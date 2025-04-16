@@ -42,6 +42,4 @@ public class ConnIdAttributeBuilder {
         builder = new AttributeInfoBuilder();
     }
 
-
-
 }
