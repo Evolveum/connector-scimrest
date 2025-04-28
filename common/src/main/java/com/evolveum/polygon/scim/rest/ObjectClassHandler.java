@@ -9,15 +9,21 @@ import java.util.Set;
 public interface ObjectClassHandler {
 
     /**
-     * Checks is
-     * @param operationType
+     * Checks if specific {@link org.identityconnectors.framework.spi.operations.SPIOperation} is supported for specific object type
+     * @param operationType Interface describing ConnId Operation
      * @return
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException If the SPI Operation is not supported.
      */
     ObjectClassHandler checkSupported(Class<?> operationType) throws UnsupportedOperationException;
 
     Uid authenticate(String username, GuardedString password, OperationOptions options);
 
+    /**
+     *
+     * @param createAttributes
+     * @param options
+     * @return
+     */
     Uid create(Set<Attribute> createAttributes, OperationOptions options);
 
     Set<AttributeDelta> updateDelta(Uid uid, Set<AttributeDelta> modifications, OperationOptions options);

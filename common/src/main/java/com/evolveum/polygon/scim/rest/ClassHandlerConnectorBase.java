@@ -9,6 +9,18 @@ import org.identityconnectors.framework.spi.operations.*;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Generic Base Connector with support for separate handlers per Object Class
+ *
+ * This allows for example to mix-and-match SCIM handlers for users, with Scripted Handlers
+ * for groups or repositories (eg. Github, which allows only user provisioning via SCIM).
+ * or pure REST connector with customized handlers per object class (eg. Forgejo).
+ *
+ * The retrieval of correct Object Class handler should be done in {@link #handlerFor(ObjectClass)} method.
+ *
+ * Handlers needs to implement {@link ObjectClassHandler} interface.
+ *
+ */
 public abstract class ClassHandlerConnectorBase implements AuthenticateOp, CreateOp, DeleteOp, ResolveUsernameOp,
         SchemaOp, ScriptOnConnectorOp, ScriptOnResourceOp, SearchOp<Filter>, TestOp,
         UpdateDeltaOp {
