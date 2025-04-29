@@ -1,77 +1,77 @@
-objectClass "User" {
-    attribute "active" {
+objectClass("User") {
+    attribute("active") {
         jsonType "boolean";
         updateable true;
         description "Is user active";
     }
-    attribute "avatar_url" {
+    attribute("avatar_url") {
         jsonType "string";
         description "URL to the user's avatar";
     }
-    attribute "created_at" {
+    attribute("created_at") {
         jsonType "string";
         openApiFormat "date-time";
         creatable true;
         description "The date and time when the user was created";
     }
-    attribute "description" {
+    attribute("description") {
         jsonType "string";
         description "the user's description";
     }
-    attribute "email" {
+    attribute("email") {
         jsonType "string";
         openApiFormat "email";
         updateable true;
         description "The user's email address";
     }
-    attribute "followers_count" {
+    attribute("followers_count") {
         jsonType "integer";
         openApiFormat "int64";
         description "Number of users following this user";
     }
-    attribute "following_count" {
+    attribute("following_count") {
         jsonType "integer";
         openApiFormat "int64";
         description "Number of users this user is following";
     }
-    attribute "full_name" {
+    attribute("full_name") {
         jsonType "string";
         creatable true;
         updateable true;
         description "the user's full name";
     }
-    attribute "html_url" {
+    attribute("html_url") {
         jsonType "string";
         description "URL to the user's profile page";
     }
-    attribute "id" {
+    attribute("id") {
         jsonType "integer";
         openApiFormat "int64";
         description "The unique identifier for the user";
     }
-    attribute "is_admin" {
+    attribute("is_admin") {
         jsonType "boolean";
         description "Is the user an administrator";
     }
-    attribute "language" {
+    attribute("language") {
         jsonType "string";
         description "User locale";
     }
-    attribute "last_login" {
+    attribute("last_login") {
         jsonType "string";
         openApiFormat "date-time";
         description "The date and time when the user last logged in";
     }
-    attribute "location" {
+    attribute("location") {
         jsonType "string";
         updateable true;
         description "the user's location";
     }
-    attribute "login" {
+    attribute("login") {
         jsonType "string";
         description "the user's username";
     }
-    attribute "login_name" {
+    attribute("login_name") {
         jsonType "string";
         creatable true;
         updateable true;
