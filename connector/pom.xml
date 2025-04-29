@@ -36,6 +36,7 @@
     </properties>
 
     <modules>
+        <module>forgejo</module>
         <module>generic</module>
     </modules>
 

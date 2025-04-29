@@ -35,6 +35,8 @@
 
         <surefire.version>3.5.2</surefire.version>
         <failsafe.version>3.5.2</failsafe.version>
+        <testng.version>7.10.2</testng.version>
+        <groovy.version>4.0.25</groovy.version>
     </properties>
 
     <repositories>
@@ -80,6 +82,11 @@
                 <groupId>com.evolveum.polygon</groupId>
                 <artifactId>connector-common</artifactId>
                 <version>${polygon.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>${testng.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

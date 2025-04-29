@@ -5,6 +5,8 @@ import com.evolveum.polygon.scim.rest.schema.RestSchemaBuilder;
 import groovy.lang.GroovyShell;
 import org.codehaus.groovy.runtime.MethodClosure;
 
+import java.io.InputStreamReader;
+
 public class GroovySchemaLoader {
 
     private GroovyShell shell;
@@ -22,5 +24,9 @@ public class GroovySchemaLoader {
 
     public RestSchema build() {
         return schemaBuilder.build();
+    }
+
+    public void loadFromResource(String s) {
+        shell.evaluate(new InputStreamReader(this.getClass().getResourceAsStream(s)));
     }
 }
