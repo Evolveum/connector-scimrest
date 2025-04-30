@@ -24,7 +24,7 @@ import java.util.Set;
  */
 public abstract class ClassHandlerConnectorBase implements Connector,
         AuthenticateOp, CreateOp, DeleteOp, ResolveUsernameOp,
-        SchemaOp, ScriptOnConnectorOp, ScriptOnResourceOp, SearchOp<Filter>, TestOp,
+        SchemaOp, SearchOp<Filter>, TestOp,
         UpdateDeltaOp {
 
     public abstract ObjectClassHandler handlerFor(ObjectClass objectClass) throws UnsupportedOperationException;

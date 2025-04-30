@@ -1,8 +1,6 @@
 package com.evolveum.polygon.scim.rest;
 
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.json.JSONObject;
 import com.evolveum.polygon.scim.rest.groovy.SearchHandler;

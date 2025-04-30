@@ -77,58 +77,59 @@ objectClass("User") {
         updateable true;
         description "The user's authentication sign-in name.";
     }
-    attribute "must_change_password" {
+    attribute("must_change_password") {
         jsonType "boolean";
         creatable true;
         updateable true;
         readable false;
     }
-    attribute "password" {
+    attribute("password") {
         jsonType "string";
         creatable true;
         updateable true;
         readable false;
     }
-    attribute "prohibit_login" {
+    attribute("prohibit_login") {
         jsonType "boolean";
         updateable true;
         description "Is user login prohibited";
     }
-    attribute "pronouns" {
+    attribute("pronouns") {
         jsonType "string";
         updateable true;
         description "the user's pronouns";
     }
-    attribute "restricted" {
+    attribute("restricted") {
         jsonType "boolean";
         creatable true;
         updateable true;
         description "Is user restricted";
     }
-    attribute "source_id" {
+    attribute("source_id") {
         jsonType "integer";
-        format "int64";
+        openApiFormat "int64";
         creatable true;
         updateable true;
         description "The ID of the user's Authentication Source";
     }
-    attribute "starred_repos_count" {
+    attribute("starred_repos_count") {
         jsonType "integer";
-        format "int64";
+        openApiFormat "int64";
         description "Number of repositories starred by this user";
     }
 
-    attribute "visibility" {
+    attribute("visibility") {
         jsonType "string";
         updateable true;
         description "UserSchema visibility level option: public, limited, private";
-        enumeration ["public", "limited", "private"];
+        // enumeration ["public", "limited", "private"];
     }
-    attribute "website" {
+    attribute("website") {
         jsonType "string";
         description "the user's website";
     }
 
+    /*
     connIdAttribute "UID" "id";
     connIdAttribute "NAME" "login";
     connIdAttribute "ENABLE" "active";
@@ -136,5 +137,5 @@ objectClass("User") {
     connIdAttribute "LOCK_OUT" "prohibit_login";
     connIdAttribute "SHORT_NAME" "full_name";
     connIdAttribute "DESCRIPTION" "description";
-
+    */
 }

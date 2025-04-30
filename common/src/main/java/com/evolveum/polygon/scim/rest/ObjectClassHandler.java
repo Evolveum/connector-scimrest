@@ -33,4 +33,6 @@ public interface ObjectClassHandler {
     Uid resolveUsername(String username, OperationOptions options);
 
     void executeQuery(Filter query, ResultsHandler handler, OperationOptions options);
+
+    ObjectClass objectClass();
 }

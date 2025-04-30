@@ -3,16 +3,23 @@ package com.evolveum.polygon.scim.rest.schema;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.SchemaBuilder;
+import org.identityconnectors.framework.spi.Connector;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class RestSchemaBuilder {
 
-    Map<String, RestObjectClassBuilder> objectClasses = new HashMap<>();
+    private final SchemaBuilder schemaBuilder;
+    private final Map<String, RestObjectClassBuilder> objectClasses = new HashMap<>();
+
+    public RestSchemaBuilder(Class<? extends Connector> connectorClass) {
+        this.schemaBuilder = new SchemaBuilder(connectorClass);
+    }
 
     public RestObjectClassBuilder objectClass(String name) {
-        return objectClasses.computeIfAbsent("name", k -> new RestObjectClassBuilder(RestSchemaBuilder.this, k));
+        return objectClasses.computeIfAbsent(name, k -> new RestObjectClassBuilder(RestSchemaBuilder.this, k));
     }
 
     public RestObjectClassBuilder objectClass(String name, @DelegatesTo(RestObjectClassBuilder.class) Closure<?> closure) {
@@ -24,6 +31,12 @@ public class RestSchemaBuilder {
     }
 
     public RestSchema build() {
-        return null;
+        Map<ObjectClass, RestObjectClass> objectClassMap = new HashMap<>();
+        for (var ocBuilder : objectClasses.values()) {
+            var objectClassDef = ocBuilder.build();
+            schemaBuilder.defineObjectClass(objectClassDef.connId());
+            objectClassMap.put(objectClassDef.objectClass(), objectClassDef);
+        }
+        return new RestSchema(schemaBuilder.build(), objectClassMap);
     }
 }

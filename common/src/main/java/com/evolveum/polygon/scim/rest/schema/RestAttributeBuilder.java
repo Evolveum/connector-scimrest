@@ -45,11 +45,24 @@ public class RestAttributeBuilder {
 
     public RestAttributeBuilder readable(boolean readable) {
         connIdBuilder.setReadable(readable);
+        if (!readable) {
+            connIdBuilder.setReturnedByDefault(false);
+        }
         return this;
     }
 
     public RestAttributeBuilder required(boolean required) {
         connIdBuilder.setRequired(required);
+        return this;
+    }
+
+    public RestAttributeBuilder updateable(boolean updatable) {
+        connIdBuilder.setUpdateable(updatable);
+        return this;
+    }
+
+    public RestAttributeBuilder creatable(boolean creatable) {
+        connIdBuilder.setCreateable(creatable);
         return this;
     }
 

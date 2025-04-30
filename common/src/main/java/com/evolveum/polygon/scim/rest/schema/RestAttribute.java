@@ -10,12 +10,14 @@ import java.util.List;
 public class RestAttribute {
 
 
-    AttributeInfo info;
-
-    private String remoteName;
+    private final AttributeInfo info;
+    private final String remoteName;
     private AttributeMapping mapping;
 
     public RestAttribute(RestAttributeBuilder restAttributeBuilder) {
+        info = restAttributeBuilder.connIdBuilder.build();
+        remoteName = restAttributeBuilder.remoteName;
+        // FIXME Do the mapping resolution
 
     }
 
@@ -29,5 +31,9 @@ public class RestAttribute {
 
     public Attribute attributeOf(Object connIdValues) {
         return AttributeBuilder.build(info.getName(), (List<Object>) connIdValues);
+    }
+
+    public AttributeInfo connId() {
+        return this.info;
     }
 }

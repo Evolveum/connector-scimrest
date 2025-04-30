@@ -1,18 +1,25 @@
 objectClass("User") {
     search {
         operation "GET"
-        endpoint "/users/"
-        filter("id", EQUAL) {
-            endpoint {
-                return "/users/search?id=$value"
+        endpoint("/users/search") {
+            objectExtractor {
+                return response.body().get("data")
+            }
+            supportedFilter("id", EQUAL) {
+                request {
+                    uriBuilder.addParameter("id",value)
+                }
+            }
+            supportedFilter("login", Contains) {
+                request {
+                    uriBuilder.addParameter("q", value)
+                }
             }
         }
-        filter("login",EQUAL) {
-            endpoint {
-                return "/users/$value"
+        endpoint("/users/") {
+            supportedFilter("login", EQUAL) {
+
             }
         }
-
-
     }
 }

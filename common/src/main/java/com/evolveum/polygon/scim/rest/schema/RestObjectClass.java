@@ -10,10 +10,19 @@ import java.util.Map;
 
 public class RestObjectClass {
 
+    private final Map<String, RestAttribute> nativeAttributes;
+    private final Map<String, RestAttribute> connIdAttributes;
     ObjectClass clazz;
-    ObjectClassInfo classInfo;
+    ObjectClassInfo connId;
 
     Map<String, RestAttribute> attributes = new HashMap<>();
+
+    public RestObjectClass(ObjectClassInfo connId, Map<String, RestAttribute> nativeAttrs, Map<String, RestAttribute> connIdAttrs) {
+        this.connId = connId;
+        this.clazz = new ObjectClass(connId.getType());
+        this.nativeAttributes = nativeAttrs;
+        this.connIdAttributes = connIdAttrs;
+    }
 
     public ConnectorObjectBuilder newObjectBuilder() {
         ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
@@ -22,7 +31,14 @@ public class RestObjectClass {
     }
 
     public Collection<RestAttribute> attributes() {
-        return attributes.values();
+        return nativeAttributes.values();
     }
 
+    public ObjectClassInfo connId() {
+        return connId;
+    }
+
+    public ObjectClass objectClass() {
+        return clazz;
+    }
 }

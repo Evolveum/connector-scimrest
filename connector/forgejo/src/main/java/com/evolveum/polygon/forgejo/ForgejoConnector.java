@@ -22,7 +22,7 @@ public class ForgejoConnector extends AbstractGroovyRestConnector {
         builder.objectClass("User")
                 .search(new FilterRequestProcessor() {
                     Function<HttpResponse<JSONObject>, Iterable<JSONObject>> dataExtractor = r ->
-                            (Iterable<JSONObject>) r.body().get("data"));
+                            (Iterable<JSONObject>) r.body().get("data");
 
 
                     @Override
