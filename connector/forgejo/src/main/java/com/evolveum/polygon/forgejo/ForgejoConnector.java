@@ -18,6 +18,7 @@ public class ForgejoConnector extends AbstractGroovyRestConnector {
 
     @Override
     protected void initializeSchema(GroovySchemaLoader loader) {
+        loader.loadFromResource("/UserNativeSchema.groovy");
         loader.loadFromResource("/UserSchema.groovy");
     }
 
