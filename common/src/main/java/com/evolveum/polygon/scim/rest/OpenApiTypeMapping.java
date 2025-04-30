@@ -63,6 +63,8 @@ public enum OpenApiTypeMapping implements AttributeMapping {
         this.connidClass = connidClass;
     }
 
+
+
     public Set<Class<?>> getJsonClasses() {
         return availableWireTypes;
     }
@@ -96,5 +98,39 @@ public enum OpenApiTypeMapping implements AttributeMapping {
     public Object toConnIdValue(Object value) throws IllegalArgumentException {
         // FIXME implement proper convertors
         return value;
+    }
+
+    public static AttributeMapping from(String jsonType, String openApiFormat) {
+        for (OpenApiTypeMapping am : values()) {
+            if (am.openApiFormat.equals(openApiFormat)) {
+                return am;
+            }
+        };
+        return new AttributeMapping() {
+            @Override
+            public Class<?> connIdType() {
+                return Object.class;
+            }
+
+            @Override
+            public Class<?> primaryWireType() {
+                return Object.class;
+            }
+
+            @Override
+            public Set<Class<?>> supportedWireTypes() {
+                return Set.of(Object.class);
+            }
+
+            @Override
+            public Object toWireValue(Object value) throws IllegalArgumentException {
+                return value;
+            }
+
+            @Override
+            public Object toConnIdValue(Object value) throws IllegalArgumentException {
+                return value;
+            }
+        };
     }
 }

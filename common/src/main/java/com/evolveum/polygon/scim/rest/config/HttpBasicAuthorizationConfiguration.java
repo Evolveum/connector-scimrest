@@ -6,7 +6,6 @@ public interface HttpBasicAuthorizationConfiguration {
 
     String getUsername();
 
-
     GuardedString getPassword();
 
 }

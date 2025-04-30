@@ -1,5 +1,7 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.JsonBodyHandler;
+import com.evolveum.polygon.scim.rest.RestContext;
 import org.json.JSONObject;
 
 import java.net.http.HttpRequest;
@@ -12,23 +14,26 @@ public interface SearchHandler {
 
     Iterable<JSONObject> extractRemoteObject(HttpResponse<JSONObject> response);
 
-    void addUriAndPaging(HttpRequest.Builder requestBuilder,  int currentPage, int pageLimit);
+    void addUriAndPaging(RestContext.RequestBuilder requestBuilder, int currentPage, int pageLimit);
 
     static Builder builder() {
         return new Builder();
     }
 
+    Integer extractTotalResultCount(HttpResponse<JSONObject> response);
+
     class Builder {
 
         private Function<HttpResponse<JSONObject>, Iterable<JSONObject>> extractor = v -> List.of(v.body());
-        private BiConsumer<HttpRequest.Builder, PagingInfo> pagingConsumer = (req, resp) -> {};
+        private BiConsumer<RestContext.RequestBuilder, PagingInfo> pagingConsumer = (req, resp) -> {};
+        private Function<HttpResponse<JSONObject>, Integer> totalCountExtractor = (e) -> null;
 
         public Builder remoteObjectExtractor(Function<HttpResponse<JSONObject>, Iterable<JSONObject>> extractor) {
             this.extractor = extractor;
             return this;
         }
 
-        public Builder addRequestUri(BiConsumer<HttpRequest.Builder, PagingInfo> pagingConsumer) {
+        public Builder addRequestUri(BiConsumer<RestContext.RequestBuilder, PagingInfo> pagingConsumer) {
             this.pagingConsumer = pagingConsumer;
             return this;
         }
@@ -42,8 +47,13 @@ public interface SearchHandler {
                 }
 
                 @Override
-                public void addUriAndPaging(HttpRequest.Builder requestBuilder, int currentPage, int pageLimit) {
+                public void addUriAndPaging(RestContext.RequestBuilder requestBuilder, int currentPage, int pageLimit) {
                     pagingConsumer.accept(requestBuilder, new PagingInfo(pageLimit, currentPage));
+                }
+
+                @Override
+                public Integer extractTotalResultCount(HttpResponse<JSONObject> response) {
+                    return totalCountExtractor.apply(response);
                 }
             };
         }

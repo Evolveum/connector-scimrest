@@ -1,12 +1,13 @@
 package com.evolveum.polygon.scim.rest;
 
+import com.evolveum.polygon.scim.rest.spi.ObjectClassOperaration;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.util.Set;
 
-public interface ObjectClassHandler {
+public interface ObjectClassHandler<HC> {
 
     /**
      * Checks if specific {@link org.identityconnectors.framework.spi.operations.SPIOperation} is supported for specific object type
@@ -14,25 +15,7 @@ public interface ObjectClassHandler {
      * @return
      * @throws UnsupportedOperationException If the SPI Operation is not supported.
      */
-    ObjectClassHandler checkSupported(Class<?> operationType) throws UnsupportedOperationException;
-
-    Uid authenticate(String username, GuardedString password, OperationOptions options);
-
-    /**
-     *
-     * @param createAttributes
-     * @param options
-     * @return
-     */
-    Uid create(Set<Attribute> createAttributes, OperationOptions options);
-
-    Set<AttributeDelta> updateDelta(Uid uid, Set<AttributeDelta> modifications, OperationOptions options);
-
-    void delete(Uid uid, OperationOptions options);
-
-    Uid resolveUsername(String username, OperationOptions options);
-
-    void executeQuery(Filter query, ResultsHandler handler, OperationOptions options);
+    <T extends ObjectClassOperaration<HC>> T  checkSupported(Class<T> operationType) throws UnsupportedOperationException;
 
     ObjectClass objectClass();
 }

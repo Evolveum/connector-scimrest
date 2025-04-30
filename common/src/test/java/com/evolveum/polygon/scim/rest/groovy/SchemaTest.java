@@ -8,7 +8,6 @@ import static org.testng.AssertJUnit.assertNotNull;
 public class SchemaTest {
     @Test
     public void testSchemaLoading() {
-
         var context = new GroovyContext();
         var schema = new RestSchemaBuilder(AbstractGroovyRestConnector.class);
         var loader = new GroovySchemaLoader(context, schema);
@@ -22,5 +21,6 @@ public class SchemaTest {
         """);
         assertNotNull(schema);
     }
+
 
 }

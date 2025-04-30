@@ -1,9 +1,11 @@
 package com.evolveum.polygon.scim.rest.schema;
 
 import com.evolveum.polygon.scim.rest.AttributeMapping;
+import com.evolveum.polygon.scim.rest.OpenApiTypeMapping;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 
 import java.util.List;
 
@@ -18,6 +20,7 @@ public class RestAttribute {
         info = restAttributeBuilder.connIdBuilder.build();
         remoteName = restAttributeBuilder.remoteName;
         // FIXME Do the mapping resolution
+        mapping = ConnIdMapping.of(info, OpenApiTypeMapping.from(restAttributeBuilder.jsonType, restAttributeBuilder.openApiFormat));
 
     }
 

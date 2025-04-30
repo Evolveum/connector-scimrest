@@ -1,33 +1,32 @@
 package com.evolveum.polygon.forgejo;
 
 import com.evolveum.polygon.scim.rest.config.HttpBasicAuthorizationConfiguration;
-import com.evolveum.polygon.scim.rest.groovy.AbstractGroovyConnectorConfiguration;
-import com.evolveum.polygon.scim.rest.groovy.AbstractGroovyRestConnector;
+import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
+import com.evolveum.polygon.scim.rest.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.scim.rest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.spi.Configuration;
 
-public class ForgejoConfiguration extends AbstractGroovyConnectorConfiguration implements HttpBasicAuthorizationConfiguration {
+public class ForgejoConfiguration extends BaseRestGroovyConnectorConfiguration implements HttpClientConfiguration.TokenAuthorization {
 
 
-    private String username;
-    private GuardedString password;
+    private String tokenName;
+    private GuardedString tokenValue;
 
     @Override
-    public String getUsername() {
-        return this.username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
+    public String getAuthorizationTokenName() {
+        return tokenName;
     }
 
     @Override
-    public GuardedString getPassword() {
-        return this.password;
+    public GuardedString getAuthorizationTokenValue() {
+        return tokenValue;
     }
 
-    public void setPassword(GuardedString password) {
-        this.password = password;
+    public void setAuthorizationTokenName(String tokenName) {
+        this.tokenName = tokenName;
     }
 
+    public void setAuthorizationTokenValue(GuardedString tokenValue) {
+        this.tokenValue = tokenValue;
+    }
 }

@@ -36,8 +36,6 @@
     </properties>
 
     <dependencies>
-
-
         <dependency>
             <groupId>com.unboundid.product.scim2</groupId>
             <artifactId>scim2-sdk-client</artifactId>
@@ -45,6 +43,11 @@
         <dependency>
             <groupId>com.evolveum.polygon</groupId>
             <artifactId>connector-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.tirasa.connid</groupId>
+            <artifactId>connector-framework-contract</artifactId>
+            <version>${connid.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>

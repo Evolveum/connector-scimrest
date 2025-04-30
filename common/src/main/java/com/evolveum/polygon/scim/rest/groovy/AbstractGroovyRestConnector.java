@@ -1,48 +1,59 @@
 package com.evolveum.polygon.scim.rest.groovy;
-
-import com.evolveum.polygon.scim.rest.AbstractRestJsonObjectClassHandler;
 import com.evolveum.polygon.scim.rest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scim.rest.ObjectClassHandler;
+import com.evolveum.polygon.scim.rest.RestContext;
+import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
 import com.evolveum.polygon.scim.rest.schema.RestSchema;
 import com.evolveum.polygon.scim.rest.schema.RestSchemaBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.spi.Configuration;
 
+import java.net.http.HttpClient;
 import java.util.Map;
 
-public abstract class AbstractGroovyRestConnector<T extends AbstractGroovyConnectorConfiguration> extends ClassHandlerConnectorBase {
+public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase<RestContext> {
 
-    Map<ObjectClass, AbstractRestJsonObjectClassHandler> handlers;
-    private AbstractGroovyConnectorConfiguration configuration;
+    Map<ObjectClass, ObjectClassHandler<RestContext>> handlers;
+    private BaseGroovyConnectorConfiguration configuration;
     private RestSchema schema;
+    private RestContext restContext;
 
     @Override
-    public AbstractGroovyConnectorConfiguration getConfiguration() {
+    public BaseGroovyConnectorConfiguration getConfiguration() {
         return configuration;
     }
 
+
     @Override
-    public ObjectClassHandler handlerFor(ObjectClass objectClass) throws UnsupportedOperationException {
+    public ObjectClassHandler<RestContext> handlerFor(ObjectClass objectClass) throws UnsupportedOperationException {
         return handlers.get(objectClass);
     }
 
-
-
     @Override
     public void init(Configuration cfg) {
-        if (cfg instanceof AbstractGroovyConnectorConfiguration groovyConf) {
+        if (cfg instanceof BaseGroovyConnectorConfiguration groovyConf) {
             this.configuration = groovyConf;
             var schemaBuilder = new RestSchemaBuilder(getClass());
+
             initializeSchema(new GroovySchemaLoader(groovyConf.groovyContext(), schemaBuilder));
             this.schema = schemaBuilder.build();
-            var handlersBuilder = new HandlersBuilder();
+            var handlersBuilder = new RestHandlerBuilder(this.schema);
             initializeObjectClassHandler(handlersBuilder);
             this.handlers = handlersBuilder.build();
-
+            initializeRestClient();
+            
         } else {
             throw new IllegalArgumentException("Configuration must be an instance of AbstractGroovyConnectorConfiguration");
         }
+    }
+
+    private void initializeRestClient() {
+        restContext = new RestContext((HttpClientConfiguration) configuration, authorizationCustomizer());
+    }
+
+    protected RestContext.AuthorizationCustomizer authorizationCustomizer() {
+        return (c,v) -> {};
     }
 
     /**
@@ -53,11 +64,13 @@ public abstract class AbstractGroovyRestConnector<T extends AbstractGroovyConnec
     protected abstract void initializeSchema(GroovySchemaLoader loader);
 
 
-    protected abstract void initializeObjectClassHandler(HandlersBuilder builder);
+    protected abstract void initializeObjectClassHandler(RestHandlerBuilder builder);
 
 
     @Override
     public void test() {
+
+
         // FIXME: Implement later
     }
 
@@ -69,5 +82,10 @@ public abstract class AbstractGroovyRestConnector<T extends AbstractGroovyConnec
     @Override
     public void dispose() {
         // Dispose of connector
+    }
+
+    @Override
+    public RestContext context() {
+        return restContext;
     }
 }

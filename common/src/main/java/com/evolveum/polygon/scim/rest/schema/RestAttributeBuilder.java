@@ -20,7 +20,6 @@ public class RestAttributeBuilder {
         connIdBuilder.setName(name);
         connIdBuilder.setNativeName(name);
         this.objectClass = restObjectClassBuilder;
-
     }
 
     public RestAttributeBuilder protocolName(String protocolName) {

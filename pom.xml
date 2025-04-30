@@ -31,6 +31,7 @@
         <project.source.version>17</project.source.version>
         <project.target.version>17</project.target.version>
         <polygon.version>1.5.3.0-M3</polygon.version>
+        <connid.version>1.6.0.1</connid.version>
         <unboundid-scim2.version>3.2.0</unboundid-scim2.version>
 
         <surefire.version>3.5.2</surefire.version>
@@ -87,6 +88,11 @@
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>${testng.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.tirasa.connid</groupId>
+                <artifactId>connector-framework</artifactId>
+                <version>${connid.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

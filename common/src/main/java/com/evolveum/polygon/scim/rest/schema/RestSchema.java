@@ -18,4 +18,8 @@ public class RestSchema {
     public Schema connIdSchema() {
         return connIdSchema;
     }
+
+    public RestObjectClass objectClass(String name) {
+        return objectClasses.get(new ObjectClass(name));
+    }
 }

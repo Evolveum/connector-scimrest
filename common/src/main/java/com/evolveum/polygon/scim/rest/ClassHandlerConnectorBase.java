@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest;
 
+import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.Filter;
@@ -22,31 +23,37 @@ import java.util.Set;
  * Handlers needs to implement {@link ObjectClassHandler} interface.
  *
  */
-public abstract class ClassHandlerConnectorBase implements Connector,
+public abstract class ClassHandlerConnectorBase<HC> implements Connector,
         AuthenticateOp, CreateOp, DeleteOp, ResolveUsernameOp,
         SchemaOp, SearchOp<Filter>, TestOp,
         UpdateDeltaOp {
 
-    public abstract ObjectClassHandler handlerFor(ObjectClass objectClass) throws UnsupportedOperationException;
+    public abstract HC context();
+
+    public abstract ObjectClassHandler<HC> handlerFor(ObjectClass objectClass) throws UnsupportedOperationException;
 
     @Override
     public Uid authenticate(ObjectClass objectClass, String username, GuardedString password, OperationOptions options) {
-        return handlerFor(objectClass).checkSupported(AuthenticateOp.class).authenticate(username, password, options);
+        throw new UnsupportedOperationException("Not supported yet.");
+        //return handlerFor(objectClass).checkSupported(AuthenticateOp.class).authenticate(username, password, options);
     }
 
     @Override
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes, OperationOptions options) {
-        return handlerFor(objectClass).checkSupported(CreateOp.class).create(createAttributes, options);
+        throw new UnsupportedOperationException("Not supported yet.");
+        //return handlerFor(objectClass).checkSupported(CreateOp.class).create(createAttributes, options);
     }
 
     @Override
     public void delete(ObjectClass objectClass, Uid uid, OperationOptions options) {
-        handlerFor(objectClass).checkSupported(DeleteOp.class).delete(uid, options);
+        throw new UnsupportedOperationException("Not supported yet.");
+        //handlerFor(objectClass).checkSupported(DeleteOp.class).delete(uid, options);
     }
 
     @Override
     public Uid resolveUsername(ObjectClass objectClass, String username, OperationOptions options) {
-        return handlerFor(objectClass).checkSupported(ResolveUsernameOp.class).resolveUsername(username, options);
+        throw new UnsupportedOperationException("Not supported yet.");
+        //return handlerFor(objectClass).checkSupported(ResolveUsernameOp.class).resolveUsername(username, options);
     }
 
     @Override
@@ -56,11 +63,14 @@ public abstract class ClassHandlerConnectorBase implements Connector,
 
     @Override
     public void executeQuery(ObjectClass objectClass, Filter query, ResultsHandler handler, OperationOptions options) {
-        handlerFor(objectClass).checkSupported(SearchOp.class).executeQuery(query, handler, options);
+        handlerFor(objectClass)
+                .checkSupported(ExecuteQueryProcessor.class)
+                .executeQuery(context(), query, handler, options);
     }
 
     @Override
     public Set<AttributeDelta> updateDelta(ObjectClass objclass, Uid uid, Set<AttributeDelta> modifications, OperationOptions options) {
-        return handlerFor(objclass).checkSupported(UpdateDeltaOp.class).updateDelta(uid, modifications, options);
+        throw new UnsupportedOperationException("Not supported yet.");
+        //return handlerFor(objclass).checkSupported(UpdateDeltaOp.class).updateDelta(uid, modifications, options);
     }
 }

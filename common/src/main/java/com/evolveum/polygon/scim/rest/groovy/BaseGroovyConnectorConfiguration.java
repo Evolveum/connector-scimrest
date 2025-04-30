@@ -1,14 +1,9 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
-import com.evolveum.polygon.scim.rest.ObjectClassHandler;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
-import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.StatefulConfiguration;
 
-import java.util.Map;
-
-public abstract class AbstractGroovyConnectorConfiguration implements StatefulConfiguration {
+public abstract class BaseGroovyConnectorConfiguration implements StatefulConfiguration {
 
     private ConnectorMessages messages;
 
