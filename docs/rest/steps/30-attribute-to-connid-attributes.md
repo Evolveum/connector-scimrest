@@ -1,4 +1,4 @@
-Identity which attributes should be used for ConnID attributes:
+Identify which attributes should be used for ConnID attributes:
  * `UID` -  A single-valued attribute that represents the <i>unique identifier</ i> of an object within the name-space of the target resource. If possible, this unique identifier also should be immutable. <br> When an application creates an object on a target resource, the create operation returns as its result the Uid of the created object.
  * `NAME` - A single-valued attribute that represents the *user-friendly identifier* of an object on a target resource. For instance, the name of an Account will most often be its loginName. The value of Name need not be unique within ObjectClass. In LDAP, for example, the Name could be the Common Name (CN). Contrast this with Uid, which is intended to be a unique identifier (and, if possible, immutable)
  * `ENABLE` - Gets/ sets the enable status of an object.
