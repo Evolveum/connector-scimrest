@@ -1,8 +1,6 @@
 package com.evolveum.polygon.forgejo;
 
-import com.evolveum.polygon.scim.rest.config.HttpBasicAuthorizationConfiguration;
 import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
-import com.evolveum.polygon.scim.rest.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scim.rest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 
