@@ -2,14 +2,18 @@ package com.evolveum.polygon.scim.rest.config;
 
 import org.identityconnectors.common.security.GuardedString;
 
-public interface HttpClientConfiguration {
+public interface HttpClientConfiguration extends ConfigurationMixin {
 
     String getBaseAddress();
 
     boolean getTrustAllCertificates();
 
 
-    interface BasicAuthorization {
+    /**
+     * HTTP Basic Authorization based configuration
+     *
+     */
+    interface BasicAuthorization extends HttpClientConfiguration {
 
         String getUsername();
 
@@ -17,7 +21,10 @@ public interface HttpClientConfiguration {
 
     }
 
-    interface TokenAuthorization {
+    /**
+     * HTTP Bearer Token based configuration
+     */
+    interface TokenAuthorization extends HttpClientConfiguration {
 
         String getAuthorizationTokenName();
 

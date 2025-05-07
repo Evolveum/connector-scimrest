@@ -5,7 +5,7 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 @FunctionalInterface
-public interface ExecuteQueryProcessor<HC> extends ObjectClassOperaration<HC> {
+public interface ExecuteQueryProcessor<HC> extends ObjectClassOperation<HC> {
 
     void executeQuery(HC context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions);
 

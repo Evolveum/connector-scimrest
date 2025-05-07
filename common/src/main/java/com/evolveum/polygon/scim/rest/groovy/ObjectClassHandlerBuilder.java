@@ -4,7 +4,7 @@ import com.evolveum.polygon.scim.rest.CompositeObjectClassHandler;
 import com.evolveum.polygon.scim.rest.ObjectClassHandler;
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
-import com.evolveum.polygon.scim.rest.spi.ObjectClassOperaration;
+import com.evolveum.polygon.scim.rest.spi.ObjectClassOperation;
 import groovy.lang.Closure;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ public class ObjectClassHandlerBuilder<HC> {
 
     ObjectClassHandler<HC> product;
 
-    Map<Class<? extends ObjectClassOperaration<?>>, ObjectClassOperaration<?>> buildedOperations = new HashMap<>();
+    Map<Class<? extends ObjectClassOperation<?>>, ObjectClassOperation<?>> buildedOperations = new HashMap<>();
 
     public ObjectClassHandlerBuilder(RestObjectClass restObjectClass) {
         this.objectClass = restObjectClass;
