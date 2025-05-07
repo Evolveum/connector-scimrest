@@ -1,22 +1,21 @@
 objectClass("User") {
     search {
-        operation "GET"
         endpoint("/users/search") {
             objectExtractor {
-                return response.body().get("data")
+                return response.body.get("data")
             }
             pagingSupport {
-                request.query("limit", paging.pageSize)
-                       .query("page", paging.pageOffset)
+                request.queryParameter("limit", paging.pageSize)
+                       .queryParameter("page", paging.pageOffset)
             }
             supportedFilter("id", EQUAL) {
                 request {
-                    uriBuilder.query("id",value)
+                    request.queryParameter("id",value)
                 }
             }
             supportedFilter("login", Contains) {
                 request {
-                    uriBuilder.query("q", value)
+                    request.queryParameter("q", value)
                 }
             }
         }

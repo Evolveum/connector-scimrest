@@ -127,5 +127,4 @@ objectClass("User") {
         jsonType "string";
         description "the user's website";
     }
-
 }
