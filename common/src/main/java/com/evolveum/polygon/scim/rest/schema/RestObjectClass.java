@@ -41,4 +41,8 @@ public class RestObjectClass {
     public ObjectClass objectClass() {
         return clazz;
     }
+
+    public RestAttribute attributeFromProtocolName(String protocolName) {
+        return nativeAttributes.get(protocolName);
+    }
 }

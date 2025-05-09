@@ -19,7 +19,7 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
 
 
     public SearchEndpointBuilder<?,?> endpoint(String path) {
-        return endpointBuilder.computeIfAbsent(path, k -> new SearchEndpointBuilder<>(k));
+        return endpointBuilder.computeIfAbsent(path, k -> new SearchEndpointBuilder<>(k, parent.getObjectClass()));
     }
 
     public SearchEndpointBuilder<?,?> endpoint(String path, Closure<?> builder) {

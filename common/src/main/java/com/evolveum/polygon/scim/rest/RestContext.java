@@ -45,11 +45,20 @@ public class RestContext {
         }
 
         String apiEndpoint;
+        StringBuilder subpath = new StringBuilder();
         Map<String,String> queryParameters = new HashMap<>();
 
         public HttpRequest build() throws URISyntaxException {
             request.uri(buildUri());
             return request.build();
+        }
+
+        public RequestBuilder subpath(String subpath) {
+            if (!subpath.isEmpty() && !subpath.endsWith("/")) {
+                this.subpath.append("/");
+            }
+            this.subpath.append(subpath);
+            return this;
         }
 
         private URI buildUri() throws URISyntaxException {
@@ -58,6 +67,12 @@ public class RestContext {
             builder.append("/");
             if (apiEndpoint != null) {
                 builder.append(apiEndpoint);
+            }
+            if (!subpath.isEmpty()) {
+                if (!builder.toString().endsWith("/")) {
+                    builder.append("/");
+                }
+                builder.append(subpath);
             }
             if (queryParameters != null) {
                 builder.append("?");

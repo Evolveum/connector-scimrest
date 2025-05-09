@@ -9,23 +9,22 @@ objectClass("User") {
                        .queryParameter("page", paging.pageOffset)
             }
             emptyFilterSupported true
-            /*
-            supportedFilter("id", EQUAL) {
-                request {
-                    request.queryParameter("id",value)
-                }
+
+            supportedFilter(attribute("id").eq().anySingleValue()) {
+                // API weirdness of Forgejo - attribute is called id, but query parameter is called uid
+                request.queryParameter("uid",value)
             }
-            supportedFilter("login", Contains) {
-                request {
-                    request.queryParameter("q", value)
-                }
-            }*/
+
+            supportedFilter(attribute("login").contains().anySingleValue()) {
+                request.queryParameter("q", value)
+            }
         }
-        /*
+
+        // This is actually get user by username
         endpoint("/users/") {
-            supportedFilter("login", EQUAL) {
+            supportedFilter(attribute("login").eq().anySingleValue()) {
                 request.subpath(value)
             }
-        }*/
+        }
     }
 }
