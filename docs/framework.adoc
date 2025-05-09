@@ -1,0 +1,21 @@
+= Framework Operations
+
+
+
+== `executeQuery` Operation
+
+The framework will look up correct handler (SCIM or REST with concrete configuration) based on following criteria:
+
+* Object Class
+* Filter
+* OperationOptions
+
+The returned handler then will be used to fetch and convert data. Supported base handlers for fetching data
+are SCIM or REST.
+
+NOTE: This is to account for possibility that some filters / searches may require completely different processing
+      (eg. unable to search via SCIM, but able to search via REST) or fetching group first, then fetching user details
+
+
+
+
