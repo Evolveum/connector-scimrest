@@ -37,7 +37,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
             initializeSchema(new GroovySchemaLoader(groovyConf.groovyContext(), schemaBuilder));
             this.schema = schemaBuilder.build();
-            var handlersBuilder = new RestHandlerBuilder(this.schema);
+            var handlersBuilder = new GroovyRestHandlerBuilder(groovyConf.groovyContext(), this.schema);
             initializeObjectClassHandler(handlersBuilder);
             this.handlers = handlersBuilder.build();
             initializeRestClient();
@@ -63,7 +63,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     protected abstract void initializeSchema(GroovySchemaLoader loader);
 
 
-    protected abstract void initializeObjectClassHandler(RestHandlerBuilder builder);
+    protected abstract void initializeObjectClassHandler(GroovyRestHandlerBuilder builder);
 
 
     @Override

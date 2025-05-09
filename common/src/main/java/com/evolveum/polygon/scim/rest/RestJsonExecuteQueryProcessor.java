@@ -4,14 +4,10 @@ import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.json.JSONObject;
-import com.evolveum.polygon.scim.rest.groovy.SearchHandler;
+import com.evolveum.polygon.scim.rest.groovy.RestSearchOperationHandler;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
-
-import java.io.IOException;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> implements ExecuteQueryProcessor<T> {
 
@@ -23,7 +19,7 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
 
     @Override
     public void executeQuery(T context, Filter query, ResultsHandler handler, OperationOptions options) {
-        var spec = createSearchSpecification(query);
+        var spec = (RestSearchOperationHandler<JSONObject, JSONObject>) createSearchSpecification(query);
 
         var shouldContinue = true;
         var currentPage = 1;
@@ -75,7 +71,7 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
         return builder.build();
     }
 
-    protected abstract SearchHandler createSearchSpecification(Filter query);
+    protected abstract RestSearchOperationHandler createSearchSpecification(Filter query);
 
 
 }

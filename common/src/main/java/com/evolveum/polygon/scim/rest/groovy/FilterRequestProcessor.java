@@ -4,6 +4,6 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 public interface FilterRequestProcessor {
 
-    SearchHandler createRequest(Filter filter);
+    RestSearchOperationHandler<?,?> createRequest(Filter filter);
 
 }

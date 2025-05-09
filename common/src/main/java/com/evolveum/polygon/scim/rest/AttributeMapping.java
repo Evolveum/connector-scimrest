@@ -25,6 +25,10 @@ public interface AttributeMapping {
             }
             return ret;
         }
-        return List.of(toConnIdValue(wireValues));
+        var connIdValue = toConnIdValue(wireValues);
+        if (connIdValue != null) {
+            return List.of(connIdValue);
+        }
+        return null;
     }
 }

@@ -7,8 +7,8 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 
 public class GroovyContext {
 
-    private CompilerConfiguration compilerConfiguration;
-    private GroovyClassLoader groovyClassLoader;
+    private final CompilerConfiguration compilerConfiguration;
+    private final GroovyClassLoader groovyClassLoader;
 
     public GroovyContext() {
         compilerConfiguration = new CompilerConfiguration();

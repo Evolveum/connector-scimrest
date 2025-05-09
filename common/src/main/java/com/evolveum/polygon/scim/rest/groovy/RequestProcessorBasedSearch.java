@@ -19,7 +19,7 @@ public class RequestProcessorBasedSearch extends RestJsonExecuteQueryProcessor<R
     }
 
     @Override
-    protected SearchHandler createSearchSpecification(Filter query) {
+    protected RestSearchOperationHandler createSearchSpecification(Filter query) {
         return processor.createRequest(query);
     }
 }

@@ -18,11 +18,7 @@ public class RestHandlerBuilder {
     }
 
     public ObjectClassHandlerBuilder<RestContext> objectClass(String user) {
-        var handler = handlers.computeIfAbsent(user, k -> {
-
-            return new ObjectClassHandlerBuilder<RestContext>(schema.objectClass(user));
-        });
-        return handler;
+        return handlers.computeIfAbsent(user, k ->  new ObjectClassHandlerBuilder<>(schema.objectClass(user)));
     }
 
     public Map<ObjectClass, ObjectClassHandler<RestContext>> build() {

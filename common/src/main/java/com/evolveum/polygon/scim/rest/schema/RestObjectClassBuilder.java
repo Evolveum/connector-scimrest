@@ -3,10 +3,8 @@ package com.evolveum.polygon.scim.rest.schema;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.*;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 public class RestObjectClassBuilder {
 

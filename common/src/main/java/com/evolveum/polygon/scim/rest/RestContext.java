@@ -81,6 +81,16 @@ public class RestContext {
             return this;
         }
 
+        public RequestBuilder queryParameter(String key, String value) {
+            this.queryParameters.put(key, value);
+            return this;
+        }
+
+        public RequestBuilder queryParameter(String key, Number value) {
+            this.queryParameters.put(key, value.toString());
+            return this;
+        }
+
         public RequestBuilder header(String name, String value) {
             this.request.header(name, value);
             return this;
