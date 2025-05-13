@@ -1,0 +1,12 @@
+// objectClassDsl.gdsl
+
+def ctx = context(scope: scriptScope())
+
+contributor(ctx) {
+    closureDelegate 'objectClass', 1, 'com.evolveum.polygon.scim.rest.schema.RestObjectClassBuilder'
+    closureDelegateFromMap([
+            'com.evolveum.polygon.scim.rest.schema.RestObjectClassBuilder.attribute': [1, 'com.evolveum.polygon.scim.rest.schema.RestAttributeBuilder']
+    ])
+
+    property('openApiFormat', ['boolean', 'string', 'number', 'array', 'object', 'null'])
+}
