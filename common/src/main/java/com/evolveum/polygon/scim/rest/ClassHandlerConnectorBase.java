@@ -58,7 +58,13 @@ public abstract class ClassHandlerConnectorBase<HC> implements Connector,
 
     @Override
     public FilterTranslator<Filter> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
-        return List::of;
+
+        return f -> {
+            if (f == null) {
+                return List.of();
+            }
+            return List.of(f);
+        };
     }
 
     @Override

@@ -32,6 +32,8 @@
     <name>Polygon SCIM 2 Connector Parent</name>
 
     <properties>
+        <bundle.name>${project.groupId}.${project.artifactId}</bundle.name>
+        <bundle.version>${project.version}</bundle.version>
         <project.source.version>17</project.source.version>
     </properties>
 
@@ -74,4 +76,48 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.evolveum.polygon.scim2</groupId>
+            <artifactId>connector-scim2-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.tirasa.connid</groupId>
+            <artifactId>connector-framework</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.tirasa.connid</groupId>
+            <artifactId>connector-framework-contract</artifactId>
+            <version>${connId.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.tirasa.connid</groupId>
+            <artifactId>connector-test-common</artifactId>
+            <version>${connId.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>${groovy.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy-astbuilder</artifactId>
+            <version>${groovy.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 </project>

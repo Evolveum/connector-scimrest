@@ -30,26 +30,18 @@
     <packaging>jar</packaging>
     <name>Polygon Forgejo Connector</name>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.evolveum.polygon.scim2</groupId>
-            <artifactId>connector-scim2-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.tirasa.connid</groupId>
-            <artifactId>connector-framework-contract</artifactId>
-            <version>${connid.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.tirasa.connid</groupId>
-            <artifactId>connector-test-common</artifactId>
-            <version>${connid.version}</version>
-        </dependency>
-    </dependencies>
+    <properties>
+        <connectorPackage>com.evolveum.polygon.forgejo</connectorPackage>
+        <connectorClass>ForgejoConnector</connectorClass>
+    </properties>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

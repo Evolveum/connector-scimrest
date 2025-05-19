@@ -4,18 +4,10 @@ import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
 import com.evolveum.polygon.scim.rest.groovy.*;
-import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
-import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
-import org.identityconnectors.framework.common.objects.filter.Filter;
-import org.json.JSONObject;
+import org.identityconnectors.framework.spi.ConnectorClass;
 
-import java.net.http.HttpResponse;
-import java.util.Objects;
-import java.util.function.Function;
-
+@ConnectorClass(displayNameKey = "forgejo.rest.display", configurationClass = ForgejoConfiguration.class)
 public class ForgejoConnector extends AbstractGroovyRestConnector<ForgejoConfiguration> {
-
-    private boolean skipJava = true;
 
     @Override
     protected void initializeSchema(GroovySchemaLoader loader) {
@@ -32,7 +24,6 @@ public class ForgejoConnector extends AbstractGroovyRestConnector<ForgejoConfigu
     @Override
     protected RestContext.AuthorizationCustomizer authorizationCustomizer() {
         return (c,request) -> {
-
             if (c instanceof HttpClientConfiguration.TokenAuthorization tokenAuth) {
                 var tokenAccessor = new GuardedStringAccessor();
                 tokenAuth.getAuthorizationTokenValue().access(tokenAccessor);
