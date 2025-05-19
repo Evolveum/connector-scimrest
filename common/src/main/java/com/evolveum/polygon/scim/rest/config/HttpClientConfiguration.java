@@ -6,7 +6,7 @@ public interface HttpClientConfiguration extends ConfigurationMixin {
 
     String getBaseAddress();
 
-    boolean getTrustAllCertificates();
+    Boolean getTrustAllCertificates();
 
 
     /**

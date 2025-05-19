@@ -3,12 +3,22 @@ package com.evolveum.polygon.scim.rest;
 import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
 
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,7 +30,17 @@ public class RestContext {
 
     public RestContext(HttpClientConfiguration configuration, AuthorizationCustomizer customizer) {
         this.configuration = configuration;
-        this.client = HttpClient.newHttpClient();
+        var builder = HttpClient.newBuilder();
+        if (Boolean.TRUE.equals(configuration.getTrustAllCertificates())) {
+            try {
+                var sslContext = SSLContext.getInstance("SSL");
+                sslContext.init(null, new TrustManager[]{TRUST_ALL}, new SecureRandom());
+                builder.sslContext(sslContext);
+            } catch (NoSuchAlgorithmException | KeyManagementException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        this.client = builder.build();
         this.customizer = customizer;
     }
 
@@ -46,7 +66,7 @@ public class RestContext {
 
         String apiEndpoint;
         StringBuilder subpath = new StringBuilder();
-        Map<String,String> queryParameters = new HashMap<>();
+        Map<String, String> queryParameters = new HashMap<>();
 
         public HttpRequest build() throws URISyntaxException {
             request.uri(buildUri());
@@ -76,7 +96,7 @@ public class RestContext {
             }
             if (queryParameters != null) {
                 builder.append("?");
-                for (Map.Entry<String,String> entry : queryParameters.entrySet()) {
+                for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
                     builder.append(entry.getKey());
                     builder.append("=");
                     builder.append(entry.getValue());
@@ -115,4 +135,42 @@ public class RestContext {
     public interface AuthorizationCustomizer {
         void customize(HttpClientConfiguration configuration, RequestBuilder request);
     }
+
+    private static final TrustManager TRUST_ALL = new X509ExtendedTrustManager() {
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
+
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
+
+        }
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
+
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
+
+        }
+
+        @Override
+        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+            return new java.security.cert.X509Certificate[0];
+        }
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+
+        }
+
+        @Override
+        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+            // empty method
+        }
+
+    };
 }
