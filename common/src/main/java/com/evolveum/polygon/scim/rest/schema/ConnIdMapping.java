@@ -9,8 +9,8 @@ import java.util.Set;
 
 public class ConnIdMapping {
 
-    public static AttributeMapping of(AttributeInfo info, AttributeMapping backingMapping) {
-        if (Uid.NAME.equals(info.getName())) {
+    public static AttributeMapping of(String name,  AttributeMapping backingMapping) {
+        if (Uid.NAME.equals(name)) {
             return new AttributeMapping() {
                 @Override
                 public Class<?> connIdType() {
