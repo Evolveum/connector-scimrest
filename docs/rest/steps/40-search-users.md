@@ -1,4 +1,4 @@
-Write a Groovy script `UserHandler.groovy` which handles search of the object class `User`.
+Write a Groovy script `User.search.groovy` which handles search of the object class `User`.
 
 The Groovy script should look like:
 
