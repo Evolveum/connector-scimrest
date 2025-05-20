@@ -10,19 +10,17 @@ public enum OpenApiTypeMapping implements AttributeMapping {
     Base64Url("base64url","Binary data encoded as a url-safe string as defined in RFC4648", byte[].class, String.class) {
         @Override
         public Object toWireValue(Object value) throws IllegalArgumentException {
-            if (value instanceof String stringVal) {
-                return Base64.getDecoder().decode(stringVal);
+            if (value instanceof byte[] byteArrayVal) {
+                return Base64.getUrlEncoder().encode(byteArrayVal);
             }
-
             return null;
         }
 
         @Override
         public Object toConnIdValue(Object value) throws IllegalArgumentException {
-            if (value instanceof byte[] byteArrayVal) {
-                return Base64.getDecoder().decode(byteArrayVal);
+            if (value instanceof String stringVal) {
+                return Base64.getUrlDecoder().decode(stringVal);
             }
-
             return null;
         }
     },
@@ -48,8 +46,8 @@ public enum OpenApiTypeMapping implements AttributeMapping {
     Byte("byte","base64 encoded data as defined in RFC4648", byte[].class, String.class) {
         @Override
         public Object toWireValue(Object value) throws IllegalArgumentException {
-            if (value instanceof String stringVal) {
-                return Base64.getDecoder().decode(stringVal);
+            if (value instanceof byte[] byteArrayVal) {
+                return Base64.getDecoder().decode(byteArrayVal);
             }
 
             return null;
@@ -57,10 +55,9 @@ public enum OpenApiTypeMapping implements AttributeMapping {
 
         @Override
         public Object toConnIdValue(Object value) throws IllegalArgumentException {
-            if (value instanceof byte[] byteArrayVal) {
-                return Base64.getDecoder().decode(byteArrayVal);
+            if (value instanceof String stringVal) {
+                return Base64.getDecoder().decode(stringVal);
             }
-
             return null;
         }
     },
@@ -489,31 +486,6 @@ public enum OpenApiTypeMapping implements AttributeMapping {
                 return am;
             }
         };
-        return new AttributeMapping() {
-            @Override
-            public Class<?> connIdType() {
-                return Object.class;
-            }
-
-            @Override
-            public Class<?> primaryWireType() {
-                return Object.class;
-            }
-
-            @Override
-            public Set<Class<?>> supportedWireTypes() {
-                return Set.of(Object.class);
-            }
-
-            @Override
-            public Object toWireValue(Object value) throws IllegalArgumentException {
-                return value;
-            }
-
-            @Override
-            public Object toConnIdValue(Object value) throws IllegalArgumentException {
-                return value;
-            }
-        };
+        return PureJsonMapping.from(jsonType);
     }
 }
