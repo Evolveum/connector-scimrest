@@ -5,6 +5,8 @@ import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
+import java.util.function.Predicate;
+
 @FunctionalInterface
 public interface FilterSpecification {
 
@@ -20,6 +22,10 @@ public interface FilterSpecification {
         return filter -> name.equals(filter.getAttribute().getName());
     }
 
+
+    static FilterSpecification.Attribute attribute(Predicate<AttributeFilter> filterPredicate) {
+        return filter -> filterPredicate.test((AttributeFilter) filter);
+    }
 
     @FunctionalInterface
     interface Attribute extends FilterSpecification {

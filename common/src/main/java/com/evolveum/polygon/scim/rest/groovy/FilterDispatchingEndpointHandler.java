@@ -12,17 +12,21 @@ public class FilterDispatchingEndpointHandler<BF, OF> implements SearchEndpointH
     private final PagingHandler pagingSupport;
     private final String apiEndpoint;
     private final Set<FilterToRequestMapper> filterMappers;
+    private final Class<?> responseFormat;
+    private final TotalCountExtractor<BF> totalCountExtractor;
 
     public FilterDispatchingEndpointHandler(SearchEndpointBuilder<BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
         this.apiEndpoint = builder.path;
         this.objectExtractor = builder.objectExtractor;
         this.pagingSupport = builder.pagingSupport;
         this.filterMappers = new HashSet<>(filterMappers);
+        this.responseFormat = builder.responseFormat;
+        this.totalCountExtractor = builder.totalCountExtractor;
     }
 
 
     @Override
-    public RestSearchOperationHandler<BF,OF> process(Filter filter) {
+    public RestSearchOperationHandler process(Filter filter) {
         var maybeMapper = filterMappers.stream().filter(m -> m.canHandle(filter)).findFirst();
         if  (maybeMapper.isEmpty()) {
             return null;
@@ -37,6 +41,8 @@ public class FilterDispatchingEndpointHandler<BF, OF> implements SearchEndpointH
                     }
                 })
                 .remoteObjectExtractor(objectExtractor::extractObjects)
+                .totalCountExtractor(this.totalCountExtractor)
+                .responseFormat(responseFormat)
                 .build();
     }
 }

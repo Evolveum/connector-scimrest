@@ -8,21 +8,34 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.net.http.HttpResponse;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class SearchEndpointBuilder<BF, OF> {
 
+    public static final Class<JSONArray> JSON_ARRAY = JSONArray.class;
+    public static final Class<JSONObject> JSON_OBJECT = JSONObject.class;
+
 
     private final RestObjectClass objectClass;
-    ResponseObjectExtractor<BF, OF> objectExtractor = r -> List.of((OF) r.body());
+    ResponseObjectExtractor<BF, OF> objectExtractor = r -> {
+        if (r.body() instanceof JSONArray array) {
+            return (Iterable<OF>)  array;
+        }
+        return List.of((OF) r.body());
+    };
     PagingHandler pagingSupport;
-    boolean emptyFilterSupported = false;
+    Boolean emptyFilterSupported = null;
     final String path;
     Set<FilterToRequestMapper> filterMappers = new HashSet<>();
+    Class<?> responseFormat = JSON_OBJECT;
+    TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
 
     public SearchEndpointBuilder(String path, RestObjectClass objectClass) {
         this.path = path;
@@ -38,14 +51,26 @@ public class SearchEndpointBuilder<BF, OF> {
         this.pagingSupport = new GroovyPagingSupport(closure);
         return this;
     }
+    public void responseFormat(Class<?> responseFormat) {
+        this.responseFormat = responseFormat;
+    }
+
+    public void singleResult() {
+        this.totalCountExtractor = TotalCountExtractor.singleObject();
+    }
 
     public void emptyFilterSupported(boolean emptyFilterSupported) {
         this.emptyFilterSupported = emptyFilterSupported;
     }
 
     public SearchEndpointHandler<BF,OF> build() {
-        if (emptyFilterSupported) {
-            filterMappers.add(FilterToRequestMapper.from(f -> f == null, (r,f) -> {}));
+        if (emptyFilterSupported == null && filterMappers.isEmpty()) {
+            // No specific filter mappers were specified and empty filter support was not specified explicitly
+            // so we assume that empty filter is supported
+            emptyFilterSupported = true;
+        }
+        if (Boolean.TRUE.equals(emptyFilterSupported)) {
+            filterMappers.add(FilterToRequestMapper.from(Objects::isNull, (r, f) -> {}));
         }
         return new FilterDispatchingEndpointHandler<>(this, filterMappers);
     }
@@ -57,6 +82,11 @@ public class SearchEndpointBuilder<BF, OF> {
 
     public SearchEndpointBuilder<BF, OF> supportedFilter(FilterSpecification filterSpec, @DelegatesTo(FilterSupportBase.class) Closure<?> closure) {
         filterMappers.add(new GroovyBasedFilterHandler(filterSpec,closure));
+        if (emptyFilterSupported == null) {
+            // If empty filter support was not specified explicitly, we assume that it is not supported
+            // when adding explicit filtering
+            emptyFilterSupported = false;
+        }
         return this;
     }
 

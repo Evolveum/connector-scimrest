@@ -1,6 +1,7 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.RestContext;
+import org.json.JSONObject;
 
 import java.net.http.HttpResponse;
 import java.util.function.BiConsumer;
@@ -18,11 +19,14 @@ public interface RestSearchOperationHandler<BF, OF> {
 
     Integer extractTotalResultCount(HttpResponse<BF> response);
 
+    Class<?> responseType();
+
     class Builder<BF, OF> {
 
         private Function<HttpResponse<BF>, Iterable<OF>> extractor = null;
         private BiConsumer<RestContext.RequestBuilder, PagingInfo> pagingConsumer = (req, resp) -> {};
-        private Function<HttpResponse<BF>, Integer> totalCountExtractor = (e) -> null;
+        private TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
+        private Class<?> responseType = JSONObject.class;
 
         public Builder<BF, OF> remoteObjectExtractor(Function<HttpResponse<BF>, Iterable<OF>> extractor) {
             this.extractor = extractor;
@@ -31,6 +35,15 @@ public interface RestSearchOperationHandler<BF, OF> {
 
         public Builder<BF,OF> addRequestUri(BiConsumer<RestContext.RequestBuilder, PagingInfo> pagingConsumer) {
             this.pagingConsumer = pagingConsumer;
+            return this;
+        }
+        public <T> Builder<T, OF> responseFormat(Class<T> responseFormat) {
+            this.responseType = responseFormat;
+            return (Builder) this;
+        }
+
+        public Builder<BF,OF> totalCountExtractor(TotalCountExtractor<BF> totalCountExtractor) {
+            this.totalCountExtractor = totalCountExtractor;
             return this;
         }
 
@@ -49,10 +62,17 @@ public interface RestSearchOperationHandler<BF, OF> {
 
                 @Override
                 public Integer extractTotalResultCount(HttpResponse<BF> response) {
-                    return totalCountExtractor.apply(response);
+                    return totalCountExtractor.extractTotalCount(response);
+                }
+
+                @Override
+                public Class<?> responseType() {
+                    return responseType;
                 }
             };
         }
+
+
     }
 
 

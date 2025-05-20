@@ -126,6 +126,17 @@ public class RestContext {
             return this;
         }
 
+        public RequestBuilder pathParameter(String key, String value) {
+            // FIXME: Replace with real UriTemplates in future
+            var keySearch = "{"+key+"}";
+            var position = apiEndpoint.indexOf(keySearch);
+            if (position < 0) {
+                throw new IllegalArgumentException("Path parameter " + key + " not found in " + subpath);
+            }
+            apiEndpoint = apiEndpoint.replace(keySearch, value);
+            return this;
+        }
+
         public RequestBuilder header(String name, String value) {
             this.request.header(name, value);
             return this;

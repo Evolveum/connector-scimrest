@@ -3,11 +3,14 @@ package com.evolveum.polygon.scim.rest;
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import com.evolveum.polygon.scim.rest.groovy.RestSearchOperationHandler;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
+
+import java.net.http.HttpResponse;
 
 public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> implements ExecuteQueryProcessor<T> {
 
@@ -19,7 +22,7 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
 
     @Override
     public void executeQuery(T context, Filter query, ResultsHandler handler, OperationOptions options) {
-        var spec = (RestSearchOperationHandler<JSONObject, JSONObject>) createSearchSpecification(query);
+        var spec = createSearchSpecification(query);
 
         var shouldContinue = true;
         var currentPage = 1;
@@ -30,7 +33,8 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
                 var batchProcessed = 0;
                 RestContext.RequestBuilder requestBuilder = context.newAuthorizedRequest();
                 spec.addUriAndPaging(requestBuilder, currentPage, pageLimit);
-                var response = context.executeRequest(requestBuilder, new JsonBodyHandler());
+                var bodyHandler = bodyHandlerFrom(spec);
+                var response = context.executeRequest(requestBuilder, bodyHandler);
                 var remoteObjs = spec.extractRemoteObject(response);
 
                 for (var remoteObj : remoteObjs) {
@@ -54,21 +58,31 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
         }
     }
 
-    private ConnectorObject deserializeFromRemote(JSONObject remoteObj) {
-        var builder = objectClass.newObjectBuilder();
-        for (var attributeDef : objectClass.attributes()) {
-            if (remoteObj.has(attributeDef.remoteName())) {
-                var wireValues = remoteObj.get(attributeDef.remoteName());
-                Object connIdValues = null;
-                if (wireValues != null) {
-                    connIdValues = attributeDef.valueMapping().toConnIdValues(wireValues);
-                }
-                if (connIdValues != null) {
-                    builder.addAttribute(attributeDef.attributeOf(connIdValues));
+    private HttpResponse.BodyHandler<Object> bodyHandlerFrom(RestSearchOperationHandler spec) {
+        if (JSONObject.class.equals(spec.responseType()) || JSONArray.class.equals(spec.responseType())) {
+            return new JacksonBodyHandler(spec.responseType());
+        }
+        throw new IllegalArgumentException("Unsupported response type: " + spec.responseType());
+    }
+
+    private ConnectorObject deserializeFromRemote(Object obj) {
+        if (obj instanceof JSONObject remoteObj) {
+            var builder = objectClass.newObjectBuilder();
+            for (var attributeDef : objectClass.attributes()) {
+                if (remoteObj.has(attributeDef.remoteName())) {
+                    var wireValues = remoteObj.get(attributeDef.remoteName());
+                    Object connIdValues = null;
+                    if (wireValues != null) {
+                        connIdValues = attributeDef.valueMapping().toConnIdValues(wireValues);
+                    }
+                    if (connIdValues != null) {
+                        builder.addAttribute(attributeDef.attributeOf(connIdValues));
+                    }
                 }
             }
+            return builder.build();
         }
-        return builder.build();
+        throw new IllegalArgumentException("Unexpected object type: " + obj.getClass());
     }
 
     protected abstract RestSearchOperationHandler createSearchSpecification(Filter query);
