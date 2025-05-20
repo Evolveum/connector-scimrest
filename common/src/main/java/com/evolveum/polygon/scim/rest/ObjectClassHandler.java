@@ -3,6 +3,11 @@ package com.evolveum.polygon.scim.rest;
 import com.evolveum.polygon.scim.rest.spi.ObjectClassOperation;
 import org.identityconnectors.framework.common.objects.*;
 
+/**
+ * Defines a contract for handling operations and object classes in the context of a specific object type.
+ *
+ * @param <HC> the type of the handler context, representing the current context of the connector.
+ */
 public interface ObjectClassHandler<HC> {
 
     /**

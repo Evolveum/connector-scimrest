@@ -9,6 +9,12 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.http.HttpResponse;
 
+/**
+ * Jackson-based Body Handler for {@link java.net.http.HttpClient}
+ *
+ * @param responseType Supported Response Type one of {@link JSONObject} or {@link JSONArray}
+ * @param <T> Body Response Type
+ */
 public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpResponse.BodyHandler<T> {
 
     @Override

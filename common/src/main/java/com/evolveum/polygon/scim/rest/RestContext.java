@@ -22,6 +22,14 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The RestContext class provides a context for executing HTTP requests
+ * with a configurable HTTP client. It centralizes authorization customization
+ * and handles SSL configurations when required.
+ *
+ * It provides a controlled facade to actual REST client allowing us to customize contracts
+ * to be easier used and consumed by AI-assisted workflows.
+ */
 public class RestContext {
 
     private final AuthorizationCustomizer customizer;
@@ -44,16 +52,47 @@ public class RestContext {
         this.customizer = customizer;
     }
 
+    /**
+     * Creates and returns a new request with authorization added using the base address from the configuration
+     * and applying any customizations defined by the provided {@code AuthorizationCustomizer}.
+     *
+     * @return a new instance of {@code RequestBuilder} that has been initialized with the base URI
+     *         and customized for authorization.
+     */
     public RequestBuilder newAuthorizedRequest() {
         var request = new RequestBuilder(configuration.getBaseAddress());
         this.customizer.customize(configuration, request);
         return request;
     }
 
+    /**
+     * Executes an synchronous HTTP request built using the provided {@code RequestBuilder} and parses the response
+     * with the specified {@code BodyHandler}.
+     *
+     * @param <T> the type of the response body
+     * @param requestBuilder the builder used to construct the HTTP request
+     * @param jsonBodyHandler the handler used to process the response body
+     * @return an {@code HttpResponse} containing the response body of type {@code T}
+     * @throws URISyntaxException if the URI built by the {@code RequestBuilder} is invalid
+     * @throws IOException if an I/O error occurs while sending or receiving
+     * @throws InterruptedException if the operation is interrupted
+     */
     public <T> HttpResponse<T> executeRequest(RequestBuilder requestBuilder, HttpResponse.BodyHandler<T> jsonBodyHandler) throws URISyntaxException, IOException, InterruptedException {
         return client.send(requestBuilder.build(), jsonBodyHandler);
     }
 
+    /**
+     * A utility class for building and configuring HTTP requests for RestContext.
+     *
+     * This class is exposed to Groovy Scripts.
+     *
+     * This class provides methods to set various components of a request such as the API endpoint, query parameters,
+     * headers, and subpaths. Additionally, it simplifies constructing URIs and associating path parameters with
+     * placeholders in the endpoint.
+     *
+     * This class is designed to be used as part of the {@code RestContext} for creating and sending HTTP requests
+     * that comply with specific configurations and authorization customizations.
+     */
     public static class RequestBuilder {
 
         private final HttpRequest.Builder request = HttpRequest.newBuilder();
@@ -143,10 +182,48 @@ public class RestContext {
         }
     }
 
+    /**
+     * Defines a mechanism for customizing the authorization of HTTP requests.
+     * Implementations of this interface are used to modify the configuration
+     * and request details to add specific authorization settings.
+     *
+     * The {@code customize} method is typically invoked during the construction
+     * of HTTP requests in a context where authorization is required. It is
+     * responsible for applying authorization headers, tokens, or other
+     * necessary configurations to the HTTP request to ensure secure communication.
+     *
+     * The interface is intended to be implemented by Groovy Connectors if default
+     * supported authorization schemes does not work.
+     *
+     * One such example is Forgejo, which does requires token being prefixed by word token.
+     */
     public interface AuthorizationCustomizer {
+
+        /**
+         * Customizes the HTTP request configuration and request properties to apply
+         * specific authorization logic or additional settings.
+         *
+         * @param configuration the HTTP client configuration that provides details
+         *                       like base address and authorization settings.
+         * @param request        the HTTP request builder that can be modified to
+         *                       include custom headers, parameters, or other request
+         *                       configurations.
+         *
+         */
         void customize(HttpClientConfiguration configuration, RequestBuilder request);
     }
 
+    /**
+     * A TrustManager implementation that accepts all TLS/SSL certificates without validation.
+     * This manager is used to bypass certificate validation checks during SSL/TLS handshake.
+     *
+     * This trust manager is only intended if configured to trust all certicates with explicit
+     * configuration from user.
+     *
+     * Note: Using this TrustManager introduces significant security risks as it effectively disables
+     * certificate validation, making the application susceptible to man-in-the-middle (MITM) attacks.
+     * It should only be used in controlled environments and never in production systems.
+     */
     private static final TrustManager TRUST_ALL = new X509ExtendedTrustManager() {
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {

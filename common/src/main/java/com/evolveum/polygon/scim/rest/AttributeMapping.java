@@ -5,6 +5,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Represents a mapping between data types used in an ConnId
+ * and their corresponding wire types used in the protocol representation.
+ * This interface allows for conversions between these two types and provides
+ * metadata about the supported data types.
+ */
 public interface AttributeMapping {
 
     Class<?> connIdType();

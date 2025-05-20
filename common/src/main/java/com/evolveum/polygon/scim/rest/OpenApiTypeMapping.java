@@ -6,6 +6,14 @@ import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.Set;
 
+/**
+ * Provides a mapping between OpenAPI data formats, their corresponding JSON
+ * representations, wire types, and ConnId class types.
+ * This class enables conversion of values between OpenAPI-compliant wire
+ * types and ConnId-compliant native types, while also defining the primary
+ * and supported wire types.
+ *
+ */
 public enum OpenApiTypeMapping implements AttributeMapping {
     Base64Url("base64url","Binary data encoded as a url-safe string as defined in RFC4648", byte[].class, String.class) {
         @Override
