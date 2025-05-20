@@ -21,9 +21,10 @@ objectClass("User") {
         }
 
         // This is actually get user by username
-        endpoint("/users/") {
+        endpoint("/users/{username}") {
+            singleResult()
             supportedFilter(attribute("login").eq().anySingleValue()) {
-                request.subpath(value)
+                request.pathParameter("username", value)
             }
         }
     }

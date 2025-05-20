@@ -27,4 +27,7 @@ objectClass("Organization") {
     attribute("website") {
         jsonType "string"
     }
+    attribute("repo_admin_change_team_access") {
+        jsonType "boolean"
+    }
 }

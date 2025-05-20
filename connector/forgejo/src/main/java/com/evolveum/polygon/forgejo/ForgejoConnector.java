@@ -11,14 +11,17 @@ public class ForgejoConnector extends AbstractGroovyRestConnector<ForgejoConfigu
 
     @Override
     protected void initializeSchema(GroovySchemaLoader loader) {
-        loader.loadFromResource("/UserNativeSchema.groovy");
-        loader.loadFromResource("/OrganizationNativeSchema.groovy");
-        loader.loadFromResource("/ConnIdMapping.groovy");
+        loader.loadFromResource("/User.native.schema.groovy");
+        loader.loadFromResource("/User.connid.schema.groovy");
+        loader.loadFromResource("/Organization.native.schema.groovy");
+        loader.loadFromResource("/Organization.connid.schema.groovy");
     }
 
     @Override
     protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
-        builder.loadFromResource("/UserHandler.groovy");
+        builder.loadFromResource("/User.search.groovy");
+        builder.loadFromResource("/Organization.search.groovy");
+
     }
 
     @Override
