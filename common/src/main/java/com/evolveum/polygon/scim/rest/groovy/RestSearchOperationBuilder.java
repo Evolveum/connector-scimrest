@@ -8,27 +8,36 @@ import groovy.lang.DelegatesTo;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuilder<ExecuteQueryProcessor<HC>> {
 
     private final BaseOperationSupportBuilder<HC> parent;
-    Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
+    Map<String, EndpointBasedSearchBuilder<HC,?,?>> endpointBuilder = new HashMap<>();
+    Set<FilterAwareSearchProcessorBuilder<HC>> builders = new HashSet<>();
 
     public RestSearchOperationBuilder(BaseOperationSupportBuilder<HC> parent) {
         this.parent = parent;
     }
 
-
-    public EndpointBasedSearchBuilder<?,?> endpoint(String path) {
-        return endpointBuilder.computeIfAbsent(path, k -> new EndpointBasedSearchBuilder<>(k, parent.getObjectClass()));
+    public EndpointBasedSearchBuilder<HC,?,?> endpoint(String path) {
+        var builder = endpointBuilder.get(path);
+        if (builder != null) {
+            return builder;
+        }
+        builder = new EndpointBasedSearchBuilder<>(path, parent.getObjectClass());
+        endpointBuilder.put(path, builder);
+        builders.add(builder);
+        return builder;
     }
 
-    public EndpointBasedSearchBuilder<?,?> endpoint(String path, @DelegatesTo(EndpointBasedSearchBuilder.class) Closure<?> builder) {
+    public EndpointBasedSearchBuilder<HC,?,?> endpoint(String path, @DelegatesTo(EndpointBasedSearchBuilder.class) Closure<?> builder) {
         return GroovyClosures.callAndReturnDelegate(builder, endpoint(path));
     }
 
     public ScriptedGroovySearchBuilder custom(@DelegatesTo(ScriptedGroovySearchBuilder.class) Closure<?> definition) {
-        var ret = new ScriptedGroovySearchBuilderImpl();
+        var ret = new ScriptedGroovySearchBuilderImpl(parent.getObjectClass());
+        builders.add(ret);
         return GroovyClosures.callAndReturnDelegate(definition, ret);
     }
 
@@ -39,21 +48,20 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
             return null;
         }
 
-        var endpoints = new HashSet<SearchEndpointHandler<?,?>>();
-        SearchEndpointHandler<?,?> defaultEndpoint = null;
-        for (var endpointBuilder : endpointBuilder.values()) {
-            var handler =  endpointBuilder.build();
-            endpoints.add(handler);
-            if (endpointBuilder.emptyFilterSupported) {
-                if (defaultEndpoint == null) {
-                    defaultEndpoint = handler;
+        var handlers = new HashSet<FilterAwareExecuteQueryProcessor<HC>>();
+        ExecuteQueryProcessor<HC> emptyFilterHandler = null;
+        for (var builder : builders) {
+            var handler =  builder.build();
+            handlers.add(handler);
+            if (builder.emptyFilterSupported()) {
+                if (emptyFilterHandler == null) {
+                    emptyFilterHandler = handler;
                 } else {
+                    // FIXME: Throw better exception
                     throw new IllegalStateException("Multiple default endpoints are not supported");
                 }
             }
         }
-        var filterProcessor = new MultipleEndpointSearchProcessor<HC>(defaultEndpoint, endpoints);
-        // FIXME: Add type safety contracts
-        return (ExecuteQueryProcessor<HC>) new RequestProcessorBasedSearch(parent.getObjectClass(),filterProcessor);
+        return new FilterBasedSearchDispatcher<>(emptyFilterHandler, handlers);
     }
 }

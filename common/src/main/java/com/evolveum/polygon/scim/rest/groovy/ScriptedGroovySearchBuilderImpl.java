@@ -1,11 +1,17 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import groovy.lang.Closure;
 
-public class ScriptedGroovySearchBuilderImpl implements ScriptedGroovySearchBuilder {
+public class ScriptedGroovySearchBuilderImpl<HC> implements ScriptedGroovySearchBuilder, FilterAwareSearchProcessorBuilder<HC> {
 
+    public RestObjectClass objectClass;
     private Boolean emptyFilterSupported;
-    private Closure<?> implementationPrototype;
+    Closure<?> implementationPrototype;
+
+    public ScriptedGroovySearchBuilderImpl(RestObjectClass objectClass) {
+        this.objectClass = objectClass;
+    }
 
     @Override
     public ScriptedGroovySearchBuilder emptyFilterSupported(boolean emptyFilterSupported) {
@@ -17,5 +23,15 @@ public class ScriptedGroovySearchBuilderImpl implements ScriptedGroovySearchBuil
     public ScriptedGroovySearchBuilder implementation(Closure<?> implementation) {
         this.implementationPrototype = implementation;
         return this;
+    }
+
+    @Override
+    public boolean emptyFilterSupported() {
+        return emptyFilterSupported;
+    }
+
+    @Override
+    public FilterAwareExecuteQueryProcessor<HC> build() {
+        return new ScriptedGroovySearchProcessor(this);
     }
 }

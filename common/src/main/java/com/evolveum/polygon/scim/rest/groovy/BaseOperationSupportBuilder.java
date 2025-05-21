@@ -36,10 +36,9 @@ public class BaseOperationSupportBuilder<HC> {
         return GroovyClosures.callAndReturnDelegate(o, searchOpBuilder);
     }
 
-    public BaseOperationSupportBuilder<HC> search(FilterRequestProcessor processor) {
-        buildedOperations.put((Class) ExecuteQueryProcessor.class, RequestProcessorBasedSearch.from(objectClass,processor));
+    public BaseOperationSupportBuilder<HC> search(ExecuteQueryProcessor<HC> processor) {
+        buildedOperations.put((Class) ExecuteQueryProcessor.class, processor);
         return this;
-
     }
 
     public ObjectClassHandler<HC> build() {

@@ -1,7 +1,6 @@
 package com.evolveum.polygon.scim.rest;
 
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
-import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,18 +12,17 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import java.net.http.HttpResponse;
 
 // FIXME: Consider making this JSON agnostic and format / parsing handling will be injected.
-public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> implements ExecuteQueryProcessor<T> {
+public class RestPagingAwareObjectRetriever<T extends RestContext> {
 
-    private RestObjectClass objectClass;
+    private final RestSearchOperationHandler specification;
+    private final RestObjectClass objectClass;
 
-    public RestJsonExecuteQueryProcessor(RestObjectClass objectClass) {
+    public RestPagingAwareObjectRetriever(RestObjectClass objectClass, RestSearchOperationHandler<?,?> specification) {
         this.objectClass = objectClass;
+        this.specification = specification;
     }
 
-    @Override
-    public void executeQuery(T context, Filter query, ResultsHandler handler, OperationOptions options) {
-        var spec = createSearchSpecification(query);
-
+    public void fetch(T context, Filter query, ResultsHandler handler, OperationOptions options) {
         var shouldContinue = true;
         var currentPage = 1;
         var pageLimit = 25; // FIXME: Make this configurable from builders.
@@ -33,10 +31,11 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
             do {
                 var batchProcessed = 0;
                 RestContext.RequestBuilder requestBuilder = context.newAuthorizedRequest();
-                spec.addUriAndPaging(requestBuilder, currentPage, pageLimit);
-                var bodyHandler = bodyHandlerFrom(spec);
+                specification.addUriAndPaging(requestBuilder, currentPage, pageLimit);
+                var bodyHandler = bodyHandlerFrom(specification);
                 var response = context.executeRequest(requestBuilder, bodyHandler);
-                var remoteObjs = spec.extractRemoteObject(response);
+
+                var remoteObjs = specification.extractRemoteObject(response);
 
                 for (var remoteObj : remoteObjs) {
                     ConnectorObject obj = deserializeFromRemote(remoteObj);
@@ -48,7 +47,7 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
                 if (batchProcessed == 0) {
                     shouldContinue = false;
                 }
-                var totalCount = spec.extractTotalResultCount(response);
+                var totalCount = specification.extractTotalResultCount(response);
                 if (totalCount != null && totalProcessed >= totalCount) {
                     shouldContinue = false;
                 }
@@ -86,9 +85,6 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
         }
         throw new IllegalArgumentException("Unexpected object type: " + obj.getClass());
     }
-
-    protected abstract RestSearchOperationHandler createSearchSpecification(Filter query);
-
 
 }
 
