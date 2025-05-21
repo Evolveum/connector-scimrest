@@ -15,13 +15,18 @@ public class ForgejoConnector extends AbstractGroovyRestConnector<ForgejoConfigu
         loader.loadFromResource("/User.connid.schema.groovy");
         loader.loadFromResource("/Organization.native.schema.groovy");
         loader.loadFromResource("/Organization.connid.schema.groovy");
+        loader.loadFromResource("/Team.native.schema.groovy");
+        loader.loadFromResource("/Team.connid.schema.groovy");
+
+
     }
 
     @Override
     protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
         builder.loadFromResource("/User.search.groovy");
         builder.loadFromResource("/Organization.search.groovy");
-
+        builder.loadFromResource("/Team.search.groovy");
+        builder.loadFromResource("/Team.custom.minimal.search.groovy");
     }
 
     @Override
@@ -30,7 +35,7 @@ public class ForgejoConnector extends AbstractGroovyRestConnector<ForgejoConfigu
             if (c instanceof HttpClientConfiguration.TokenAuthorization tokenAuth) {
                 var tokenAccessor = new GuardedStringAccessor();
                 tokenAuth.getAuthorizationTokenValue().access(tokenAccessor);
-                request.header("Authentication", "token " + tokenAccessor.getClearString());
+                request.header("Authorization", "token " + tokenAccessor.getClearString());
             }
         };
     }
