@@ -3,9 +3,10 @@ objectClass("Team") {
         custom {
             emptyFilterSupported true
             implementation {
-                def orgs = objectClass("Organization").search(null)
+                def orgs = objectClass("Organization").search()
                 for (def org :orgs) {
-                    objectClass("Team").search(attributeFilter("organization.name").eq(org.get("name")), resultHandler)
+                    def teamFilter = attributeFilter("organization.name").eq(org.name.nameValue)
+                    objectClass("Team").search(teamFilter, resultHandler)
                 }
             }
         }
