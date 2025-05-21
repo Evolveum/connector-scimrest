@@ -3,6 +3,7 @@ package com.evolveum.polygon.scim.rest.groovy;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import com.evolveum.polygon.scim.rest.spi.SearchEndpointHandler;
 import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,8 +23,13 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
         return endpointBuilder.computeIfAbsent(path, k -> new EndpointBasedSearchBuilder<>(k, parent.getObjectClass()));
     }
 
-    public EndpointBasedSearchBuilder<?,?> endpoint(String path, Closure<?> builder) {
+    public EndpointBasedSearchBuilder<?,?> endpoint(String path, @DelegatesTo(EndpointBasedSearchBuilder.class) Closure<?> builder) {
         return GroovyClosures.callAndReturnDelegate(builder, endpoint(path));
+    }
+
+    public ScriptedGroovySearchBuilder custom(@DelegatesTo(ScriptedGroovySearchBuilder.class) Closure<?> definition) {
+        var ret = new ScriptedGroovySearchBuilderImpl();
+        return GroovyClosures.callAndReturnDelegate(definition, ret);
     }
 
     public ExecuteQueryProcessor<HC> build() {

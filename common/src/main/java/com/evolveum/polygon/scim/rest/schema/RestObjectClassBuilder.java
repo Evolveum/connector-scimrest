@@ -1,6 +1,8 @@
 package com.evolveum.polygon.scim.rest.schema;
 
+import com.evolveum.polygon.scim.rest.groovy.GroovyClosures;
 import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.*;
 
 import java.util.HashMap;
@@ -19,10 +21,10 @@ public class RestObjectClassBuilder {
 
     }
 
-
     private final String name;
     private ObjectClassInfoBuilder connIdBuilder = new ObjectClassInfoBuilder();
     Map<String, RestAttributeBuilder> nativeAttributes = new HashMap<>();
+    private String description;
 
     public RestObjectClassBuilder(RestSchemaBuilder restSchemaBuilder, String name) {
         this.name = name;
@@ -34,12 +36,14 @@ public class RestObjectClassBuilder {
         return builder;
     }
 
-    public RestAttributeBuilder attribute(String name, Closure closure) {
+    public RestAttributeBuilder attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
         var attr = attribute(name);
-        closure.setDelegate(attr);
-        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        closure.call();
-        return attr;
+        return GroovyClosures.callAndReturnDelegate(closure, attr);
+    }
+
+    public RestObjectClassBuilder description(String description) {
+        this.description = description;
+        return this;
     }
 
     public RestObjectClassBuilder connIdAttribute(String connIdName, String attributeName) {
