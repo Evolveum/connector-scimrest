@@ -21,13 +21,18 @@ public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpRespon
     public HttpResponse.BodySubscriber<T> apply(HttpResponse.ResponseInfo responseInfo) {
         var mapper = new ObjectMapper();
         mapper.registerModule(new JsonOrgModule());
-        var upstream = HttpResponse.BodySubscribers.ofInputStream();
-        return HttpResponse.BodySubscribers.mapping(upstream, m -> {
-            try {
-                return mapper.readValue(m, responseType);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        });
+
+        if (responseInfo.statusCode() == 200) {
+                var upstream = HttpResponse.BodySubscribers.ofInputStream();
+                return HttpResponse.BodySubscribers.mapping(upstream, m -> {
+                    try {
+                        return mapper.readValue(m, responseType);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                });
+        }
+        return HttpResponse.BodySubscribers.replacing(null);
+
     }
 }
