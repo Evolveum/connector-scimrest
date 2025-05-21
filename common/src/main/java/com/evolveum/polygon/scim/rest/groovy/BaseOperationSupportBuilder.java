@@ -11,7 +11,8 @@ import groovy.lang.DelegatesTo;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ObjectClassHandlerBuilder<HC> {
+// FIXME: Extract public interface to limit Groovy / tooling view to be not confused by actual implementation
+public class BaseOperationSupportBuilder<HC> {
 
     private final RestObjectClass objectClass;
 
@@ -22,7 +23,7 @@ public class ObjectClassHandlerBuilder<HC> {
     RestSearchOperationBuilder searchOpBuilder;
 
 
-    public ObjectClassHandlerBuilder(RestObjectClass restObjectClass) {
+    public BaseOperationSupportBuilder(RestObjectClass restObjectClass) {
         this.objectClass = restObjectClass;
         searchOpBuilder = new RestSearchOperationBuilder(this);
     }
@@ -35,7 +36,7 @@ public class ObjectClassHandlerBuilder<HC> {
         return GroovyClosures.callAndReturnDelegate(o, searchOpBuilder);
     }
 
-    public ObjectClassHandlerBuilder<HC> search(FilterRequestProcessor processor) {
+    public BaseOperationSupportBuilder<HC> search(FilterRequestProcessor processor) {
         buildedOperations.put((Class) ExecuteQueryProcessor.class, RequestProcessorBasedSearch.from(objectClass,processor));
         return this;
 

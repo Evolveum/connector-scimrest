@@ -10,19 +10,19 @@ import java.util.Map;
 
 public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuilder<ExecuteQueryProcessor<HC>> {
 
-    private final ObjectClassHandlerBuilder<HC> parent;
-    Map<String, SearchEndpointBuilder<?,?>> endpointBuilder = new HashMap<>();
+    private final BaseOperationSupportBuilder<HC> parent;
+    Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
 
-    public RestSearchOperationBuilder(ObjectClassHandlerBuilder<HC> parent) {
+    public RestSearchOperationBuilder(BaseOperationSupportBuilder<HC> parent) {
         this.parent = parent;
     }
 
 
-    public SearchEndpointBuilder<?,?> endpoint(String path) {
-        return endpointBuilder.computeIfAbsent(path, k -> new SearchEndpointBuilder<>(k, parent.getObjectClass()));
+    public EndpointBasedSearchBuilder<?,?> endpoint(String path) {
+        return endpointBuilder.computeIfAbsent(path, k -> new EndpointBasedSearchBuilder<>(k, parent.getObjectClass()));
     }
 
-    public SearchEndpointBuilder<?,?> endpoint(String path, Closure<?> builder) {
+    public EndpointBasedSearchBuilder<?,?> endpoint(String path, Closure<?> builder) {
         return GroovyClosures.callAndReturnDelegate(builder, endpoint(path));
     }
 

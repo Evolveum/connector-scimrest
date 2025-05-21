@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public class SearchEndpointBuilder<BF, OF> {
+public class EndpointBasedSearchBuilder<BF, OF> {
 
     public static final Class<JSONArray> JSON_ARRAY = JSONArray.class;
     public static final Class<JSONObject> JSON_OBJECT = JSONObject.class;
@@ -37,17 +37,17 @@ public class SearchEndpointBuilder<BF, OF> {
     Class<?> responseFormat = JSON_OBJECT;
     TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
 
-    public SearchEndpointBuilder(String path, RestObjectClass objectClass) {
+    public EndpointBasedSearchBuilder(String path, RestObjectClass objectClass) {
         this.path = path;
         this.objectClass = objectClass;
     }
 
-    public SearchEndpointBuilder<BF, OF> objectExtractor(@DelegatesTo(ResponseWrapper.class) Closure<?> closure) {
+    public EndpointBasedSearchBuilder<BF, OF> objectExtractor(@DelegatesTo(ResponseWrapper.class) Closure<?> closure) {
         this.objectExtractor  = new GroovyObjectExtractor<>(closure);
         return this;
     }
 
-    public SearchEndpointBuilder<BF, OF> pagingSupport(@DelegatesTo(PagingSupportBase.class) Closure<?> closure) {
+    public EndpointBasedSearchBuilder<BF, OF> pagingSupport(@DelegatesTo(PagingSupportBase.class) Closure<?> closure) {
         this.pagingSupport = new GroovyPagingSupport(closure);
         return this;
     }
@@ -72,7 +72,7 @@ public class SearchEndpointBuilder<BF, OF> {
         if (Boolean.TRUE.equals(emptyFilterSupported)) {
             filterMappers.add(FilterToRequestMapper.from(Objects::isNull, (r, f) -> {}));
         }
-        return new FilterDispatchingEndpointHandler<>(this, filterMappers);
+        return new EndpointBasedSearchHandler<>(this, filterMappers);
     }
 
     public FilterSpecification attribute(String name) {
@@ -80,7 +80,7 @@ public class SearchEndpointBuilder<BF, OF> {
         return FilterSpecification.attribute(connIdName);
     }
 
-    public SearchEndpointBuilder<BF, OF> supportedFilter(FilterSpecification filterSpec, @DelegatesTo(FilterSupportBase.class) Closure<?> closure) {
+    public EndpointBasedSearchBuilder<BF, OF> supportedFilter(FilterSpecification filterSpec, @DelegatesTo(FilterSupportBase.class) Closure<?> closure) {
         filterMappers.add(new GroovyBasedFilterHandler(filterSpec,closure));
         if (emptyFilterSupported == null) {
             // If empty filter support was not specified explicitly, we assume that it is not supported

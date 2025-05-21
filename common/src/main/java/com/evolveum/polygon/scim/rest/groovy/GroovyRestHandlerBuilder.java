@@ -28,7 +28,7 @@ public class GroovyRestHandlerBuilder extends RestHandlerBuilder {
         shell.evaluate(script);
     }
 
-    public ObjectClassHandlerBuilder<RestContext> objectClass(String name, @DelegatesTo(ObjectClassHandlerBuilder.class) Closure<?> closure) {
+    public BaseOperationSupportBuilder<RestContext> objectClass(String name, @DelegatesTo(BaseOperationSupportBuilder.class) Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, objectClass(name));
     }
 }

@@ -11,14 +11,14 @@ import java.util.Map;
 public class RestHandlerBuilder {
 
     private final RestSchema schema;
-    private final Map<String, ObjectClassHandlerBuilder<RestContext>> handlers = new HashMap<>();
+    private final Map<String, BaseOperationSupportBuilder<RestContext>> handlers = new HashMap<>();
 
     public RestHandlerBuilder(RestSchema schema) {
         this.schema = schema;
     }
 
-    public ObjectClassHandlerBuilder<RestContext> objectClass(String user) {
-        return handlers.computeIfAbsent(user, k ->  new ObjectClassHandlerBuilder<>(schema.objectClass(user)));
+    public BaseOperationSupportBuilder<RestContext> objectClass(String user) {
+        return handlers.computeIfAbsent(user, k ->  new BaseOperationSupportBuilder<>(schema.objectClass(user)));
     }
 
     public Map<ObjectClass, ObjectClassHandler<RestContext>> build() {

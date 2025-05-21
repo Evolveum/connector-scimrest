@@ -6,7 +6,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import java.util.HashSet;
 import java.util.Set;
 
-public class FilterDispatchingEndpointHandler<BF, OF> implements SearchEndpointHandler<BF, OF> {
+public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler<BF, OF> {
 
     private final ResponseObjectExtractor<BF,OF> objectExtractor;
     private final PagingHandler pagingSupport;
@@ -15,7 +15,7 @@ public class FilterDispatchingEndpointHandler<BF, OF> implements SearchEndpointH
     private final Class<?> responseFormat;
     private final TotalCountExtractor<BF> totalCountExtractor;
 
-    public FilterDispatchingEndpointHandler(SearchEndpointBuilder<BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
+    public EndpointBasedSearchHandler(EndpointBasedSearchBuilder<BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
         this.apiEndpoint = builder.path;
         this.objectExtractor = builder.objectExtractor;
         this.pagingSupport = builder.pagingSupport;
