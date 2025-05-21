@@ -1,6 +1,7 @@
 package com.evolveum.polygon.scim.rest;
 
 import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
+import org.identityconnectors.common.logging.Log;
 
 
 import javax.net.ssl.SSLContext;
@@ -31,6 +32,8 @@ import java.util.Map;
  * to be easier used and consumed by AI-assisted workflows.
  */
 public class RestContext {
+
+    private static final Log LOG = Log.getLog(RestContext.class);
 
     private final AuthorizationCustomizer customizer;
     private final HttpClientConfiguration configuration;
@@ -78,7 +81,9 @@ public class RestContext {
      * @throws InterruptedException if the operation is interrupted
      */
     public <T> HttpResponse<T> executeRequest(RequestBuilder requestBuilder, HttpResponse.BodyHandler<T> jsonBodyHandler) throws URISyntaxException, IOException, InterruptedException {
-        return client.send(requestBuilder.build(), jsonBodyHandler);
+        var request = requestBuilder.build();
+        LOG.ok("Executing request {0}", request);
+        return client.send(request, jsonBodyHandler);
     }
 
     /**

@@ -10,15 +10,15 @@ import java.util.Map;
 
 public class RestHandlerBuilder {
 
-    private final RestSchema schema;
+    private final ConnectorContext context;
     private final Map<String, BaseOperationSupportBuilder<RestContext>> handlers = new HashMap<>();
 
-    public RestHandlerBuilder(RestSchema schema) {
-        this.schema = schema;
+    public RestHandlerBuilder(ConnectorContext context) {
+        this.context = context;
     }
 
     public BaseOperationSupportBuilder<RestContext> objectClass(String user) {
-        return handlers.computeIfAbsent(user, k ->  new BaseOperationSupportBuilder<>(schema.objectClass(user)));
+        return handlers.computeIfAbsent(user, k ->  new BaseOperationSupportBuilder<>(context,context.schema().objectClass(user)));
     }
 
     public Map<ObjectClass, ObjectClassHandler<RestContext>> build() {

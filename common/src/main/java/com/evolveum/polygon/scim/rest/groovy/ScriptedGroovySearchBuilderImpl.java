@@ -5,11 +5,13 @@ import groovy.lang.Closure;
 
 public class ScriptedGroovySearchBuilderImpl<HC> implements ScriptedGroovySearchBuilder, FilterAwareSearchProcessorBuilder<HC> {
 
+    final ConnectorContext context;
     public RestObjectClass objectClass;
     private Boolean emptyFilterSupported;
     Closure<?> implementationPrototype;
 
-    public ScriptedGroovySearchBuilderImpl(RestObjectClass objectClass) {
+    public ScriptedGroovySearchBuilderImpl(ConnectorContext context, RestObjectClass objectClass) {
+        this.context = context;
         this.objectClass = objectClass;
     }
 

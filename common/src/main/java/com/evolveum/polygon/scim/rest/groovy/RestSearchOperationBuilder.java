@@ -36,7 +36,7 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
     }
 
     public ScriptedGroovySearchBuilder custom(@DelegatesTo(ScriptedGroovySearchBuilder.class) Closure<?> definition) {
-        var ret = new ScriptedGroovySearchBuilderImpl(parent.getObjectClass());
+        var ret = new ScriptedGroovySearchBuilderImpl(parent.context, parent.getObjectClass());
         builders.add(ret);
         return GroovyClosures.callAndReturnDelegate(definition, ret);
     }

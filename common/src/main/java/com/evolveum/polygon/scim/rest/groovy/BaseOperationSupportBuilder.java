@@ -15,6 +15,7 @@ import java.util.Map;
 public class BaseOperationSupportBuilder<HC> {
 
     private final RestObjectClass objectClass;
+    final ConnectorContext context;
 
     ObjectClassHandler<HC> product;
 
@@ -23,8 +24,9 @@ public class BaseOperationSupportBuilder<HC> {
     RestSearchOperationBuilder searchOpBuilder;
 
 
-    public BaseOperationSupportBuilder(RestObjectClass restObjectClass) {
+    public BaseOperationSupportBuilder(ConnectorContext context, RestObjectClass restObjectClass) {
         this.objectClass = restObjectClass;
+        this.context = context;
         searchOpBuilder = new RestSearchOperationBuilder(this);
     }
 

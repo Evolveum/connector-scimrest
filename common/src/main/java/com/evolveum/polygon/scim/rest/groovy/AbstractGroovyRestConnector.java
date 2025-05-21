@@ -3,43 +3,37 @@ import com.evolveum.polygon.scim.rest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scim.rest.ObjectClassHandler;
 import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
-import com.evolveum.polygon.scim.rest.schema.RestSchema;
 import com.evolveum.polygon.scim.rest.schema.RestSchemaBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.spi.Configuration;
 
-import java.util.Map;
-
 public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase<RestContext> {
 
-    Map<ObjectClass, ObjectClassHandler<RestContext>> handlers;
-    private BaseGroovyConnectorConfiguration configuration;
-    private RestSchema schema;
-    private RestContext restContext;
+    private ConnectorContext context;
 
     @Override
     public BaseGroovyConnectorConfiguration getConfiguration() {
-        return configuration;
+        return context.configuration();
     }
 
 
     @Override
     public ObjectClassHandler<RestContext> handlerFor(ObjectClass objectClass) throws UnsupportedOperationException {
-        return handlers.get(objectClass);
+        return context.handlerFor(objectClass);
     }
 
     @Override
     public void init(Configuration cfg) {
-        if (cfg instanceof BaseGroovyConnectorConfiguration groovyConf) {
-            this.configuration = groovyConf;
-            var schemaBuilder = new RestSchemaBuilder(getClass());
 
+        if (cfg instanceof BaseGroovyConnectorConfiguration groovyConf) {
+            context = new ConnectorContext(groovyConf);
+            var schemaBuilder = new RestSchemaBuilder(getClass());
             initializeSchema(new GroovySchemaLoader(groovyConf.groovyContext(), schemaBuilder));
-            this.schema = schemaBuilder.build();
-            var handlersBuilder = new GroovyRestHandlerBuilder(groovyConf.groovyContext(), this.schema);
+            context.schema(schemaBuilder.build());
+            var handlersBuilder = context.handlerBuilder(groovyConf.groovyContext());
             initializeObjectClassHandler(handlersBuilder);
-            this.handlers = handlersBuilder.build();
+            context.handlers(handlersBuilder.build());
             initializeRestClient();
             
         } else {
@@ -48,7 +42,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     }
 
     private void initializeRestClient() {
-        restContext = new RestContext((HttpClientConfiguration) configuration, authorizationCustomizer());
+        context.rest(new RestContext((HttpClientConfiguration) context.configuration(), authorizationCustomizer()));
     }
 
     protected RestContext.AuthorizationCustomizer authorizationCustomizer() {
@@ -75,7 +69,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
     @Override
     public Schema schema() {
-        return schema.connIdSchema();
+        return context.schema().connIdSchema();
     }
 
     @Override
@@ -85,6 +79,6 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
     @Override
     public RestContext context() {
-        return restContext;
+        return context.rest();
     }
 }

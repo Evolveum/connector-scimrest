@@ -16,8 +16,10 @@ public class ScriptedGroovySearchProcessor<HC> implements FilterAwareExecuteQuer
     private final RestObjectClass objectClass;
     private final Closure<?> implementation;
     private final Set<FilterSpecification> supportedFilters;
+    private final ConnectorContext context;
 
     public <HC> ScriptedGroovySearchProcessor(ScriptedGroovySearchBuilderImpl<HC> builder) {
+        this.context = builder.context;
         this.objectClass = builder.objectClass;
         this.implementation = builder.implementationPrototype;
         this.supportedFilters = new HashSet<>();
@@ -25,7 +27,7 @@ public class ScriptedGroovySearchProcessor<HC> implements FilterAwareExecuteQuer
 
     @Override
     public void executeQuery(HC context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
-        var scriptContext = new SearchScriptContextImpl();
+        var scriptContext = new SearchScriptContextImpl(this.context, objectClass,filter, resultsHandler, operationOptions);
         GroovyClosures.copyAndCall(implementation, scriptContext);
     }
 
