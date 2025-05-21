@@ -18,6 +18,9 @@ import java.util.function.Predicate;
 @FunctionalInterface
 public interface FilterSpecification {
 
+    static FilterSpecification EMPTY_FILTER = f -> f == null;
+
+
     /**
      * Determines if the provided filter matches the criteria specified by this specification.
      *
