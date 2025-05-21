@@ -41,12 +41,12 @@ objectClass("OrganizationUnit") {
 
                 // Step 2: Iterate over each organization to find units
                 for (def org : orgs) {
-                    def id = org.get("id")
+                    def id = org.getUid().getUidValue()
 
                     // Create a filter to search for units with the same organization ID
 
-                    def filter = filter("organizationId").eq(id)
-                    
+                    def filter = attributeFilter("organizationId").eq(id)
+
                     // Performs search using units for specific organization
                     // and pass results to resultHandler
                     objectClass("OrganizationUnit").search(filter, resultHandler)
@@ -73,22 +73,19 @@ Note that `custom` handler block should be avoided if required data could be obt
   * Available properties & methods:
     * `requestFilter` - a filter, which should be interpreted by this custom
     * `resultHandler` - result handler which should be used to report final found objects of the object class this search handler is implemented for.
-    * `objectClass(className)` - returns an `ObjectClassHandler` for specified `className`, which allows us to perform searches for objects of that particular object class.
-    * `filter(attributeName)` - returns a fluent builder for filters for current object class this implementation is tied to.
+    * `objectClass(className)` - returns an `ObjectClassScripting` for specified `className`, which allows us to perform searches for objects of that particular object class.
+    * `attributeFilter(protocolName)` - returns a fluent builder for filters for current object class this implementation is tied to. The `protocolName` is the name of the attribute as defined in the protocol.
 
-### `ObjectClassHandler`
+### `ObjectClassScripting`
 
 Provides an access to existing implementation of the Object Class support.
 
 Available methods are:
 
-* `searchAll()` - Searches for all objects of this class without any specific filter.
+* `search()` - Searches for all objects of this class without any specific filter.
    * returns a collection of objects. 
 
 * `search(filter)` - Searches for objects of this class which matches specified filter
    * returns a collection of objects which matches the filter.
 
 * `search(filter, resultHandler)` - Searches for objects of this class and reports the results to the specified result handler.
-
-
-
