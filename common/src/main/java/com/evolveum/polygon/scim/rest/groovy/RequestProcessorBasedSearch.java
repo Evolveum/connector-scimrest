@@ -5,6 +5,7 @@ import com.evolveum.polygon.scim.rest.RestJsonExecuteQueryProcessor;
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
+// FIXME: Consider merging this with RestJsonExecuteQueryProcessor
 public class RequestProcessorBasedSearch extends RestJsonExecuteQueryProcessor<RestContext> {
 
     private final FilterRequestProcessor processor;

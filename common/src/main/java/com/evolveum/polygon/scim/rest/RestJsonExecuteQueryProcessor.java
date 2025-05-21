@@ -12,6 +12,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.net.http.HttpResponse;
 
+// FIXME: Consider making this JSON agnostic and format / parsing handling will be injected.
 public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> implements ExecuteQueryProcessor<T> {
 
     private RestObjectClass objectClass;
@@ -26,7 +27,7 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
 
         var shouldContinue = true;
         var currentPage = 1;
-        var pageLimit = 25;
+        var pageLimit = 25; // FIXME: Make this configurable from builders.
         var totalProcessed = 0;
         try {
             do {
@@ -54,6 +55,7 @@ public abstract class RestJsonExecuteQueryProcessor<T extends RestContext> imple
                 currentPage++;
             } while (shouldContinue);
         } catch (Exception e) {
+            // FIXME: Add proper error handling here and maybe translation to ConnID exceptions
             throw new RuntimeException(e);
         }
     }

@@ -7,6 +7,7 @@ import java.net.http.HttpResponse;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+// FIXME Find proper name
 public interface RestSearchOperationHandler<BF, OF> {
 
     Iterable<OF> extractRemoteObject(HttpResponse<BF> response);
