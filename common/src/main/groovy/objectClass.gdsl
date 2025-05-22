@@ -1,0 +1,14 @@
+// objectClassDsl.gdsl
+
+// Context for schema.groovy files
+def schemaCtx = context(filenamePattern: ".*\\.schema\\.groovy")
+def searchCtx = context(filenamePattern: ".*\\.search\\.groovy")
+
+contributor(schemaCtx) {
+    // Delegate top-level objectClass calls to RestSchemaBuilder
+    delegatesTo(findClass('com.evolveum.polygon.scim.rest.schema.RestSchemaBuilder'))
+}
+
+contribute(searchCtx) {
+    delegatesTo(findClass('com.evolveum.polygon.scim.rest.groovy.BaseOperationSupportBuilder'))
+}
