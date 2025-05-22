@@ -1,0 +1,210 @@
+# Search Reference
+
+This document provides a reference for implementing search functionality in Groovy scripts for the connector.
+
+## Search Handler
+
+The search handler is defined within the `objectClass` block and allows you to specify how to search for objects of a particular class using REST API endpoints.
+
+```groovy
+objectClass("YourObjectClass") {
+    search {
+        // Search implementation goes here
+    }
+}
+```
+
+There are two types of search implementations:
+1. **Endpoint-based search** - Uses specific REST API endpoints to search for objects
+2. **Custom search** - Implements custom search logic when endpoint-based search is not viable
+
+### Endpoint Handler
+
+The endpoint handler specifies which REST API endpoint to use for searching objects.
+
+```groovy
+endpoint("/path/to/endpoint") {
+    // Endpoint configuration goes here
+}
+```
+
+You can define multiple endpoints within a single search block to handle different search scenarios.
+
+## Detailed API Documentation
+
+### Search Configuration Options
+
+#### Response Format
+
+Specifies the format of the response from the endpoint.
+
+```groovy
+responseFormat JSON_ARRAY
+```
+
+Available formats:
+* `JSON_ARRAY` - The response is a JSON array of objects
+* `JSON_OBJECT` - The response is a JSON object (default)
+
+#### Object Extractor
+
+Extracts the list of objects from the response body.
+
+```groovy
+objectExtractor {
+    return response.body().get("data")
+}
+```
+
+The `response.body()` is a Java `org.json.JSONObject` that represents the parsed JSON response.
+
+#### Paging Support
+
+Configures pagination for the search request.
+
+```groovy
+pagingSupport {
+    request.queryParameter("limit", paging.pageSize)
+           .queryParameter("page", paging.pageOffset)
+}
+```
+
+Available paging properties:
+* `paging.pageSize` - The number of items to return per page
+* `paging.pageOffset` - The page number to return (1-based)
+
+#### Empty Filter Support
+
+Indicates whether the endpoint supports searching without any filters.
+
+```groovy
+emptyFilterSupported true
+```
+
+**Note:** Only one endpoint or custom search implementation can support empty filters within a single search handler. 
+If multiple endpoints or custom implementations are configured to support empty filters, an exception will be thrown during runtime.
+
+If no explicit filter support is specified and no filter mappers are added, empty filter support is assumed to be true.
+If filter mappers are added without explicitly setting empty filter support, it is assumed to be false.
+
+#### Single Result
+
+Indicates that the endpoint returns a single object rather than a collection. 
+This affects how the total count is extracted from the response.
+
+```groovy
+singleResult()
+```
+
+### Filter Support
+
+#### Attribute References
+
+When defining filters, you need to reference attributes by their protocol names. 
+The system automatically maps these to ConnID attribute names.
+
+```groovy
+attribute("attributeName")
+```
+
+This method creates a filter specification for the attribute with the given protocol name.
+The protocol name is mapped to the corresponding ConnID attribute name internally.
+
+#### Supported Filters
+
+Defines which attribute filters are supported by the endpoint.
+
+```groovy
+supportedFilter(attribute("attributeName").eq().anySingleValue()) {
+    request.queryParameter("paramName", value)
+}
+```
+
+The `supportedFilter` block takes a filter definition and a closure that configures the request based on the filter value.
+Inside the closure, you have access to:
+- `request` - The request builder
+- `filter` - The original filter object
+- `value` - The first value from the filter (convenience accessor)
+- `values` - All values from the filter
+
+Available filter operations:
+* `eq()` - Equals
+* `contains()` - Contains substring
+* `startsWith()` - Starts with substring
+* `endsWith()` - Ends with substring
+
+Value types:
+* `anySingleValue()` - Any single value
+
+### Request Customization
+
+The `request` object allows you to customize the HTTP request.
+
+#### Query Parameters
+
+Adds query parameters to the request URL.
+
+```groovy
+request.queryParameter("paramName", value)
+```
+
+#### Path Parameters
+
+Replaces path parameters in the endpoint URL.
+
+```groovy
+request.pathParameter("paramName", value)
+```
+
+For example, with endpoint `/users/{username}`, you can set the `username` parameter:
+
+```groovy
+request.pathParameter("username", "john.doe")
+```
+
+#### Headers
+
+Adds headers to the request.
+
+```groovy
+request.header("headerName", "headerValue")
+```
+
+### Multiple Endpoints
+
+You can define multiple endpoints within a single search block to handle different search scenarios.
+
+```groovy
+search {
+    endpoint("/users/search") {
+        // Configuration for searching multiple users
+    }
+
+    endpoint("/users/{username}") {
+        // Configuration for getting a single user by username
+    }
+}
+```
+
+Each endpoint can have its own configuration for response format, object extraction, paging, and supported filters.
+
+### Custom Search Implementation
+
+When standard endpoint-based search is not viable (for example, when you need to coordinate multiple HTTP requests or search across multiple object classes), you can implement a custom search handler.
+
+```groovy
+objectClass("YourObjectClass") {
+    search {
+        custom {
+            emptyFilterSupported true
+
+            implementation {
+                // Custom search logic goes here
+                // You can use objectClass(), attributeFilter(), and resultHandler
+            }
+        }
+    }
+}
+```
+
+For detailed information about custom search implementation, including configuration options, available objects and methods, and examples, see [Custom Search Implementation](90-custom-search-implementation.md).

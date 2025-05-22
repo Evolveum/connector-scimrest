@@ -59,22 +59,19 @@ objectClass("OrganizationUnit") {
 
 ## Detailed API Documentation
 
-### Search `custom` handler
+### Custom Search Configuration
 
-Custom handler is block inside of `objectClass` `search` handler, which allows us to implement custom search script for the cases, when search requires coordination between multiple HTTP requests or object searches.
-Note that `custom` handler block should be avoided if required data could be obtained by single simple HTTP call.
+- `emptyFilterSupported` - Indicates whether the custom search implementation supports empty filters
+  - `true` - Custom search implementation handles empty filters, practically meaning it returns all objects of the object class
+  - `false` - Custom search implementation handles specific filters and contains filtering logic for these filters
+- `implementation` - Contains the custom search logic in Groovy, which is responsible for implementing the functionality
 
-`custom` block has following properties:
+#### Available Objects and Methods in Custom Search
 
-* `emptyFilterSupported` - `boolean`
-   * `true` - custom search implementation handles empty filters, practically meaning it returns all objects of the object class.
-   * `false` - custom search implementation handles specific filters and contains filtering logic for these filters.
-* `implementation` - code block containing implementation logic in Groovy, which is responsible for implementing the functionality.
-  * Available properties & methods:
-    * `requestFilter` - a filter, which should be interpreted by this custom
-    * `resultHandler` - result handler which should be used to report final found objects of the object class this search handler is implemented for.
-    * `objectClass(className)` - returns an `ObjectClassScripting` for specified `className`, which allows us to perform searches for objects of that particular object class.
-    * `attributeFilter(protocolName)` - returns a fluent builder for filters for current object class this implementation is tied to. The `protocolName` is the name of the attribute as defined in the protocol.
+- `requestFilter` - The filter that should be interpreted by this custom search
+- `resultHandler` - The result handler that should be used to report found objects of the object class this search handler is implemented for
+- `objectClass(className)` - Returns an `ObjectClassScripting` for specified `className`, which allows you to perform searches for objects of that particular object class
+- `attributeFilter(protocolName)` - Returns a fluent builder for filters for the current object class this implementation is tied to. The `protocolName` is the name of the attribute as defined in the protocol
 
 ### `ObjectClassScripting`
 
