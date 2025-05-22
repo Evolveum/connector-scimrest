@@ -67,8 +67,6 @@ public class TestForgejoConnector {
         assertNotNull(results);
     }
 
-
-
     @Test
     public void testSearchUserByUid() {
         var connector = initializedConnector();

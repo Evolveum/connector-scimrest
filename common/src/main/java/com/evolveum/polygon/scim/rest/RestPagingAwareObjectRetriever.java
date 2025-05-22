@@ -43,7 +43,8 @@ public class RestPagingAwareObjectRetriever<T extends RestContext> {
                     batchProcessed++;
                 }
                 totalProcessed += batchProcessed;
-                // FIXME: Check totals if available and if processed is less then total should continue = true
+                // TODO: Add support for cursor-based continuation https://developer.zendesk.com/api-reference/introduction/pagination/#using-offset-pagination
+                // TODO: Maybe paging and cursor API could be merged to being two different implentations of cursor
                 if (batchProcessed == 0) {
                     shouldContinue = false;
                 }

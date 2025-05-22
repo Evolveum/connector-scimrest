@@ -42,15 +42,29 @@ public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearch
         this.objectClass = objectClass;
     }
 
-    public EndpointBasedSearchBuilder<HC, BF, OF> objectExtractor(@DelegatesTo(ResponseWrapper.class) Closure<?> closure) {
+    public EndpointBasedSearchBuilder<HC, BF, OF> objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure) {
         this.objectExtractor  = new GroovyObjectExtractor<>(closure);
         return this;
     }
 
-    public EndpointBasedSearchBuilder<HC, BF, OF> pagingSupport(@DelegatesTo(PagingSupportBase.class) Closure<?> closure) {
+    /**
+     * Configures the paging support for the search endpoint using Groovy Closure.
+     *
+     * @param closure A closure that modifies request to include paging information.
+          * @return This builder instance, allowing method chaining.
+     */
+    public EndpointBasedSearchBuilder<HC, BF, OF> pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure) {
         this.pagingSupport = new GroovyPagingSupport(closure);
         return this;
     }
+
+    /**
+     * Sets the response format class for the search endpoint.
+     *
+     * The built-in supported response formats are {@link #JSON_ARRAY}, {@link #JSON_OBJECT}
+     *
+     * @param responseFormat The Class object representing the desired response format.
+     */
     public void responseFormat(Class<?> responseFormat) {
         this.responseFormat = responseFormat;
     }
@@ -59,6 +73,13 @@ public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearch
         this.totalCountExtractor = TotalCountExtractor.singleObject();
     }
 
+    /**
+     * Sets whether the search endpoint supports filtering with empty filter criteria.
+     *
+     * Only one such endpoint / custom script may be defined for whole search handler.
+     *
+     * @param emptyFilterSupported true if the endpoint should be used for searches without filters.
+     */
     public void emptyFilterSupported(boolean emptyFilterSupported) {
         this.emptyFilterSupported = emptyFilterSupported;
     }
@@ -99,6 +120,7 @@ public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearch
     }
 
     public record PagingSupportBase(RestContext.RequestBuilder request, PagingInfo paging) {
+
     }
 
     public record FilterSupportBase(RestContext.RequestBuilder request, Filter filter, Object value, List<Object> values) {
