@@ -18,14 +18,13 @@ public class RestAttribute {
 
     public RestAttribute(RestAttributeBuilder restAttributeBuilder) {
         remoteName = restAttributeBuilder.remoteName;
-        // FIXME Do the mapping resolution
-        var openApiMapping = OpenApiTypeMapping.from(restAttributeBuilder.jsonType, restAttributeBuilder.openApiFormat);
-
-        restAttributeBuilder.connIdBuilder.setType(openApiMapping.connIdType());
-
-        mapping = ConnIdMapping.of(restAttributeBuilder.connIdBuilder.build().getName(), openApiMapping);
-        // ConnID Specific mapping may changed the name.
-        restAttributeBuilder.connIdBuilder.setType(mapping.connIdType());
+        if (!(restAttributeBuilder instanceof RestReferenceAttributeBuilder)) {
+            var openApiMapping = OpenApiTypeMapping.from(restAttributeBuilder.jsonType, restAttributeBuilder.openApiFormat);
+            restAttributeBuilder.connIdBuilder.setType(openApiMapping.connIdType());
+            mapping = ConnIdMapping.of(restAttributeBuilder.connIdBuilder.build().getName(), openApiMapping);
+            // ConnID Specific mapping may changed the name.
+            restAttributeBuilder.connIdBuilder.setType(mapping.connIdType());
+        } // FIXME: Do the reference attribute mappings
 
         info = restAttributeBuilder.connIdBuilder.build();
 

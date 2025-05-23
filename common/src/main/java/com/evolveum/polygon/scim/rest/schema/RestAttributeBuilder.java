@@ -120,6 +120,16 @@ public class RestAttributeBuilder {
         return this;
     }
 
+    public RestAttributeBuilder returnedByDefault(boolean returnedByDefault) {
+        connIdBuilder.setReturnedByDefault(returnedByDefault);
+        return this;
+    }
+
+    public RestAttributeBuilder multiValued(boolean multiValued) {
+        connIdBuilder.setMultiValued(multiValued);
+        return this;
+    }
+
     /**
      * Builds and returns a {@code RestAttribute} instance with the specified attributes.
      *

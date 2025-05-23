@@ -36,8 +36,18 @@ public class RestObjectClassBuilder {
         return builder;
     }
 
+    public RestReferenceAttributeBuilder reference(String name) {
+        var builder = nativeAttributes.computeIfAbsent(name, (k) -> new RestReferenceAttributeBuilder(RestObjectClassBuilder.this, k));
+        return (RestReferenceAttributeBuilder) builder;
+    }
+
     public RestAttributeBuilder attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
         var attr = attribute(name);
+        return GroovyClosures.callAndReturnDelegate(closure, attr);
+    }
+
+    public RestReferenceAttributeBuilder reference(String name, @DelegatesTo(RestReferenceAttributeBuilder.class) Closure closure) {
+        var attr = reference(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }
 
