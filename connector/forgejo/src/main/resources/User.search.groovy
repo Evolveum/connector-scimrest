@@ -44,7 +44,7 @@ objectClass("User") {
             attribute "organization"
             resolutionType PER_OBJECT
             implementation {
-                var orgFilter = objectClass("Organization").attributeFilter("member").equals(value)
+                var orgFilter = objectClass("Organization").attributeFilter("member").eq(value)
                 var orgs = objectClass("Organization").search(orgFilter)
                 value.addAttribute("organization", orgs)
             }
