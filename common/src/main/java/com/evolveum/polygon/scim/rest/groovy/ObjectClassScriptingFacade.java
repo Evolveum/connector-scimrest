@@ -2,9 +2,9 @@ package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.ObjectClassHandler;
 import com.evolveum.polygon.scim.rest.RestContext;
+import com.evolveum.polygon.scim.rest.groovy.api.ObjectClassScripting;
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 

@@ -1,10 +1,10 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.RestContext;
+import com.evolveum.polygon.scim.rest.groovy.api.FilterSpecification;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 public interface FilterToRequestMapper {
 

@@ -10,5 +10,5 @@ contributor(schemaCtx) {
 }
 
 contribute(searchCtx) {
-    delegatesTo(findClass('com.evolveum.polygon.scim.rest.groovy.BaseOperationSupportBuilder'))
+    delegatesTo(findClass('com.evolveum.polygon.scim.rest.groovy.api.OperationSupportBuilder'))
 }

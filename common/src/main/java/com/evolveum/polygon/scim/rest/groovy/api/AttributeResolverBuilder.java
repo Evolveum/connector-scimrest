@@ -1,4 +1,4 @@
-package com.evolveum.polygon.scim.rest.groovy;
+package com.evolveum.polygon.scim.rest.groovy.api;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -13,7 +13,7 @@ import groovy.lang.DelegatesTo;
  *
  * @param <HC> The type of the context in which the attribute resolver operates.
  */
-public interface AttributeResolverBuilder<HC> {
+public interface AttributeResolverBuilder {
 
 
     ResolutionType PER_OBJECT = ResolutionType.PER_OBJECT;
@@ -32,7 +32,7 @@ public interface AttributeResolverBuilder<HC> {
      * @param type The resolution type to be used.
      * @return This builder instance for method chaining.
      */
-    AttributeResolverBuilder<HC> resolutionType(ResolutionType type);
+    AttributeResolverBuilder resolutionType(ResolutionType type);
 
     /**
      * Groovy implementation of attribute resolution.
@@ -43,7 +43,7 @@ public interface AttributeResolverBuilder<HC> {
      * @param closure The closure defining custom behavior for attribute resolution.
      * @return This builder instance for method chaining.
      */
-    AttributeResolverBuilder<HC> implementation(@DelegatesTo(value = AttributeResolutionContext.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure);
+    AttributeResolverBuilder implementation(@DelegatesTo(value = AttributeResolutionContext.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure);
 
     enum ResolutionType {
         /**
@@ -64,6 +64,6 @@ public interface AttributeResolverBuilder<HC> {
      * @param attributeName name of attribute
      * @return this builder
      */
-    AttributeResolverBuilder<HC> attribute(String attributeName);
+    AttributeResolverBuilder attribute(String attributeName);
 
 }

@@ -1,4 +1,4 @@
-package com.evolveum.polygon.scim.rest.groovy;
+package com.evolveum.polygon.scim.rest.groovy.api;
 
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;

@@ -1,4 +1,4 @@
-package com.evolveum.polygon.scim.rest.groovy;
+package com.evolveum.polygon.scim.rest.groovy.api;
 
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -61,7 +61,7 @@ public interface ObjectClassScripting {
      * @return a filter builder for the specified attribute
      * @throws IllegalArgumentException if the attribute is not found
      */
-    default FilterBuilder attributeFilter(String protocolName) {
+    default FilterBuilder.AttributeFilterBuilder attributeFilter(String protocolName) {
         var attribute = definition().attributeFromProtocolName(protocolName);
         if (attribute == null) {
             throw new IllegalArgumentException("Unknown attribute: " + protocolName);

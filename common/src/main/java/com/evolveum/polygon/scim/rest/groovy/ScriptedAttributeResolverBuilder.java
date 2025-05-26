@@ -1,5 +1,7 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolutionContext;
+import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scim.rest.schema.RestAttribute;
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import groovy.lang.Closure;
@@ -8,7 +10,7 @@ import groovy.lang.DelegatesTo;
 import java.util.HashSet;
 import java.util.Set;
 
-public class GroovyAttributeResolverBuilder<HC> implements AttributeResolverBuilder<HC> {
+public class ScriptedAttributeResolverBuilder<HC> implements AttributeResolverBuilder {
 
     private final Set<RestAttribute> attributes = new HashSet<>();
 
@@ -16,25 +18,25 @@ public class GroovyAttributeResolverBuilder<HC> implements AttributeResolverBuil
     private final RestObjectClass objectClass;
     private ResolutionType resolutionType;
 
-    public GroovyAttributeResolverBuilder(ConnectorContext context, RestObjectClass objectClass) {
+    public ScriptedAttributeResolverBuilder(ConnectorContext context, RestObjectClass objectClass) {
         this.context = context;
         this.objectClass = objectClass;
     }
 
     @Override
-    public GroovyAttributeResolverBuilder<HC> attribute(String attributeName) {
+    public ScriptedAttributeResolverBuilder<HC> attribute(String attributeName) {
         attributes.add(objectClass.attributeFromProtocolName(attributeName));
         return this;
     }
 
     @Override
-    public GroovyAttributeResolverBuilder<HC> resolutionType(ResolutionType type) {
+    public ScriptedAttributeResolverBuilder<HC> resolutionType(ResolutionType type) {
         this.resolutionType = type;
         return this;
     }
 
     @Override
-    public GroovyAttributeResolverBuilder<HC> implementation(@DelegatesTo(AttributeResolutionContext.class) Closure<?> closure) {
+    public ScriptedAttributeResolverBuilder<HC> implementation(@DelegatesTo(AttributeResolutionContext.class) Closure<?> closure) {
         // FIXME: Capture implementation
         return this;
     }

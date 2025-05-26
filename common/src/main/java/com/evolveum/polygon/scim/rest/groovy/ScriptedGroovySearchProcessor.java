@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.OperationOptions;

@@ -1,6 +1,7 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.RestContext;
+import com.evolveum.polygon.scim.rest.groovy.api.PagingInfo;
 import org.json.JSONObject;
 
 import java.net.http.HttpResponse;
