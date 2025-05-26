@@ -71,7 +71,7 @@ public class RestPagingAwareObjectRetriever<T extends RestContext> {
         if (obj instanceof JSONObject remoteObj) {
             var builder = objectClass.newObjectBuilder();
             for (var attributeDef : objectClass.attributes()) {
-                if (remoteObj.has(attributeDef.remoteName())) {
+                if (remoteObj.has(attributeDef.remoteName()) && attributeDef.valueMapping() != null) {
                     var wireValues = remoteObj.get(attributeDef.remoteName());
                     Object connIdValues = null;
                     if (wireValues != null) {

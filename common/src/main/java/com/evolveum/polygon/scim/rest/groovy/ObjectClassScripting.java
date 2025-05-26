@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
@@ -50,4 +51,25 @@ public interface ObjectClassScripting {
      * @param consumer the result handler to process the results
      */
     void search(Filter filter, ResultsHandler consumer);
+
+
+    /**
+     * Creates a filter builder for the specified attribute using its protocol name.
+     * This method is used to create filters for attributes in custom search implementations.
+     *
+     * @param protocolName the protocol name of the attribute to filter on
+     * @return a filter builder for the specified attribute
+     * @throws IllegalArgumentException if the attribute is not found
+     */
+    default FilterBuilder attributeFilter(String protocolName) {
+        var attribute = definition().attributeFromProtocolName(protocolName);
+        if (attribute == null) {
+            throw new IllegalArgumentException("Unknown attribute: " + protocolName);
+        }
+
+        return FilterBuilder.forAttribute(attribute.connId().getName());
+    }
+
+    RestObjectClass definition();
+
 }

@@ -15,6 +15,7 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
     private final BaseOperationSupportBuilder<HC> parent;
     Map<String, EndpointBasedSearchBuilder<HC,?,?>> endpointBuilder = new HashMap<>();
     Set<FilterAwareSearchProcessorBuilder<HC>> builders = new HashSet<>();
+    Set<AttributeResolverBuilder<HC>> resolvers = new HashSet<>();
 
     public RestSearchOperationBuilder(BaseOperationSupportBuilder<HC> parent) {
         this.parent = parent;
@@ -31,8 +32,15 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
         return builder;
     }
 
-    public EndpointBasedSearchBuilder<HC,?,?> endpoint(String path, @DelegatesTo(EndpointBasedSearchBuilder.class) Closure<?> builder) {
+    public EndpointBasedSearchBuilder<HC,?,?> endpoint(String path, @DelegatesTo(value = EndpointBasedSearchBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> builder) {
         return GroovyClosures.callAndReturnDelegate(builder, endpoint(path));
+    }
+
+
+    public GroovyAttributeResolverBuilder<HC> attributeResolver(@DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition) {
+        var ret = new GroovyAttributeResolverBuilder<HC>(parent.context, parent.getObjectClass());
+        resolvers.add(ret);
+        return GroovyClosures.callAndReturnDelegate(definition, ret);
     }
 
     public ScriptedGroovySearchBuilder custom(@DelegatesTo(ScriptedGroovySearchBuilder.class) Closure<?> definition) {

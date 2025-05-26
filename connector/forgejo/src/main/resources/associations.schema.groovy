@@ -2,20 +2,20 @@ objectClass("User") {
     reference("organization") {
         subtype "UserOrganizationMembership"
         returnedByDefault false
-        multiValued true
+        //multiValued true
         description "Virtual relationship shortcut to organization (determined by teams membership)"
         updateable false
-        creatable false
+        //creatable false
         role SUBJECT
     }
 
     reference("teams") {
-        //subtype "UserTeamMembership"
+        subtype "UserTeamMembership"
         returnedByDefault false
         multiValued true
         updateable true
-        creatable false
-        role OBJECT
+        //creatable false
+        role SUBJECT
     }
 
 }
@@ -25,14 +25,14 @@ objectClass("Organization") {
         objectClass "User"
         subtype "UserOrganizationMembership"
         returnedByDefault false
-        multiValued true
+        //multiValued true
         role OBJECT
     }
     reference("teams") {
         objectClass "Team"
         subtype "TeamOrganizationMembership"
         returnedByDefault false
-        multiValued true
+        //multiValued true
         role OBJECT
     }
 }
@@ -50,7 +50,7 @@ objectClass("Team") {
         objectClass "User"
         subtype "UserTeamMembership"
         returnedByDefault false
-        multiValued true
+        //multiValued true
         role OBJECT;
     }
 }

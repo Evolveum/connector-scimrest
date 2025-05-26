@@ -11,6 +11,10 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 public record ObjectClassScriptingFacade(RestContext rest, RestObjectClass schema, ObjectClassHandler<RestContext> handler) implements ObjectClassScripting {
 
+    @Override
+    public RestObjectClass definition() {
+        return schema;
+    }
 
     @Override
     public void search(Filter filter, ResultsHandler consumer) {
