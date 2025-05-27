@@ -1,2 +1,4 @@
 .aider*
 **/target/
+/docs/tasks.md
+*.iml
