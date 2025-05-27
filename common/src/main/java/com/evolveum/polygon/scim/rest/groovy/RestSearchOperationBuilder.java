@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolver;
 import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scim.rest.groovy.api.SearchScriptBuilder;
 import com.evolveum.polygon.scim.rest.groovy.api.SearchOperationBuilder;
@@ -17,7 +18,7 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
     private final BaseOperationSupportBuilder<HC> parent;
     Map<String, EndpointBasedSearchBuilder<HC,?,?>> endpointBuilder = new HashMap<>();
     Set<FilterAwareSearchProcessorBuilder<HC>> builders = new HashSet<>();
-    Set<AttributeResolverBuilder> resolvers = new HashSet<>();
+    Set<ScriptedAttributeResolverBuilder<HC>> resolvers = new HashSet<>();
 
     public RestSearchOperationBuilder(BaseOperationSupportBuilder<HC> parent) {
         this.parent = parent;
@@ -76,6 +77,23 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
                 }
             }
         }
-        return new FilterBasedSearchDispatcher<>(emptyFilterHandler, handlers);
+        ExecuteQueryProcessor<HC> dispatcher = new FilterBasedSearchDispatcher<>(emptyFilterHandler, handlers);
+        if (!resolvers.isEmpty()) {
+            Set<AttributeResolver> perObjectResolvers = new HashSet<>();
+            Set<AttributeResolver> batchedResolvers = new HashSet<>();
+            for (var builder : resolvers) {
+                var resolver = builder.build();
+                switch (builder.resolutionType()) {
+                    case BATCH -> batchedResolvers.add(resolver);
+                    case PER_OBJECT -> perObjectResolvers.add(resolver);
+                    default -> throw new IllegalStateException("Unknown resolver type: " + builder.resolutionType());
+                }
+            }
+            dispatcher = new AttributeResolvingSearchHandler<>(dispatcher, perObjectResolvers, batchedResolvers);
+
+
+        }
+
+        return dispatcher;
     }
 }

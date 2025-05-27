@@ -1,6 +1,9 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
+import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
@@ -14,6 +17,9 @@ public interface FilterBuilder {
     record AttributeFilterBuilder(String name) implements FilterBuilder {
 
         public EqualsFilter eq(Object value) {
+            if (value instanceof ConnectorObjectBuilder builder) {
+                value = new ConnectorObjectReference(builder.build());
+            }
             return new EqualsFilter(AttributeBuilder.build(name, value));
         }
 

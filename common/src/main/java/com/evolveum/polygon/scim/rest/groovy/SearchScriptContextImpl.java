@@ -17,12 +17,7 @@ public record SearchScriptContextImpl(ConnectorContext context, RestObjectClass 
 
     @Override
     public ObjectClassScripting objectClass(String name) {
-        var schema = context.schema().objectClass(name);
-        if (schema == null) {
-            throw new IllegalArgumentException("No such object class: " + name);
-        }
-        var handler = context.handlerFor(schema.objectClass());
-        return new ObjectClassScriptingFacade(context.rest(), schema, handler);
+        return ObjectClassScriptingFacade.from(context, name);
     }
 
 

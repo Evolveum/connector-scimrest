@@ -5,11 +5,21 @@ import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.groovy.api.ObjectClassScripting;
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 
 public record ObjectClassScriptingFacade(RestContext rest, RestObjectClass schema, ObjectClassHandler<RestContext> handler) implements ObjectClassScripting {
+
+    static ObjectClassScriptingFacade from(ConnectorContext context, String objectClass) {
+        var schema = context.schema().objectClass(objectClass);
+        if (schema == null) {
+            throw new IllegalArgumentException("No such object class: " + objectClass);
+        }
+        var handler = context.handlerFor(schema.objectClass());
+        return new ObjectClassScriptingFacade(context.rest(), schema, handler);
+    }
 
     @Override
     public RestObjectClass definition() {

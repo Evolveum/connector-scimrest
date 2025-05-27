@@ -2,6 +2,8 @@ package com.evolveum.polygon.scim.rest;
 
 import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 
 
 import javax.net.ssl.SSLContext;
@@ -179,6 +181,10 @@ public class RestContext {
             }
             apiEndpoint = apiEndpoint.replace(keySearch, value);
             return this;
+        }
+
+        public RequestBuilder pathParameter(String key, Attribute value) {
+            return pathParameter(key, AttributeUtil.getAsStringValue(value));
         }
 
         public RequestBuilder header(String name, String value) {
