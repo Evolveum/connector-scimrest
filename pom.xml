@@ -31,7 +31,7 @@
         <project.source.version>17</project.source.version>
         <project.target.version>17</project.target.version>
         <polygon.version>1.5.3.0-M3</polygon.version>
-        <connId.version>1.6.0.1</connId.version>
+        <connId.version>1.6.0.0</connId.version>
         <unboundid-scim2.version>3.2.0</unboundid-scim2.version>
 
         <surefire.version>3.5.2</surefire.version>
