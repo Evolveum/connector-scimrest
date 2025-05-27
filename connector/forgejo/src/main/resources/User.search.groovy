@@ -1,3 +1,5 @@
+import org.identityconnectors.framework.common.objects.ConnectorObjectReference
+
 objectClass("User") {
     search {
 
@@ -25,14 +27,14 @@ objectClass("User") {
         endpoint("/users/{username}") {
             singleResult()
             supportedFilter(attribute("login").eq().anySingleValue()) {
-                request.pathParameter("username", value)
+                request.pathParameter("username", value.value.uid)
             }
         }
 
         endpoint("teams/{id}/members") {
             responseFormat JSON_ARRAY
             supportedFilter(attribute("teams").eq().anySingleValue()) {
-                request.pathParameter("id", value.uid)
+                request.pathParameter("id", value.value.uid)
             }
             pagingSupport {
                 request.queryParameter("limit", paging.pageSize)
@@ -46,7 +48,7 @@ objectClass("User") {
             implementation {
                 var orgFilter = objectClass("Organization").attributeFilter("member").eq(value)
                 var orgs = objectClass("Organization").search(orgFilter)
-                value.addAttribute("organization", orgs)
+                value.addAttribute("organization", orgs.collect { i -> new ConnectorObjectReference(i)})
             }
         }
     }

@@ -17,5 +17,16 @@ objectClass("Team") {
                 request.pathParameter("id", value);
             }
         }
+
+        /**
+        attributeResolver {
+            attribute "members"
+            type PER_OBJECT
+
+            implementation {
+                // Implemented via search for all team members
+                return objectClass("User").search(attributeFilter("teams").eq(object));
+            }
+        }*/
     }
 }

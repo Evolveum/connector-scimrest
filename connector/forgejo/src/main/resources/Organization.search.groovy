@@ -22,7 +22,7 @@ objectClass("Organization") {
                         .queryParameter("page", paging.pageOffset)
             }
             supportedFilter(attribute("member").eq().anySingleValue()) {
-                request.pathParameter("username", value.name)
+                request.pathParameter("username", value.value.name)
             }
         }
     }
