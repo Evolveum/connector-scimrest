@@ -1,5 +1,3 @@
-import org.identityconnectors.framework.common.objects.ConnectorObjectReference
-
 objectClass("User") {
     search {
 
@@ -39,16 +37,6 @@ objectClass("User") {
             pagingSupport {
                 request.queryParameter("limit", paging.pageSize)
                         .queryParameter("page", paging.pageOffset)
-            }
-        }
-
-        attributeResolver {
-            attribute "organization"
-            resolutionType PER_OBJECT
-            implementation {
-                var orgFilter = objectClass("Organization").attributeFilter("member").eq(value)
-                var orgs = objectClass("Organization").search(orgFilter)
-                value.addAttribute("organization", orgs.collect { i -> new ConnectorObjectReference(i)})
             }
         }
     }

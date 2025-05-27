@@ -14,16 +14,5 @@ objectClass("Organization") {
                 request.pathParameter("org", value)
             }
         }
-
-        endpoint("users/{username}/orgs") {
-            responseFormat JSON_ARRAY
-            pagingSupport { // IDEA: lambda may delegate also to RequestBuilder
-                request.queryParameter("limit", paging.pageSize)
-                        .queryParameter("page", paging.pageOffset)
-            }
-            supportedFilter(attribute("member").eq().anySingleValue()) {
-                request.pathParameter("username", value.value.name)
-            }
-        }
     }
 }
