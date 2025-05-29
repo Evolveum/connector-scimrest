@@ -28,6 +28,8 @@ public class ForgejoConnector extends AbstractGroovyRestConnector<ForgejoConfigu
         builder.loadFromResource("/Organization.search.groovy");
         builder.loadFromResource("/Team.search.groovy");
         builder.loadFromResource("/Team.custom.minimal.search.groovy");
+        // Contains both organization and user search necessary for providing user-sided part of associations.
+        builder.loadFromResource("/User.organization.support.search.groovy");
     }
 
     @Override
