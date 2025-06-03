@@ -12,7 +12,6 @@ import groovy.lang.DelegatesTo;
 import java.util.HashMap;
 import java.util.Map;
 
-// FIXME: Extract public interface to limit Groovy / tooling view to be not confused by actual implementation
 public class BaseOperationSupportBuilder<HC> implements OperationSupportBuilder {
 
     private final RestObjectClass objectClass;

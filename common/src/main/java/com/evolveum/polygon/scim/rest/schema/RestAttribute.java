@@ -5,7 +5,6 @@ import com.evolveum.polygon.scim.rest.OpenApiTypeMapping;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
 
 import java.util.List;
 
@@ -16,9 +15,9 @@ public class RestAttribute {
     private final String remoteName;
     private AttributeMapping mapping;
 
-    public RestAttribute(RestAttributeBuilder restAttributeBuilder) {
+    public RestAttribute(RestAttributeBuilderImpl restAttributeBuilder) {
         remoteName = restAttributeBuilder.remoteName;
-        if (!(restAttributeBuilder instanceof RestReferenceAttributeBuilder)) {
+        if (!(restAttributeBuilder instanceof RestReferenceAttributeBuilderImpl)) {
             var openApiMapping = OpenApiTypeMapping.from(restAttributeBuilder.jsonType, restAttributeBuilder.openApiFormat);
             restAttributeBuilder.connIdBuilder.setType(openApiMapping.connIdType());
             mapping = ConnIdMapping.of(restAttributeBuilder.connIdBuilder.build().getName(), openApiMapping);

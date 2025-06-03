@@ -1,6 +1,8 @@
 package com.evolveum.polygon.scim.rest.schema;
 
 import com.evolveum.polygon.scim.rest.groovy.GroovyClosures;
+import com.evolveum.polygon.scim.rest.groovy.api.RestAttributeBuilder;
+import com.evolveum.polygon.scim.rest.groovy.api.RestReferenceAttributeBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.*;
@@ -22,8 +24,8 @@ public class RestObjectClassBuilder {
     }
 
     private final String name;
-    private ObjectClassInfoBuilder connIdBuilder = new ObjectClassInfoBuilder();
-    Map<String, RestAttributeBuilder> nativeAttributes = new HashMap<>();
+    private final ObjectClassInfoBuilder connIdBuilder = new ObjectClassInfoBuilder();
+    Map<String, RestAttributeBuilderImpl> nativeAttributes = new HashMap<>();
     private String description;
 
     public RestObjectClassBuilder(RestSchemaBuilder restSchemaBuilder, String name) {
@@ -31,22 +33,21 @@ public class RestObjectClassBuilder {
         connIdBuilder.setType(name);
     }
 
-    public RestAttributeBuilder attribute(String name) {
-        var builder = nativeAttributes.computeIfAbsent(name, (k) -> new RestAttributeBuilder(RestObjectClassBuilder.this, k));
-        return builder;
+    public RestAttributeBuilderImpl attribute(String name) {
+        return nativeAttributes.computeIfAbsent(name, (k) -> new RestAttributeBuilderImpl(this, k));
     }
 
-    public RestReferenceAttributeBuilder reference(String name) {
-        var builder = nativeAttributes.computeIfAbsent(name, (k) -> new RestReferenceAttributeBuilder(RestObjectClassBuilder.this, k));
-        return (RestReferenceAttributeBuilder) builder;
+    public RestReferenceAttributeBuilderImpl reference(String name) {
+        var builder = nativeAttributes.computeIfAbsent(name, (k) -> new RestReferenceAttributeBuilderImpl(RestObjectClassBuilder.this, k));
+        return (RestReferenceAttributeBuilderImpl) builder;
     }
 
-    public RestAttributeBuilder attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
+    public RestAttributeBuilderImpl attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
         var attr = attribute(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }
 
-    public RestReferenceAttributeBuilder reference(String name, @DelegatesTo(RestReferenceAttributeBuilder.class) Closure closure) {
+    public RestReferenceAttributeBuilderImpl reference(String name, @DelegatesTo(RestReferenceAttributeBuilder.class) Closure closure) {
         var attr = reference(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }

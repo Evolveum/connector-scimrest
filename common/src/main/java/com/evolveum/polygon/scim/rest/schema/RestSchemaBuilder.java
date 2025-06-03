@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.schema;
 
+import com.evolveum.polygon.scim.rest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -28,6 +29,10 @@ public class RestSchemaBuilder {
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.call();
         return objectClass;
+    }
+
+    public RestRelationshipBuilder relationship(String name, @DelegatesTo(RestRelationshipBuilder.class) Closure<?> closure) {
+        throw new UnsupportedOperationException();
     }
 
     public RestSchema build() {
