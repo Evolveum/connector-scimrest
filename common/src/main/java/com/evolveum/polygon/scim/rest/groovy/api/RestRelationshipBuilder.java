@@ -22,7 +22,22 @@ public interface RestRelationshipBuilder {
 
         RestReferenceAttributeBuilderImpl attribute(String name);
 
-        RestReferenceAttributeBuilderImpl attribute(String name, @DelegatesTo(value = RestReferenceAttributeBuilderImpl.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+        Reference attribute(String name, @DelegatesTo(value = Reference.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
+    }
+
+    interface Reference extends RestReferenceAttributeBuilder {
+
+        /**
+         * Adds an attribute resolver with custom behavior defined.
+         *
+         * The attribute will be marked as {@link #emulated(boolean)} true.
+         * The values for attribute will be provided by defined attribute resolver.
+         *
+         *
+         * @param closure The closure defining custom behavior for the attribute resolver.
+         * @return A new instance of {@link AttributeResolver} configured according to the closure's specifications.
+         */
+        AttributeResolverBuilder resolver(@DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
     }
 }

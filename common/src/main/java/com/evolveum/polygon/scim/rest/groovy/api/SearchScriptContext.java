@@ -19,23 +19,6 @@ public interface SearchScriptContext extends BaseScriptContext {
     RestObjectClass definition();
 
     /**
-     * Creates a filter builder for the specified attribute using its protocol name.
-     * This method is used to create filters for attributes in custom search implementations.
-     * 
-     * @param protocolName the protocol name of the attribute to filter on
-     * @return a filter builder for the specified attribute
-     * @throws IllegalArgumentException if the attribute is not found
-     */
-    default FilterBuilder attributeFilter(String protocolName) {
-        var attribute = definition().attributeFromProtocolName(protocolName);
-        if (attribute == null) {
-            throw new IllegalArgumentException("Unknown attribute: " + protocolName);
-        }
-
-        return FilterBuilder.forAttribute(attribute.connId().getName());
-    }
-
-    /**
      * Returns the result handler for the current search operation.
      * The result handler is used to report found objects.
      * 

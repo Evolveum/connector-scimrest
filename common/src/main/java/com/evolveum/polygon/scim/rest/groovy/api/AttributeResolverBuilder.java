@@ -2,6 +2,7 @@ package com.evolveum.polygon.scim.rest.groovy.api;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+import org.identityconnectors.framework.common.objects.filter.Filter;
 
 /**
  * Interface for building attribute resolvers.
@@ -33,6 +34,16 @@ public interface AttributeResolverBuilder {
      * @return This builder instance for method chaining.
      */
     AttributeResolverBuilder resolutionType(ResolutionType type);
+
+
+    /**
+     * Search-based resolver. Resolves reference values by performing search of target object class
+     * for reference attribute.
+     *
+     * @param closure Closure which builds filter.
+     * @return
+     */
+    AttributeResolverBuilder search(@DelegatesTo(value = AttributeResolutionContext.class,strategy = Closure.DELEGATE_FIRST) Closure<Filter> closure);
 
     /**
      * Groovy implementation of attribute resolution.
@@ -66,4 +77,7 @@ public interface AttributeResolverBuilder {
      */
     AttributeResolverBuilder attribute(String attributeName);
 
+    interface SearchBased {
+
+    }
 }

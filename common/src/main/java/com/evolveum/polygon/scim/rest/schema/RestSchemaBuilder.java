@@ -10,7 +10,7 @@ import org.identityconnectors.framework.spi.Connector;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RestSchemaBuilder {
+public class RestSchemaBuilder implements com.evolveum.polygon.scim.rest.groovy.api.SchemaBuilder {
 
     private final SchemaBuilder schemaBuilder;
     private final Map<String, RestObjectClassBuilder> objectClasses = new HashMap<>();
@@ -19,10 +19,12 @@ public class RestSchemaBuilder {
         this.schemaBuilder = new SchemaBuilder(connectorClass);
     }
 
+    @Override
     public RestObjectClassBuilder objectClass(String name) {
         return objectClasses.computeIfAbsent(name, k -> new RestObjectClassBuilder(RestSchemaBuilder.this, k));
     }
 
+    @Override
     public RestObjectClassBuilder objectClass(String name, @DelegatesTo(RestObjectClassBuilder.class) Closure<?> closure) {
         var objectClass = objectClass(name);
         closure.setDelegate(objectClass);
@@ -31,6 +33,7 @@ public class RestSchemaBuilder {
         return objectClass;
     }
 
+    @Override
     public RestRelationshipBuilder relationship(String name, @DelegatesTo(RestRelationshipBuilder.class) Closure<?> closure) {
         throw new UnsupportedOperationException();
     }

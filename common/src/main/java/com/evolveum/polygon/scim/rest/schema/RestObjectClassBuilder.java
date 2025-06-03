@@ -1,6 +1,7 @@
 package com.evolveum.polygon.scim.rest.schema;
 
 import com.evolveum.polygon.scim.rest.groovy.GroovyClosures;
+import com.evolveum.polygon.scim.rest.groovy.api.ObjectClassSchemaBuilder;
 import com.evolveum.polygon.scim.rest.groovy.api.RestAttributeBuilder;
 import com.evolveum.polygon.scim.rest.groovy.api.RestReferenceAttributeBuilder;
 import groovy.lang.Closure;
@@ -10,7 +11,7 @@ import org.identityconnectors.framework.common.objects.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RestObjectClassBuilder {
+public class RestObjectClassBuilder implements ObjectClassSchemaBuilder {
 
     private static final Map<String, String> BUILT_IN_ATTRIBUTES;
 
@@ -33,28 +34,44 @@ public class RestObjectClassBuilder {
         connIdBuilder.setType(name);
     }
 
+    @Override
     public RestAttributeBuilderImpl attribute(String name) {
         return nativeAttributes.computeIfAbsent(name, (k) -> new RestAttributeBuilderImpl(this, k));
     }
 
+    @Override
     public RestReferenceAttributeBuilderImpl reference(String name) {
         var builder = nativeAttributes.computeIfAbsent(name, (k) -> new RestReferenceAttributeBuilderImpl(RestObjectClassBuilder.this, k));
         return (RestReferenceAttributeBuilderImpl) builder;
     }
 
+
+    @Override
     public RestAttributeBuilderImpl attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
         var attr = attribute(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }
 
+    @Override
     public RestReferenceAttributeBuilderImpl reference(String name, @DelegatesTo(RestReferenceAttributeBuilder.class) Closure closure) {
         var attr = reference(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }
 
+    @Override
     public RestObjectClassBuilder description(String description) {
         this.description = description;
         return this;
+    }
+
+    @Override
+    public ScimMapping scim() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ScimMapping scim(@DelegatesTo(ScimMapping.class)  Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, scim());
     }
 
     public RestObjectClassBuilder connIdAttribute(String connIdName, String attributeName) {

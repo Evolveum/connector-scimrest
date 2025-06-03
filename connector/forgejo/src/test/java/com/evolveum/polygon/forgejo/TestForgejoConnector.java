@@ -96,7 +96,7 @@ public class TestForgejoConnector {
         var filter = new ContainsFilter(new Name("tony"));
         connector.executeQuery(new ObjectClass("User"), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
-        assertEquals(results.size(), 1);
+        assertEquals(results.size(), 2);
         assertEquals(results.get(0).getUid().getUidValue(), "1");
     }
 

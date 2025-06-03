@@ -6,7 +6,7 @@ def searchCtx = context(filenamePattern: ".*\\.search\\.groovy")
 
 contributor(schemaCtx) {
     // Delegate top-level objectClass calls to RestSchemaBuilder
-    delegatesTo(findClass('com.evolveum.polygon.scim.rest.schema.RestSchemaBuilder'))
+    delegatesTo(findClass('com.evolveum.polygon.scim.rest.groovy.api.SchemaBuilder'))
 }
 
 contribute(searchCtx) {
