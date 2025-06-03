@@ -12,8 +12,14 @@ objectClass("User") {
 /** Custom association between User and Office (custom SCIM type) **/
 relationship("OfficeEmployment") {
     subject("User") {
-        attribute "office" {
-            type EMULATED // Denotes that attribute does not exists in user schema, but will be emulated by connector.
+        attribute("office") {
+            // Emulated true is implied by presence of resolver
+            resolver {
+                resolutionType PER_OBJECT
+                search {
+                    attributeFilter("employees").eq(value)
+                }
+            }
         }
     }
     object("Office") {

@@ -20,7 +20,7 @@ objectClass("User") {
                     for (var team : teamsInOrg) {
                         var teamMembersFilter = objectClass("User").attributeFilter("team")
                             .eq(team);
-                        usersInTeam = objectClass("User").search(teamMembersFilter)
+                        var usersInTeam = objectClass("User").search(teamMembersFilter)
                         if (usersInTeam.any {it.uid.equals(value.build().uid)}) {
                             userTeams.add(new ConnectorObjectReference(team))
                         }

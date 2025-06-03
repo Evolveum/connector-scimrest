@@ -4,6 +4,7 @@ objectClass("User") {
         updateable true;
         description "Is user active";
     }
+
     attribute("avatar_url") {
         jsonType "string";
         description "URL to the user's avatar";
