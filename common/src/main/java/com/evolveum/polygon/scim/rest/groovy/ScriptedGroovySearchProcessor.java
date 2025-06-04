@@ -23,7 +23,7 @@ public class ScriptedGroovySearchProcessor<HC> implements FilterAwareExecuteQuer
         this.context = builder.context;
         this.objectClass = builder.objectClass;
         this.implementation = builder.implementationPrototype;
-        this.supportedFilters = new HashSet<>();
+        this.supportedFilters = builder.supportedFilters;
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.ObjectClassHandler;
 import com.evolveum.polygon.scim.rest.RestContext;
+import com.evolveum.polygon.scim.rest.ScimContext;
 import com.evolveum.polygon.scim.rest.schema.RestSchema;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
@@ -14,6 +15,7 @@ public class ConnectorContext {
 
     private RestSchema schema;
     private RestContext rest;
+    private ScimContext scim;
 
     public ConnectorContext(BaseGroovyConnectorConfiguration groovyConf) {
         this.configuration = groovyConf;

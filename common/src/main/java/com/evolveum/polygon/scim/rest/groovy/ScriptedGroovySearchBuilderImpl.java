@@ -1,13 +1,18 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scim.rest.groovy.api.SearchScriptBuilder;
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import groovy.lang.Closure;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class ScriptedGroovySearchBuilderImpl<HC> implements SearchScriptBuilder, FilterAwareSearchProcessorBuilder<HC> {
 
     final ConnectorContext context;
     public RestObjectClass objectClass;
+    public Set<FilterSpecification> supportedFilters = new HashSet<>();
     private Boolean emptyFilterSupported;
     Closure<?> implementationPrototype;
 

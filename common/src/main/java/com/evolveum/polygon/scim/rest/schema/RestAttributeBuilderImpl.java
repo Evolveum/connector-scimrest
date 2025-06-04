@@ -101,15 +101,15 @@ public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.
     public JsonMapping json() {
         return new JsonMapping() {
             @Override
-            public boolean type(String jsonType) {
+            public JsonMapping type(String jsonType) {
                 RestAttributeBuilderImpl.this.jsonType = jsonType;
-                return false;
+                return this;
             }
 
             @Override
-            public boolean openApiFormat(String openapiFormat) {
+            public JsonMapping openApiFormat(String openapiFormat) {
                 RestAttributeBuilderImpl.this.openApiFormat = openapiFormat;
-                return false;
+                return this;
             }
         };
     }

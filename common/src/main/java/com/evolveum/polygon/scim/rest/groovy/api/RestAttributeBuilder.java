@@ -91,12 +91,20 @@ public interface RestAttributeBuilder {
 
     interface JsonMapping {
 
-        boolean type(String jsonType);
-        boolean openApiFormat(String openapiFormat);
+        JsonMapping type(String jsonType);
+        JsonMapping openApiFormat(String openapiFormat);
 
     }
 
     interface ScimMapping {
+
+        /**
+         * Name of the matching SCIM attribute
+         **/
+        String name();
+
+        ScimMapping name(String name);
+
 
     }
 

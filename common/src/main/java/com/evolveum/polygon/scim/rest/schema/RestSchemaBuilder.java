@@ -47,4 +47,8 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scim.rest.groovy.
         }
         return new RestSchema(schemaBuilder.build(), objectClassMap);
     }
+
+    public Iterable<RestObjectClassBuilder> allObjectClasses() {
+        return objectClasses.values();
+    }
 }

@@ -1,6 +1,6 @@
 package com.evolveum.polygon.scim.rest;
 
-import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
+import com.evolveum.polygon.scim.rest.config.RestClientConfiguration;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -38,10 +38,10 @@ public class RestContext {
     private static final Log LOG = Log.getLog(RestContext.class);
 
     private final AuthorizationCustomizer customizer;
-    private final HttpClientConfiguration configuration;
+    private final RestClientConfiguration configuration;
     private final HttpClient client;
 
-    public RestContext(HttpClientConfiguration configuration, AuthorizationCustomizer customizer) {
+    public RestContext(RestClientConfiguration configuration, AuthorizationCustomizer customizer) {
         this.configuration = configuration;
         var builder = HttpClient.newBuilder();
         if (Boolean.TRUE.equals(configuration.getTrustAllCertificates())) {
@@ -221,7 +221,7 @@ public class RestContext {
          *                       configurations.
          *
          */
-        void customize(HttpClientConfiguration configuration, RequestBuilder request);
+        void customize(RestClientConfiguration configuration, RequestBuilder request);
     }
 
     /**

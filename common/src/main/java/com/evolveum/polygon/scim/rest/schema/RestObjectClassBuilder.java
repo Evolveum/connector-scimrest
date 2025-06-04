@@ -100,4 +100,17 @@ public class RestObjectClassBuilder implements ObjectClassSchemaBuilder {
 
         return new RestObjectClass(connIdBuilder.build(), nativeAttrs, connIdAttrs);
     }
+
+    public String description() {
+        return description;
+    }
+
+    public boolean embedded() {
+        // Embedded means non-manageable object
+        return false;
+    }
+
+    public Iterable<RestAttributeBuilderImpl> allAttributes() {
+        return nativeAttributes.values();
+    }
 }
