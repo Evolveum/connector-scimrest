@@ -12,4 +12,5 @@ public interface SchemaBuilder {
     RestObjectClassBuilder objectClass(String name, @DelegatesTo(RestObjectClassBuilder.class) Closure<?> closure);
 
     RestRelationshipBuilder relationship(String name, @DelegatesTo(RestRelationshipBuilder.class) Closure<?> closure);
+
 }

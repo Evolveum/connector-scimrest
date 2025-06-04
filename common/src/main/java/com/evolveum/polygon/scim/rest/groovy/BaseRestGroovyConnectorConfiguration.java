@@ -1,9 +1,9 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
-import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
+import com.evolveum.polygon.scim.rest.config.RestClientConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
-public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyConnectorConfiguration implements HttpClientConfiguration {
+public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyConnectorConfiguration implements RestClientConfiguration {
 
     private String baseAddress;
     private Boolean trustAllCertificates;

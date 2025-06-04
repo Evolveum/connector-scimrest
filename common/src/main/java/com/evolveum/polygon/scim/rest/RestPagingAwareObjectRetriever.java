@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest;
 
+import com.evolveum.polygon.scim.rest.groovy.BatchAwareResultHandler;
 import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.json.JSONArray;
@@ -42,6 +43,8 @@ public class RestPagingAwareObjectRetriever<T extends RestContext> {
                     handler.handle(obj);
                     batchProcessed++;
                 }
+
+                BatchAwareResultHandler.batchFinished(handler);
                 totalProcessed += batchProcessed;
                 // TODO: Add support for cursor-based continuation https://developer.zendesk.com/api-reference/introduction/pagination/#using-offset-pagination
                 // TODO: Maybe paging and cursor API could be merged to being two different implentations of cursor

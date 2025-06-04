@@ -26,7 +26,6 @@ public class AttributeResolvingSearchHandler<HC> implements ExecuteQueryProcesso
         this.batched = batchedResolvers;
     }
 
-
     @Override
     public void executeQuery(HC context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
         var coordinator = new AttributeResolutionCoordinator(resultsHandler);

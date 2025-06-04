@@ -30,6 +30,7 @@ public interface TotalCountExtractor<T> {
      *
      * @return A TotalCountExtractor that always returns `null`.
      */
+    @SuppressWarnings("unchecked")
     static <BF> TotalCountExtractor<BF> unsupported() {
         return (TotalCountExtractor<BF>) UNSUPPORTED;
     }
@@ -41,6 +42,7 @@ public interface TotalCountExtractor<T> {
      * @param <BF> the type of the response body
      * @return a TotalCountExtractor instance that counts objects as 1
      */
+    @SuppressWarnings("unchecked")
     static <BF> TotalCountExtractor<BF> singleObject() {
         return (TotalCountExtractor<BF>) SINGLE_OBJECT;
     }

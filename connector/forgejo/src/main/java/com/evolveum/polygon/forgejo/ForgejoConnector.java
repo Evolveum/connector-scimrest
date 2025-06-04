@@ -2,7 +2,7 @@ package com.evolveum.polygon.forgejo;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scim.rest.RestContext;
-import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
+import com.evolveum.polygon.scim.rest.config.RestClientConfiguration;
 import com.evolveum.polygon.scim.rest.groovy.*;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
@@ -35,9 +35,9 @@ public class ForgejoConnector extends AbstractGroovyRestConnector<ForgejoConfigu
     @Override
     protected RestContext.AuthorizationCustomizer authorizationCustomizer() {
         return (c,request) -> {
-            if (c instanceof HttpClientConfiguration.TokenAuthorization tokenAuth) {
+            if (c instanceof RestClientConfiguration.TokenAuthorization tokenAuth) {
                 var tokenAccessor = new GuardedStringAccessor();
-                tokenAuth.getAuthorizationTokenValue().access(tokenAccessor);
+                tokenAuth.getRestTokenValue().access(tokenAccessor);
                 request.header("Authorization", "token " + tokenAccessor.getClearString());
             }
         };

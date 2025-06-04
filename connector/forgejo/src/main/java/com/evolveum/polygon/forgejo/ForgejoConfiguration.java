@@ -1,11 +1,11 @@
 package com.evolveum.polygon.forgejo;
 
-import com.evolveum.polygon.scim.rest.config.HttpClientConfiguration;
+import com.evolveum.polygon.scim.rest.config.RestClientConfiguration;
 import com.evolveum.polygon.scim.rest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
-public class ForgejoConfiguration extends BaseRestGroovyConnectorConfiguration implements HttpClientConfiguration.TokenAuthorization {
+public class ForgejoConfiguration extends BaseRestGroovyConnectorConfiguration implements RestClientConfiguration.TokenAuthorization {
 
 
     private String tokenName;
@@ -13,13 +13,13 @@ public class ForgejoConfiguration extends BaseRestGroovyConnectorConfiguration i
 
     @Override
     @ConfigurationProperty(groupMessageKey = "rest.auth.tokenName", required = false)
-    public String getAuthorizationTokenName() {
+    public String getRestTokenName() {
         return tokenName;
     }
 
     @Override
     @ConfigurationProperty(groupMessageKey = "rest.auth.tokenValue", required = true)
-    public GuardedString getAuthorizationTokenValue() {
+    public GuardedString getRestTokenValue() {
         return tokenValue;
     }
 
