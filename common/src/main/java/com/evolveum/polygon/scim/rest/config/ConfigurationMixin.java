@@ -26,4 +26,11 @@ public interface ConfigurationMixin {
         }
         throw new IllegalStateException("Configuration of type " + extendedConfiguration.getSimpleName() + " required");
     }
+
+    default  <E extends ConfigurationMixin> E supports(Class<E> extendedConfiguration) {
+        if (extendedConfiguration.isInstance(this)) {
+            return extendedConfiguration.cast(this);
+        }
+        return null;
+    }
 }

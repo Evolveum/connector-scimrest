@@ -1,9 +1,15 @@
 package com.evolveum.polygon.scim.rest;
 
+import com.evolveum.polygon.common.GuardedStringAccessor;
+import com.evolveum.polygon.scim.rest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scim.rest.groovy.ScimSchemaTranslator;
+import com.evolveum.polygon.scim.rest.schema.RestSchemaBuilder;
 import com.unboundid.scim2.client.ScimService;
-import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
 import com.unboundid.scim2.common.types.ServiceProviderConfigResource;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 import java.util.HashMap;
@@ -11,29 +17,44 @@ import java.util.Map;
 
 public class ScimContext {
 
-    private final ScimService client;
+
+    private final ScimService scimClient;
+    private final Client httpClient;
+
     private ServiceProviderConfigResource providerConfig;
 
-    private Map<String, ScimResourceContext> resources;
+    private Map<String, ScimResourceContext> resources = new HashMap<>();
 
     private Map<String, SchemaResource> schemas = new HashMap<>();
 
     public ScimContext(ScimService scimService) {
-        this.client = scimService;
+        this.scimClient = scimService;
+        this.httpClient = null;
+    }
+
+    public ScimContext(ScimClientConfiguration scimConf) {
+        var bearerConf = scimConf.supports(ScimClientConfiguration.BearerToken.class);
+
+        var clientBuilder = ClientBuilder.newBuilder();
+        if (bearerConf != null && bearerConf.isScimBearerTokenConfigured()) {
+            var accessor = new GuardedStringAccessor();
+            bearerConf.getScimBearerToken().access(accessor);
+            clientBuilder.register(OAuth2ClientSupport.feature(accessor.getClearString()));
+        }
+
+        this.httpClient = clientBuilder.build();
+        this.scimClient = new ScimService(httpClient.target(scimConf.getScimBaseUrl()));
     }
 
     public void initialize() {
         try {
-            this.providerConfig = client.getServiceProviderConfig();
+            //this.providerConfig = scimClient.getServiceProviderConfig();
 
-            for (var schema : client.getSchemas()) {
+            for (var schema : scimClient.getSchemas()) {
                 schemas.put(schema.getId(), schema);
             }
 
-            for (var resource : client.getResourceTypes()) {
-                // FIXME: Maybe we should wrap it into nice context object
-                // holding schemas together, other resources
-
+            for (var resource : scimClient.getResourceTypes()) {
                 var primary = schemas.get(resource.getSchema().toString());
                 var extensions = new HashMap<String, SchemaResource>();
                 for (var ext : resource.getSchemaExtensions()) {
@@ -47,5 +68,12 @@ public class ScimContext {
             throw new ConnectorException(e);
         }
 
+    }
+
+    public void contributeToSchema(RestSchemaBuilder schemaBuilder) {
+        var translator = new ScimSchemaTranslator();
+        for (var resource : resources.values()) {
+            translator.populateBuilder(resource, schemaBuilder);
+        }
     }
 }

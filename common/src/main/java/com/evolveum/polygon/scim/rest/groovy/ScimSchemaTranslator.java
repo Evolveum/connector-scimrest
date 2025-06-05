@@ -1,18 +1,14 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.ScimResourceContext;
-import com.evolveum.polygon.scim.rest.schema.RestAttributeBuilderImpl;
-import com.evolveum.polygon.scim.rest.schema.RestObjectClassBuilder;
+import com.evolveum.polygon.scim.rest.schema.MappedAttributeBuilderImpl;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClassBuilder;
 import com.evolveum.polygon.scim.rest.schema.RestSchemaBuilder;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class ScimSchemaTranslator {
-
 
     public void populateBuilder(ScimResourceContext scim, RestSchemaBuilder schema) {
 
@@ -29,7 +25,7 @@ public class ScimSchemaTranslator {
 
     }
 
-    private void populatePrimarySchema(SchemaResource schemaResource, RestObjectClassBuilder objectClass, boolean onlyListed) {
+    private void populatePrimarySchema(SchemaResource schemaResource, MappedObjectClassBuilder objectClass, boolean onlyListed) {
         for (var scimAttr : schemaResource.getAttributes()) {
             // We should determine if attribute is excluded by name or being structured
             if (AttributeDefinition.Type.COMPLEX.equals(scimAttr.getType())) {
@@ -40,18 +36,16 @@ public class ScimSchemaTranslator {
             // Lookup as SCIM attribute first
             var attribute = findOrCreateAttribute(scimAttr, objectClass, onlyListed);
 
-
-
         }
     }
 
-    private RestAttributeBuilderImpl findOrCreateAttribute(AttributeDefinition scimAttr, RestObjectClassBuilder objectClass, boolean onlyListed) {
+    private MappedAttributeBuilderImpl findOrCreateAttribute(AttributeDefinition scimAttr, MappedObjectClassBuilder objectClass, boolean onlyListed) {
         for (var attr : objectClass.allAttributes()) {
             if (scimAttr.getName().equals(attr.scim().name())) {
                 return attr;
             }
         }
-        if (!onlyListed) {
+        if (onlyListed) {
             return null;
         }
         // We create new attribute (or use attribute with same name
@@ -59,7 +53,7 @@ public class ScimSchemaTranslator {
 
     }
 
-    private RestObjectClassBuilder findOrCreateObjectClass(ResourceTypeResource scim, RestSchemaBuilder schema) {
+    private MappedObjectClassBuilder findOrCreateObjectClass(ResourceTypeResource scim, RestSchemaBuilder schema) {
         for (var objClass : schema.allObjectClasses()) {
             if (objClass.embedded()) {
 

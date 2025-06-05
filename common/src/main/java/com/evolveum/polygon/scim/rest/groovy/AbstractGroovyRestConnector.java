@@ -38,17 +38,22 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
         initializeSchema(new GroovySchemaLoader(context.configuration().groovyContext(), schemaBuilder));
         // Populate with SCIM schema
+
+        // Before we build final schema, we populate it with schema discovered via SCIM (if SCIM is enabled)
+        context.initializeScim();
+        if (context.isScimEnabled()) {
+            context.scim().initialize();
+            context.scim().contributeToSchema(schemaBuilder);
+        }
+
         context.schema(schemaBuilder.build());
 
         var handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
         initializeObjectClassHandler(handlersBuilder);
         context.handlers(handlersBuilder.build());
 
-        initializeRestClient();
-    }
-
-    private void initializeRestClient() {
-        context.rest(new RestContext((RestClientConfiguration) context.configuration(), authorizationCustomizer()));
+        // Finally we initialize REST client if present
+        context.initializeRest(authorizationCustomizer());
     }
 
     protected RestContext.AuthorizationCustomizer authorizationCustomizer() {

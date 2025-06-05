@@ -18,6 +18,9 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
 
         GuardedString getScimBearerToken();
 
+        default boolean isScimBearerTokenConfigured() {
+            return getScimBaseUrl() != null && getScimBearerToken() != null;
+        }
     }
 
     interface OAuthGrant extends ScimClientConfiguration {
