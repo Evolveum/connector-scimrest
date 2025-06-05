@@ -1,3 +1,5 @@
+package openProject
+
 objectClass("Role") {
     attribute("id") {
         jsonType "integer";

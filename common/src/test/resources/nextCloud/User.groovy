@@ -1,3 +1,5 @@
+package nextCloud
+
 objectClass("User") {
     attribute("userid") {
         jsonType "string";

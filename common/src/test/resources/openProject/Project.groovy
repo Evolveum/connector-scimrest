@@ -1,3 +1,5 @@
+package openProject
+
 objectClass("Project") {
     attribute("id") {
         jsonType "integer";

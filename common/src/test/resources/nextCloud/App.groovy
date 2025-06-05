@@ -1,3 +1,5 @@
+package nextCloud
+
 objectClass("App") {
     attribute("filter") {
         jsonType "string";

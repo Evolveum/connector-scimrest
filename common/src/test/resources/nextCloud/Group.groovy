@@ -1,3 +1,5 @@
+package nextCloud
+
 objectClass("Group") {
     attribute("search") {
         jsonType "string";

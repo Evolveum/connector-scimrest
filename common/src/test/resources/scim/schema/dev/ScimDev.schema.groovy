@@ -16,6 +16,7 @@ relationship("OfficeEmployment") {
             // Emulated true is implied by presence of resolver
             resolver {
                 resolutionType PER_OBJECT
+                // If not specified, we can assume search is performed on other side of relation
                 search {
                     attributeFilter("employees").eq(value)
                 }
