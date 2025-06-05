@@ -1,7 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
-import com.evolveum.polygon.scim.rest.schema.RestAttribute;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
+import com.evolveum.polygon.scim.rest.schema.MappedAttribute;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 
 import java.util.Set;
@@ -14,7 +13,7 @@ import java.util.Set;
  */
 public interface AttributeResolver {
 
-    Set<RestAttribute> getSupportedAttributes();
+    Set<MappedAttribute> getSupportedAttributes();
 
     /**
      * Resolves additional attributes for single object.

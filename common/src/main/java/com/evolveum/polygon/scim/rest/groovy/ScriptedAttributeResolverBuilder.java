@@ -1,12 +1,11 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
-import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolutionContext;
 import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolver;
 import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scim.rest.groovy.api.ObjectClassScripting;
-import com.evolveum.polygon.scim.rest.schema.RestAttribute;
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedAttribute;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
@@ -17,14 +16,14 @@ import java.util.Set;
 
 public class ScriptedAttributeResolverBuilder<HC> implements AttributeResolverBuilder {
 
-    private final Set<RestAttribute> attributes = new HashSet<>();
+    private final Set<MappedAttribute> attributes = new HashSet<>();
 
     private final ConnectorContext context;
-    private final RestObjectClass objectClass;
+    private final MappedObjectClass objectClass;
     private ResolutionType resolutionType = ResolutionType.PER_OBJECT;
     private Closure<?> implementation;
 
-    public ScriptedAttributeResolverBuilder(ConnectorContext context, RestObjectClass objectClass) {
+    public ScriptedAttributeResolverBuilder(ConnectorContext context, MappedObjectClass objectClass) {
         this.context = context;
         this.objectClass = objectClass;
     }
@@ -64,13 +63,13 @@ public class ScriptedAttributeResolverBuilder<HC> implements AttributeResolverBu
     }
 
     private record GroovySingleResolver(ConnectorContext context,
-                                        RestObjectClass objectClass,
-                                        Set<RestAttribute> supportedAttributes,
+                                        MappedObjectClass objectClass,
+                                        Set<MappedAttribute> supportedAttributes,
                                         Closure<?> implementation) implements AttributeResolver {
 
 
         @Override
-        public Set<RestAttribute> getSupportedAttributes() {
+        public Set<MappedAttribute> getSupportedAttributes() {
             return supportedAttributes;
         }
 
@@ -81,7 +80,7 @@ public class ScriptedAttributeResolverBuilder<HC> implements AttributeResolverBu
         }
     }
 
-    private record SingleResolverContext(ConnectorContext context, RestObjectClass definition, ConnectorObjectBuilder value) implements AttributeResolutionContext {
+    private record SingleResolverContext(ConnectorContext context, MappedObjectClass definition, ConnectorObjectBuilder value) implements AttributeResolutionContext {
 
         @Override
         public ObjectClassScripting objectClass(String name) {

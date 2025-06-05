@@ -1,6 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
@@ -70,6 +70,6 @@ public interface ObjectClassScripting {
         return FilterBuilder.forAttribute(attribute.connId().getName());
     }
 
-    RestObjectClass definition();
+    MappedObjectClass definition();
 
 }

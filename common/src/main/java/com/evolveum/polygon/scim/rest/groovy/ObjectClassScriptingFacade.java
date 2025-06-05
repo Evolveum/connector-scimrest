@@ -3,14 +3,13 @@ package com.evolveum.polygon.scim.rest.groovy;
 import com.evolveum.polygon.scim.rest.ObjectClassHandler;
 import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.groovy.api.ObjectClassScripting;
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
-import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 
-public record ObjectClassScriptingFacade(RestContext rest, RestObjectClass schema, ObjectClassHandler<RestContext> handler) implements ObjectClassScripting {
+public record ObjectClassScriptingFacade(RestContext rest, MappedObjectClass schema, ObjectClassHandler<RestContext> handler) implements ObjectClassScripting {
 
     static ObjectClassScriptingFacade from(ConnectorContext context, String objectClass) {
         var schema = context.schema().objectClass(objectClass);
@@ -22,7 +21,7 @@ public record ObjectClassScriptingFacade(RestContext rest, RestObjectClass schem
     }
 
     @Override
-    public RestObjectClass definition() {
+    public MappedObjectClass definition() {
         return schema;
     }
 

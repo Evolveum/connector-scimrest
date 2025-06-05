@@ -1,7 +1,5 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
-import com.evolveum.polygon.scim.rest.schema.RestAttributeBuilderImpl;
-import com.evolveum.polygon.scim.rest.schema.RestReferenceAttributeBuilderImpl;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 

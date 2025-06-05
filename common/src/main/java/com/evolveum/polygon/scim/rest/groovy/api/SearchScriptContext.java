@@ -1,6 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
@@ -16,7 +16,7 @@ public interface SearchScriptContext extends BaseScriptContext {
      * 
      * @return the object class definition
      */
-    RestObjectClass definition();
+    MappedObjectClass definition();
 
     /**
      * Returns the result handler for the current search operation.

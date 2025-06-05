@@ -8,9 +8,9 @@ import java.util.Map;
 public class RestSchema {
 
     private final Schema connIdSchema;
-    private final Map<ObjectClass, RestObjectClass> objectClasses;
+    private final Map<ObjectClass, MappedObjectClass> objectClasses;
 
-    public RestSchema(Schema connIdSchema, Map<ObjectClass, RestObjectClass> objectClasses) {
+    public RestSchema(Schema connIdSchema, Map<ObjectClass, MappedObjectClass> objectClasses) {
         this.connIdSchema = connIdSchema;
         this.objectClasses = objectClasses;
     }
@@ -19,7 +19,7 @@ public class RestSchema {
         return connIdSchema;
     }
 
-    public RestObjectClass objectClass(String name) {
+    public MappedObjectClass objectClass(String name) {
         return objectClasses.get(new ObjectClass(name));
     }
 }

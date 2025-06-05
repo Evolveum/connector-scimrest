@@ -2,7 +2,7 @@ package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.RestPagingAwareObjectRetriever;
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import com.evolveum.polygon.scim.rest.spi.SearchEndpointHandler;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class EndpointBasedSearchHandler<HC,BF, OF> implements SearchEndpointHandler<BF, OF>, FilterAwareExecuteQueryProcessor<HC> {
 
-    private RestObjectClass objectClass;
+    private MappedObjectClass objectClass;
     private final ResponseObjectExtractor<BF,OF> objectExtractor;
     private final PagingHandler pagingSupport;
     private final String apiEndpoint;

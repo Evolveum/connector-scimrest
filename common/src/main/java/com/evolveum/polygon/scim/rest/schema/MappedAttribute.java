@@ -8,16 +8,16 @@ import org.identityconnectors.framework.common.objects.AttributeInfo;
 
 import java.util.List;
 
-public class RestAttribute {
+public class MappedAttribute {
 
 
     private final AttributeInfo info;
     private final String remoteName;
     private AttributeMapping mapping;
 
-    public RestAttribute(RestAttributeBuilderImpl restAttributeBuilder) {
+    public MappedAttribute(MappedAttributeBuilderImpl restAttributeBuilder) {
         remoteName = restAttributeBuilder.remoteName;
-        if (!(restAttributeBuilder instanceof RestReferenceAttributeBuilderImpl)) {
+        if (!(restAttributeBuilder instanceof MappedReferenceAttributeBuilderImpl)) {
             var openApiMapping = OpenApiTypeMapping.from(restAttributeBuilder.jsonType, restAttributeBuilder.openApiFormat);
             restAttributeBuilder.connIdBuilder.setType(openApiMapping.connIdType());
             mapping = ConnIdMapping.of(restAttributeBuilder.connIdBuilder.build().getName(), openApiMapping);

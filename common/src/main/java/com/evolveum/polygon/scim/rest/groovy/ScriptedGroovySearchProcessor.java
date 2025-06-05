@@ -1,20 +1,19 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.groovy.api.FilterSpecification;
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public class ScriptedGroovySearchProcessor<HC> implements FilterAwareExecuteQueryProcessor<HC> {
 
 
 
-    private final RestObjectClass objectClass;
+    private final MappedObjectClass objectClass;
     private final Closure<?> implementation;
     private final Set<FilterSpecification> supportedFilters;
     private final ConnectorContext context;

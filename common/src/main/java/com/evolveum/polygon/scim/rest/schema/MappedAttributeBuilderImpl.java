@@ -1,11 +1,10 @@
 package com.evolveum.polygon.scim.rest.schema;
 
-import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 
-public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.groovy.api.RestAttributeBuilder {
+public class MappedAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.groovy.api.RestAttributeBuilder {
 
-    RestObjectClassBuilder objectClass;
+    MappedObjectClassBuilder objectClass;
     AttributeInfoBuilder connIdBuilder = new AttributeInfoBuilder();
 
     boolean emulated = false;
@@ -18,7 +17,9 @@ public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.
     String jsonType;
     String openApiFormat;
 
-    public RestAttributeBuilderImpl(RestObjectClassBuilder restObjectClassBuilder, String name) {
+    private ScimBuilder scim;
+
+    public MappedAttributeBuilderImpl(MappedObjectClassBuilder restObjectClassBuilder, String name) {
         this.remoteName = name;
         connIdBuilder.setName(name);
         connIdBuilder.setNativeName(name);
@@ -27,13 +28,13 @@ public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.
 
 
     @Override
-    public RestAttributeBuilderImpl protocolName(String protocolName) {
+    public MappedAttributeBuilderImpl protocolName(String protocolName) {
         this.protocolName = protocolName;
         return this;
     }
 
     @Override
-    public RestAttributeBuilderImpl remoteName(String remoteName) {
+    public MappedAttributeBuilderImpl remoteName(String remoteName) {
         this.remoteName = remoteName;
         return this;
     }
@@ -44,7 +45,7 @@ public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.
     }
 
     @Override
-    public RestAttributeBuilderImpl readable(boolean readable) {
+    public MappedAttributeBuilderImpl readable(boolean readable) {
         connIdBuilder.setReadable(readable);
         if (!readable) {
             connIdBuilder.setReturnedByDefault(false);
@@ -54,36 +55,36 @@ public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.
 
 
     @Override
-    public RestAttributeBuilderImpl required(boolean required) {
+    public MappedAttributeBuilderImpl required(boolean required) {
         connIdBuilder.setRequired(required);
         return this;
     }
 
     @Override
-    public RestAttributeBuilderImpl updateable(boolean updatable) {
+    public MappedAttributeBuilderImpl updateable(boolean updatable) {
         connIdBuilder.setUpdateable(updatable);
         return this;
     }
 
     @Override
-    public RestAttributeBuilderImpl creatable(boolean creatable) {
+    public MappedAttributeBuilderImpl creatable(boolean creatable) {
         connIdBuilder.setCreateable(creatable);
         return this;
     }
 
-    public RestAttributeBuilderImpl description(String description) {
+    public MappedAttributeBuilderImpl description(String description) {
         this.description = description;
         return this;
     }
 
     @Override
-    public RestAttributeBuilderImpl returnedByDefault(boolean returnedByDefault) {
+    public MappedAttributeBuilderImpl returnedByDefault(boolean returnedByDefault) {
         connIdBuilder.setReturnedByDefault(returnedByDefault);
         return this;
     }
 
     @Override
-    public RestAttributeBuilderImpl multiValued(boolean multiValued) {
+    public MappedAttributeBuilderImpl multiValued(boolean multiValued) {
         connIdBuilder.setMultiValued(multiValued);
         return this;
     }
@@ -93,8 +94,8 @@ public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.
      *
      * @return a new {@code RestAttribute} instance configured with the current settings
      */
-    public RestAttribute build() {
-        return new RestAttribute(this);
+    public MappedAttribute build() {
+        return new MappedAttribute(this);
     }
 
     @Override
@@ -102,13 +103,13 @@ public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.
         return new JsonMapping() {
             @Override
             public JsonMapping type(String jsonType) {
-                RestAttributeBuilderImpl.this.jsonType = jsonType;
+                MappedAttributeBuilderImpl.this.jsonType = jsonType;
                 return this;
             }
 
             @Override
             public JsonMapping openApiFormat(String openapiFormat) {
-                RestAttributeBuilderImpl.this.openApiFormat = openapiFormat;
+                MappedAttributeBuilderImpl.this.openApiFormat = openapiFormat;
                 return this;
             }
         };
@@ -119,7 +120,7 @@ public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.
                 return new ConnIdMapping() {
             @Override
             public ConnIdMapping name(String name) {
-                RestAttributeBuilderImpl.this.connIdBuilder.setName(name);
+                MappedAttributeBuilderImpl.this.connIdBuilder.setName(name);
                 return this;
             }
         };
@@ -127,8 +128,25 @@ public class RestAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.
 
     @Override
     public ScimMapping scim() {
-        throw new UnsupportedOperationException();
+        if (this.scim == null) {
+            this.scim = new ScimBuilder();
+        }
+        return scim;
     }
 
+    private class ScimBuilder implements ScimMapping {
+        private String name;
+
+        @Override
+        public String name() {
+            return this.name;
+        }
+
+        @Override
+        public ScimMapping name(String name) {
+            this.name = name;
+            return this;
+        }
+    }
 
 }

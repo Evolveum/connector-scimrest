@@ -1,7 +1,7 @@
 package com.evolveum.polygon.scim.rest;
 
 import com.evolveum.polygon.scim.rest.groovy.BatchAwareResultHandler;
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,9 +16,9 @@ import java.net.http.HttpResponse;
 public class RestPagingAwareObjectRetriever<T extends RestContext> {
 
     private final RestSearchOperationHandler specification;
-    private final RestObjectClass objectClass;
+    private final MappedObjectClass objectClass;
 
-    public RestPagingAwareObjectRetriever(RestObjectClass objectClass, RestSearchOperationHandler<?,?> specification) {
+    public RestPagingAwareObjectRetriever(MappedObjectClass objectClass, RestSearchOperationHandler<?,?> specification) {
         this.objectClass = objectClass;
         this.specification = specification;
     }

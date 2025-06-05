@@ -11,7 +11,7 @@ import org.identityconnectors.framework.common.objects.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RestObjectClassBuilder implements ObjectClassSchemaBuilder {
+public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
 
     private static final Map<String, String> BUILT_IN_ATTRIBUTES;
 
@@ -26,47 +26,53 @@ public class RestObjectClassBuilder implements ObjectClassSchemaBuilder {
 
     private final String name;
     private final ObjectClassInfoBuilder connIdBuilder = new ObjectClassInfoBuilder();
-    Map<String, RestAttributeBuilderImpl> nativeAttributes = new HashMap<>();
+    Map<String, MappedAttributeBuilderImpl> nativeAttributes = new HashMap<>();
     private String description;
+    private ScimMapping scim;
 
-    public RestObjectClassBuilder(RestSchemaBuilder restSchemaBuilder, String name) {
+    public MappedObjectClassBuilder(RestSchemaBuilder restSchemaBuilder, String name) {
         this.name = name;
         connIdBuilder.setType(name);
     }
 
     @Override
-    public RestAttributeBuilderImpl attribute(String name) {
-        return nativeAttributes.computeIfAbsent(name, (k) -> new RestAttributeBuilderImpl(this, k));
+    public MappedAttributeBuilderImpl attribute(String name) {
+        return nativeAttributes.computeIfAbsent(name, (k) -> new MappedAttributeBuilderImpl(this, k));
     }
 
     @Override
-    public RestReferenceAttributeBuilderImpl reference(String name) {
-        var builder = nativeAttributes.computeIfAbsent(name, (k) -> new RestReferenceAttributeBuilderImpl(RestObjectClassBuilder.this, k));
-        return (RestReferenceAttributeBuilderImpl) builder;
+    public MappedReferenceAttributeBuilderImpl reference(String name) {
+        var builder = nativeAttributes.computeIfAbsent(name, (k) -> new MappedReferenceAttributeBuilderImpl(MappedObjectClassBuilder.this, k));
+        return (MappedReferenceAttributeBuilderImpl) builder;
     }
 
 
     @Override
-    public RestAttributeBuilderImpl attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
+    public MappedAttributeBuilderImpl attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
         var attr = attribute(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }
 
     @Override
-    public RestReferenceAttributeBuilderImpl reference(String name, @DelegatesTo(RestReferenceAttributeBuilder.class) Closure closure) {
+    public MappedReferenceAttributeBuilderImpl reference(String name, @DelegatesTo(RestReferenceAttributeBuilder.class) Closure closure) {
         var attr = reference(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }
 
     @Override
-    public RestObjectClassBuilder description(String description) {
+    public MappedObjectClassBuilder description(String description) {
         this.description = description;
         return this;
     }
 
     @Override
     public ScimMapping scim() {
-        throw new UnsupportedOperationException();
+        if (scim == null) {
+            this.scim = new ScimBuilder();
+            scim.name(name);
+        }
+        return this.scim;
+        
     }
 
     @Override
@@ -74,7 +80,7 @@ public class RestObjectClassBuilder implements ObjectClassSchemaBuilder {
         return GroovyClosures.callAndReturnDelegate(closure, scim());
     }
 
-    public RestObjectClassBuilder connIdAttribute(String connIdName, String attributeName) {
+    public MappedObjectClassBuilder connIdAttribute(String connIdName, String attributeName) {
         var finalName = BUILT_IN_ATTRIBUTES.get(connIdName);
         if (finalName == null) {
             throw new IllegalArgumentException("No such built-in ConnID attribute: " + connIdName);
@@ -88,9 +94,9 @@ public class RestObjectClassBuilder implements ObjectClassSchemaBuilder {
     }
 
 
-    public RestObjectClass build() {
-        var connIdAttrs = new HashMap<String, RestAttribute>();
-        var nativeAttrs = new HashMap<String, RestAttribute>();
+    public MappedObjectClass build() {
+        var connIdAttrs = new HashMap<String, MappedAttribute>();
+        var nativeAttrs = new HashMap<String, MappedAttribute>();
         for (var attrBuilder : nativeAttributes.values()) {
             var attribute = attrBuilder.build();
             connIdBuilder.addAttributeInfo(attribute.connId());
@@ -98,7 +104,7 @@ public class RestObjectClassBuilder implements ObjectClassSchemaBuilder {
             nativeAttrs.put(attribute.remoteName(), attribute);
         }
 
-        return new RestObjectClass(connIdBuilder.build(), nativeAttrs, connIdAttrs);
+        return new MappedObjectClass(connIdBuilder.build(), nativeAttrs, connIdAttrs);
     }
 
     public String description() {
@@ -110,7 +116,46 @@ public class RestObjectClassBuilder implements ObjectClassSchemaBuilder {
         return false;
     }
 
-    public Iterable<RestAttributeBuilderImpl> allAttributes() {
+    public Iterable<MappedAttributeBuilderImpl> allAttributes() {
         return nativeAttributes.values();
+    }
+
+    private class ScimBuilder implements ScimMapping {
+
+
+        private String schemaUri;
+        private String name;
+        private boolean onlyExplicitlyListed = false;
+
+        @Override
+        public ScimMapping extension(String alias, String namespace) {
+            return null;
+        }
+
+        @Override
+        public String schemaUri() {
+            return schemaUri;
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public void name(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean isOnlyExplicitlyListed() {
+            return onlyExplicitlyListed;
+        }
+
+        @Override
+        public ScimMapping onlyExplicitlyListed(boolean value) {
+            onlyExplicitlyListed = value;
+            return this;
+        }
     }
 }

@@ -1,6 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
-import com.evolveum.polygon.scim.rest.schema.RestReferenceAttributeBuilderImpl;
+import com.evolveum.polygon.scim.rest.schema.MappedReferenceAttributeBuilderImpl;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -20,7 +20,7 @@ public interface RestRelationshipBuilder {
 
     interface Participant {
 
-        RestReferenceAttributeBuilderImpl attribute(String name);
+        MappedReferenceAttributeBuilderImpl attribute(String name);
 
         Reference attribute(String name, @DelegatesTo(value = Reference.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 

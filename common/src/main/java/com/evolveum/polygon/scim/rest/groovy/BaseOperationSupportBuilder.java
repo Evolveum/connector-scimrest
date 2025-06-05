@@ -3,7 +3,7 @@ package com.evolveum.polygon.scim.rest.groovy;
 import com.evolveum.polygon.scim.rest.CompositeObjectClassHandler;
 import com.evolveum.polygon.scim.rest.ObjectClassHandler;
 import com.evolveum.polygon.scim.rest.groovy.api.OperationSupportBuilder;
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import com.evolveum.polygon.scim.rest.spi.ObjectClassOperation;
 import groovy.lang.Closure;
@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class BaseOperationSupportBuilder<HC> implements OperationSupportBuilder {
 
-    private final RestObjectClass objectClass;
+    private final MappedObjectClass objectClass;
     final ConnectorContext context;
 
     ObjectClassHandler<HC> product;
@@ -24,13 +24,13 @@ public class BaseOperationSupportBuilder<HC> implements OperationSupportBuilder 
     RestSearchOperationBuilder searchOpBuilder;
 
 
-    public BaseOperationSupportBuilder(ConnectorContext context, RestObjectClass restObjectClass) {
+    public BaseOperationSupportBuilder(ConnectorContext context, MappedObjectClass restObjectClass) {
         this.objectClass = restObjectClass;
         this.context = context;
         searchOpBuilder = new RestSearchOperationBuilder(this);
     }
 
-    public RestObjectClass getObjectClass() {
+    public MappedObjectClass getObjectClass() {
         return objectClass;
     }
 

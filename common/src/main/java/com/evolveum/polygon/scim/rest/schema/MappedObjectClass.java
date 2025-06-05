@@ -8,16 +8,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RestObjectClass {
+public class MappedObjectClass {
 
-    private final Map<String, RestAttribute> nativeAttributes;
-    private final Map<String, RestAttribute> connIdAttributes;
+    private final Map<String, MappedAttribute> nativeAttributes;
+    private final Map<String, MappedAttribute> connIdAttributes;
     ObjectClass clazz;
     ObjectClassInfo connId;
 
-    Map<String, RestAttribute> attributes = new HashMap<>();
+    Map<String, MappedAttribute> attributes = new HashMap<>();
 
-    public RestObjectClass(ObjectClassInfo connId, Map<String, RestAttribute> nativeAttrs, Map<String, RestAttribute> connIdAttrs) {
+    public MappedObjectClass(ObjectClassInfo connId, Map<String, MappedAttribute> nativeAttrs, Map<String, MappedAttribute> connIdAttrs) {
         this.connId = connId;
         this.clazz = new ObjectClass(connId.getType());
         this.nativeAttributes = nativeAttrs;
@@ -30,7 +30,7 @@ public class RestObjectClass {
         return builder;
     }
 
-    public Collection<RestAttribute> attributes() {
+    public Collection<MappedAttribute> attributes() {
         return nativeAttributes.values();
     }
 
@@ -42,7 +42,7 @@ public class RestObjectClass {
         return clazz;
     }
 
-    public RestAttribute attributeFromProtocolName(String protocolName) {
+    public MappedAttribute attributeFromProtocolName(String protocolName) {
         return nativeAttributes.get(protocolName);
     }
 }

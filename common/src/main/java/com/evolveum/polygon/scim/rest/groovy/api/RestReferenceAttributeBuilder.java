@@ -1,6 +1,5 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
-import com.evolveum.polygon.scim.rest.schema.RestReferenceAttributeBuilderImpl;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 
 public interface RestReferenceAttributeBuilder extends RestAttributeBuilder {

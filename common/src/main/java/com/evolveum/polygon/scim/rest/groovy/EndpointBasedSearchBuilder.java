@@ -5,7 +5,7 @@ import com.evolveum.polygon.scim.rest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scim.rest.groovy.api.PagingInfo;
 import com.evolveum.polygon.scim.rest.groovy.api.SearchEndpointBuilder;
 import com.evolveum.polygon.scim.rest.groovy.api.ResponseWrapper;
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
@@ -22,7 +22,7 @@ public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearch
 
 
 
-    final RestObjectClass objectClass;
+    final MappedObjectClass objectClass;
     ResponseObjectExtractor<BF, OF> objectExtractor = r -> {
         if (r.body() instanceof JSONArray array) {
             return (Iterable<OF>)  array;
@@ -36,7 +36,7 @@ public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearch
     Class<?> responseFormat = JSON_OBJECT;
     TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
 
-    public EndpointBasedSearchBuilder(String path, RestObjectClass objectClass) {
+    public EndpointBasedSearchBuilder(String path, MappedObjectClass objectClass) {
         this.path = path;
         this.objectClass = objectClass;
     }

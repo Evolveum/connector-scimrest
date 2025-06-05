@@ -13,19 +13,19 @@ import java.util.Map;
 public class RestSchemaBuilder implements com.evolveum.polygon.scim.rest.groovy.api.SchemaBuilder {
 
     private final SchemaBuilder schemaBuilder;
-    private final Map<String, RestObjectClassBuilder> objectClasses = new HashMap<>();
+    private final Map<String, MappedObjectClassBuilder> objectClasses = new HashMap<>();
 
     public RestSchemaBuilder(Class<? extends Connector> connectorClass) {
         this.schemaBuilder = new SchemaBuilder(connectorClass);
     }
 
     @Override
-    public RestObjectClassBuilder objectClass(String name) {
-        return objectClasses.computeIfAbsent(name, k -> new RestObjectClassBuilder(RestSchemaBuilder.this, k));
+    public MappedObjectClassBuilder objectClass(String name) {
+        return objectClasses.computeIfAbsent(name, k -> new MappedObjectClassBuilder(RestSchemaBuilder.this, k));
     }
 
     @Override
-    public RestObjectClassBuilder objectClass(String name, @DelegatesTo(RestObjectClassBuilder.class) Closure<?> closure) {
+    public MappedObjectClassBuilder objectClass(String name, @DelegatesTo(MappedObjectClassBuilder.class) Closure<?> closure) {
         var objectClass = objectClass(name);
         closure.setDelegate(objectClass);
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
@@ -39,7 +39,7 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scim.rest.groovy.
     }
 
     public RestSchema build() {
-        Map<ObjectClass, RestObjectClass> objectClassMap = new HashMap<>();
+        Map<ObjectClass, MappedObjectClass> objectClassMap = new HashMap<>();
         for (var ocBuilder : objectClasses.values()) {
             var objectClassDef = ocBuilder.build();
             schemaBuilder.defineObjectClass(objectClassDef.connId());
@@ -48,7 +48,7 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scim.rest.groovy.
         return new RestSchema(schemaBuilder.build(), objectClassMap);
     }
 
-    public Iterable<RestObjectClassBuilder> allObjectClasses() {
+    public Iterable<MappedObjectClassBuilder> allObjectClasses() {
         return objectClasses.values();
     }
 }

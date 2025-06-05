@@ -1,6 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
-import com.evolveum.polygon.scim.rest.schema.RestObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 
 public interface BaseScriptContext {
 
@@ -10,7 +10,7 @@ public interface BaseScriptContext {
      *
      * @return the object class definition
      */
-    RestObjectClass definition();
+    MappedObjectClass definition();
 
 
     /**
