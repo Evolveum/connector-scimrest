@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.ContextLookup;
 import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.RestPagingAwareObjectRetriever;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
@@ -11,7 +12,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import java.util.HashSet;
 import java.util.Set;
 
-public class EndpointBasedSearchHandler<HC,BF, OF> implements SearchEndpointHandler<BF, OF>, FilterAwareExecuteQueryProcessor<HC> {
+public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler<BF, OF>, FilterAwareExecuteQueryProcessor {
 
     private MappedObjectClass objectClass;
     private final ResponseObjectExtractor<BF,OF> objectExtractor;
@@ -21,7 +22,7 @@ public class EndpointBasedSearchHandler<HC,BF, OF> implements SearchEndpointHand
     private final Class<?> responseFormat;
     private final TotalCountExtractor<BF> totalCountExtractor;
 
-    public EndpointBasedSearchHandler(EndpointBasedSearchBuilder<HC, BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
+    public EndpointBasedSearchHandler(EndpointBasedSearchBuilder<BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
         this.objectClass = builder.objectClass;
         this.apiEndpoint = builder.path;
         this.objectExtractor = builder.objectExtractor;
@@ -59,11 +60,11 @@ public class EndpointBasedSearchHandler<HC,BF, OF> implements SearchEndpointHand
     }
 
     @Override
-    public void executeQuery(HC context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
+    public void executeQuery(ContextLookup context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
         // FIXME: naive refactor for now, reimplement to be better
         var spec = process(filter);
         if (spec != null) {
-            new RestPagingAwareObjectRetriever<>(objectClass, spec).fetch((RestContext) context, filter, resultsHandler, operationOptions);
+            new RestPagingAwareObjectRetriever(objectClass, spec).fetch(context, filter, resultsHandler, operationOptions);
 
         } else {
             throw new IllegalStateException("Cannot execute query");

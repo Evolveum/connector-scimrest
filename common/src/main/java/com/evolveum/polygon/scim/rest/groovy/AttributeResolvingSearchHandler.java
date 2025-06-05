@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.ContextLookup;
 import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolver;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -12,22 +13,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class AttributeResolvingSearchHandler<HC> implements ExecuteQueryProcessor<HC> {
+public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
 
-    private final ExecuteQueryProcessor<HC> delegate;
+    private final ExecuteQueryProcessor delegate;
     private final Set<AttributeResolver> perObject;
     private final Set<AttributeResolver> batched;
 
     private Set<AttributeResolver> attributeResolvers;
 
-    public AttributeResolvingSearchHandler(ExecuteQueryProcessor<HC> delegate, Set<AttributeResolver> perObjectResolvers, Set<AttributeResolver> batchedResolvers) {
+    public AttributeResolvingSearchHandler(ExecuteQueryProcessor delegate, Set<AttributeResolver> perObjectResolvers, Set<AttributeResolver> batchedResolvers) {
         this.delegate = delegate;
         this.perObject = perObjectResolvers;
         this.batched = batchedResolvers;
     }
 
     @Override
-    public void executeQuery(HC context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
+    public void executeQuery(ContextLookup context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
         var coordinator = new AttributeResolutionCoordinator(resultsHandler);
         delegate.executeQuery(context, filter, coordinator, operationOptions);
     }

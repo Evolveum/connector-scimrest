@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearchProcessorBuilder<HC>, SearchEndpointBuilder {
+public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProcessorBuilder, SearchEndpointBuilder {
 
 
 
@@ -42,13 +42,13 @@ public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearch
     }
 
     @Override
-    public EndpointBasedSearchBuilder<HC, BF, OF> objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure) {
+    public EndpointBasedSearchBuilder<BF, OF> objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure) {
         this.objectExtractor  = new GroovyObjectExtractor<>(closure);
         return this;
     }
 
     @Override
-    public EndpointBasedSearchBuilder<HC, BF, OF> pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure) {
+    public EndpointBasedSearchBuilder<BF, OF> pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure) {
         this.pagingSupport = new GroovyPagingSupport(closure);
         return this;
     }
@@ -60,13 +60,13 @@ public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearch
     }
 
     @Override
-    public EndpointBasedSearchBuilder<HC, BF, OF>  singleResult() {
+    public EndpointBasedSearchBuilder<BF, OF>  singleResult() {
         this.totalCountExtractor = TotalCountExtractor.singleObject();
         return this;
     }
 
     @Override
-    public EndpointBasedSearchBuilder<HC, BF, OF>  emptyFilterSupported(boolean emptyFilterSupported) {
+    public EndpointBasedSearchBuilder<BF, OF>  emptyFilterSupported(boolean emptyFilterSupported) {
         this.emptyFilterSupported = emptyFilterSupported;
         return this;
     }
@@ -83,7 +83,7 @@ public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearch
     }
 
     @Override
-    public EndpointBasedSearchBuilder<HC, BF, OF> supportedFilter(FilterSpecification filterSpec, @DelegatesTo(FilterSupportBase.class) Closure<?> closure) {
+    public EndpointBasedSearchBuilder<BF, OF> supportedFilter(FilterSpecification filterSpec, @DelegatesTo(FilterSupportBase.class) Closure<?> closure) {
         filterMappers.add(new GroovyBasedFilterHandler(filterSpec,closure));
         if (emptyFilterSupported == null) {
             // If empty filter support was not specified explicitly, we assume that it is not supported
@@ -125,7 +125,13 @@ public class EndpointBasedSearchBuilder<HC, BF, OF> implements FilterAwareSearch
         }
     }
 
-    public EndpointBasedSearchHandler<HC, BF, OF> build() {
+    @Override
+    public boolean isEnabled() {
+        // Maybe do this also configurable?
+        return true;
+    }
+
+    public EndpointBasedSearchHandler<BF, OF> build() {
         if (emptyFilterSupported == null && filterMappers.isEmpty()) {
             // No specific filter mappers were specified and empty filter support was not specified explicitly
             // so we assume that empty filter is supported

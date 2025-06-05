@@ -8,13 +8,14 @@ import groovy.lang.Closure;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ScriptedGroovySearchBuilderImpl<HC> implements SearchScriptBuilder, FilterAwareSearchProcessorBuilder<HC> {
+public class ScriptedGroovySearchBuilderImpl implements SearchScriptBuilder, FilterAwareSearchProcessorBuilder {
 
     final ConnectorContext context;
     public MappedObjectClass objectClass;
     public Set<FilterSpecification> supportedFilters = new HashSet<>();
     private Boolean emptyFilterSupported;
     Closure<?> implementationPrototype;
+    private boolean enabled = true;
 
     public ScriptedGroovySearchBuilderImpl(ConnectorContext context, MappedObjectClass objectClass) {
         this.context = context;
@@ -39,7 +40,12 @@ public class ScriptedGroovySearchBuilderImpl<HC> implements SearchScriptBuilder,
     }
 
     @Override
-    public FilterAwareExecuteQueryProcessor<HC> build() {
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public FilterAwareExecuteQueryProcessor build() {
         return new ScriptedGroovySearchProcessor(this);
     }
 }

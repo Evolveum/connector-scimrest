@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.ContextLookup;
 import com.evolveum.polygon.scim.rest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import groovy.lang.Closure;
@@ -9,7 +10,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.util.Set;
 
-public class ScriptedGroovySearchProcessor<HC> implements FilterAwareExecuteQueryProcessor<HC> {
+public class ScriptedGroovySearchProcessor implements FilterAwareExecuteQueryProcessor {
 
 
 
@@ -18,7 +19,7 @@ public class ScriptedGroovySearchProcessor<HC> implements FilterAwareExecuteQuer
     private final Set<FilterSpecification> supportedFilters;
     private final ConnectorContext context;
 
-    public <HC> ScriptedGroovySearchProcessor(ScriptedGroovySearchBuilderImpl<HC> builder) {
+    public ScriptedGroovySearchProcessor(ScriptedGroovySearchBuilderImpl builder) {
         this.context = builder.context;
         this.objectClass = builder.objectClass;
         this.implementation = builder.implementationPrototype;
@@ -26,7 +27,7 @@ public class ScriptedGroovySearchProcessor<HC> implements FilterAwareExecuteQuer
     }
 
     @Override
-    public void executeQuery(HC context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
+    public void executeQuery(ContextLookup context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
         var scriptContext = new SearchScriptContextImpl(this.context, objectClass,filter, resultsHandler, operationOptions);
         GroovyClosures.copyAndCall(implementation, scriptContext);
     }

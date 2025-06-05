@@ -1,31 +1,27 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
-import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolver;
-import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolverBuilder;
-import com.evolveum.polygon.scim.rest.groovy.api.SearchScriptBuilder;
-import com.evolveum.polygon.scim.rest.groovy.api.SearchOperationBuilder;
+import com.evolveum.polygon.scim.rest.groovy.api.*;
+import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuilder<ExecuteQueryProcessor<HC>>, SearchOperationBuilder {
+public class RestSearchOperationBuilder implements ObjectClassOperationBuilder<ExecuteQueryProcessor>, SearchOperationBuilder {
 
-    private final BaseOperationSupportBuilder<HC> parent;
-    Map<String, EndpointBasedSearchBuilder<HC,?,?>> endpointBuilder = new HashMap<>();
-    Set<FilterAwareSearchProcessorBuilder<HC>> builders = new HashSet<>();
-    Set<ScriptedAttributeResolverBuilder<HC>> resolvers = new HashSet<>();
+    private final BaseOperationSupportBuilder parent;
+    Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
+    Set<FilterAwareSearchProcessorBuilder> builders = new HashSet<>();
+    Set<ScriptedAttributeResolverBuilder> resolvers = new HashSet<>();
+    private ScimSearchHandler.Builder scim;
 
-    public RestSearchOperationBuilder(BaseOperationSupportBuilder<HC> parent) {
+    public RestSearchOperationBuilder(BaseOperationSupportBuilder parent) {
         this.parent = parent;
     }
 
     @Override
-    public EndpointBasedSearchBuilder<HC,?,?> endpoint(String path) {
+    public EndpointBasedSearchBuilder<?,?> endpoint(String path) {
         var builder = endpointBuilder.get(path);
         if (builder != null) {
             return builder;
@@ -37,14 +33,14 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
     }
 
     @Override
-    public EndpointBasedSearchBuilder<HC,?,?> endpoint(String path, @DelegatesTo(value = EndpointBasedSearchBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> builder) {
+    public EndpointBasedSearchBuilder<?,?> endpoint(String path, @DelegatesTo(value = EndpointBasedSearchBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> builder) {
         return GroovyClosures.callAndReturnDelegate(builder, endpoint(path));
     }
 
 
     @Override
-    public ScriptedAttributeResolverBuilder<HC> attributeResolver(@DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition) {
-        var ret = new ScriptedAttributeResolverBuilder<HC>(parent.context, parent.getObjectClass());
+    public ScriptedAttributeResolverBuilder attributeResolver(@DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition) {
+        var ret = new ScriptedAttributeResolverBuilder(parent.context, parent.getObjectClass());
         resolvers.add(ret);
         return GroovyClosures.callAndReturnDelegate(definition, ret);
     }
@@ -56,28 +52,42 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
         return GroovyClosures.callAndReturnDelegate(definition, ret);
     }
 
-    public ExecuteQueryProcessor<HC> build() {
-        if (endpointBuilder.isEmpty()) {
+    public ExecuteQueryProcessor build() {
+        if (endpointBuilder.isEmpty() && scim == null) {
             // We don't have any endpoints, so we don't need to build anything, this results in search operation
             // being unsupported.
             return null;
         }
 
-        var handlers = new HashSet<FilterAwareExecuteQueryProcessor<HC>>();
-        ExecuteQueryProcessor<HC> emptyFilterHandler = null;
+        var handlers = new HashSet<FilterAwareExecuteQueryProcessor>();
+        ExecuteQueryProcessor emptyFilterHandler = null;
+        ExecuteQueryProcessor anyFilterHandler = null;
         for (var builder : builders) {
-            var handler =  builder.build();
-            handlers.add(handler);
-            if (builder.emptyFilterSupported()) {
-                if (emptyFilterHandler == null) {
-                    emptyFilterHandler = handler;
-                } else {
-                    // FIXME: Throw better exception
-                    throw new IllegalStateException("Multiple default endpoints are not supported");
+            if (builder.isEnabled()) {
+                var handler = builder.build();
+                handlers.add(handler);
+                if (builder.emptyFilterSupported()) {
+                    if (emptyFilterHandler == null) {
+                        emptyFilterHandler = handler;
+                    } else {
+                        // FIXME: Throw better exception
+                        throw new IllegalStateException("Multiple default endpoints are not supported");
+                    }
                 }
             }
         }
-        ExecuteQueryProcessor<HC> dispatcher = new FilterBasedSearchDispatcher<>(emptyFilterHandler, handlers);
+        if (scim != null && scim.isEnabled()) {
+            var handler = scim.build();
+
+            if (emptyFilterHandler == null && scim.emptyFilterSupported()) {
+                emptyFilterHandler = handler;
+            }
+            if (anyFilterHandler == null && scim.anyFilterSupported()) {
+                anyFilterHandler = handler;
+            }
+        }
+
+        ExecuteQueryProcessor dispatcher = new FilterBasedSearchDispatcher<>(emptyFilterHandler, anyFilterHandler,  handlers);
         if (!resolvers.isEmpty()) {
             Set<AttributeResolver> perObjectResolvers = new HashSet<>();
             Set<AttributeResolver> batchedResolvers = new HashSet<>();
@@ -89,11 +99,19 @@ public class RestSearchOperationBuilder<HC> implements ObjectClassOperationBuild
                     default -> throw new IllegalStateException("Unknown resolver type: " + builder.resolutionType());
                 }
             }
-            dispatcher = new AttributeResolvingSearchHandler<>(dispatcher, perObjectResolvers, batchedResolvers);
+            dispatcher = new AttributeResolvingSearchHandler(dispatcher, perObjectResolvers, batchedResolvers);
 
 
         }
 
         return dispatcher;
+    }
+
+    @Override
+    public ScimSearchHandler.Builder scim() {
+        if (this.scim == null) {
+            this.scim = new ScimSearchHandler.Builder(parent.getObjectClass());
+        };
+        return scim;
     }
 }

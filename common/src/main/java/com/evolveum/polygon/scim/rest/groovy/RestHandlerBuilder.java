@@ -11,18 +11,18 @@ import java.util.Map;
 public class RestHandlerBuilder {
 
     private final ConnectorContext context;
-    private final Map<String, BaseOperationSupportBuilder<RestContext>> handlers = new HashMap<>();
+    private final Map<String, BaseOperationSupportBuilder> handlers = new HashMap<>();
 
     public RestHandlerBuilder(ConnectorContext context) {
         this.context = context;
     }
 
-    public BaseOperationSupportBuilder<RestContext> objectClass(String user) {
-        return handlers.computeIfAbsent(user, k ->  new BaseOperationSupportBuilder<>(context,context.schema().objectClass(user)));
+    public BaseOperationSupportBuilder objectClass(String user) {
+        return handlers.computeIfAbsent(user, k ->  new BaseOperationSupportBuilder(context,context.schema().objectClass(user)));
     }
 
-    public Map<ObjectClass, ObjectClassHandler<RestContext>> build() {
-        Map<ObjectClass, ObjectClassHandler<RestContext>> ret = new HashMap<>();
+    public Map<ObjectClass, ObjectClassHandler> build() {
+        Map<ObjectClass, ObjectClassHandler> ret = new HashMap<>();
         for (var builder : handlers.values()) {
             var handler = builder.build();
             if (handler != null) {

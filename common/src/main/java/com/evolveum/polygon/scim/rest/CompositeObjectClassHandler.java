@@ -6,12 +6,12 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CompositeObjectClassHandler<HC> implements ObjectClassHandler<HC> {
+public class CompositeObjectClassHandler implements ObjectClassHandler {
 
     private final ObjectClass objectClass;
-    private final  Map<Class<? extends ObjectClassOperation<?>>, ObjectClassOperation<?>> handlers = new HashMap<>();
+    private final  Map<Class<? extends ObjectClassOperation>, ObjectClassOperation> handlers = new HashMap<>();
 
-    public CompositeObjectClassHandler(ObjectClass objectClass, Map<Class<? extends ObjectClassOperation<?>>, ObjectClassOperation<?>> handlers) {
+    public CompositeObjectClassHandler(ObjectClass objectClass, Map<Class<? extends ObjectClassOperation>, ObjectClassOperation> handlers) {
         this.objectClass = objectClass;
         this.handlers.putAll(handlers);
     }
@@ -22,7 +22,7 @@ public class CompositeObjectClassHandler<HC> implements ObjectClassHandler<HC> {
     }
 
     @Override
-    public <T extends ObjectClassOperation<HC>> T checkSupported(Class<T> operationType) throws UnsupportedOperationException {
+    public <T extends ObjectClassOperation> T checkSupported(Class<T> operationType) throws UnsupportedOperationException {
         var rawHandler = handlers.get(operationType);
         if (rawHandler == null) {
             throw new UnsupportedOperationException(String.format("Operation %s is not supported", operationType.getName()));

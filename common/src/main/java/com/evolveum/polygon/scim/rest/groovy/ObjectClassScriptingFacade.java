@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.ContextLookup;
 import com.evolveum.polygon.scim.rest.ObjectClassHandler;
 import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.groovy.api.ObjectClassScripting;
@@ -9,7 +10,7 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 
-public record ObjectClassScriptingFacade(RestContext rest, MappedObjectClass schema, ObjectClassHandler<RestContext> handler) implements ObjectClassScripting {
+public record ObjectClassScriptingFacade(ContextLookup rest, MappedObjectClass schema, ObjectClassHandler handler) implements ObjectClassScripting {
 
     static ObjectClassScriptingFacade from(ConnectorContext context, String objectClass) {
         var schema = context.schema().objectClass(objectClass);
@@ -17,7 +18,7 @@ public record ObjectClassScriptingFacade(RestContext rest, MappedObjectClass sch
             throw new IllegalArgumentException("No such object class: " + objectClass);
         }
         var handler = context.handlerFor(schema.objectClass());
-        return new ObjectClassScriptingFacade(context.rest(), schema, handler);
+        return new ObjectClassScriptingFacade(context, schema, handler);
     }
 
     @Override

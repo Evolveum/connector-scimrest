@@ -1,5 +1,7 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
+import com.evolveum.polygon.scim.rest.AttributeMapping;
+
 public interface RestAttributeBuilder {
 
     /**
@@ -97,7 +99,6 @@ public interface RestAttributeBuilder {
     }
 
     interface ScimMapping {
-
         /**
          * Name of the matching SCIM attribute
          **/
@@ -105,12 +106,16 @@ public interface RestAttributeBuilder {
 
         ScimMapping name(String name);
 
+        ScimMapping type(String name);
 
+        void implementation(AttributeMapping mapping);
     }
 
     interface ConnIdMapping {
 
         ConnIdMapping name(String name);
+
+        ConnIdMapping type(Class<?> connIdType);
     }
 
 }

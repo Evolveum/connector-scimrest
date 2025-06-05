@@ -8,7 +8,7 @@ import org.identityconnectors.framework.common.objects.*;
  *
  * @param <HC> the type of the handler context, representing the current context of the connector.
  */
-public interface ObjectClassHandler<HC> {
+public interface ObjectClassHandler {
 
     /**
      * Checks if specific {@link org.identityconnectors.framework.spi.operations.SPIOperation} is supported for specific object type
@@ -16,7 +16,7 @@ public interface ObjectClassHandler<HC> {
      * @return
      * @throws UnsupportedOperationException If the SPI Operation is not supported.
      */
-    <T extends ObjectClassOperation<HC>> T  checkSupported(Class<T> operationType) throws UnsupportedOperationException;
+    <T extends ObjectClassOperation> T  checkSupported(Class<T> operationType) throws UnsupportedOperationException;
 
     ObjectClass objectClass();
 }

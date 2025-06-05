@@ -33,7 +33,7 @@ import java.util.Map;
  * It provides a controlled facade to actual REST client allowing us to customize contracts
  * to be easier used and consumed by AI-assisted workflows.
  */
-public class RestContext {
+public class RestContext implements RetrievableContext {
 
     private static final Log LOG = Log.getLog(RestContext.class);
 

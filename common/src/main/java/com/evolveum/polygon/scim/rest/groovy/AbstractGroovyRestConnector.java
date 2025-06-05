@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 import com.evolveum.polygon.scim.rest.ClassHandlerConnectorBase;
+import com.evolveum.polygon.scim.rest.ContextLookup;
 import com.evolveum.polygon.scim.rest.ObjectClassHandler;
 import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.config.RestClientConfiguration;
@@ -8,7 +9,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.spi.Configuration;
 
-public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase<RestContext> {
+public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase {
 
     private ConnectorContext context;
 
@@ -18,9 +19,13 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     }
 
     @Override
-    public ObjectClassHandler<RestContext> handlerFor(ObjectClass objectClass) throws UnsupportedOperationException {
+    public ObjectClassHandler handlerFor(ObjectClass objectClass) throws UnsupportedOperationException {
         initialize();
-        return context.handlerFor(objectClass);
+        var handler =  context.handlerFor(objectClass);
+        if (handler == null) {
+            throw new UnsupportedOperationException("Cannot find handler for " + objectClass);
+        }
+        return handler;
     }
 
     @Override
@@ -50,6 +55,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
         var handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
         initializeObjectClassHandler(handlersBuilder);
+        context.scim().contributeToHandlers(handlersBuilder);
         context.handlers(handlersBuilder.build());
 
         // Finally we initialize REST client if present
@@ -90,7 +96,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     }
 
     @Override
-    public RestContext context() {
-        return context.rest();
+    public ContextLookup context() {
+        return context;
     }
 }

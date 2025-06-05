@@ -23,14 +23,14 @@ import java.util.Set;
  * Handlers needs to implement {@link ObjectClassHandler} interface.
  *
  */
-public abstract class ClassHandlerConnectorBase<HC> implements Connector,
+public abstract class ClassHandlerConnectorBase implements Connector,
         AuthenticateOp, CreateOp, DeleteOp, ResolveUsernameOp,
         SchemaOp, SearchOp<Filter>, TestOp,
         UpdateDeltaOp {
 
-    public abstract HC context();
+    public abstract ContextLookup context();
 
-    public abstract ObjectClassHandler<HC> handlerFor(ObjectClass objectClass) throws UnsupportedOperationException;
+    public abstract ObjectClassHandler handlerFor(ObjectClass objectClass) throws UnsupportedOperationException;
 
     @Override
     public Uid authenticate(ObjectClass objectClass, String username, GuardedString password, OperationOptions options) {

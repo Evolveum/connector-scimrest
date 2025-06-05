@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.ContextLookup;
 import com.evolveum.polygon.scim.rest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -11,21 +12,23 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import java.util.HashSet;
 import java.util.Set;
 
-public class FilterBasedSearchDispatcher<HC> implements ExecuteQueryProcessor<HC> {
+public class FilterBasedSearchDispatcher<HC> implements ExecuteQueryProcessor {
 
     private final static FilterSpecification.Attribute IS_UID_FILTER_WITH_SINGLE_VALUE = FilterSpecification.attribute(Uid.NAME).eq().anySingleValue();
+    private final ExecuteQueryProcessor anyFilterHandler;
 
 
-    ExecuteQueryProcessor<HC> emptyFilterSupport;
-    Set<FilterAwareExecuteQueryProcessor<HC>> implementations;
+    ExecuteQueryProcessor emptyFilterSupport;
+    Set<FilterAwareExecuteQueryProcessor> implementations;
 
-    public FilterBasedSearchDispatcher(ExecuteQueryProcessor<HC> emptyFilterHandler, HashSet<FilterAwareExecuteQueryProcessor<HC>> handlers) {
+    public FilterBasedSearchDispatcher(ExecuteQueryProcessor emptyFilterHandler, ExecuteQueryProcessor anyFilterHandler, HashSet<FilterAwareExecuteQueryProcessor> handlers) {
         this.emptyFilterSupport = emptyFilterHandler;
+        this.anyFilterHandler = anyFilterHandler;
         this.implementations = Set.copyOf(handlers);
     }
 
     @Override
-    public void executeQuery(HC context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
+    public void executeQuery(ContextLookup context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
 
         var rewrittenFilter = filter;
         var implementation = findImplementation(filter, operationOptions);
@@ -47,7 +50,7 @@ public class FilterBasedSearchDispatcher<HC> implements ExecuteQueryProcessor<HC
         implementation.executeQuery(context, rewrittenFilter, resultsHandler, operationOptions);
     }
 
-    private ExecuteQueryProcessor<HC> findImplementation(Filter filter, OperationOptions operationOptions) {
+    private ExecuteQueryProcessor findImplementation(Filter filter, OperationOptions operationOptions) {
         if (isEmpty(filter) && emptyFilterSupport != null) {
             return emptyFilterSupport;
         }
@@ -57,7 +60,7 @@ public class FilterBasedSearchDispatcher<HC> implements ExecuteQueryProcessor<HC
                 return impl;
             }
         }
-        return null;
+        return anyFilterHandler;
     }
 
     private boolean isEmpty(Filter filter) {

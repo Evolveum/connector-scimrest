@@ -12,14 +12,14 @@ import groovy.lang.DelegatesTo;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BaseOperationSupportBuilder<HC> implements OperationSupportBuilder {
+public class BaseOperationSupportBuilder implements OperationSupportBuilder {
 
     private final MappedObjectClass objectClass;
     final ConnectorContext context;
 
-    ObjectClassHandler<HC> product;
+    ObjectClassHandler product;
 
-    Map<Class<? extends ObjectClassOperation<?>>, ObjectClassOperation<?>> buildedOperations = new HashMap<>();
+    Map<Class<? extends ObjectClassOperation>, ObjectClassOperation> buildedOperations = new HashMap<>();
 
     RestSearchOperationBuilder searchOpBuilder;
 
@@ -39,24 +39,28 @@ public class BaseOperationSupportBuilder<HC> implements OperationSupportBuilder 
         return GroovyClosures.callAndReturnDelegate(o, searchOpBuilder);
     }
 
-    public BaseOperationSupportBuilder<HC> search(ExecuteQueryProcessor<HC> processor) {
+    public BaseOperationSupportBuilder search(ExecuteQueryProcessor processor) {
         buildedOperations.put((Class) ExecuteQueryProcessor.class, processor);
         return this;
     }
 
-    public ObjectClassHandler<HC> build() {
+    public ObjectClassHandler build() {
         buildOperationIfEmpty(ExecuteQueryProcessor.class, searchOpBuilder);
 
 
-        return new CompositeObjectClassHandler<>(objectClass.objectClass(), buildedOperations);
+        return new CompositeObjectClassHandler(objectClass.objectClass(), buildedOperations);
     }
 
-    private <O extends ObjectClassOperation<HC>>void buildOperationIfEmpty(Class<O> type, RestSearchOperationBuilder builder) {
+    private void buildOperationIfEmpty(Class<? extends ObjectClassOperation> type, RestSearchOperationBuilder builder) {
         if (builder == null || buildedOperations.containsKey(type)) {
             // Skip building for now
             return;
 
         }
         buildedOperations.put(type, builder.build());
+    }
+
+    public RestSearchOperationBuilder searchBuilder() {
+        return searchOpBuilder;
     }
 }

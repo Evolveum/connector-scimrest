@@ -13,7 +13,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import java.net.http.HttpResponse;
 
 // FIXME: Consider making this JSON agnostic and format / parsing handling will be injected.
-public class RestPagingAwareObjectRetriever<T extends RestContext> {
+public class RestPagingAwareObjectRetriever {
 
     private final RestSearchOperationHandler specification;
     private final MappedObjectClass objectClass;
@@ -23,7 +23,8 @@ public class RestPagingAwareObjectRetriever<T extends RestContext> {
         this.specification = specification;
     }
 
-    public void fetch(T context, Filter query, ResultsHandler handler, OperationOptions options) {
+    public void fetch(ContextLookup lookup, Filter query, ResultsHandler handler, OperationOptions options) {
+        var context = lookup.get(RestContext.class);
         var shouldContinue = true;
         var currentPage = 1;
         var pageLimit = 25; // FIXME: Make this configurable from builders.

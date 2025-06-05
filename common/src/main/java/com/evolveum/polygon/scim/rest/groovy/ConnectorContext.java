@@ -1,8 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
-import com.evolveum.polygon.scim.rest.ObjectClassHandler;
-import com.evolveum.polygon.scim.rest.RestContext;
-import com.evolveum.polygon.scim.rest.ScimContext;
+import com.evolveum.polygon.scim.rest.*;
 import com.evolveum.polygon.scim.rest.config.RestClientConfiguration;
 import com.evolveum.polygon.scim.rest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scim.rest.schema.RestSchema;
@@ -10,9 +8,9 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import java.util.Map;
 
-public class ConnectorContext {
+public class ConnectorContext implements ContextLookup {
 
-    Map<ObjectClass, ObjectClassHandler<RestContext>> handlers;
+    Map<ObjectClass, ObjectClassHandler> handlers;
     BaseGroovyConnectorConfiguration configuration;
 
     private RestSchema schema;
@@ -34,11 +32,11 @@ public class ConnectorContext {
         this.schema = build;
     }
 
-    public void handlers(Map<ObjectClass, ObjectClassHandler<RestContext>> build) {
+    public void handlers(Map<ObjectClass, ObjectClassHandler> build) {
         this.handlers = build;
     }
 
-    public ObjectClassHandler<RestContext> handlerFor(ObjectClass objectClass) {
+    public ObjectClassHandler handlerFor(ObjectClass objectClass) {
         return this.handlers.get(objectClass);
     }
 
@@ -76,5 +74,24 @@ public class ConnectorContext {
         if (configuration instanceof RestClientConfiguration restCfg) {
             rest = new RestContext(restCfg, authorizationCustomizer);
         }
+    }
+
+    @Override
+    public <T extends RetrievableContext> T get(Class<T> contextType) throws IllegalStateException {
+        var ret = getUnchecked(contextType);
+        if (ret == null) {
+            throw new IllegalStateException(String.format("No context found for type %s", contextType.getName()));
+        }
+        return ret;
+    }
+
+    private <T extends RetrievableContext> T getUnchecked(Class<T> contextType) {
+        if (ScimContext.class.equals(contextType)) {
+            return contextType.cast(scim);
+        }
+        if (RestContext.class.equals(contextType)) {
+            return contextType.cast(rest);
+        }
+        return null;
     }
 }

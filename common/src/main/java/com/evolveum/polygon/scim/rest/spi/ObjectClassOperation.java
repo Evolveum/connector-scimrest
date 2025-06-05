@@ -1,5 +1,5 @@
 package com.evolveum.polygon.scim.rest.spi;
 
-public interface ObjectClassOperation<HC> {
+public interface ObjectClassOperation {
 
 }
