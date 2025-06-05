@@ -41,20 +41,24 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     }
 
     @Override
-    public MappedReferenceAttributeBuilderImpl reference(String name) {
-        var builder = nativeAttributes.computeIfAbsent(name, (k) -> new MappedReferenceAttributeBuilderImpl(MappedObjectClassBuilder.this, k));
-        return (MappedReferenceAttributeBuilderImpl) builder;
+    public MappedAttributeBuilderImpl reference(String name) {
+        var builder = nativeAttributes.computeIfAbsent(name, (k) -> {
+            var ret = new MappedAttributeBuilderImpl(MappedObjectClassBuilder.this, k);
+            ret.connIdBuilder.setType(ConnectorObjectReference.class);
+            return ret;
+        });
+        return (MappedAttributeBuilderImpl) builder;
     }
 
 
     @Override
-    public MappedAttributeBuilderImpl attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
+    public MappedBasicAttributeBuilderImpl attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
         var attr = attribute(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }
 
     @Override
-    public MappedReferenceAttributeBuilderImpl reference(String name, @DelegatesTo(RestReferenceAttributeBuilder.class) Closure closure) {
+    public MappedAttributeBuilderImpl reference(String name, @DelegatesTo(RestReferenceAttributeBuilder.class) Closure closure) {
         var attr = reference(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }
@@ -73,6 +77,10 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
         }
         return this.scim;
         
+    }
+
+    public String name() {
+        return name;
     }
 
     @Override
@@ -119,6 +127,16 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     public Iterable<MappedAttributeBuilderImpl> allAttributes() {
         return nativeAttributes.values();
     }
+
+    public boolean connIdAttributeNotDefined(String name) {
+        for (var attrBuilder : nativeAttributes.values()) {
+            if (name.equals(attrBuilder.connIdBuilder.build().getName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     private class ScimBuilder implements ScimMapping {
 

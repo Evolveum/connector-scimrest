@@ -15,7 +15,9 @@ public interface AttributeMapping {
 
     Class<?> connIdType();
     Class<?> primaryWireType();
-    Set<Class<?>> supportedWireTypes();
+    default Set<Class<?>> supportedWireTypes() {
+        return Set.of(primaryWireType());
+    }
 
     Object toWireValue(Object value) throws  IllegalArgumentException;
     Object toConnIdValue(Object value) throws IllegalArgumentException;

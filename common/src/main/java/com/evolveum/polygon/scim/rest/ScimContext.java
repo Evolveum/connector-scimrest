@@ -2,6 +2,7 @@ package com.evolveum.polygon.scim.rest;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scim.rest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scim.rest.groovy.RestHandlerBuilder;
 import com.evolveum.polygon.scim.rest.groovy.ScimSchemaTranslator;
 import com.evolveum.polygon.scim.rest.schema.RestSchemaBuilder;
 import com.unboundid.scim2.client.ScimService;
@@ -11,15 +12,18 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ScimContext {
+public class ScimContext implements RetrievableContext {
 
 
     private final ScimService scimClient;
     private final Client httpClient;
+    private final ScimClientConfiguration configuration;
 
     private ServiceProviderConfigResource providerConfig;
 
@@ -27,12 +31,12 @@ public class ScimContext {
 
     private Map<String, SchemaResource> schemas = new HashMap<>();
 
-    public ScimContext(ScimService scimService) {
-        this.scimClient = scimService;
-        this.httpClient = null;
-    }
+    private Map<String, String> resourceToObjectClass;
+    private Map<String, ScimResourceContext> objectClassToResource;
+
 
     public ScimContext(ScimClientConfiguration scimConf) {
+        this.configuration = scimConf;
         var bearerConf = scimConf.supports(ScimClientConfiguration.BearerToken.class);
 
         var clientBuilder = ClientBuilder.newBuilder();
@@ -57,10 +61,11 @@ public class ScimContext {
             for (var resource : scimClient.getResourceTypes()) {
                 var primary = schemas.get(resource.getSchema().toString());
                 var extensions = new HashMap<String, SchemaResource>();
+                var relativeEndpoint = relativeEndpoint(resource.getEndpoint());
                 for (var ext : resource.getSchemaExtensions()) {
                     extensions.put(ext.getSchema().toString(), schemas.get(ext.getSchema().toString()));
                 }
-                resources.put(resource.getId(), new ScimResourceContext(resource, primary, extensions));
+                resources.put(resource.getId(), new ScimResourceContext(resource, relativeEndpoint, primary, extensions));
             }
 
         } catch (Exception e) {
@@ -70,10 +75,51 @@ public class ScimContext {
 
     }
 
+    private String relativeEndpoint(URI endpoint) {
+        var endpointStr = endpoint.toString();
+        if (endpointStr.startsWith(configuration.getScimBaseUrl())) {
+            return endpointStr.substring(configuration.getScimBaseUrl().length());
+        }
+        throw new IllegalArgumentException("Can not relativize endpoint.");
+    }
+
     public void contributeToSchema(RestSchemaBuilder schemaBuilder) {
         var translator = new ScimSchemaTranslator();
         for (var resource : resources.values()) {
-            translator.populateBuilder(resource, schemaBuilder);
+            translator.correlateObjectClasses(resource, schemaBuilder);
         }
+        resourceToObjectClass = translator.resourceToObjectClass();
+        objectClassToResource = translator.objectClassToResource();
+        for (var resource : resources.values()) {
+            translator.populateSchema(resource, schemaBuilder);
+        }
+    }
+
+    public void contributeToHandlers(RestHandlerBuilder handlerBuilder) {
+        for (var resource : resources.values()) {
+            // FIXME: Probably we should have list of resources to ignore
+            var ocBuilder = handlerBuilder.objectClass(objectClassForResource(resource));
+
+            var searchBuilder = ocBuilder.searchBuilder();
+
+            //var getManuallyImplemented = searchBuilder.getAlreadyImplemented();
+
+            var scim = searchBuilder.scim();
+            if (scim.isEnabled()) {
+                // SCIM Configuration
+            }
+        }
+    }
+
+    private String objectClassForResource(ScimResourceContext resource) {
+        return resourceToObjectClass.get(resource.resource().getName());
+    }
+
+    public ScimService scimClient() {
+        return scimClient;
+    }
+
+    public ScimResourceContext resourceForObjectClass(ObjectClass objectClass) {
+        return objectClassToResource.get(objectClass.getObjectClassValue());
     }
 }
