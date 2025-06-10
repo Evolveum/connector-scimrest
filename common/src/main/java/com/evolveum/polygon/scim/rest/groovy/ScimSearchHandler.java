@@ -1,8 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.ContextLookup;
-import com.evolveum.polygon.scim.rest.JacksonBodyHandler;
-import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.ScimContext;
 import com.evolveum.polygon.scim.rest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scim.rest.groovy.api.ScimSearchBuilder;
@@ -13,11 +11,7 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import java.net.URI;
-import java.net.http.HttpResponse;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,7 +31,7 @@ public class ScimSearchHandler implements  FilterAwareExecuteQueryProcessor {
         this.supportedFilters = supportedFilters;
     }
 
-    public void fetch(ScimContext context, Filter query, ResultsHandler handler, OperationOptions options) {
+    public void performSearch(ScimContext context, Filter query, ResultsHandler handler, OperationOptions options) {
         var shouldContinue = true;
         var currentPage = 1;
         var pageLimit = 25; // FIXME: Make this configurable from builders.
@@ -111,7 +105,27 @@ public class ScimSearchHandler implements  FilterAwareExecuteQueryProcessor {
 
     @Override
     public void executeQuery(ContextLookup context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
-        fetch(context.get(ScimContext.class), filter, resultsHandler, operationOptions);
+        var uid = FilterSpecification.UID_EQUALS_SINGLE_VALUE.checkOnlyValue(filter);
+        if (uid != null) {
+            performGet(context.get(ScimContext.class), uid, resultsHandler, operationOptions);
+        } else {
+            performSearch(context.get(ScimContext.class), filter, resultsHandler, operationOptions);
+        }
+    }
+
+    private void performGet(ScimContext context, Object uid, ResultsHandler handler, OperationOptions operationOptions) {
+        var scim = context.scimClient();
+        var resource = context.resourceForObjectClass(objectClass.objectClass());
+
+        try {
+            var remoteObj = scim.retrieveRequest(resource.relativeEndpoint(), uid.toString())
+                    .invoke(GenericScimResource.class);
+            ConnectorObject obj = deserializeFromRemote(remoteObj);
+            handler.handle(obj);
+            BatchAwareResultHandler.batchFinished(handler);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static class Builder implements ScimSearchBuilder, FilterAwareSearchProcessorBuilder {

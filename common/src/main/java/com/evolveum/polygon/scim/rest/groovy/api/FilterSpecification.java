@@ -22,6 +22,7 @@ public interface FilterSpecification {
 
     static FilterSpecification EMPTY_FILTER = f -> f == null;
 
+    static FilterSpecification.SingleValueAttribute UID_EQUALS_SINGLE_VALUE = FilterSpecification.attribute(Uid.NAME).eq().anySingleValue();
 
     /**
      * Determines if the provided filter matches the criteria specified by this specification.
@@ -103,8 +104,29 @@ public interface FilterSpecification {
          *
          * @return An {@link Attribute} specification that matches only if the attribute has exactly one value.
          */
-        default Attribute anySingleValue() {
-            return chain(filter -> filter.getAttribute().getValue().size() == 1);
+        default SingleValueAttribute anySingleValue() {
+            return new SingleValueAttribute(this);
+        }
+    }
+
+    record SingleValueAttribute(Attribute base) implements Attribute {
+
+        @Override
+        public boolean matches(AttributeFilter filter) {
+            return base.matches(filter) && filter.getAttribute().getValue().size() == 1;
+        }
+
+        /**
+         * Checks if filter matches specifications & extract sonly value from an attribute based on a given filter.
+         *
+         * @param filter the filter to match the attribute
+         * @return the only value of the matched attribute, or null if filter does not match specification
+         */
+        public Object checkOnlyValue(Filter filter) {
+            if (matches(filter) && filter instanceof AttributeFilter attrFilter) {
+                return attrFilter.getAttribute().getValue().get(0);
+            }
+            return null;
         }
     }
 }
