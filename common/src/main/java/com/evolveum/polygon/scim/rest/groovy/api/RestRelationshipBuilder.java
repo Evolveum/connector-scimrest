@@ -7,9 +7,24 @@ import groovy.lang.DelegatesTo;
 public interface RestRelationshipBuilder {
 
 
-    Subject subject(String name, @DelegatesTo(value = Subject.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+    /**
+     * Declares object class as a subject of this relationship
+     *
+     * @param objectClass Object Class of subject of this relationship (semantic owner of relation)
+     * @param closure Groovy closure which configures subject-part of relation
+     * @return Builder which allows to customize subject part of relationship
+     */
+    Subject subject(String objectClass, @DelegatesTo(value = Subject.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
-    Object object(String name, @DelegatesTo(value = Object.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+
+    /**
+     * Declares an object class as a participant of this relationship.
+     *
+     * @param objectClass Object class of the object.
+     * @param closure Groovy closure to configure the participant part of the relationship.
+     * @return Builder for customizing the participant part of the relationship.
+     */
+    Object object(String objectClass, @DelegatesTo(value = Object.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     interface Subject extends Participant {
 

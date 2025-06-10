@@ -138,7 +138,7 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     }
 
 
-    private class ScimBuilder implements ScimMapping {
+    private static class ScimBuilder implements ScimMapping {
 
 
         private String schemaUri;
@@ -161,8 +161,9 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
         }
 
         @Override
-        public void name(String name) {
+        public ScimMapping name(String name) {
             this.name = name;
+            return this;
         }
 
         @Override
