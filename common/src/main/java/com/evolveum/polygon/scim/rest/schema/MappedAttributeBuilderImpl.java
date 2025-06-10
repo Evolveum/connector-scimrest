@@ -5,6 +5,7 @@ import org.identityconnectors.framework.common.objects.AttributeInfo;
 public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.groovy.api.RestReferenceAttributeBuilder {
 
     private String referencedObjectClass;
+    private boolean isReference = false;
 
     public MappedAttributeBuilderImpl(MappedObjectClassBuilder restObjectClassBuilder, String name) {
         super(restObjectClassBuilder, name);
@@ -12,6 +13,7 @@ public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl 
 
     @Override
     public MappedAttributeBuilderImpl objectClass(String objectClass) {
+        isReference = true;
         this.referencedObjectClass = objectClass;
         this.connIdBuilder.setReferencedObjectClassName(objectClass);
         return this;
@@ -25,15 +27,27 @@ public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl 
 
     @Override
     public MappedAttributeBuilderImpl role(String role) {
+        this.isReference = true;
         this.connIdBuilder.setRoleInReference(role);
         return this;
     }
 
     @Override
     public MappedAttributeBuilderImpl role(AttributeInfo.RoleInReference role) {
-        this.connIdBuilder.setRoleInReference(role.toString());
-        return this;
+        return role(role.toString());
     }
 
 
+    public boolean isReference() {
+        return isReference;
+    }
+
+    /**
+     * Builds and returns a {@code RestAttribute} instance with the specified attributes.
+     *
+     * @return a new {@code RestAttribute} instance configured with the current settings
+     */
+    public MappedAttribute build() {
+        return new MappedAttribute(this);
+    }
 }

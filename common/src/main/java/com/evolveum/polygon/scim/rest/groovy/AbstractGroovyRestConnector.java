@@ -55,7 +55,10 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
         var handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
         initializeObjectClassHandler(handlersBuilder);
-        context.scim().contributeToHandlers(handlersBuilder);
+
+        if (context.isScimEnabled()) {
+            context.scim().contributeToHandlers(handlersBuilder);
+        }
         context.handlers(handlersBuilder.build());
 
         // Finally we initialize REST client if present

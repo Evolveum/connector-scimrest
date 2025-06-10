@@ -5,6 +5,7 @@ import com.evolveum.polygon.scim.rest.OpenApiTypeMapping;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,15 +20,19 @@ public class MappedAttribute {
     private ScimAttributeMapping scim;
     private Map<Class<? extends AttributeProtocolMapping>, AttributeProtocolMapping> protocolMappings = new HashMap<>();
 
-    public MappedAttribute(MappedBasicAttributeBuilderImpl mappedBuilder) {
+    public MappedAttribute(MappedAttributeBuilderImpl mappedBuilder) {
         remoteName = mappedBuilder.remoteName;
-        if (!(mappedBuilder instanceof MappedAttributeBuilderImpl)) {
+
+        if (!mappedBuilder.isReference()) {
             var openApiMapping = OpenApiTypeMapping.from(mappedBuilder.jsonType, mappedBuilder.openApiFormat);
             mappedBuilder.connIdBuilder.setType(openApiMapping.connIdType());
             mapping = ConnIdMapping.of(mappedBuilder.connIdBuilder.build().getName(), openApiMapping);
             // ConnID Specific mapping may changed the name.
             mappedBuilder.connIdBuilder.setType(mapping.connIdType());
-        } // FIXME: Do the reference attribute mappings
+        } else {
+            mappedBuilder.connIdBuilder.setType(ConnectorObjectReference.class);
+        }
+        // FIXME: Do the reference attribute mappings
 
         info = mappedBuilder.connIdBuilder.build();
         for (var proto : mappedBuilder.protocolMappings.entrySet()) {

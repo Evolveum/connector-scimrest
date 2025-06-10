@@ -6,7 +6,7 @@ import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MappedBasicAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.groovy.api.RestAttributeBuilder {
+public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.groovy.api.RestAttributeBuilder {
 
     MappedObjectClassBuilder objectClass;
     AttributeInfoBuilder connIdBuilder = new AttributeInfoBuilder();
@@ -96,14 +96,7 @@ public class MappedBasicAttributeBuilderImpl implements com.evolveum.polygon.sci
         return this;
     }
 
-    /**
-     * Builds and returns a {@code RestAttribute} instance with the specified attributes.
-     *
-     * @return a new {@code RestAttribute} instance configured with the current settings
-     */
-    public MappedAttribute build() {
-        return new MappedAttribute(this);
-    }
+
 
     @Override
     public JsonMapping json() {

@@ -21,7 +21,7 @@ public class GroovyRestHandlerBuilder extends RestHandlerBuilder {
     }
 
     public void loadFromResource(String s) {
-        shell.evaluate(new InputStreamReader(this.getClass().getResourceAsStream(s)));
+        shell.evaluate(new InputStreamReader(this.getClass().getResourceAsStream(s)), s);
     }
 
     public void loadFromString(String script) {
