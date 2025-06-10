@@ -20,8 +20,6 @@ import java.util.Set;
 
 public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProcessorBuilder, SearchEndpointBuilder {
 
-
-
     final MappedObjectClass objectClass;
     ResponseObjectExtractor<BF, OF> objectExtractor = r -> {
         if (r.body() instanceof JSONArray array) {
@@ -78,8 +76,12 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
     @Override
     public FilterSpecification.Attribute attribute(String name) {
-        var connIdName = objectClass.attributeFromProtocolName(name).connId().getName();
-        return FilterSpecification.attribute(connIdName);
+        var connId = objectClass.attributeFromProtocolName(name).connId();
+        if (connId != null) {
+            // FIXME: Create deffered search here
+            return FilterSpecification.attribute(connId.getName());
+        }
+        return FilterSpecification.attribute(name);
     }
 
     @Override
@@ -97,7 +99,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
         @Override
         public Iterable<OF> extractObjects(HttpResponse<BF> response) {
-            return GroovyClosures.copyAndCall(prototype, new ResponseWrapper<BF>(response));
+            return GroovyClosures.copyAndCall((Closure<Iterable<OF>>) prototype, new ResponseWrapper<BF>(response));
         }
     }
 

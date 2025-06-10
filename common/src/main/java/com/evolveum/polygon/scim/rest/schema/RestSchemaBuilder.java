@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.schema;
 
+import com.evolveum.polygon.scim.rest.groovy.GroovyClosures;
 import com.evolveum.polygon.scim.rest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -35,7 +36,8 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scim.rest.groovy.
 
     @Override
     public RestRelationshipBuilder relationship(String name, @DelegatesTo(RestRelationshipBuilder.class) Closure<?> closure) {
-        throw new UnsupportedOperationException();
+        var ret =  new RelationshipBuilderImpl(name, this);
+        return GroovyClosures.callAndReturnDelegate(closure, ret);
     }
 
     public RestSchema build() {

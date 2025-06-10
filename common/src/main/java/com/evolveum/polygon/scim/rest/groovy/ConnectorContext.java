@@ -8,7 +8,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import java.util.Map;
 
-public class ConnectorContext implements ContextLookup {
+public class ConnectorContext implements ContextLookup, RetrievableContext {
 
     Map<ObjectClass, ObjectClassHandler> handlers;
     BaseGroovyConnectorConfiguration configuration;
@@ -86,6 +86,9 @@ public class ConnectorContext implements ContextLookup {
     }
 
     private <T extends RetrievableContext> T getUnchecked(Class<T> contextType) {
+        if (ConnectorContext.class.equals(contextType)) {
+            return contextType.cast(this);
+        }
         if (ScimContext.class.equals(contextType)) {
             return contextType.cast(scim);
         }

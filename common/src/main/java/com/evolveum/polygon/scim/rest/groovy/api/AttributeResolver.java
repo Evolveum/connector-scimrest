@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
+import com.evolveum.polygon.scim.rest.ContextLookup;
 import com.evolveum.polygon.scim.rest.schema.MappedAttribute;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 
@@ -24,7 +25,7 @@ public interface AttributeResolver {
      *
      * @param builder The builder for the connector object whose attributes need to be resolved.
      */
-    void resolveSingle(ConnectorObjectBuilder builder);
+    void resolveSingle(ContextLookup context, ConnectorObjectBuilder builder);
 
     /**
      * Resolves additional attributes for multiple connector objects.
@@ -34,9 +35,11 @@ public interface AttributeResolver {
      *
      * @param builders An iterable collection of `ConnectorObjectBuilder` objects whose attributes need to be resolved.
      */
-    default void resolve(Iterable<ConnectorObjectBuilder> builders) {
+    default void resolve(ContextLookup context,Iterable<ConnectorObjectBuilder> builders) {
         for (ConnectorObjectBuilder builder : builders) {
-            resolveSingle(builder);
+            resolveSingle(context, builder);
         }
     }
+
+    AttributeResolverBuilder.ResolutionType resolutionType();
 }

@@ -2,6 +2,7 @@ package com.evolveum.polygon.scim.rest.schema;
 
 import com.evolveum.polygon.scim.rest.AttributeMapping;
 import com.evolveum.polygon.scim.rest.OpenApiTypeMapping;
+import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolver;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
@@ -13,16 +14,17 @@ import java.util.Map;
 
 public class MappedAttribute {
 
-
     private final AttributeInfo info;
     private final String remoteName;
     private AttributeMapping mapping;
     private ScimAttributeMapping scim;
-    private Map<Class<? extends AttributeProtocolMapping>, AttributeProtocolMapping> protocolMappings = new HashMap<>();
+    private final Map<Class<? extends AttributeProtocolMapping<?>>, AttributeProtocolMapping<?>> protocolMappings = new HashMap<>();
+    private final boolean emulated;
+    private AttributeResolver resolver;
 
     public MappedAttribute(MappedAttributeBuilderImpl mappedBuilder) {
         remoteName = mappedBuilder.remoteName;
-
+        emulated = mappedBuilder.emulated;
         if (!mappedBuilder.isReference()) {
             var openApiMapping = OpenApiTypeMapping.from(mappedBuilder.jsonType, mappedBuilder.openApiFormat);
             mappedBuilder.connIdBuilder.setType(openApiMapping.connIdType());
@@ -35,6 +37,11 @@ public class MappedAttribute {
         // FIXME: Do the reference attribute mappings
 
         info = mappedBuilder.connIdBuilder.build();
+        mappedBuilder.deffered.set(this);
+
+        if (mappedBuilder.resolverBuilder != null) {
+            this.resolver = mappedBuilder.resolverBuilder.build();
+        }
         for (var proto : mappedBuilder.protocolMappings.entrySet()) {
             protocolMappings.put(proto.getKey(), proto.getValue().build());
         }
@@ -68,5 +75,13 @@ public class MappedAttribute {
 
     public <T extends AttributeProtocolMapping> T mapping(Class<T> type) {
         return type.cast(protocolMappings.get(type));
+    }
+
+    public boolean emulated() {
+        return emulated;
+    }
+
+    public AttributeResolver resolver() {
+        return resolver;
     }
 }

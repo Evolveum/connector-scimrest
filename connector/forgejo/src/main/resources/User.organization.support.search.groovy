@@ -1,5 +1,5 @@
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference
-
+/*
 objectClass("User") {
     search {
         attributeResolver {
@@ -13,7 +13,7 @@ objectClass("User") {
         }
     }
 }
-
+*/
 objectClass("Organization") {
     search {
         endpoint("users/{username}/orgs") {

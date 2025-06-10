@@ -16,6 +16,8 @@ public class GroovySchemaLoader {
         shell = context.createShell();
         this.schemaBuilder = schemaBuilder;
         shell.setVariable("objectClass", new MethodClosure(schemaBuilder, "objectClass"));
+        shell.setVariable("relationship", new MethodClosure(schemaBuilder, "relationship"));
+
     }
 
     public void load(String groovyScript) {
@@ -27,6 +29,6 @@ public class GroovySchemaLoader {
     }
 
     public void loadFromResource(String s) {
-        shell.evaluate(new InputStreamReader(this.getClass().getResourceAsStream(s)));
+        shell.evaluate(new InputStreamReader(this.getClass().getResourceAsStream(s)), s);
     }
 }

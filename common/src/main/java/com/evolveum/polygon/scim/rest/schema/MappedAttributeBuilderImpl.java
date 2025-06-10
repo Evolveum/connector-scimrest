@@ -1,11 +1,19 @@
 package com.evolveum.polygon.scim.rest.schema;
 
+import com.evolveum.polygon.scim.rest.Deferred;
+import com.evolveum.polygon.scim.rest.groovy.GroovyClosures;
+import com.evolveum.polygon.scim.rest.groovy.ScriptedAttributeResolverBuilder;
+import com.evolveum.polygon.scim.rest.groovy.ScriptedSingleAttributeResolverBuilder;
+import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolverBuilder;
+import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 
 public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.groovy.api.RestReferenceAttributeBuilder {
 
+    public Deferred.Settable<MappedAttribute> deffered = Deferred.settable();
     private String referencedObjectClass;
     private boolean isReference = false;
+    ScriptedSingleAttributeResolverBuilder resolverBuilder;
 
     public MappedAttributeBuilderImpl(MappedObjectClassBuilder restObjectClassBuilder, String name) {
         super(restObjectClassBuilder, name);
@@ -49,5 +57,12 @@ public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl 
      */
     public MappedAttribute build() {
         return new MappedAttribute(this);
+    }
+
+    public AttributeResolverBuilder resolver(Closure<?> closure) {
+        this.emulated = true;
+        this.resolverBuilder = new ScriptedSingleAttributeResolverBuilder(objectClass.name(), deffered);
+        GroovyClosures.callAndReturnDelegate(closure, resolverBuilder);
+        return resolverBuilder;
     }
 }

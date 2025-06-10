@@ -15,7 +15,7 @@ public class GroovyClosures {
     public static <T>  T callAndReturnDelegate(Closure<?> closure, T delegate) {
         closure.setDelegate(delegate);
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        closure.call();
+        performClosureCall(closure, delegate);
         return delegate;
     }
 
@@ -27,11 +27,32 @@ public class GroovyClosures {
      * @param delegate The delegate object that will be used within the closure.
      * @return The result of the closure execution.
      */
-    public static <T>  T copyAndCall(Closure<?> prototype, Object delegate) {
+    public static <T>  T copyAndCall(Closure<T> prototype, Object delegate) {
         Closure<?> closure = (Closure<?>) prototype.clone();
         closure.setDelegate(delegate);
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         // FIXME: Add type safety contracts
-        return (T) closure.call();
+        return performClosureCall(closure, delegate);
+    }
+
+    private static <T> T performClosureCall(Closure<?> closure, Object delegate) {
+        if (delegate instanceof ClosureExecutionAware executionAware) {
+            executionAware.beforeExecution();
+        }
+        T ret = (T) closure.call();
+        if (delegate instanceof ClosureExecutionAware executionAware) {
+            executionAware.afterExecution();
+        }
+        return ret;
+    }
+
+    public interface ClosureExecutionAware {
+
+        default void beforeExecution() {
+            // Intentional NOOP
+        }
+        default void afterExecution() {
+            // Intentional NOOP
+        }
     }
 }

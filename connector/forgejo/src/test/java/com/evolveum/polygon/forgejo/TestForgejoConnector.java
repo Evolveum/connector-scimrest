@@ -28,6 +28,9 @@ public class TestForgejoConnector {
         var user = schema.findObjectClassInfo("User");
         assertNotNull(user);
         assertNotNull(user.getType());
+
+        assertTrue(user.getAttributeInfo().stream().anyMatch(
+                attr -> attr.getName().equals("organization") && attr.getType().equals(ConnectorObjectReference.class)));
     }
 
     private ForgejoConnector initializedConnector() {
@@ -100,7 +103,7 @@ public class TestForgejoConnector {
         assertEquals(results.get(0).getUid().getUidValue(), "1");
     }
 
-    @Test(enabled = false)
+    @Test()
     public void testSearchUserByNameEquals() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -131,6 +134,23 @@ public class TestForgejoConnector {
         assertNotNull(results);
         assertEquals(results.size(), 1);
         assertEquals(results.get(0).getUid().getUidValue(), "3");
+    }
+
+    @Test
+    public void testOrganizationMembershipReturned() {
+        var connector = initializedConnector();
+        var results = new ArrayList<ConnectorObject>();
+        var filter = new EqualsFilter(new Name("tonydamage"));
+        connector.executeQuery(new ObjectClass("User"), filter, results::add, new OperationOptions(Map.of()));
+        assertNotNull(results);
+        assertEquals(results.size(), 1);
+        assertEquals(results.get(0).getUid().getUidValue(), "1");
+
+        var organizations = results.get(0).getAttributeByName("organization");
+        assertNotNull(organizations);
+        assertFalse(organizations.getValue().isEmpty());
+        assertTrue(organizations.getValue().stream().anyMatch(o -> o instanceof ConnectorObjectReference cor && cor.getValue() instanceof ConnectorObject co && co.getName().getNameValue().equals("vaia-test")));
+
     }
 
 }

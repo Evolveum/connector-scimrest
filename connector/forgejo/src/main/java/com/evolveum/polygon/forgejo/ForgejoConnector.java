@@ -17,7 +17,7 @@ public class ForgejoConnector extends AbstractGroovyRestConnector<ForgejoConfigu
         loader.loadFromResource("/Organization.connid.schema.groovy");
         loader.loadFromResource("/Team.native.schema.groovy");
         loader.loadFromResource("/Team.connid.schema.groovy");
-        loader.loadFromResource("/associations.schema.groovy");
+        loader.loadFromResource("/associations.new.schema.groovy");
 
 
     }

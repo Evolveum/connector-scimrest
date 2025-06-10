@@ -25,10 +25,11 @@ objectClass("User") {
         endpoint("/users/{username}") {
             singleResult()
             supportedFilter(attribute("login").eq().anySingleValue()) {
-                request.pathParameter("username", value.value.uid)
+                request.pathParameter("username", value)
             }
         }
 
+        /*
         endpoint("teams/{id}/members") {
             responseFormat JSON_ARRAY
             supportedFilter(attribute("teams").eq().anySingleValue()) {
@@ -39,5 +40,6 @@ objectClass("User") {
                         .queryParameter("page", paging.pageOffset)
             }
         }
+        */
     }
 }

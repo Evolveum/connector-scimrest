@@ -1,7 +1,7 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.groovy.api.*;
-import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
+import com.evolveum.polygon.scim.rest.schema.MappedAttribute;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -59,6 +59,10 @@ public class RestSearchOperationBuilder implements ObjectClassOperationBuilder<E
             return null;
         }
 
+        return buildAttributeResolver(buildFilterDispatcher());
+    }
+
+    private ExecuteQueryProcessor buildFilterDispatcher() {
         var handlers = new HashSet<FilterAwareExecuteQueryProcessor>();
         ExecuteQueryProcessor emptyFilterHandler = null;
         ExecuteQueryProcessor anyFilterHandler = null;
@@ -86,22 +90,38 @@ public class RestSearchOperationBuilder implements ObjectClassOperationBuilder<E
                 anyFilterHandler = handler;
             }
         }
+        return new FilterBasedSearchDispatcher<>(emptyFilterHandler, anyFilterHandler,  handlers);
+    }
 
-        ExecuteQueryProcessor dispatcher = new FilterBasedSearchDispatcher<>(emptyFilterHandler, anyFilterHandler,  handlers);
-        if (!resolvers.isEmpty()) {
-            Set<AttributeResolver> perObjectResolvers = new HashSet<>();
-            Set<AttributeResolver> batchedResolvers = new HashSet<>();
-            for (var builder : resolvers) {
-                var resolver = builder.build();
-                switch (builder.resolutionType()) {
+    private ExecuteQueryProcessor buildAttributeResolver(ExecuteQueryProcessor dispatcher) {
+        Set<AttributeResolver> perObjectResolvers = new HashSet<>();
+        Set<AttributeResolver> batchedResolvers = new HashSet<>();
+        Set<MappedAttribute> supportedAttributes = new HashSet<>();
+        for (var builder : resolvers) {
+            var resolver = builder.build();
+            supportedAttributes.addAll(resolver.getSupportedAttributes());
+            switch (builder.resolutionType()) {
+                case BATCH -> batchedResolvers.add(resolver);
+                case PER_OBJECT -> perObjectResolvers.add(resolver);
+                default -> throw new IllegalStateException("Unknown resolver type: " + builder.resolutionType());
+            }
+        }
+        for (var attribute : parent.getObjectClass().attributes()) {
+            if (attribute.emulated()) {
+                var resolver = attribute.resolver();
+                if (resolver == null && !supportedAttributes.contains(attribute)) {
+                    throw new IllegalStateException("Attribute: " + attribute.remoteName() + " is emulated, but no resolver exists.");
+                }
+                switch (resolver.resolutionType()) {
                     case BATCH -> batchedResolvers.add(resolver);
                     case PER_OBJECT -> perObjectResolvers.add(resolver);
-                    default -> throw new IllegalStateException("Unknown resolver type: " + builder.resolutionType());
+                    default -> throw new IllegalStateException("Unknown resolver type: " + resolver.resolutionType());
                 }
             }
+        }
+
+        if (!perObjectResolvers.isEmpty() || !batchedResolvers.isEmpty()) {
             dispatcher = new AttributeResolvingSearchHandler(dispatcher, perObjectResolvers, batchedResolvers);
-
-
         }
 
         return dispatcher;

@@ -29,17 +29,19 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
 
     @Override
     public void executeQuery(ContextLookup context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
-        var coordinator = new AttributeResolutionCoordinator(resultsHandler);
+        var coordinator = new AttributeResolutionCoordinator(context, resultsHandler);
         delegate.executeQuery(context, filter, coordinator, operationOptions);
     }
 
     private class AttributeResolutionCoordinator implements BatchAwareResultHandler {
         private final ResultsHandler delegate;
+        private final ContextLookup contextLookup;
 
         List<ConnectorObjectBuilder> outstanding = new ArrayList<>();
 
-        public AttributeResolutionCoordinator(ResultsHandler resultsHandler) {
+        public AttributeResolutionCoordinator(ContextLookup lookup, ResultsHandler resultsHandler) {
             this.delegate = resultsHandler;
+            this.contextLookup = lookup;
         }
 
         @Override
@@ -47,7 +49,7 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
             var builder = new ConnectorObjectBuilder().add(original);
             for (AttributeResolver resolver : perObject) {
                 if (resolver.getSupportedAttributes().stream().anyMatch(a -> original.getAttributeByName(a.connId().getName()) == null)) {
-                    resolver.resolveSingle(builder);
+                    resolver.resolveSingle(contextLookup, builder);
                 }
             }
             if (batched.isEmpty()) {
@@ -64,7 +66,7 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
             outstanding = new ArrayList<>();
 
             for (AttributeResolver resolver : batched) {
-                resolver.resolve(batch);
+                resolver.resolve(contextLookup, batch);
             }
 
             for (ConnectorObjectBuilder builder : batch) {

@@ -14,7 +14,7 @@ public interface RestRelationshipBuilder {
      * @param closure Groovy closure which configures subject-part of relation
      * @return Builder which allows to customize subject part of relationship
      */
-    Subject subject(String objectClass, @DelegatesTo(value = Subject.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+    Participant subject(String objectClass, @DelegatesTo(value = Participant.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
 
     /**
@@ -24,18 +24,13 @@ public interface RestRelationshipBuilder {
      * @param closure Groovy closure to configure the participant part of the relationship.
      * @return Builder for customizing the participant part of the relationship.
      */
-    Object object(String objectClass, @DelegatesTo(value = Object.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+    Participant object(String objectClass, @DelegatesTo(value = Participant.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
-    interface Subject extends Participant {
 
-    }
-
-    interface Object extends Participant{
-    }
 
     interface Participant {
 
-        MappedAttributeBuilderImpl attribute(String name);
+        Reference attribute(String name);
 
         Reference attribute(String name, @DelegatesTo(value = Reference.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 

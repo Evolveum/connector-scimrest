@@ -45,4 +45,8 @@ public class MappedObjectClass {
     public MappedAttribute attributeFromProtocolName(String protocolName) {
         return nativeAttributes.get(protocolName);
     }
+
+    public String name() {
+        return objectClass().getObjectClassValue();
+    }
 }

@@ -9,4 +9,5 @@ public interface AttributeResolutionContext extends BaseScriptContext {
     }
 
     ConnectorObjectBuilder value();
+
 }
