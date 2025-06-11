@@ -85,11 +85,16 @@ public class TestForgejoConnector {
     public void testSearchOrganizationByUidWithNameHint() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
-        var filter = new EqualsFilter(new Uid("4", new Name("dfx.sk")));
+        var filter = new EqualsFilter(new Uid("dfx.sk", new Name("dfx.sk")));
         connector.executeQuery(new ObjectClass("Organization"), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "4");
+        var firstResult = results.get(0);
+        assertEquals(firstResult.getUid().getUidValue(), "dfx.sk");
+        var members = firstResult.getAttributeByName("member");
+        assertNotNull(members);
+        assertFalse(members.getValue().isEmpty());
+
     }
 
     @Test

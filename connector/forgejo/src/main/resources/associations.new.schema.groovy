@@ -11,12 +11,12 @@ relationship("UserOrganizationMembership") {
     }
     object("Organization") {
         attribute("member") {
-            /*resolver {
+            resolver {
                 resolutionType PER_OBJECT
                 search {
                     attributeFilter("organization").eq(value)
                 }
-            }*/
+            }
         }
     }
 }

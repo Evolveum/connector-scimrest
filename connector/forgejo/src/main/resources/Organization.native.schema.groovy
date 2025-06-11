@@ -21,6 +21,9 @@ objectClass("Organization") {
     attribute("name") {
         jsonType "string"
     }
+    attribute("username") {
+        jsonType "string"
+    }
     attribute("visibility") {
         jsonType "string"
     }
