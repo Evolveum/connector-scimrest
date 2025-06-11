@@ -3,6 +3,8 @@ package com.evolveum.polygon.scim.rest.groovy.api;
 import com.evolveum.polygon.scim.rest.ContextLookup;
 import com.evolveum.polygon.scim.rest.schema.MappedAttribute;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 
 import java.util.Set;
 
@@ -13,6 +15,8 @@ import java.util.Set;
  *
  */
 public interface AttributeResolver {
+
+    String SKIP_ATTRIBUTE_RESOLUTION_OPTION = "skipAttributeResolution";
 
     Set<MappedAttribute> getSupportedAttributes();
 
@@ -42,4 +46,11 @@ public interface AttributeResolver {
     }
 
     AttributeResolverBuilder.ResolutionType resolutionType();
+
+
+    default OperationOptions skipAttributeResolution() {
+        return new OperationOptionsBuilder()
+                .setOption(SKIP_ATTRIBUTE_RESOLUTION_OPTION, true).build();
+    }
+
 }

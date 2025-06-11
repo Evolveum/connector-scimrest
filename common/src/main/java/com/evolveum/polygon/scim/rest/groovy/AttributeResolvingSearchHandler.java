@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static com.evolveum.polygon.scim.rest.groovy.api.AttributeResolver.SKIP_ATTRIBUTE_RESOLUTION_OPTION;
+
 public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
 
     private final ExecuteQueryProcessor delegate;
@@ -28,9 +30,20 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
     }
 
     @Override
-    public void executeQuery(ContextLookup context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
-        var coordinator = new AttributeResolutionCoordinator(context, resultsHandler);
-        delegate.executeQuery(context, filter, coordinator, operationOptions);
+    public void executeQuery(ContextLookup context, Filter filter, ResultsHandler userHandler, OperationOptions operationOptions) {
+        var handler = userHandler;
+        if (shouldPerformAttributeResolution(operationOptions)) {
+            handler = new AttributeResolutionCoordinator(context, userHandler, operationOptions);
+        }
+        delegate.executeQuery(context, filter, handler, operationOptions);
+    }
+
+    private boolean shouldPerformAttributeResolution(OperationOptions operationOptions) {
+        if (operationOptions == null) {
+            return true;
+        }
+        var skipResolution = operationOptions.getOptions().get(SKIP_ATTRIBUTE_RESOLUTION_OPTION);
+        return !Boolean.TRUE.equals(skipResolution);
     }
 
     private class AttributeResolutionCoordinator implements BatchAwareResultHandler {
@@ -39,7 +52,7 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
 
         List<ConnectorObjectBuilder> outstanding = new ArrayList<>();
 
-        public AttributeResolutionCoordinator(ContextLookup lookup, ResultsHandler resultsHandler) {
+        public AttributeResolutionCoordinator(ContextLookup lookup, ResultsHandler resultsHandler, OperationOptions operationOptions) {
             this.delegate = resultsHandler;
             this.contextLookup = lookup;
         }

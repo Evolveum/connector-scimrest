@@ -9,6 +9,7 @@ import com.evolveum.polygon.scim.rest.schema.MappedAttribute;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
 import org.identityconnectors.framework.common.objects.filter.Filter;
@@ -121,8 +122,10 @@ public class ScriptedAttributeResolverBuilder implements AttributeResolverBuilde
             var context = lookup.get(ConnectorContext.class);
             var objectClass = context.schema().objectClass(targetObjectClass);
             var scriptContext = new SingleResolverContext(context, objectClass, builder);
+
             Filter filter = GroovyClosures.copyAndCall(implementation, scriptContext);
-            var results = scriptContext.objectClass(targetObjectClass).search(filter);
+            var results = new ArrayList<ConnectorObject>();
+            scriptContext.objectClass(targetObjectClass).search(filter, results::add, skipAttributeResolution());
             var attrValues = new ArrayList<ConnectorObjectReference>();
             for (var result : results) {
                 attrValues.add(new ConnectorObjectReference(result));

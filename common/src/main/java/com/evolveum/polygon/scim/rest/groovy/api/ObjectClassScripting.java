@@ -2,6 +2,7 @@ package com.evolveum.polygon.scim.rest.groovy.api;
 
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
@@ -50,8 +51,11 @@ public interface ObjectClassScripting {
      * @param filter the filter to apply to the search
      * @param consumer the result handler to process the results
      */
-    void search(Filter filter, ResultsHandler consumer);
+    default void search(Filter filter, ResultsHandler consumer) {
+        search(filter, consumer, null);
+    }
 
+    void search(Filter filter, ResultsHandler consumer, OperationOptions options);
 
     /**
      * Creates a filter builder for the specified attribute using its protocol name.

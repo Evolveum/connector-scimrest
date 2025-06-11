@@ -6,6 +6,7 @@ import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.groovy.api.ObjectClassScripting;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import com.evolveum.polygon.scim.rest.spi.ExecuteQueryProcessor;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
@@ -26,8 +27,8 @@ public record ObjectClassScriptingFacade(ContextLookup rest, MappedObjectClass s
         return schema;
     }
 
-    @Override
-    public void search(Filter filter, ResultsHandler consumer) {
-        handler.checkSupported(ExecuteQueryProcessor.class).executeQuery(rest, filter, consumer, null);
+
+    public void search(Filter filter, ResultsHandler consumer, OperationOptions options) {
+        handler.checkSupported(ExecuteQueryProcessor.class).executeQuery(rest, filter, consumer, options);
     }
 }
