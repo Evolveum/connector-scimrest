@@ -41,8 +41,10 @@ public class RestPagingAwareObjectRetriever {
 
                 for (var remoteObj : remoteObjs) {
                     ConnectorObject obj = deserializeFromRemote(remoteObj);
-                    handler.handle(obj);
-                    batchProcessed++;
+                    if (obj != null) {
+                        handler.handle(obj);
+                        batchProcessed++;
+                    }
                 }
 
                 BatchAwareResultHandler.batchFinished(handler);
@@ -73,6 +75,9 @@ public class RestPagingAwareObjectRetriever {
 
     private ConnectorObject deserializeFromRemote(Object obj) {
         if (obj instanceof JSONObject remoteObj) {
+            if (remoteObj.isEmpty()) {
+                return null;
+            }
             var builder = objectClass.newObjectBuilder();
             for (var attributeDef : objectClass.attributes()) {
                 if (remoteObj.has(attributeDef.remoteName()) && attributeDef.valueMapping() != null) {

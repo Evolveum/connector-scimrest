@@ -11,6 +11,7 @@ import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.net.http.HttpResponse;
 import java.util.HashSet;
@@ -25,7 +26,10 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         if (r.body() instanceof JSONArray array) {
             return (Iterable<OF>)  array;
         }
-        return List.of((OF) r.body());
+        if (r.body() instanceof JSONObject object) {
+            return List.of((OF) object);
+        }
+        return List.of();
     };
     PagingHandler pagingSupport;
     Boolean emptyFilterSupported = null;
