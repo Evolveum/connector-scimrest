@@ -4,6 +4,6 @@ public interface AttributeProtocolMappingBuilder {
 
     Class<?> suggestedConnIdType();
 
-    AttributeProtocolMapping<?> build();
+    AttributeProtocolMapping<?,?> build();
 
 }

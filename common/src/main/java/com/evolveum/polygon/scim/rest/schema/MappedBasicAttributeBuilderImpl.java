@@ -14,7 +14,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
     MappedObjectClassBuilder objectClass;
     AttributeInfoBuilder connIdBuilder = new AttributeInfoBuilder();
 
-    Map<Class<? extends AttributeProtocolMapping<?>>, AttributeProtocolMappingBuilder> protocolMappings = new HashMap<>();
+    Map<Class<? extends AttributeProtocolMapping<?,?>>, AttributeProtocolMappingBuilder> protocolMappings = new HashMap<>();
 
 
     boolean emulated = false;
@@ -135,6 +135,10 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
         private String openApiFormat;
 
 
+        JsonBuilder() {
+            this.name = remoteName;
+        }
+
         @Override
         public JsonMapping name(String protocolName) {
             this.name = name;
@@ -164,7 +168,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
         }
 
         @Override
-        public AttributeProtocolMapping<?> build() {
+        public AttributeProtocolMapping<?,?> build() {
 
             ValueMapping<Object, JsonNode> valueMapping = OpenApiValueMapping.from(type, openApiFormat);
             if (connIdType != null && !connIdType.equals(valueMapping.connIdType())) {
@@ -205,15 +209,14 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
         }
 
         @Override
-        public AttributeProtocolMapping<?> build() {
+        public AttributeProtocolMapping<?,?> build() {
+            if (type != null && implementation == null) {
+                implementation =  OpenApiValueMapping.from(type, null);
+            }
             if (implementation != null) {
-                return new ScimAttributeMapping.Custom(name, type, implementation);
+                return new ScimAttributeMapping(name, implementation);
             }
-            if (type != null) {
-                var valueMapping = OpenApiValueMapping.from(type, null);
-                return new ScimAttributeMapping.ValueMappingBased(name, valueMapping);
-            }
-            return new ScimAttributeMapping.Naive(name);
+            throw new IllegalArgumentException("No SCIM implementation found for attribute " + name);
         }
 
         @Override

@@ -1,8 +1,6 @@
 package com.evolveum.polygon.scim.rest.schema;
 
-import com.evolveum.polygon.scim.rest.JsonValueMapping;
 import com.evolveum.polygon.scim.rest.ValueMapping;
-import jakarta.json.JsonValue;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +32,7 @@ record ValueTypeOverrideMapping<O, D, P>(Class<O> connIdType, ValueMapping<D,P> 
         }
         throw new IllegalArgumentException("Unsupported override type combination: " + valueMapping.connIdType());
     }
-
+    // FIXME: Add other conversion for ConnID
     @SuppressWarnings("unchecked")
     private static <O, P> ValueMapping<O,P> cast(Class<O> type, ValueMapping<?,P> valueMapping) {
         return (ValueMapping<O, P>) valueMapping;

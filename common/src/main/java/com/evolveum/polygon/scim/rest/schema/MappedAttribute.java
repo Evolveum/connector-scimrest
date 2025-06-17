@@ -16,7 +16,7 @@ public class MappedAttribute {
 
     private final AttributeInfo info;
     private final String remoteName;
-    private final Map<Class<? extends AttributeProtocolMapping<?>>, AttributeProtocolMapping<?>> protocolMappings = new HashMap<>();
+    private final Map<Class<? extends AttributeProtocolMapping<?,?>>, AttributeProtocolMapping<?,?>> protocolMappings = new HashMap<>();
     private final boolean emulated;
     private AttributeResolver resolver;
 
@@ -84,7 +84,7 @@ public class MappedAttribute {
         return mapping(JsonAttributeMapping.class);
     }
 
-    public <T extends AttributeProtocolMapping<?>> T mapping(Class<T> type) {
+    public <T extends AttributeProtocolMapping<?,?>> T mapping(Class<T> type) {
         return type.cast(protocolMappings.get(type));
     }
 
