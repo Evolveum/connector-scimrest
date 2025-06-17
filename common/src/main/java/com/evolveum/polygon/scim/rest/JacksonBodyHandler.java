@@ -26,7 +26,8 @@ public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpRespon
                 var upstream = HttpResponse.BodySubscribers.ofInputStream();
                 return HttpResponse.BodySubscribers.mapping(upstream, m -> {
                     try {
-                        return mapper.readValue(m, responseType);
+                        var treeNode = mapper.readTree(m);
+                        return responseType.cast(treeNode);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     }

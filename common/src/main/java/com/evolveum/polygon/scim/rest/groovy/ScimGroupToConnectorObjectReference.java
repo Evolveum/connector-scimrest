@@ -1,6 +1,8 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.AttributeMapping;
+import com.evolveum.polygon.scim.rest.JsonAttributeMapping;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
@@ -8,8 +10,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import java.util.Set;
 
-public class ScimGroupToConnectorObjectReference implements AttributeMapping {
-
+public class ScimGroupToConnectorObjectReference implements JsonAttributeMapping {
 
     private final ObjectClass referencedObjectClass;
 
@@ -18,27 +19,27 @@ public class ScimGroupToConnectorObjectReference implements AttributeMapping {
     }
 
     @Override
-    public Class<?> connIdType() {
+    public Class<ConnectorObjectReference> connIdType() {
         return  ConnectorObjectReference.class;
     }
 
     @Override
-    public Class<?> primaryWireType() {
+    public Class<? extends JsonNode> primaryWireType() {
         return ObjectNode.class;
     }
 
     @Override
-    public Set<Class<?>> supportedWireTypes() {
-        return Set.of();
+    public Set<Class<? extends JsonNode>> supportedWireTypes() {
+        return Set.of(ObjectNode.class);
     }
 
     @Override
-    public Object toWireValue(Object value) throws IllegalArgumentException {
+    public JsonNode toWireValue(Object value) throws IllegalArgumentException {
         return null;
     }
 
     @Override
-    public Object toConnIdValue(Object value) throws IllegalArgumentException {
+    public ConnectorObjectReference toConnIdValue(JsonNode value) throws IllegalArgumentException {
         if (value instanceof ObjectNode remote) {
             var builder = new ConnectorObjectBuilder();
             builder.setObjectClass(referencedObjectClass);

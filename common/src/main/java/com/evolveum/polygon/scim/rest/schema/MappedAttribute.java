@@ -84,4 +84,15 @@ public class MappedAttribute {
     public AttributeResolver resolver() {
         return resolver;
     }
+
+    @Override
+    public String toString() {
+        return new StringBuilder(getClass().getSimpleName())
+                .append("{connid=")
+                .append(info.getName())
+                .append(", remoteName=")
+                .append(remoteName)
+                .append('}')
+                .toString();
+    }
 }

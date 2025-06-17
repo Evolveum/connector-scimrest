@@ -6,6 +6,9 @@ import com.evolveum.polygon.scim.rest.groovy.api.PagingInfo;
 import com.evolveum.polygon.scim.rest.groovy.api.SearchEndpointBuilder;
 import com.evolveum.polygon.scim.rest.groovy.api.ResponseWrapper;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
@@ -14,19 +17,18 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.http.HttpResponse;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProcessorBuilder, SearchEndpointBuilder {
 
     final MappedObjectClass objectClass;
     ResponseObjectExtractor<BF, OF> objectExtractor = r -> {
-        if (r.body() instanceof JSONArray array) {
-            return (Iterable<OF>)  array;
+        if (r.body() instanceof ArrayNode array) {
+            var ret = new ArrayList<OF>();
+            array.elements().forEachRemaining(i -> ret.add((OF) i));
+            return ret;
         }
-        if (r.body() instanceof JSONObject object) {
+        if (r.body() instanceof ObjectNode object) {
             return List.of((OF) object);
         }
         return List.of();

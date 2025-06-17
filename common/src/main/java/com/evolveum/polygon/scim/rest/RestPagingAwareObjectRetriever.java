@@ -2,6 +2,9 @@ package com.evolveum.polygon.scim.rest;
 
 import com.evolveum.polygon.scim.rest.groovy.BatchAwareResultHandler;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -67,14 +70,14 @@ public class RestPagingAwareObjectRetriever {
     }
 
     private HttpResponse.BodyHandler<Object> bodyHandlerFrom(RestSearchOperationHandler spec) {
-        if (JSONObject.class.equals(spec.responseType()) || JSONArray.class.equals(spec.responseType())) {
+        if (ArrayNode.class.equals(spec.responseType()) || ObjectNode.class.equals(spec.responseType())) {
             return new JacksonBodyHandler(spec.responseType());
         }
         throw new IllegalArgumentException("Unsupported response type: " + spec.responseType());
     }
 
     private ConnectorObject deserializeFromRemote(Object obj) {
-        if (obj instanceof JSONObject remoteObj) {
+        if (obj instanceof JsonNode remoteObj) {
             if (remoteObj.isEmpty()) {
                 return null;
             }

@@ -11,32 +11,17 @@ import java.util.Set;
  * This interface allows for conversions between these two types and provides
  * metadata about the supported data types.
  */
-public interface AttributeMapping {
+public interface AttributeMapping<C,P> {
 
-    Class<?> connIdType();
-    Class<?> primaryWireType();
-    default Set<Class<?>> supportedWireTypes() {
+    Class<? extends C> connIdType();
+    Class<? extends P> primaryWireType();
+    default Set<Class<? extends P>> supportedWireTypes() {
         return Set.of(primaryWireType());
     }
 
-    Object toWireValue(Object value) throws  IllegalArgumentException;
-    Object toConnIdValue(Object value) throws IllegalArgumentException;
+    P toWireValue(C value) throws  IllegalArgumentException;
 
-    default List<Object> toConnIdValues(Object wireValues) {
-        if (wireValues == null) {
-            return null;
-        }
-        if (wireValues instanceof Iterable<?> iterable) {
-            var ret = new ArrayList<>();
-            for (var w : iterable) {
-                ret.add(toConnIdValue(w));
-            }
-            return ret;
-        }
-        var connIdValue = toConnIdValue(wireValues);
-        if (connIdValue != null) {
-            return List.of(connIdValue);
-        }
-        return null;
-    }
+    C toConnIdValue(P value) throws IllegalArgumentException;
+
+    List<C> toConnIdValues(Iterable<P> wireValues);
 }

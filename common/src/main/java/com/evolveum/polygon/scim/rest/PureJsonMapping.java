@@ -1,23 +1,108 @@
 package com.evolveum.polygon.scim.rest;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.*;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.Set;
 
-public enum PureJsonMapping implements AttributeMapping {
-    STRING("string", "A string value", String.class, String.class),
-    INTEGER("integer", "A signed integer value", Integer.class, Integer.class),
-    BOOLEAN("boolean", "A boolean value", Boolean.class, Boolean.class)
+public enum PureJsonMapping implements JsonAttributeMapping {
+    STRING("string", "A string value", String.class, TextNode.class) {
+        @Override
+        public Object toConnIdValue(JsonNode value) throws IllegalArgumentException {
+            if (value instanceof TextNode textNode) {
+                return textNode.asText();
+            }
+            return super.toConnIdValue(value);
+        }
+    },
+    INTEGER("integer", "A signed integer value", Integer.class, IntNode.class) {
+        @Override
+        public Object toConnIdValue(JsonNode value) throws IllegalArgumentException {
+            if (value instanceof IntNode intNode) {
+                return intNode.asInt();
+            }
+            if (value instanceof NumericNode numericNode) {
+                return numericNode.asInt();
+            }
+            return super.toConnIdValue(value);
+        }
+
+        @Override
+        public JsonNode toWireValue(Object value) throws IllegalArgumentException {
+            if (value instanceof Integer) {
+                return new IntNode((Integer) value);
+            }
+            return super.toWireValue(value);
+        }
+    },
+    BOOLEAN("boolean", "A boolean value", Boolean.class, BooleanNode.class) {
+        @Override
+        public Object toConnIdValue(JsonNode value) throws IllegalArgumentException {
+            if (value instanceof BooleanNode booleanNode) {
+                return booleanNode.asBoolean();
+            }
+            return super.toConnIdValue(value);
+        }
+
+        @Override
+        public JsonNode toWireValue(Object value) throws IllegalArgumentException {
+            if (value instanceof Boolean bool) {
+                return BooleanNode.valueOf(bool);
+            }
+            return super.toWireValue(value);
+        }
+    },
+    NUMBER("number", "A number value", Number.class, NumericNode.class) {
+
+        @Override
+        public JsonNode toWireValue(Object value) throws IllegalArgumentException {
+            if (value instanceof Number n) {
+                return JsonNodeFactory.instance.numberNode(n.doubleValue());
+            }
+        return super.toWireValue(value);
+        }
+
+        @Override
+        public Object toConnIdValue(JsonNode value) throws IllegalArgumentException {
+            if (value instanceof NumericNode numeric) {
+                return numeric.numberValue();
+            }
+            return super.toConnIdValue(value);
+        }
+    },
+    BINARY("binary", "A binary value", BinaryNode.class, TextNode.class) {
+        public JsonNode toWireValue(Object value) throws IllegalArgumentException {
+            if (value instanceof byte[] byteArrayVal) {
+                return new BinaryNode(byteArrayVal);
+            }
+            throw new IllegalArgumentException("Cannot convert " + value.getClass() + " to " + this.getClass().getSimpleName());
+        }
+
+        @Override
+        public Object toConnIdValue(JsonNode value) throws IllegalArgumentException {
+            if (value instanceof BinaryNode textNode) {
+                return textNode.binaryValue();
+            }
+            if (value instanceof TextNode textNode) {
+                return Base64.getDecoder().decode(textNode.asText());
+            }
+            throw new IllegalArgumentException("Cannot convert " + value.getClass() + " to " + this.getClass().getSimpleName());
+        }
+
+    }
     ;
 
-    private final Set<Class<?>> availableWireTypes;
+    private final Set<Class<? extends JsonNode>> availableWireTypes;
     private final Class<?> connidClass;
-    private final Class<?> primaryWireType;
+    private final Class<? extends JsonNode> primaryWireType;
     private final String jsonType;
 
-    PureJsonMapping(String jsonType, String description, Class<?> connidClass, Class<?>... jsonClass) {
+    PureJsonMapping(String jsonType, String description,
+                    Class<?> connidClass, Class<? extends JsonNode>... jsonClass) {
         this.jsonType = jsonType;
         this.primaryWireType = jsonClass[0];
         this.availableWireTypes = Set.of(jsonClass);
@@ -26,7 +111,7 @@ public enum PureJsonMapping implements AttributeMapping {
 
 
 
-    public Set<Class<?>> getJsonClasses() {
+    public Set<Class<? extends JsonNode>> getJsonClasses() {
         return availableWireTypes;
     }
 
@@ -40,58 +125,31 @@ public enum PureJsonMapping implements AttributeMapping {
     }
 
     @Override
-    public Class<?> primaryWireType() {
+    public Class<? extends JsonNode> primaryWireType() {
         return primaryWireType;
     }
 
     @Override
-    public Set<Class<?>> supportedWireTypes() {
+    public Set<Class<? extends JsonNode>> supportedWireTypes() {
         return availableWireTypes;
     }
 
     @Override
-    public Object toWireValue(Object value) throws IllegalArgumentException {
-        // FIXME implement proper convertors
-        return value;
+    public Object toConnIdValue(JsonNode value) throws IllegalArgumentException {
+        throw new IllegalArgumentException("Can not convert " + value + " to a " + connidClass.getSimpleName());
     }
 
     @Override
-    public Object toConnIdValue(Object value) throws IllegalArgumentException {
-        // FIXME implement proper convertors
-        return value;
+    public JsonNode toWireValue(Object value) throws IllegalArgumentException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public static AttributeMapping from(String jsonType) {
+    public static JsonAttributeMapping from(String jsonType) {
         for (PureJsonMapping am : values()) {
             if (am.jsonType.equals(jsonType)) {
                 return am;
             }
         };
-        return new AttributeMapping() {
-            @Override
-            public Class<?> connIdType() {
-                return String.class;
-            }
-
-            @Override
-            public Class<?> primaryWireType() {
-                return Object.class;
-            }
-
-            @Override
-            public Set<Class<?>> supportedWireTypes() {
-                return Set.of(Object.class);
-            }
-
-            @Override
-            public Object toWireValue(Object value) throws IllegalArgumentException {
-                return value;
-            }
-
-            @Override
-            public Object toConnIdValue(Object value) throws IllegalArgumentException {
-                return value;
-            }
-        };
+        return null;
     }
 }

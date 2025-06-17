@@ -1,6 +1,8 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
 import com.evolveum.polygon.scim.rest.RestContext;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
@@ -12,8 +14,8 @@ import java.util.List;
 
 public interface SearchEndpointBuilder {
 
-    Class<JSONArray> JSON_ARRAY = JSONArray.class;
-    Class<JSONObject> JSON_OBJECT = JSONObject.class;
+    Class<ArrayNode> JSON_ARRAY = ArrayNode.class;
+    Class<ObjectNode> JSON_OBJECT = ObjectNode.class;
 
 
     /**
