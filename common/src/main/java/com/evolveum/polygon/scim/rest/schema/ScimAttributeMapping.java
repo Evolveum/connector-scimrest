@@ -1,11 +1,10 @@
 package com.evolveum.polygon.scim.rest.schema;
 
-import com.evolveum.polygon.scim.rest.AttributeMapping;
+import com.evolveum.polygon.scim.rest.ValueMapping;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
-import com.unboundid.scim2.common.GenericScimResource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +12,17 @@ import java.util.List;
 public abstract class ScimAttributeMapping implements AttributeProtocolMapping<ObjectNode> {
 
     private final String name;
-
     public ScimAttributeMapping(String name) {
         this.name = name;
     }
 
     public String path() {
         return name;
+    }
+
+    @Override
+    public Class<?> connIdType() {
+        return null;
     }
 
     @Override
@@ -43,9 +46,9 @@ public abstract class ScimAttributeMapping implements AttributeProtocolMapping<O
 
     public static class Custom extends ScimAttributeMapping {
 
-        private final AttributeMapping implementation;
+        private final ValueMapping implementation;
 
-        public Custom(String name, String type, AttributeMapping implementation) {
+        public Custom(String name, String type, ValueMapping implementation) {
             super(name);
             this.implementation = implementation;
         }
@@ -53,6 +56,39 @@ public abstract class ScimAttributeMapping implements AttributeProtocolMapping<O
         @Override
         Object convertSingleValue(JsonNode value) {
             return implementation.toConnIdValue(value);
+        }
+
+        @Override
+        public List<Object> extractMultipleValues(ObjectNode wireValues) {
+            return implementation.toConnIdValues(wireValues);
+        }
+    }
+
+    public static class ValueMappingBased extends ScimAttributeMapping {
+
+        private ValueMapping<?, JsonNode> mapping;
+
+        public ValueMappingBased(String name, ValueMapping<?, JsonNode> mapping) {
+            super(name);
+            if (mapping == null) {
+                throw new IllegalArgumentException("Mapping is null");
+            }
+            this.mapping = mapping;
+        }
+
+        @Override
+        Object convertSingleValue(JsonNode value) {
+            return mapping.toConnIdValue(value);
+        }
+
+        @Override
+        public Class<?> connIdType() {
+            return mapping.connIdType();
+        }
+
+        @Override
+        public List<Object> extractMultipleValues(ObjectNode wireValues) {
+            return (List) mapping.toConnIdValues(wireValues);
         }
     }
 
@@ -69,6 +105,9 @@ public abstract class ScimAttributeMapping implements AttributeProtocolMapping<O
             return value;
         }
 
-
+        @Override
+        public List<Object> extractMultipleValues(ObjectNode wireValues) {
+            return List.of(convertSingleValue(wireValues));
+        }
     }
 }

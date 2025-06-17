@@ -2,17 +2,15 @@ package com.evolveum.polygon.scim.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
-import org.w3c.dom.Text;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.channels.UnsupportedAddressTypeException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Set;
 
-import static com.evolveum.polygon.scim.rest.PureJsonMapping.*;
+import static com.evolveum.polygon.scim.rest.JsonSchemaValueMapping.*;
 
 /**
  * Provides a mapping between OpenAPI data formats, their corresponding JSON
@@ -22,7 +20,7 @@ import static com.evolveum.polygon.scim.rest.PureJsonMapping.*;
  * and supported wire types.
  *
  */
-public enum OpenApiTypeMapping implements JsonAttributeMapping {
+public enum OpenApiValueMapping implements JsonValueMapping {
     Base64Url("base64url","Binary data encoded as a url-safe string as defined in RFC4648", byte[].class, STRING) {
         @Override
         public JsonNode toWireValue(Object value) throws IllegalArgumentException {
@@ -310,7 +308,7 @@ public enum OpenApiTypeMapping implements JsonAttributeMapping {
     Uint8("uint8","unsigned 8-bit integer", Integer.class, INTEGER) {
         @Override
         public JsonNode toWireValue(Object value) throws IllegalArgumentException {
-            if (value instanceof Integer val &&  val.intValue() >= 0 && val.intValue() <= 255) {
+            if (value instanceof Integer val && val >= 0 && val <= 255) {
                 return baseMapping.toWireValue(value);
             }
             throw cannotConvertToWire(value);
@@ -325,9 +323,10 @@ public enum OpenApiTypeMapping implements JsonAttributeMapping {
     protected final Set<Class<? extends JsonNode>> availableWireTypes;
     protected final Class<?> connidClass;
     protected final Class<? extends JsonNode> primaryWireType;
-    protected final PureJsonMapping baseMapping;
+    protected final JsonSchemaValueMapping baseMapping;
 
-    OpenApiTypeMapping(String openApiFormat, String description, Class<?> connidClass, PureJsonMapping baseMapping, Class<? extends JsonNode>... jsonClass) {
+    @SafeVarargs
+    OpenApiValueMapping(String openApiFormat, String description, Class<?> connidClass, JsonSchemaValueMapping baseMapping, Class<? extends JsonNode>... jsonClass) {
         this.openApiFormat = openApiFormat;
         this.baseMapping = baseMapping;
         this.connidClass = connidClass;
@@ -375,13 +374,13 @@ public enum OpenApiTypeMapping implements JsonAttributeMapping {
         return baseMapping.toConnIdValue(value);
     }
 
-    public static JsonAttributeMapping from(String jsonType, String openApiFormat) {
-        for (OpenApiTypeMapping am : values()) {
+    public static JsonValueMapping from(String jsonType, String openApiFormat) {
+        for (OpenApiValueMapping am : values()) {
             if (am.openApiFormat.equals(openApiFormat)) {
                 return am;
             }
         };
-        return PureJsonMapping.from(jsonType);
+        return JsonSchemaValueMapping.from(jsonType);
     }
 
     protected IllegalArgumentException cannotConvertToWire(Object value) {

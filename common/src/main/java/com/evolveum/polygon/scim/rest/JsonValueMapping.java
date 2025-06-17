@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-public interface JsonAttributeMapping extends AttributeMapping<Object, JsonNode> {
+public interface JsonValueMapping extends ValueMapping<Object, JsonNode> {
 
 
     @Override

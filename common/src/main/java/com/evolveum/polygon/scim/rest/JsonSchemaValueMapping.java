@@ -3,13 +3,10 @@ package com.evolveum.polygon.scim.rest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.Set;
 
-public enum PureJsonMapping implements JsonAttributeMapping {
+public enum JsonSchemaValueMapping implements JsonValueMapping {
     STRING("string", "A string value", String.class, TextNode.class) {
         @Override
         public Object toConnIdValue(JsonNode value) throws IllegalArgumentException {
@@ -101,8 +98,8 @@ public enum PureJsonMapping implements JsonAttributeMapping {
     private final Class<? extends JsonNode> primaryWireType;
     private final String jsonType;
 
-    PureJsonMapping(String jsonType, String description,
-                    Class<?> connidClass, Class<? extends JsonNode>... jsonClass) {
+    JsonSchemaValueMapping(String jsonType, String description,
+                           Class<?> connidClass, Class<? extends JsonNode>... jsonClass) {
         this.jsonType = jsonType;
         this.primaryWireType = jsonClass[0];
         this.availableWireTypes = Set.of(jsonClass);
@@ -144,8 +141,8 @@ public enum PureJsonMapping implements JsonAttributeMapping {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public static JsonAttributeMapping from(String jsonType) {
-        for (PureJsonMapping am : values()) {
+    public static JsonValueMapping from(String jsonType) {
+        for (JsonSchemaValueMapping am : values()) {
             if (am.jsonType.equals(jsonType)) {
                 return am;
             }

@@ -1,6 +1,7 @@
 package com.evolveum.polygon.scim.rest;
 
 import com.evolveum.polygon.scim.rest.groovy.BatchAwareResultHandler;
+import com.evolveum.polygon.scim.rest.schema.JsonAttributeMapping;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -83,11 +84,12 @@ public class RestPagingAwareObjectRetriever {
             }
             var builder = objectClass.newObjectBuilder();
             for (var attributeDef : objectClass.attributes()) {
-                if (remoteObj.has(attributeDef.remoteName()) && attributeDef.valueMapping() != null) {
+                var valueMapping = attributeDef.mapping(JsonAttributeMapping.class);
+                if (remoteObj.has(attributeDef.remoteName()) && valueMapping != null) {
                     var wireValues = remoteObj.get(attributeDef.remoteName());
                     Object connIdValues = null;
                     if (wireValues != null) {
-                        connIdValues = attributeDef.valueMapping().toConnIdValues(wireValues);
+                        connIdValues = valueMapping.extractMultipleValues(wireValues);
                     }
                     if (connIdValues != null) {
                         builder.addAttribute(attributeDef.attributeOf(connIdValues));

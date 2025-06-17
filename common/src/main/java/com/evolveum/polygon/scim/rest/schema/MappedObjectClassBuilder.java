@@ -97,7 +97,7 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
         if (attribute == null) {
             throw new IllegalArgumentException("Attribute " + attributeName + " not found");
         }
-        attribute.connIdBuilder.setName(finalName);
+        attribute.connId().name(finalName);
         return this;
     }
 

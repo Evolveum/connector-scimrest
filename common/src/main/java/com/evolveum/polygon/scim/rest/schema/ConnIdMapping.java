@@ -1,7 +1,6 @@
 package com.evolveum.polygon.scim.rest.schema;
 
-import com.evolveum.polygon.scim.rest.AttributeMapping;
-import org.identityconnectors.framework.common.objects.AttributeInfo;
+import com.evolveum.polygon.scim.rest.ValueMapping;
 import org.identityconnectors.framework.common.objects.Uid;
 
 import java.util.List;
@@ -10,9 +9,9 @@ import java.util.Set;
 
 public class ConnIdMapping {
 
-    public static AttributeMapping<?, ?> of(String name,  AttributeMapping<?,?> backingMapping) {
+    public static ValueMapping<?, ?> of(String name, ValueMapping<?,?> backingMapping) {
         if (Uid.NAME.equals(name)) {
-            return new AttributeMapping<String, Object>() {
+            return new ValueMapping<String, Object>() {
                 @Override
                 public Class<String> connIdType() {
                     return String.class;
@@ -30,7 +29,7 @@ public class ConnIdMapping {
 
                 @Override
                 public Object toWireValue(String value) throws IllegalArgumentException {
-                    return ((AttributeMapping) backingMapping).toWireValue(value);
+                    return ((ValueMapping) backingMapping).toWireValue(value);
                 }
 
                 @Override
@@ -40,7 +39,7 @@ public class ConnIdMapping {
 
                 @Override
                 public List toConnIdValues(Iterable wireValues) {
-                    var originalList = ((AttributeMapping) backingMapping).toConnIdValues(wireValues);
+                    var originalList = ((ValueMapping) backingMapping).toConnIdValues(wireValues);
                     if (originalList != null && !originalList.isEmpty()) {
                         return List.of(Objects.toString(originalList.get(0)));
                     }

@@ -1,6 +1,9 @@
 package com.evolveum.polygon.scim.rest.schema;
 
-import com.evolveum.polygon.scim.rest.AttributeMapping;
+import com.evolveum.polygon.scim.rest.JsonValueMapping;
+import com.evolveum.polygon.scim.rest.OpenApiValueMapping;
+import com.evolveum.polygon.scim.rest.ValueMapping;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 
 import java.util.HashMap;
@@ -19,12 +22,10 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
     String remoteName;
     private String description;
 
-    // FIXME: Extract to Json Specific Builder
-    String protocolName;
-    String jsonType;
-    String openApiFormat;
 
     private ScimBuilder scim;
+    String connIdName;
+    Class<?> connIdType;
 
     public MappedBasicAttributeBuilderImpl(MappedObjectClassBuilder restObjectClassBuilder, String name) {
         this.remoteName = name;
@@ -36,7 +37,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
 
     @Override
     public MappedBasicAttributeBuilderImpl protocolName(String protocolName) {
-        this.protocolName = protocolName;
+        json().name(protocolName);
         return this;
     }
 
@@ -100,19 +101,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
 
     @Override
     public JsonMapping json() {
-        return new JsonMapping() {
-            @Override
-            public JsonMapping type(String jsonType) {
-                MappedBasicAttributeBuilderImpl.this.jsonType = jsonType;
-                return this;
-            }
-
-            @Override
-            public JsonMapping openApiFormat(String openapiFormat) {
-                MappedBasicAttributeBuilderImpl.this.openApiFormat = openapiFormat;
-                return this;
-            }
-        };
+        return (JsonBuilder) protocolMappings.computeIfAbsent(JsonAttributeMapping.class, m -> new JsonBuilder());
     }
 
     @Override
@@ -120,12 +109,14 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
         return new ConnIdMapping() {
             @Override
             public ConnIdMapping name(String name) {
+                MappedBasicAttributeBuilderImpl.this.connIdName = name;
                 MappedBasicAttributeBuilderImpl.this.connIdBuilder.setName(name);
                 return this;
             }
 
             @Override
             public ConnIdMapping type(Class<?> connIdType) {
+                MappedBasicAttributeBuilderImpl.this.connIdType = connIdType;
                 MappedBasicAttributeBuilderImpl.this.connIdBuilder.setType(connIdType);
                 return this;
             }
@@ -137,10 +128,59 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
         return (ScimBuilder) protocolMappings.computeIfAbsent(ScimAttributeMapping.class, m -> new ScimBuilder());
     }
 
-    private class ScimBuilder implements AttributeProtocolMappingBuilder, ScimMapping {
+    class JsonBuilder implements AttributeProtocolMappingBuilder, JsonMapping {
+
         private String name;
         private String type;
-        private AttributeMapping implementation;
+        private String openApiFormat;
+
+
+        @Override
+        public JsonMapping name(String protocolName) {
+            this.name = name;
+            return this;
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public JsonMapping type(String jsonType) {
+            type = jsonType;
+            return this;
+        }
+
+        @Override
+        public JsonMapping openApiFormat(String openapiFormat) {
+            this.openApiFormat = openapiFormat;
+            return this;
+        }
+
+        @Override
+        public Class<?> suggestedConnIdType() {
+            return null;
+        }
+
+        @Override
+        public AttributeProtocolMapping<?> build() {
+
+            ValueMapping<Object, JsonNode> valueMapping = OpenApiValueMapping.from(type, openApiFormat);
+            if (connIdType != null && !connIdType.equals(valueMapping.connIdType())) {
+                // we need to to ConnID override
+                valueMapping = ValueTypeOverrideMapping.of(connIdType, valueMapping);
+            }
+
+
+            return new JsonAttributeMapping(name, valueMapping);
+        }
+    }
+
+    class ScimBuilder implements AttributeProtocolMappingBuilder, ScimMapping {
+        private String name;
+        private String type;
+        private ValueMapping implementation;
 
         @Override
         public String name() {
@@ -160,7 +200,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
         }
 
         @Override
-        public void implementation(AttributeMapping mapping) {
+        public void implementation(ValueMapping mapping) {
             this.implementation = mapping;
         }
 
@@ -169,15 +209,16 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
             if (implementation != null) {
                 return new ScimAttributeMapping.Custom(name, type, implementation);
             }
+            if (type != null) {
+                var valueMapping = OpenApiValueMapping.from(type, null);
+                return new ScimAttributeMapping.ValueMappingBased(name, valueMapping);
+            }
             return new ScimAttributeMapping.Naive(name);
         }
-
-
 
         @Override
         public Class<?> suggestedConnIdType() {
             return null;
         }
     }
-
 }

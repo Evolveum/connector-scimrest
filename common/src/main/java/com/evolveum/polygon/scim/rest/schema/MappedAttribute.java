@@ -1,7 +1,7 @@
 package com.evolveum.polygon.scim.rest.schema;
 
-import com.evolveum.polygon.scim.rest.AttributeMapping;
-import com.evolveum.polygon.scim.rest.OpenApiTypeMapping;
+import com.evolveum.polygon.scim.rest.ValueMapping;
+import com.evolveum.polygon.scim.rest.OpenApiValueMapping;
 import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolver;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -16,8 +16,6 @@ public class MappedAttribute {
 
     private final AttributeInfo info;
     private final String remoteName;
-    private AttributeMapping mapping;
-    private ScimAttributeMapping scim;
     private final Map<Class<? extends AttributeProtocolMapping<?>>, AttributeProtocolMapping<?>> protocolMappings = new HashMap<>();
     private final boolean emulated;
     private AttributeResolver resolver;
@@ -25,12 +23,27 @@ public class MappedAttribute {
     public MappedAttribute(MappedAttributeBuilderImpl mappedBuilder) {
         remoteName = mappedBuilder.remoteName;
         emulated = mappedBuilder.emulated;
+
+        Class<?> suggestedConnIdType = null;
+        for (var proto : mappedBuilder.protocolMappings.entrySet()) {
+            var protocolMapping = proto.getValue().build();
+            protocolMappings.put(proto.getKey(), protocolMapping);
+            if (protocolMapping.connIdType() != null) {
+                if (suggestedConnIdType != null && !protocolMapping.connIdType().equals(suggestedConnIdType)) {
+                    throw new IllegalStateException("Multiple ConnID types declared for attribute. " + protocolMapping.connIdType() + ", " + suggestedConnIdType);
+                }
+                suggestedConnIdType = protocolMapping.connIdType();
+            }
+        }
+        if (suggestedConnIdType == null) {
+            suggestedConnIdType = mappedBuilder.connIdType;
+        }
+
         if (!mappedBuilder.isReference()) {
-            var openApiMapping = OpenApiTypeMapping.from(mappedBuilder.jsonType, mappedBuilder.openApiFormat);
-            mappedBuilder.connIdBuilder.setType(openApiMapping.connIdType());
-            mapping = ConnIdMapping.of(mappedBuilder.connIdBuilder.build().getName(), openApiMapping);
-            // ConnID Specific mapping may changed the name.
-            mappedBuilder.connIdBuilder.setType(mapping.connIdType());
+            if (suggestedConnIdType == null) {
+                throw new IllegalArgumentException("Missing ConnId type definition for attribute " + remoteName);
+            }
+            mappedBuilder.connIdBuilder.setType(suggestedConnIdType);
         } else {
             mappedBuilder.connIdBuilder.setType(ConnectorObjectReference.class);
         }
@@ -42,16 +55,10 @@ public class MappedAttribute {
         if (mappedBuilder.resolverBuilder != null) {
             this.resolver = mappedBuilder.resolverBuilder.build();
         }
-        for (var proto : mappedBuilder.protocolMappings.entrySet()) {
-            protocolMappings.put(proto.getKey(), proto.getValue().build());
-        }
 
 
 
-    }
 
-    public AttributeMapping valueMapping() {
-        return this.mapping;
     }
 
     public String remoteName() {
@@ -70,10 +77,14 @@ public class MappedAttribute {
     }
 
     public ScimAttributeMapping scim() {
-        return scim;
+        return mapping(ScimAttributeMapping.class);
     }
 
-    public <T extends AttributeProtocolMapping> T mapping(Class<T> type) {
+    public JsonAttributeMapping json() {
+        return mapping(JsonAttributeMapping.class);
+    }
+
+    public <T extends AttributeProtocolMapping<?>> T mapping(Class<T> type) {
         return type.cast(protocolMappings.get(type));
     }
 

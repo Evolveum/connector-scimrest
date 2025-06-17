@@ -1,7 +1,5 @@
 package com.evolveum.polygon.scim.rest;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -11,7 +9,7 @@ import java.util.Set;
  * This interface allows for conversions between these two types and provides
  * metadata about the supported data types.
  */
-public interface AttributeMapping<C,P> {
+public interface ValueMapping<C,P> {
 
     Class<? extends C> connIdType();
     Class<? extends P> primaryWireType();

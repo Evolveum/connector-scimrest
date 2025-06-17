@@ -7,6 +7,7 @@ import com.evolveum.polygon.scim.rest.groovy.ScriptedSingleAttributeResolverBuil
 import com.evolveum.polygon.scim.rest.groovy.api.AttributeResolverBuilder;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.Uid;
 
 public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl implements com.evolveum.polygon.scim.rest.groovy.api.RestReferenceAttributeBuilder {
 
@@ -56,6 +57,10 @@ public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl 
      * @return a new {@code RestAttribute} instance configured with the current settings
      */
     public MappedAttribute build() {
+        // FIXME: Could this be part of ConnID schema contributor?
+        if (Uid.NAME.equals(connIdName)) {
+            connId().type(String.class);
+        }
         return new MappedAttribute(this);
     }
 

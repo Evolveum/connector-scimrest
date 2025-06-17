@@ -56,7 +56,9 @@ public class ScimSchemaTranslator {
     private void populateBuiltInSchema(MappedObjectClassBuilder objectClass, boolean isOnlyExplicitlyListed) {
         var idAttribute = findOrCreateAttribute(ID_ATTR, objectClass, isOnlyExplicitlyListed);
         if (idAttribute != null) {
-            idAttribute.scim().name(ID_ATTR.getName());
+            idAttribute.scim()
+                    .name(ID_ATTR.getName())
+                    .type("string");
             // We should check if other attributes
             if (objectClass.connIdAttributeNotDefined(Uid.NAME)) {
                 idAttribute.connId().name(Uid.NAME);
@@ -76,10 +78,9 @@ public class ScimSchemaTranslator {
             var attribute = findOrCreateAttribute(scimAttr, objectClass, onlyListed);
             if (attribute != null) {
                 attribute.scim().name(scimAttr.getName());
+                attribute.scim().type(scimAttr.getType().getName());
                 attribute.description(scimAttr.getDescription());
             }
-
-            attribute.scim().type(scimAttr.getType().name());
             if (USER_SCHEMA_URN.equals(schemaResource.getId())) {
                 switch (scimAttr.getName()) {
                     case "userName" -> {

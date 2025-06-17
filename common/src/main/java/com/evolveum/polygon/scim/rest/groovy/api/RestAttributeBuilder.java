@@ -1,6 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
-import com.evolveum.polygon.scim.rest.AttributeMapping;
+import com.evolveum.polygon.scim.rest.ValueMapping;
 
 public interface RestAttributeBuilder {
 
@@ -92,9 +92,11 @@ public interface RestAttributeBuilder {
     }
 
     interface JsonMapping {
-
+        String name();
+        JsonMapping name(String protocolName);
         JsonMapping type(String jsonType);
         JsonMapping openApiFormat(String openapiFormat);
+
 
     }
 
@@ -108,7 +110,7 @@ public interface RestAttributeBuilder {
 
         ScimMapping type(String name);
 
-        void implementation(AttributeMapping mapping);
+        void implementation(ValueMapping mapping);
     }
 
     interface ConnIdMapping {

@@ -1,7 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
-import com.evolveum.polygon.scim.rest.AttributeMapping;
-import com.evolveum.polygon.scim.rest.JsonAttributeMapping;
+import com.evolveum.polygon.scim.rest.JsonValueMapping;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
@@ -10,7 +9,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import java.util.Set;
 
-public class ScimGroupToConnectorObjectReference implements JsonAttributeMapping {
+public class ScimGroupToConnectorObjectReference implements JsonValueMapping {
 
     private final ObjectClass referencedObjectClass;
 
