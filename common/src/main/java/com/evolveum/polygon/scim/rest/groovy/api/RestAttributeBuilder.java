@@ -1,6 +1,8 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
 import com.evolveum.polygon.scim.rest.ValueMapping;
+import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 
 public interface RestAttributeBuilder {
 
@@ -49,8 +51,9 @@ public interface RestAttributeBuilder {
 
     ScimMapping scim();
 
-    ConnIdMapping connId();
+    JsonMapping json(@DelegatesTo(value = JsonMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
+    ConnIdMapping connId();
     /**
      * Sets the protocol name for the current attribute.
      *
@@ -91,6 +94,8 @@ public interface RestAttributeBuilder {
         return this;
     }
 
+    ScimMapping scim(@DelegatesTo(value = ScimMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+
     interface JsonMapping {
         String name();
         JsonMapping name(String protocolName);
@@ -110,7 +115,9 @@ public interface RestAttributeBuilder {
 
         ScimMapping type(String name);
 
-        void implementation(ValueMapping mapping);
+        ScimMapping implementation(ValueMapping<?,?> mapping);
+
+        ScimMapping implementation(@DelegatesTo(value = ValueMappingBuilder.class) Closure<?> closure);
     }
 
     interface ConnIdMapping {

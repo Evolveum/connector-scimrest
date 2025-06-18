@@ -1,9 +1,12 @@
 package com.evolveum.polygon.scim.rest.schema;
 
-import com.evolveum.polygon.scim.rest.JsonValueMapping;
 import com.evolveum.polygon.scim.rest.OpenApiValueMapping;
 import com.evolveum.polygon.scim.rest.ValueMapping;
+import com.evolveum.polygon.scim.rest.groovy.GroovyClosures;
+import com.evolveum.polygon.scim.rest.groovy.api.ValueMappingBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
+import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 
 import java.util.HashMap;
@@ -105,6 +108,11 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
     }
 
     @Override
+    public JsonMapping json(@DelegatesTo(value = JsonMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure,json());
+    }
+
+    @Override
     public ConnIdMapping connId() {
         return new ConnIdMapping() {
             @Override
@@ -126,6 +134,11 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
     @Override
     public ScimMapping scim() {
         return (ScimBuilder) protocolMappings.computeIfAbsent(ScimAttributeMapping.class, m -> new ScimBuilder());
+    }
+
+    @Override
+    public ScimMapping scim(@DelegatesTo(value = ScimMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, scim());
     }
 
     class JsonBuilder implements AttributeProtocolMappingBuilder, JsonMapping {
@@ -204,8 +217,18 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
         }
 
         @Override
-        public void implementation(ValueMapping mapping) {
+        public ScimBuilder implementation(ValueMapping<?,?> mapping) {
             this.implementation = mapping;
+            return this;
+        }
+
+        @Override
+        public ScimMapping implementation(@DelegatesTo(ValueMappingBuilder.class) Closure<?> closure) {
+            Class<?> typeClass = connIdType != null ? connIdType : Object.class;
+            var builder = new ValueMappingBuilderImpl<>(typeClass,JsonNode.class);
+            GroovyClosures.callAndReturnDelegate(closure, builder);
+            this.implementation = builder.build();
+            return this;
         }
 
         @Override
@@ -216,7 +239,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
             if (implementation != null) {
                 return new ScimAttributeMapping(name, implementation);
             }
-            throw new IllegalArgumentException("No SCIM implementation found for attribute " + name);
+            return null;
         }
 
         @Override

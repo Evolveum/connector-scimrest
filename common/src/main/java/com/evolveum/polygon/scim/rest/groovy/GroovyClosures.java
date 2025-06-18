@@ -2,6 +2,8 @@ package com.evolveum.polygon.scim.rest.groovy;
 
 import groovy.lang.Closure;
 
+import java.util.function.Function;
+
 public class GroovyClosures {
 
     /**
@@ -44,6 +46,14 @@ public class GroovyClosures {
             executionAware.afterExecution();
         }
         return ret;
+    }
+
+    public static <T, R> Function<T, R> asFunction(Closure<R> closure) {
+        return (T input) -> {
+            var copy = (Closure<R>) closure.clone();
+            return (R) copy.call(input);
+        };
+
     }
 
     public interface ClosureExecutionAware {

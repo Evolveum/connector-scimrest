@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
+import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 
 public interface RestReferenceAttributeDelegator extends RestReferenceAttributeBuilder {
@@ -66,9 +67,18 @@ public interface RestReferenceAttributeDelegator extends RestReferenceAttributeB
         return delegate().json();
     }
 
+    default JsonMapping json(Closure<?> closure) {
+        return delegate().json(closure);
+    }
+
     @Override
     default ScimMapping scim() {
         return delegate().scim();
+    }
+
+    @Override
+    default ScimMapping scim(Closure<?> closure) {
+        return delegate().scim(closure);
     }
 
     @Override

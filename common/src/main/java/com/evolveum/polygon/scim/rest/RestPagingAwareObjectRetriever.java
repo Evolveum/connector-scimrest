@@ -3,12 +3,9 @@ package com.evolveum.polygon.scim.rest;
 import com.evolveum.polygon.scim.rest.groovy.BatchAwareResultHandler;
 import com.evolveum.polygon.scim.rest.schema.JsonAttributeMapping;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import com.evolveum.polygon.scim.rest.groovy.RestSearchOperationHandler;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
@@ -78,19 +75,15 @@ public class RestPagingAwareObjectRetriever {
     }
 
     private ConnectorObject deserializeFromRemote(Object obj) {
-        if (obj instanceof JsonNode remoteObj) {
+        if (obj instanceof ObjectNode remoteObj) {
             if (remoteObj.isEmpty()) {
                 return null;
             }
             var builder = objectClass.newObjectBuilder();
             for (var attributeDef : objectClass.attributes()) {
                 var valueMapping = attributeDef.mapping(JsonAttributeMapping.class);
-                if (remoteObj.has(attributeDef.remoteName()) && valueMapping != null) {
-                    var wireValues = remoteObj.get(attributeDef.remoteName());
-                    Object connIdValues = null;
-                    if (wireValues != null) {
-                        connIdValues = valueMapping.extractMultipleValues(wireValues);
-                    }
+                if (valueMapping != null) {
+                    Object connIdValues = valueMapping.valuesFromObject(remoteObj);
                     if (connIdValues != null) {
                         builder.addAttribute(attributeDef.attributeOf(connIdValues));
                     }

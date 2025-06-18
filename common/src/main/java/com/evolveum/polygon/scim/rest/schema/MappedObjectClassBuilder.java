@@ -93,7 +93,7 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
         if (finalName == null) {
             throw new IllegalArgumentException("No such built-in ConnID attribute: " + connIdName);
         }
-        var attribute = nativeAttributes.get(attributeName);
+        var attribute = attribute(attributeName);
         if (attribute == null) {
             throw new IllegalArgumentException("Attribute " + attributeName + " not found");
         }

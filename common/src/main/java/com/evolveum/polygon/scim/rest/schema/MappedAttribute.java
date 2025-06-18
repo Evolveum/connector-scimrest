@@ -27,6 +27,9 @@ public class MappedAttribute {
         Class<?> suggestedConnIdType = null;
         for (var proto : mappedBuilder.protocolMappings.entrySet()) {
             var protocolMapping = proto.getValue().build();
+            if (protocolMapping == null) {
+                continue;
+            }
             protocolMappings.put(proto.getKey(), protocolMapping);
             if (protocolMapping.connIdType() != null) {
                 if (suggestedConnIdType != null && !protocolMapping.connIdType().equals(suggestedConnIdType)) {
