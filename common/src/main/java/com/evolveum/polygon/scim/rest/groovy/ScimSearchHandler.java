@@ -85,7 +85,7 @@ public class ScimSearchHandler implements  FilterAwareExecuteQueryProcessor {
         for (var attributeDef : objectClass.attributes()) {
             var mapping = attributeDef.mapping(ScimAttributeMapping.class);
             if (mapping != null) {
-                var value = mapping.extractValue(remoteObj.getObjectNode());
+                var value = mapping.valuesFromObject(remoteObj.getObjectNode());
                 if (value != null) {
                     builder.addAttribute(attributeDef.attributeOf(value));
                 }
@@ -182,4 +182,3 @@ public class ScimSearchHandler implements  FilterAwareExecuteQueryProcessor {
         }
     }
 }
-
