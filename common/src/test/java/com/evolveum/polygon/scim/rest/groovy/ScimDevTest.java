@@ -25,6 +25,7 @@ public class ScimDevTest {
 
     private static final ObjectClass USER_OC = new ObjectClass("User");
     private static final ObjectClass OFFICE_OC = new ObjectClass("Office");
+    private static final ObjectClass GROUP_OC = new ObjectClass("Group");
 
 
     private class TestConfiguration extends BaseRestGroovyConnectorConfiguration implements ScimClientConfiguration.BearerToken {
@@ -98,6 +99,23 @@ public class ScimDevTest {
         connector.executeQuery(OFFICE_OC, FilterBuilder.equalTo(randomUser.getUid()), maybeUser, null);
         assertNotNull(maybeUser.result);
         assertEquals(randomUser.getUid(), maybeUser.result.getUid());
+    }
+
+    @Test
+    public void getGroups() {
+        var connector = initializedConnector();
+        var users = new ArrayList<ConnectorObject>();
+        connector.executeQuery(GROUP_OC, null, users::add, null);
+        assertFalse(users.isEmpty(), "Users should not be empty");
+
+        var randomUser = users.get(new Random().nextInt(users.size()));
+        assertNotNull(randomUser);
+        var maybeUser = new ExpectSingle();
+        connector.executeQuery(GROUP_OC, FilterBuilder.equalTo(randomUser.getUid()), maybeUser, null);
+        assertNotNull(maybeUser.result);
+        assertEquals(randomUser.getUid(), maybeUser.result.getUid());
+
+
     }
 
 
