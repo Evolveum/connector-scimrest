@@ -75,12 +75,29 @@ public class ScimContext implements RetrievableContext {
 
     }
 
+    /**
+     * Creates relative URI from absolute URI based on {@link ScimClientConfiguration#getScimBaseUrl()}
+     *
+     *
+     *
+     * @param endpoint
+     * @return
+     */
     private String relativeEndpoint(URI endpoint) {
         var endpointStr = endpoint.toString();
-        if (endpointStr.startsWith(configuration.getScimBaseUrl())) {
-            return endpointStr.substring(configuration.getScimBaseUrl().length());
+
+        // Drop HTTP // HTTPS prefix from both
+        endpointStr = removeProtocol(endpointStr);
+        var baseUrl = removeProtocol(configuration.getScimBaseUrl());
+
+        if (endpointStr.startsWith(baseUrl)) {
+            return endpointStr.substring(baseUrl.length());
         }
         throw new IllegalArgumentException("Can not relativize endpoint.");
+    }
+
+    private String removeProtocol(String endpointStr) {
+        return endpointStr.replaceFirst("^https?://", "");
     }
 
     public void contributeToSchema(RestSchemaBuilder schemaBuilder) {
