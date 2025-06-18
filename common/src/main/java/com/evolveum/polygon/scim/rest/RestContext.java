@@ -235,7 +235,7 @@ public class RestContext implements RetrievableContext {
      * certificate validation, making the application susceptible to man-in-the-middle (MITM) attacks.
      * It should only be used in controlled environments and never in production systems.
      */
-    private static final TrustManager TRUST_ALL = new X509ExtendedTrustManager() {
+    public static final TrustManager TRUST_ALL = new X509ExtendedTrustManager() {
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
 
