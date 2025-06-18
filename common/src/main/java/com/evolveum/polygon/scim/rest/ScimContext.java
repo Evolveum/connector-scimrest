@@ -10,17 +10,26 @@ import com.unboundid.scim2.common.types.SchemaResource;
 import com.unboundid.scim2.common.types.ServiceProviderConfigResource;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.ext.RuntimeDelegate;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.JerseyClient;
+import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
+import org.glassfish.jersey.internal.RuntimeDelegateImpl;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 import java.net.URI;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ScimContext implements RetrievableContext {
 
 
+    private final ContextLookup  contextLookup;
     private final ScimService scimClient;
     private final Client httpClient;
     private final ScimClientConfiguration configuration;
@@ -35,19 +44,32 @@ public class ScimContext implements RetrievableContext {
     private Map<String, ScimResourceContext> objectClassToResource;
 
 
-    public ScimContext(ScimClientConfiguration scimConf) {
+    public ScimContext(ContextLookup contextLookup, ScimClientConfiguration scimConf) {
+        this.contextLookup = contextLookup;
         this.configuration = scimConf;
         var bearerConf = scimConf.supports(ScimClientConfiguration.BearerToken.class);
 
-        var clientBuilder = ClientBuilder.newBuilder();
-        if (bearerConf != null && bearerConf.isScimBearerTokenConfigured()) {
-            var accessor = new GuardedStringAccessor();
-            bearerConf.getScimBearerToken().access(accessor);
-            clientBuilder.register(OAuth2ClientSupport.feature(accessor.getClearString()));
-        }
+        var classLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(configuration.getClass().getClassLoader());
+            RuntimeDelegate.setInstance(new RuntimeDelegateImpl());
+            var clientBuilder = new JerseyClientBuilder();
+            if (bearerConf != null && bearerConf.isScimBearerTokenConfigured()) {
+                var accessor = new GuardedStringAccessor();
+                bearerConf.getScimBearerToken().access(accessor);
+                clientBuilder.register(OAuth2ClientSupport.feature(accessor.getClearString()));
 
-        this.httpClient = clientBuilder.build();
-        this.scimClient = new ScimService(httpClient.target(scimConf.getScimBaseUrl()));
+                var sslContext = SSLContext.getInstance("SSL");
+                sslContext.init(null, new TrustManager[]{RestContext.TRUST_ALL}, new SecureRandom());
+                clientBuilder.sslContext(sslContext);
+            }
+            this.httpClient = clientBuilder.build();
+            this.scimClient = new ScimService(httpClient.target(scimConf.getScimBaseUrl()));
+        } catch (Exception e) {
+            throw new ConnectorException(e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(classLoader);
+        }
     }
 
     public void initialize() {
@@ -84,8 +106,9 @@ public class ScimContext implements RetrievableContext {
      * @return
      */
     private String relativeEndpoint(URI endpoint) {
-        var endpointStr = endpoint.toString();
-
+        return relativeEndpoint(endpoint.toString());
+    }
+    private String relativeEndpoint(String endpointStr) {
         // Drop HTTP // HTTPS prefix from both
         endpointStr = removeProtocol(endpointStr);
         var baseUrl = removeProtocol(configuration.getScimBaseUrl());
@@ -101,7 +124,7 @@ public class ScimContext implements RetrievableContext {
     }
 
     public void contributeToSchema(RestSchemaBuilder schemaBuilder) {
-        var translator = new ScimSchemaTranslator();
+        var translator = new ScimSchemaTranslator(contextLookup);
         for (var resource : resources.values()) {
             translator.correlateObjectClasses(resource, schemaBuilder);
         }
@@ -138,5 +161,16 @@ public class ScimContext implements RetrievableContext {
 
     public ScimResourceContext resourceForObjectClass(ObjectClass objectClass) {
         return objectClassToResource.get(objectClass.getObjectClassValue());
+    }
+
+    public ObjectClass objectClassFromUri(String ref) {
+        var uri = relativeEndpoint(ref);
+        for (var resource : resources.values()) {
+            if (uri.startsWith(resource.relativeEndpoint())) {
+                var objectClass = resourceToObjectClass.get(resource.resource().getName());
+                return new ObjectClass(objectClass);
+            }
+        }
+        return null;
     }
 }
