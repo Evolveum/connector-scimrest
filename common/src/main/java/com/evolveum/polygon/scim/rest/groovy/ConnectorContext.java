@@ -66,7 +66,7 @@ public class ConnectorContext implements ContextLookup, RetrievableContext {
 
     public void initializeScim() {
         if (configuration instanceof ScimClientConfiguration scimConf) {
-            scim = new ScimContext(scimConf);
+            scim = new ScimContext(this, scimConf);
         }
     }
 

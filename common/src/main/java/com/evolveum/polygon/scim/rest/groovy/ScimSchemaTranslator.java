@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scim.rest.groovy;
 
+import com.evolveum.polygon.scim.rest.ContextLookup;
 import com.evolveum.polygon.scim.rest.ScimResourceContext;
 import com.evolveum.polygon.scim.rest.schema.MappedAttributeBuilderImpl;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClassBuilder;
@@ -7,10 +8,7 @@ import com.evolveum.polygon.scim.rest.schema.RestSchemaBuilder;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
-import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
-import org.identityconnectors.framework.common.objects.Name;
-import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.objects.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +16,8 @@ import java.util.Map;
 public class ScimSchemaTranslator {
 
     private static final String USER_SCHEMA_URN = "urn:ietf:params:scim:schemas:core:2.0:User" ;
+    private static final String GROUP_SCHEMA_URN = "urn:ietf:params:scim:schemas:core:2.0:Group" ;
+
     private static final String USER_GROUPS_ATTR_NAME = "groups" ;
 
     private Map<String, String> resourceToObjectClass = new HashMap<>();
@@ -28,6 +28,11 @@ public class ScimSchemaTranslator {
             .setName("id")
             .build();
 
+    private final ContextLookup contextLookup;
+
+    public ScimSchemaTranslator(ContextLookup contextLookup) {
+        this.contextLookup = contextLookup;
+    }
 
     public void correlateObjectClasses(ScimResourceContext scim, RestSchemaBuilder schema) {
 
@@ -80,6 +85,7 @@ public class ScimSchemaTranslator {
                 attribute.scim().name(scimAttr.getName());
                 attribute.scim().type(scimAttr.getType().getName());
                 attribute.description(scimAttr.getDescription());
+                attribute.multiValued(scimAttr.isMultiValued());
             }
             if (USER_SCHEMA_URN.equals(schemaResource.getId())) {
                 switch (scimAttr.getName()) {
@@ -91,7 +97,22 @@ public class ScimSchemaTranslator {
                     case "groups" -> {
                         var groupOc = resourceToObjectClass.get("Group");
                         attribute.connId().type(ConnectorObjectReference.class);
+                        attribute.subtype("_User_Group_Membership");
+                        attribute.role(AttributeInfo.RoleInReference.SUBJECT);
                         attribute.scim().implementation(new ScimGroupToConnectorObjectReference(new ObjectClass(groupOc)));
+                    }
+                }
+            } else if (GROUP_SCHEMA_URN.equals(schemaResource.getId())) {
+                switch (scimAttr.getName()) {
+                    case "displayName" -> {
+                        attribute.connId().name(Name.NAME);
+                    }
+                    case "members" -> {
+                        attribute.connId().type(ConnectorObjectReference.class);
+                        attribute.role(AttributeInfo.RoleInReference.OBJECT);
+                        attribute.subtype("_User_Group_Membership");
+                        attribute.scim().implementation(new ScimMemberToConnectorObjectReference(contextLookup));
+
                     }
                 }
             }

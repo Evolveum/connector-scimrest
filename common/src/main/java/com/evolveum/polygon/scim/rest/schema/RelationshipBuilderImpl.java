@@ -3,6 +3,7 @@ package com.evolveum.polygon.scim.rest.schema;
 import com.evolveum.polygon.scim.rest.groovy.GroovyClosures;
 import com.evolveum.polygon.scim.rest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 
 public class RelationshipBuilderImpl implements RestRelationshipBuilder, GroovyClosures.ClosureExecutionAware {
 
@@ -42,8 +43,10 @@ public class RelationshipBuilderImpl implements RestRelationshipBuilder, GroovyC
         if (subject != null && object != null) {
             // configure side mappings.
             subject.attribute().objectClass(object.objectClass());
-            object.attribute().objectClass(subject.objectClass());
+            subject.attribute().role(AttributeInfo.RoleInReference.SUBJECT);
 
+            object.attribute().objectClass(subject.objectClass());
+            object.attribute().role(AttributeInfo.RoleInReference.OBJECT);
 
         }
     }
