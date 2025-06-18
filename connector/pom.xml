@@ -39,6 +39,7 @@
 
     <modules>
         <module>forgejo</module>
+        <module>sample-scimdev</module>
         <module>generic</module>
     </modules>
 
