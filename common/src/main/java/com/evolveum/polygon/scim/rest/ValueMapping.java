@@ -21,5 +21,4 @@ public interface ValueMapping<C,P> {
 
     C toConnIdValue(P value) throws IllegalArgumentException;
 
-    List<C> toConnIdValues(Iterable<P> wireValues);
 }

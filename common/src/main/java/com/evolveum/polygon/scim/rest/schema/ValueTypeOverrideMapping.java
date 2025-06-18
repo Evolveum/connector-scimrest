@@ -59,9 +59,4 @@ record ValueTypeOverrideMapping<O, D, P>(Class<O> connIdType, ValueMapping<D,P> 
         return toOverride.apply(impl.toConnIdValue(value));
     }
 
-    @Override
-    public List<O> toConnIdValues(Iterable<P> wireValues) {
-        var original = impl.toConnIdValues(wireValues);
-        return original.stream().map(toOverride).collect(Collectors.toList());
-    }
 }

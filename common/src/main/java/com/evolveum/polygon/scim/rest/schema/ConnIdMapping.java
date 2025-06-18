@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+@Deprecated
 public class ConnIdMapping {
 
     public static ValueMapping<?, ?> of(String name, ValueMapping<?,?> backingMapping) {
@@ -35,15 +36,6 @@ public class ConnIdMapping {
                 @Override
                 public String toConnIdValue(Object value) throws IllegalArgumentException {
                     return Objects.toString(value);
-                }
-
-                @Override
-                public List toConnIdValues(Iterable wireValues) {
-                    var originalList = ((ValueMapping) backingMapping).toConnIdValues(wireValues);
-                    if (originalList != null && !originalList.isEmpty()) {
-                        return List.of(Objects.toString(originalList.get(0)));
-                    }
-                    return List.of();
                 }
             };
         }
