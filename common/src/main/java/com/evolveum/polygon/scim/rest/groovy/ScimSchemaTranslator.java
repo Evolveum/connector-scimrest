@@ -56,6 +56,10 @@ public class ScimSchemaTranslator {
         var objectClass = schema.objectClass(objectClassName);
         populateBuiltInSchema(objectClass, objectClass.scim().isOnlyExplicitlyListed());
         populatePrimarySchema(scim.primarySchema(), objectClass, objectClass.scim().isOnlyExplicitlyListed());
+        // FIXME populate deep schema
+        // eg. resolving things like familyName = name.familyName
+        // practically values remapped from deep containers
+
     }
 
     private void populateBuiltInSchema(MappedObjectClassBuilder objectClass, boolean isOnlyExplicitlyListed) {

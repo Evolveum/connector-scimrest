@@ -1,6 +1,7 @@
 package com.evolveum.polygon.scim.rest.groovy.api;
 
 import com.evolveum.polygon.scim.rest.ValueMapping;
+import com.evolveum.polygon.scim.rest.api.AttributePath;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -114,6 +115,36 @@ public interface RestAttributeBuilder {
         ScimMapping name(String name);
 
         ScimMapping type(String name);
+
+        /**
+         * SCIM Attribute path
+         *
+         * A path to SCIM attribute which will be mapped to ConnID attribute
+         *
+         * Path should uniquely point to one JSON attribute (eg. `name.formatted` or `email[type eq primary]`)
+         *
+         * @param path
+         * @return
+         */
+        ScimMapping path(String path);
+
+        /**
+         * SCIM Attribute path
+         *
+         * A path to SCIM attribute which will be mapped to ConnID attribute
+         *
+         * Path should uniquely point to one JSON attribute (eg. `name.formatted` or `email[type eq primary]`)
+         *
+         * @param path
+         * @return
+         */
+        ScimMapping path(AttributePath path);
+
+        default AttributePath attribute(String name) {
+            return AttributePath.of(name);
+        }
+
+        AttributePath extension(String uriOrAlias);
 
         ScimMapping implementation(ValueMapping<?,?> mapping);
 

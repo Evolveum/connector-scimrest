@@ -30,7 +30,7 @@ public interface ObjectClassSchemaBuilder {
      * @param closure a closure that configures the {@link RestAttributeBuilder} instance for the specified attribute
      * @return an instance of {@link RestAttributeBuilder} for further configuration of the attribute
      */
-    RestAttributeBuilder attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure<?> closure);
+    RestAttributeBuilder attribute(String name, @DelegatesTo(value = RestAttributeBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     /**
      * Creates / gets reference definition with the specified name, applying a closure to further configure it.
@@ -54,7 +54,7 @@ public interface ObjectClassSchemaBuilder {
      * @param closure a closure that configures the {@link ScimMapping} instance
      * @return an instance of {@link ScimMapping} representing the SCIM schema mappings
      */
-    ScimMapping scim(@DelegatesTo(ScimMapping.class) Closure<?> closure);
+    ScimMapping scim(@DelegatesTo(value = ScimMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     /**
      * Defines the SCIM (System for Cross-domain Identity Management) mapping configuration.
@@ -100,6 +100,8 @@ public interface ObjectClassSchemaBuilder {
          * @return The current ScimMapping instance for method chaining.
          */
         ScimMapping onlyExplicitlyListed(boolean value);
+
+        String extensionUriFromAlias(String uriOrAlias);
     }
 
 

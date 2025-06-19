@@ -144,10 +144,12 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
         private String schemaUri;
         private String name;
         private boolean onlyExplicitlyListed = false;
+        private Map<String, String> aliasToNamespace = new HashMap<>();
 
         @Override
         public ScimMapping extension(String alias, String namespace) {
-            return null;
+            aliasToNamespace.put(alias, namespace);
+            return this;
         }
 
         @Override
@@ -175,6 +177,14 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
         public ScimMapping onlyExplicitlyListed(boolean value) {
             onlyExplicitlyListed = value;
             return this;
+        }
+
+        @Override
+        public String extensionUriFromAlias(String uriOrAlias) {
+            if (uriOrAlias.startsWith("urn:")) {
+                return uriOrAlias;
+            }
+            return aliasToNamespace.getOrDefault(uriOrAlias, uriOrAlias);
         }
     }
 }

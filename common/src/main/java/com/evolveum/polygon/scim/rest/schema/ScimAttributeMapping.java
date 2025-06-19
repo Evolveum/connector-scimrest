@@ -1,6 +1,7 @@
 package com.evolveum.polygon.scim.rest.schema;
 
 import com.evolveum.polygon.scim.rest.ValueMapping;
+import com.evolveum.polygon.scim.rest.api.AttributePath;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -10,16 +11,15 @@ import java.util.List;
 
 public class ScimAttributeMapping extends JsonAttributeMapping {
 
-    public ScimAttributeMapping(String name, ValueMapping<Object, JsonNode> mapping) {
-        super(name, mapping);
+    public ScimAttributeMapping(AttributePath path, ValueMapping<Object, JsonNode> mapping) {
+        super(path, mapping);
     }
 
     @Override
     public JsonNode attributeFromObject(ObjectNode object) {
-        if (name != null) {
-            return object.get(name);
+        if (path != null) {
+            return path.resolve(object);
         }
-        // FIXME: Later here will be SCIM path navigation support (if attribute is defined by SCIM path)
         return null;
     }
 

@@ -13,6 +13,42 @@ objectClass("User") {
         extension("enterprise", "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")
     }
     // Here could be attribute customizations
+
+    attribute("givenName") {
+        // FIXME: This will be derived from SCIM Schema
+        connId().type(String)
+        scim {
+            type "string"
+            path attribute("name").child("givenName")
+        }
+    }
+    attribute("familyName") {
+        connId().type(String) // FIXME: This will be derived from SCIM Schema
+        scim {
+            type "string" // FIXME: THis will be derived from SCIM Schema
+            path attribute("name").child("familyName")
+        }
+    }
+    attribute("formattedName") {
+        scim {
+            type "string" // FIXME: THis will be derived from SCIM Schema based on path
+            path attribute("name").child("formatted")
+        }
+    }
+    attribute("primaryEmail") {
+        scim {
+            type "string" // FIXME: THis will be derived from SCIM Schema based on path
+            path attribute("emails").valueFilter("primary", true).child("value")
+        }
+    }
+
+    attribute("employeeNumber") {
+        scim {
+            type "string" // FIXME: THis will be derived from SCIM Schema based on path
+            path extension("enterprise").child("employeeNumber")
+
+        }
+    }
 }
 
 objectClass("Office") {

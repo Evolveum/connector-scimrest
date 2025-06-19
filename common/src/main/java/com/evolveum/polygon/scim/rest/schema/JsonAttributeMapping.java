@@ -2,6 +2,7 @@ package com.evolveum.polygon.scim.rest.schema;
 
 import com.evolveum.polygon.scim.rest.JsonValueMapping;
 import com.evolveum.polygon.scim.rest.ValueMapping;
+import com.evolveum.polygon.scim.rest.api.AttributePath;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -11,14 +12,21 @@ import java.util.List;
 
 public class JsonAttributeMapping implements AttributeProtocolMapping<ObjectNode, JsonNode> {
 
-    protected final String name;
+    protected final AttributePath path;
     protected final ValueMapping<Object, JsonNode> valueMapping;
 
     public JsonAttributeMapping(String name,
                                 ValueMapping<Object, JsonNode> valueMapping) {
-        this.name = name;
+        this(AttributePath.of(name), valueMapping);
+    }
+
+    public JsonAttributeMapping(AttributePath path,
+                                ValueMapping<Object, JsonNode> valueMapping) {
+        this.path = path;
         this.valueMapping = valueMapping;
     }
+
+
 
     @Override
     public Class<?> connIdType() {
@@ -27,8 +35,8 @@ public class JsonAttributeMapping implements AttributeProtocolMapping<ObjectNode
 
     @Override
     public JsonNode attributeFromObject(ObjectNode object) {
-        if (name != null) {
-            return object.get(name);
+        if (path != null) {
+            return path.resolve(object);
         }
         // FIXME: Here should be some other way for navigating structures (for flattening, similar to SCIM)
         return null;

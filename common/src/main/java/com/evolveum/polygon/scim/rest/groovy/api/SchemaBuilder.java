@@ -9,7 +9,7 @@ public interface SchemaBuilder {
 
     MappedObjectClassBuilder objectClass(String name);
 
-    MappedObjectClassBuilder objectClass(String name, @DelegatesTo(MappedObjectClassBuilder.class) Closure<?> closure);
+    MappedObjectClassBuilder objectClass(String name, @DelegatesTo(ObjectClassSchemaBuilder.class) Closure<?> closure);
 
     RestRelationshipBuilder relationship(String name, @DelegatesTo(RestRelationshipBuilder.class) Closure<?> closure);
 

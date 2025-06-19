@@ -2,6 +2,7 @@ package com.evolveum.polygon.scim.rest.schema;
 
 import com.evolveum.polygon.scim.rest.OpenApiValueMapping;
 import com.evolveum.polygon.scim.rest.ValueMapping;
+import com.evolveum.polygon.scim.rest.api.AttributePath;
 import com.evolveum.polygon.scim.rest.groovy.GroovyClosures;
 import com.evolveum.polygon.scim.rest.groovy.api.ValueMappingBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -195,18 +196,22 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
     }
 
     class ScimBuilder implements AttributeProtocolMappingBuilder, ScimMapping {
-        private String name;
+        private AttributePath path;
         private String type;
         private ValueMapping implementation;
 
         @Override
         public String name() {
-            return this.name;
+            if (path != null && path.onlyAttribute() != null) {
+                return path.onlyAttribute().name();
+            }
+
+            return null;
         }
 
         @Override
         public ScimMapping name(String name) {
-            this.name = name;
+            this.path = AttributePath.of(name);
             return this;
         }
 
@@ -215,6 +220,26 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
             this.type = name;
             return this;
         }
+
+
+        @Override
+        public ScimMapping path(String path) {
+            // FIXME: Implement parsing of SCIM paths to AttributePath
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public ScimMapping path(AttributePath path) {
+            this.path = path;
+            return this;
+        }
+
+        @Override
+        public AttributePath extension(String uriOrAlias) {
+            var extensionUri = MappedBasicAttributeBuilderImpl.this.objectClass.scim().extensionUriFromAlias(uriOrAlias);
+            return AttributePath.of(extensionUri);
+        }
+
 
         @Override
         public ScimBuilder implementation(ValueMapping<?,?> mapping) {
@@ -237,7 +262,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
                 implementation =  OpenApiValueMapping.from(type, null);
             }
             if (implementation != null) {
-                return new ScimAttributeMapping(name, implementation);
+                return new ScimAttributeMapping(path, implementation);
             }
             return null;
         }
