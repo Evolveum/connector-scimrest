@@ -78,6 +78,25 @@ public record AttributePath(List<Component> components) implements Resolver<Obje
         }
     }
 
+    public record Extension(String name) implements Component {
+
+        @Override
+        public JsonNode resolve(JsonNode contextNode) {
+            if (contextNode instanceof ObjectNode object) {
+                return object.get(name);
+            }
+            return null;
+        }
+
+        @Override
+        public void toString(StringBuilder builder, Component previous) {
+            if (previous instanceof Attribute) {
+                builder.append('.');
+            }
+            builder.append(name);
+        }
+    }
+
     public record SimpleValueFilter(Map<String, Object> keyValues) implements Component {
 
         @Override

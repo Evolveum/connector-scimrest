@@ -223,6 +223,11 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
 
 
         @Override
+        public AttributePath path() {
+            return path;
+        }
+
+        @Override
         public ScimMapping path(String path) {
             // FIXME: Implement parsing of SCIM paths to AttributePath
             throw new UnsupportedOperationException("Not supported yet.");
@@ -237,7 +242,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements com.evolveum.po
         @Override
         public AttributePath extension(String uriOrAlias) {
             var extensionUri = MappedBasicAttributeBuilderImpl.this.objectClass.scim().extensionUriFromAlias(uriOrAlias);
-            return AttributePath.of(extensionUri);
+            return AttributePath.of(new AttributePath.Extension(extensionUri));
         }
 
 

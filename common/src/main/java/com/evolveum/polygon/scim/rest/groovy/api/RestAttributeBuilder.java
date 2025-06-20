@@ -149,6 +149,8 @@ public interface RestAttributeBuilder {
         ScimMapping implementation(ValueMapping<?,?> mapping);
 
         ScimMapping implementation(@DelegatesTo(value = ValueMappingBuilder.class) Closure<?> closure);
+
+        AttributePath path();
     }
 
     interface ConnIdMapping {

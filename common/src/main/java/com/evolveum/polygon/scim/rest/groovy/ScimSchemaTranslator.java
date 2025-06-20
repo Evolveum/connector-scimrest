@@ -56,10 +56,50 @@ public class ScimSchemaTranslator {
         var objectClass = schema.objectClass(objectClassName);
         populateBuiltInSchema(objectClass, objectClass.scim().isOnlyExplicitlyListed());
         populatePrimarySchema(scim.primarySchema(), objectClass, objectClass.scim().isOnlyExplicitlyListed());
+
+        populatePathBasedSchema(scim,objectClass);
         // FIXME populate deep schema
         // eg. resolving things like familyName = name.familyName
         // practically values remapped from deep containers
 
+    }
+
+    private void populatePathBasedSchema(ScimResourceContext scim, MappedObjectClassBuilder objectClass) {
+        for (var attr : objectClass.allAttributes()) {
+            var path = attr.scim().path();
+            if (path == null || path.onlyAttribute() != null) {
+                // Path is simple only one attribute, so no it was handled in previous step
+                continue;
+            }
+            var attrDef = scim.findAttributeDefinition(path);
+            if (attrDef == null) {
+                throw new IllegalStateException(String.format("Attribute '%s' not found", path));
+            }
+            populateAttribute(attr, attrDef);
+        }
+
+
+    }
+
+    private void populateAttribute(MappedAttributeBuilderImpl attribute, AttributeDefinition scimAttr) {
+        attribute.scim().type(scimAttr.getType().getName());
+        attribute.description(scimAttr.getDescription());
+        attribute.multiValued(scimAttr.isMultiValued());
+        attribute.returnedByDefault(AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned()));
+        switch (scimAttr.getMutability()) {
+            case IMMUTABLE -> {
+                attribute.readable(true).creatable(true).updateable(false);
+            }
+            case READ_ONLY -> {
+                attribute.readable(true).creatable(false).updateable(false);
+            }
+            case READ_WRITE -> {
+                attribute.readable(true).creatable(true).updateable(true);
+            }
+            case WRITE_ONLY -> {
+                attribute.readable(false).creatable(true).updateable(true);
+            }
+        }
     }
 
     private void populateBuiltInSchema(MappedObjectClassBuilder objectClass, boolean isOnlyExplicitlyListed) {
@@ -87,9 +127,7 @@ public class ScimSchemaTranslator {
             var attribute = findOrCreateAttribute(scimAttr, objectClass, onlyListed);
             if (attribute != null) {
                 attribute.scim().name(scimAttr.getName());
-                attribute.scim().type(scimAttr.getType().getName());
-                attribute.description(scimAttr.getDescription());
-                attribute.multiValued(scimAttr.isMultiValued());
+                populateAttribute(attribute, scimAttr);
             }
             if (USER_SCHEMA_URN.equals(schemaResource.getId())) {
                 switch (scimAttr.getName()) {
