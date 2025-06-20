@@ -7,10 +7,37 @@ import org.identityconnectors.framework.common.objects.Uid
 objectClass("User") {
     // SCIM specific mappings for whole User schema (customizations)
     scim {
-    // This  also could shortcut for creating container enterprise with attributes inside
+        // This  also could be shortcut for creating container enterprise with attributes inside
         extension("enterprise", "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")
     }
     // Here could be attribute customizations
+
+    attribute("givenName") {
+        scim {
+            path attribute("name").child("givenName")
+        }
+    }
+    attribute("familyName") {
+        scim {
+            path attribute("name").child("familyName")
+        }
+    }
+    attribute("formattedName") {
+        scim {
+            path attribute("name").child("formatted")
+        }
+    }
+    attribute("primaryEmail") {
+        scim {
+            path attribute("emails").valueFilter("primary", true).child("value")
+        }
+    }
+
+    attribute("employeeNumber") {
+        scim {
+            path extension("enterprise").child("employeeNumber")
+        }
+    }
 }
 
 objectClass("Office") {
@@ -22,6 +49,7 @@ objectClass("Office") {
 relationship("OfficeEmployment") {
     subject("User") {
         attribute("office") {
+            multiValued true
             // Emulated true is implied by presence of resolver
             resolver {
                 resolutionType PER_OBJECT

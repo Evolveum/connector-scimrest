@@ -51,6 +51,7 @@ objectClass("Office") {
 relationship("OfficeEmployment") {
     subject("User") {
         attribute("office") {
+            multiValued true
             // Emulated true is implied by presence of resolver
             resolver {
                 resolutionType PER_OBJECT
