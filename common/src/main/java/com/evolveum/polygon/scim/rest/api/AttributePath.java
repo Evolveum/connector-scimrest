@@ -4,6 +4,7 @@ import com.evolveum.polygon.scim.rest.schema.MappedObjectClassBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 import com.github.javaparser.resolution.Resolvable;
+import com.unboundid.scim2.common.types.FilterConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +45,14 @@ public record AttributePath(List<Component> components) implements Resolver<Obje
 
     public AttributePath valueFilter(String key, Object value) {
         return child(new SimpleValueFilter(Map.of(key, value)));
+    }
+
+    public AttributePath firstValue() {
+        return child(new IndexFilter(0));
+    }
+
+    public AttributePath withoutFilters() {
+        return new AttributePath(components.stream().filter(i -> !(i instanceof FilterComponent)).toList());
     }
 
     private AttributePath child(Component attribute) {
@@ -97,7 +106,26 @@ public record AttributePath(List<Component> components) implements Resolver<Obje
         }
     }
 
-    public record SimpleValueFilter(Map<String, Object> keyValues) implements Component {
+    public record IndexFilter(int index) implements FilterComponent {
+
+        @Override
+        public JsonNode resolve(JsonNode contextNode) {
+            if (contextNode instanceof ArrayNode array) {
+                if (array.size() > index) {
+                    return array.get(index);
+                }
+                return null;
+            }
+            return null;
+        }
+
+        @Override
+        public void toString(StringBuilder builder, Component previous) {
+            builder.append('[').append(index).append(']');
+        }
+    }
+
+    public record SimpleValueFilter(Map<String, Object> keyValues) implements FilterComponent {
 
         @Override
         public JsonNode resolve(JsonNode contextNode) {
@@ -156,6 +184,9 @@ public record AttributePath(List<Component> components) implements Resolver<Obje
 
     public interface Component extends Resolver<JsonNode, JsonNode> {
         void toString(StringBuilder builder, Component previous);
+    }
+
+    public interface FilterComponent extends Component {
     }
 
     @Override

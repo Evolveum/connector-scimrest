@@ -5,6 +5,7 @@ objectClass("User") {
         // Only listed attributes are supported
         onlyExplicitlyListed true
         // FIXME: define format how to map extension to container (short names are not part of protocol)
+        extension("slack", "urn:ietf:params:scim:schemas:extension:slack:profile:2.0:User")
         extension("enterprise", "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")
     }
 
@@ -13,12 +14,14 @@ objectClass("User") {
     attribute("displayName")
     attribute("title")
     attribute("email") {
-        // FIXME: Define format for SCIM path
-        scimPath "emails[0]['value']"
+        scim {
+            path attribute("emails").firstValue().child("value")
+        }
     }
     attribute("profile_photo") {
-        // FIXME: Define format for SCIM path
-        scimPath "photos[0]['values']"
+        scim {
+            path attribute("photos").firstValue().child("values")
+        }
     }
     attribute("password")
     reference("groups")
