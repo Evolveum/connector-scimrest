@@ -7,9 +7,11 @@
 package com.evolveum.polygon.forgejo;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
-import com.evolveum.polygon.scim.rest.RestContext;
-import com.evolveum.polygon.scim.rest.config.RestClientConfiguration;
-import com.evolveum.polygon.scim.rest.groovy.*;
+import com.evolveum.polygon.scimrest.RestContext;
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
+import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
 @ConnectorClass(displayNameKey = "forgejo.rest.display", configurationClass = ForgejoConfiguration.class)

@@ -6,12 +6,9 @@
  */
 package com.evolveum.polygon.sample.scimdev;
 
-import com.evolveum.polygon.common.GuardedStringAccessor;
-import com.evolveum.polygon.scim.rest.RestContext;
-import com.evolveum.polygon.scim.rest.config.RestClientConfiguration;
-import com.evolveum.polygon.scim.rest.groovy.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scim.rest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scim.rest.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
+import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
 @ConnectorClass(displayNameKey = "scimdev.rest.display", configurationClass = ScimDevConfiguration.class)

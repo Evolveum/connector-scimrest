@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.forgejo;
 
-import com.evolveum.polygon.scim.rest.config.RestClientConfiguration;
-import com.evolveum.polygon.scim.rest.groovy.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 

@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.sample.scimdev;
 
-import com.evolveum.polygon.scim.rest.config.ScimClientConfiguration;
-import com.evolveum.polygon.scim.rest.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scimrest.groovy.BaseGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 

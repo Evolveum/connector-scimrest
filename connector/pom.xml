@@ -11,12 +11,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.evolveum.polygon.scim2</groupId>
-        <artifactId>connector-scim2</artifactId>
+        <groupId>com.evolveum.polygon.scimrest</groupId>
+        <artifactId>connector-scimrest-parent</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>connector-scim2-parent</artifactId>
+    <artifactId>connector-scimrest-connectors</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -71,8 +71,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.evolveum.polygon.scim2</groupId>
-            <artifactId>connector-scim2-common</artifactId>
+            <groupId>com.evolveum.polygon.scimrest</groupId>
+            <artifactId>connector-scimrest-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -11,8 +11,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.evolveum.polygon.scim2</groupId>
-        <artifactId>connector-scim2-parent</artifactId>
+        <groupId>com.evolveum.polygon.scimrest</groupId>
+        <artifactId>connector-scimrest-connectors</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
