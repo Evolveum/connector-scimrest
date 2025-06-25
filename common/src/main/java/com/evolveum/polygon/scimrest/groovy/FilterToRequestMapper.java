@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.RestContext;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 

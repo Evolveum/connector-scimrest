@@ -6,8 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.RestContext;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
+import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
 import org.json.JSONObject;
 
 import java.net.http.HttpResponse;

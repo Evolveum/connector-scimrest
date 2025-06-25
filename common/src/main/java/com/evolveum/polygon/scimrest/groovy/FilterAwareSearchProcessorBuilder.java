@@ -6,6 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
+
 public interface FilterAwareSearchProcessorBuilder {
 
     boolean isEnabled();

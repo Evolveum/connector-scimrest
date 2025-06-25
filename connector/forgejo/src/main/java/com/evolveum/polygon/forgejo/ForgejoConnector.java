@@ -7,7 +7,7 @@
 package com.evolveum.polygon.forgejo;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
-import com.evolveum.polygon.scimrest.RestContext;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;

@@ -9,7 +9,9 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.*;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
+import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import java.util.Map;

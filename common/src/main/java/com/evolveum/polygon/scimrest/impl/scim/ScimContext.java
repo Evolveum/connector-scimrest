@@ -4,12 +4,14 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest;
+package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
+import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
+import com.evolveum.polygon.scimrest.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.ScimSchemaTranslator;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
 import com.unboundid.scim2.client.ScimService;
 import com.unboundid.scim2.common.types.SchemaResource;
@@ -32,7 +34,7 @@ import java.util.Map;
 public class ScimContext implements RetrievableContext {
 
 
-    private final ContextLookup  contextLookup;
+    private final ContextLookup contextLookup;
     private final ScimService scimClient;
     private final Client httpClient;
     private final ScimClientConfiguration configuration;

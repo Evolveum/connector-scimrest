@@ -4,9 +4,11 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest;
+package com.evolveum.polygon.scimrest.impl.rest;
 
-import com.evolveum.polygon.scimrest.groovy.BatchAwareResultHandler;
+import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.scimrest.JacksonBodyHandler;
+import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.schema.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.fasterxml.jackson.databind.node.ArrayNode;

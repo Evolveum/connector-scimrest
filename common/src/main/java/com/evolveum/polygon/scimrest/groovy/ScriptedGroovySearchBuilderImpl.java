@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.SearchScriptBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
 import groovy.lang.Closure;
 
 import java.util.HashSet;

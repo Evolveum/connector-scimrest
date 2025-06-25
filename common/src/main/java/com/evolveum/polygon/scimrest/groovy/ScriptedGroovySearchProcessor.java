@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;

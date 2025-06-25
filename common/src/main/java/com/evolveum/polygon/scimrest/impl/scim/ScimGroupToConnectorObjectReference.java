@@ -4,24 +4,23 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.groovy;
+package com.evolveum.polygon.scimrest.impl.scim;
 
-import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.JsonValueMapping;
-import com.evolveum.polygon.scimrest.ScimContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import java.util.Set;
 
-public class ScimMemberToConnectorObjectReference implements JsonValueMapping {
+public class ScimGroupToConnectorObjectReference implements JsonValueMapping {
 
-    private final ContextLookup contextLookup;
+    private final ObjectClass referencedObjectClass;
 
-    public ScimMemberToConnectorObjectReference(ContextLookup contextLookup) {
-        this.contextLookup = contextLookup;
+    public ScimGroupToConnectorObjectReference(ObjectClass targetObjectClass) {
+        this.referencedObjectClass = targetObjectClass;
     }
 
     @Override
@@ -48,8 +47,7 @@ public class ScimMemberToConnectorObjectReference implements JsonValueMapping {
     public ConnectorObjectReference toConnIdValue(JsonNode value) throws IllegalArgumentException {
         if (value instanceof ObjectNode remote) {
             var builder = new ConnectorObjectBuilder();
-            builder.setObjectClass(contextLookup.get(ScimContext.class).objectClassFromUri(remote.get("$ref").asText()));
-
+            builder.setObjectClass(referencedObjectClass);
             builder.setUid(remote.get("value").asText());
             builder.setName(remote.get("display").asText());
             return new ConnectorObjectReference(builder.build());

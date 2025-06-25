@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.ObjectClassHandler;
-import com.evolveum.polygon.scimrest.RestContext;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Schema;

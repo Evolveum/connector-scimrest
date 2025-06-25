@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
-import com.evolveum.polygon.scimrest.RestContext;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;

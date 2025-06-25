@@ -4,10 +4,12 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.groovy;
+package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.scimrest.ContextLookup;
-import com.evolveum.polygon.scimrest.ScimContext;
+import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
+import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
+import com.evolveum.polygon.scimrest.groovy.FilterAwareSearchProcessorBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.ScimSearchBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
@@ -22,7 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 // FIXME: Consider making this JSON agnostic and format / parsing handling will be injected.
-public class ScimSearchHandler implements  FilterAwareExecuteQueryProcessor {
+public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
     private final MappedObjectClass objectClass;
     private final Set<FilterSpecification> supportedFilters;

@@ -4,10 +4,9 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.groovy;
+package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.scimrest.ContextLookup;
-import com.evolveum.polygon.scimrest.ScimResourceContext;
 import com.evolveum.polygon.scimrest.schema.MappedAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClassBuilder;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;

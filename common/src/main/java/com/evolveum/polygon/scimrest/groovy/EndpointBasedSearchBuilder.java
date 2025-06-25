@@ -6,12 +6,13 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.RestContext;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
 import com.evolveum.polygon.scimrest.groovy.api.SearchEndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.ResponseWrapper;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -142,7 +143,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         return true;
     }
 
-    public EndpointBasedSearchHandler<BF, OF> build() {
+    public ScriptedAttributeResolverBuilder.EndpointBasedSearchHandler<BF, OF> build() {
         if (emptyFilterSupported == null && filterMappers.isEmpty()) {
             // No specific filter mappers were specified and empty filter support was not specified explicitly
             // so we assume that empty filter is supported
@@ -151,6 +152,6 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         if (Boolean.TRUE.equals(emptyFilterSupported)) {
             filterMappers.add(FilterToRequestMapper.from(Objects::isNull, (r, f) -> {}));
         }
-        return new EndpointBasedSearchHandler<>(this, filterMappers);
+        return new ScriptedAttributeResolverBuilder.EndpointBasedSearchHandler<>(this, filterMappers);
     }
 }

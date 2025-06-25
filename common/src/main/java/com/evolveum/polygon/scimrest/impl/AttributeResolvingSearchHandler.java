@@ -4,9 +4,10 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.groovy;
+package com.evolveum.polygon.scimrest.impl;
 
 import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
 import org.identityconnectors.framework.common.objects.ConnectorObject;

@@ -4,7 +4,7 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest;
+package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.scimrest.api.AttributePath;
 import com.unboundid.scim2.common.types.AttributeDefinition;
