@@ -1,0 +1,21 @@
+= Polygon SCIMREST Connector Framework
+
+Framework and set of connectors for various services using SCIM 2 and REST.
+
+The intent of SCIMREST framework is to simplify building customized connectors using declarative approach, set of prebuilt components and strategies, with option to custimize behaviour using Java or Groovy code.
+
+== Structure
+
+* link:common/[`common`]:
+Common base Java framework for implementing SCIM & REST based ConnId connectors.
+** Supports custom Java lambdas / classes for behavior customization
+** Supports custom Groovy scripts (using DSL and lambdas0) for behavior customizations
+
+* link:connector/[`connector`]:
+Contains hand-crafted implementation of generic and application specific connectors, created to common connector framework.
+** link:connector/forgejo/[`forgejo`]: Forgejo Connector implemented using Groovy DSL and base Java classes for loading Groovy scripts from classpath.
+** link:connector/generic/[`generic`]: Generic connector supporting Groovy DSL and custom scripts presented on file system.
+
+* link:docs/[`docs`]: Documentation of connector framework.
+** link:docs/rest/[`rest`]: Documentation regarding implementation of REST connectors using this connector framework
+*** link:docs/rest/steps/[`steps`]: Step by step description of neccessary steps to implement connector.
