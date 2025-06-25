@@ -1,9 +1,13 @@
+/*
+ * Copyright (c) 2025 Evolveum and contributors
+ *
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ *
+ */
 package com.evolveum.polygon.scim.rest.groovy;
 
-import org.json.JSONObject;
 
 import java.net.http.HttpResponse;
-import java.util.function.Function;
 
 /**
  * Functional interface for extracting objects from HTTP responses.

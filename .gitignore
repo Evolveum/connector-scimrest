@@ -2,3 +2,4 @@
 **/target/
 /docs/tasks.md
 *.iml
+local

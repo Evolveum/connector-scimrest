@@ -40,7 +40,7 @@ The problematic part is that sometimes the actual reference (from ConnID perspec
       "type": "string",
       "multiValued": false,
       "description": "Identifier of the member of this Group.",
-      "...": "..." // Shortened for clarity
+      // more properties ommited for clarity
     },
     {
       "name": "$ref",

@@ -10,27 +10,19 @@ GET
 /activitypub/repository-id/{repository-id}
 Returns the Repository actor for a repo
 
-
-
 POST
 /activitypub/repository-id/{repository-id}/inbox
 Send to the inbox
-
-
 
 GET
 /activitypub/user-id/{user-id}
 Returns the Person actor for a user
 
-
-
 POST
 /activitypub/user-id/{user-id}/inbox
 Send to the inbox
 
-
 ## Admin
-
 
 GET admin/cron
 List cron tasks

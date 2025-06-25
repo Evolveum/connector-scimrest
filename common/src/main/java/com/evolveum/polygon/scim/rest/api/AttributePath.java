@@ -1,10 +1,13 @@
+/*
+ * Copyright (c) 2025 Evolveum and contributors
+ *
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ *
+ */
 package com.evolveum.polygon.scim.rest.api;
 
-import com.evolveum.polygon.scim.rest.schema.MappedObjectClassBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
-import com.github.javaparser.resolution.Resolvable;
-import com.unboundid.scim2.common.types.FilterConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;

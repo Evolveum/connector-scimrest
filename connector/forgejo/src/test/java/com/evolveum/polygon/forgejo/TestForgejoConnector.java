@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 Evolveum and contributors
+ *
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ *
+ */
 package com.evolveum.polygon.forgejo;
 
 import org.identityconnectors.common.security.GuardedString;
@@ -13,8 +19,6 @@ import java.util.Map;
 import static org.testng.Assert.*;
 
 public class TestForgejoConnector {
-
-//708f9b2d9ece1b996073e1edb83ce54b09081ee3
 
     @Test
     public void testSchema() {
@@ -37,16 +41,16 @@ public class TestForgejoConnector {
         var connector = new ForgejoConnector();
         var configuration = new ForgejoConfiguration();
 
-        configuration.setBaseAddress("https://git.dfx.sk/api/v1");
-        configuration.setAuthorizationTokenName("forgejo-read-only");
-        configuration.setAuthorizationTokenValue(new GuardedString("69dccdac818e14af47cb3984c41be1eebf847511".toCharArray()));
+        configuration.setBaseAddress("...");
+        configuration.setAuthorizationTokenName("...");
+        configuration.setAuthorizationTokenValue(new GuardedString("...".toCharArray()));
 
         connector.init(configuration);
         return connector;
     }
 
 
-    @Test
+    @Test(enabled = false)
     public void testSearchAllUsers() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -54,7 +58,7 @@ public class TestForgejoConnector {
         assertNotNull(results);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSearchAllUOrganizations() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -62,7 +66,7 @@ public class TestForgejoConnector {
         assertNotNull(results);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSearchAllTeams() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -70,7 +74,7 @@ public class TestForgejoConnector {
         assertNotNull(results);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSearchUserByUid() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -81,7 +85,7 @@ public class TestForgejoConnector {
         assertEquals(results.get(0).getUid().getUidValue(), "1");
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSearchOrganizationByUidWithNameHint() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -97,7 +101,7 @@ public class TestForgejoConnector {
 
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSearchUserByNameContains() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -108,7 +112,7 @@ public class TestForgejoConnector {
         assertEquals(results.get(0).getUid().getUidValue(), "1");
     }
 
-    @Test()
+    @Test(enabled = false)
     public void testSearchUserByNameEquals() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -119,7 +123,7 @@ public class TestForgejoConnector {
         assertEquals(results.get(0).getUid().getUidValue(), "1");
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSearchTeamByOrganizationName() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -130,7 +134,7 @@ public class TestForgejoConnector {
         assertEquals(results.get(0).getUid().getUidValue(), "3");
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSearchTeamByUid() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
@@ -141,7 +145,7 @@ public class TestForgejoConnector {
         assertEquals(results.get(0).getUid().getUidValue(), "3");
     }
 
-    @Test
+    @Test(enabled = false)
     public void testOrganizationMembershipReturned() {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();

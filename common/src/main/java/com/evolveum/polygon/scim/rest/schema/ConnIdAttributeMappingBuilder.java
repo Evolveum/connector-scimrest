@@ -4,7 +4,9 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-objectClass("Organization") {
-    connIdAttribute("UID", "name");
-    connIdAttribute("NAME", "username");
+package com.evolveum.polygon.scim.rest.schema;
+
+public class ConnIdAttributeMappingBuilder {
+
+
 }

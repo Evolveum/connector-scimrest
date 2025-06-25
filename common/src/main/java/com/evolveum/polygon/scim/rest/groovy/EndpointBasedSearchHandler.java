@@ -1,7 +1,12 @@
+/*
+ * Copyright (c) 2025 Evolveum and contributors
+ *
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ *
+ */
 package com.evolveum.polygon.scim.rest.groovy;
 
 import com.evolveum.polygon.scim.rest.ContextLookup;
-import com.evolveum.polygon.scim.rest.RestContext;
 import com.evolveum.polygon.scim.rest.RestPagingAwareObjectRetriever;
 import com.evolveum.polygon.scim.rest.schema.MappedObjectClass;
 import com.evolveum.polygon.scim.rest.spi.SearchEndpointHandler;
@@ -14,7 +19,7 @@ import java.util.Set;
 
 public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler<BF, OF>, FilterAwareExecuteQueryProcessor {
 
-    private MappedObjectClass objectClass;
+    private final MappedObjectClass objectClass;
     private final ResponseObjectExtractor<BF,OF> objectExtractor;
     private final PagingHandler pagingSupport;
     private final String apiEndpoint;

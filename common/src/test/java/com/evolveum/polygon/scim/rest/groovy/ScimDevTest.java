@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 Evolveum and contributors
+ *
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ *
+ */
 package com.evolveum.polygon.scim.rest.groovy;
 
 
@@ -17,9 +23,6 @@ import static org.testng.Assert.*;
 
 public class ScimDevTest {
 
-    private final static String TOKEN_ENDPOINT = "https://idp.scim.dev/oauth/token";
-    private final static String CLIENT_ID = "9f12c467-68e5-42ab-b1e6-b7d90ae8600f";
-    private final static String CLIENT_SECRET = "BGCsIeoNnEabme5oMZGrCvU5cD8LgUoR5S1ntJGA";
     private final static String SCIM_BASE_URL = "https://api.scim.dev/scim/v2";
     private final static String BEARER_TOKEN = "yDVnbHg34ZyrfpgjiUGsnTiWzvDUYX89WwOvECftDUgeDuOYZw1ijtbUYPU3";
 
