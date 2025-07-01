@@ -1,22 +1,26 @@
-## GET /users/search
+=== GET /users/search
 
 Search for users
 
-### Parameters
+==== Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
-| q    |string (query) | keyword |
-| uid  | integer($int64) (query) | ID of the user to search for |
-| page | integer (query) | page number of results to return (1-based) |
-| limit | integer (query) | page size of results |
+[cols=",,",options="header",]
+|===
+|Name |Type |Description
+|q |string (query) |keyword
+|uid |integer($int64) (query) |ID of the user to search for
+|page |integer (query) |page number of results to return (1-based)
+|limit |integer (query) |page size of results
+|===
 
-### Responses
+==== Responses
 
-#### `200` - SearchResults of a successful search
+===== `200` - SearchResults of a successful search
 
 Example value:
-```json
+
+[source,json]
+----
 {
   "data": [
     {
@@ -47,4 +51,4 @@ Example value:
   ],
   "ok": true
 }
-```
+----
