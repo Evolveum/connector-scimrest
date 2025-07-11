@@ -1,0 +1,27 @@
+
+= Minimal Connector
+
+== Requirements from project scope
+
+The requirements for Rapid Application onboarding
+
+* Connection configuration
+** minimize number of configuration options needed (Tony, need to verify)
+* Discovery of Account and Group-like schemas, associations
+** Account examples: Account, User
+** Group-like examples: Group, Organization, Team, Project
+
+* Searching for all objects
+
+
+
+
+== ConnID operations
+
+The minimal cloud connector should support following connID operations in to work correctly:
+
+ * `test`
+ * `schema`
+ * `executeQuery`
+
+NOTE: This is informed by base testing in midPoint
