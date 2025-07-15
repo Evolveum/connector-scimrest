@@ -32,6 +32,14 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifestEntries>
+                            <ConnectorBundle-ConnectorClass>com.evolveum.polygon.scimrest.groovy.impl.ReadOnlyConnector</ConnectorBundle-ConnectorClass>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
             </plugin>
         </plugins>
     </build>
