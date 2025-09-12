@@ -51,4 +51,22 @@ public interface RestClientConfiguration extends ConfigurationMixin {
         GuardedString getRestTokenValue();
 
     }
+
+    interface ApiKeyAuthorization extends RestClientConfiguration {
+
+        GuardedString getRestApiKey();
+    }
+
+    static boolean isConfigured(Class<? extends RestClientConfiguration> type, RestClientConfiguration configuration) {
+        if (ApiKeyAuthorization.class.isAssignableFrom(type)) {
+            return (configuration instanceof ApiKeyAuthorization api && api.getRestApiKey() != null);
+        }
+        if (TokenAuthorization.class.isAssignableFrom(type)) {
+            return (configuration instanceof TokenAuthorization token && token.getRestTokenValue() != null);
+        }
+        if (BasicAuthorization.class.isAssignableFrom(type)) {
+            return (configuration instanceof BasicAuthorization basic && basic.getRestUsername() != null && basic.getRestPassword() != null);
+        }
+        return false;
+    }
 }

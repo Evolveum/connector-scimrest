@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.GroovyShell;
@@ -22,6 +23,9 @@ public class GroovyRestHandlerBuilder extends RestHandlerBuilder {
         super(schema);
         this.shell = context.createShell();
         shell.setVariable("objectClass", new MethodClosure(this, "objectClass"));
+        shell.setVariable("test", new MethodClosure(this, "test"));
+        shell.setVariable("authorization", new MethodClosure(this, "authorization"));
+
     }
 
     public void loadFromResource(String s) {
