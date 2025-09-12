@@ -1,0 +1,121 @@
+package com.evolveum.polygon.openProject.integration;
+
+import com.evolveum.polygon.openProject.OpenProjectConfiguration;
+import com.evolveum.polygon.openProject.OpenProjectConnector;
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
+import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
+import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+
+public class BaseTest {
+
+    private OpenProjectConnector initializedConnector() {
+        var connector = new OpenProjectConnector();
+        var configuration = new OpenProjectConfiguration();
+
+        configuration.setBaseAddress("");
+        configuration.setUserName("");
+        configuration.setPassword(new GuardedString("".toCharArray()));
+
+        connector.init(configuration);
+        return connector;
+    }
+
+    public void testSchema(String objectType) {
+        var connector = new OpenProjectConnector();
+        var configuration = new OpenProjectConfiguration();
+        connector.init(configuration);
+        var schema = connector.schema();
+
+        assertNotNull(schema);
+        var o = schema.findObjectClassInfo(objectType);
+        assertNotNull(o);
+        assertNotNull(o.getType());
+    }
+
+
+    public void testSearchAll(String objectType) {
+        var connector = initializedConnector();
+        var results = new ArrayList<ConnectorObject>();
+        connector.executeQuery(new ObjectClass(objectType), null,
+                results::add, new OperationOptions(Map.of()));
+        assertNotNull(results);
+    }
+
+
+    public void testSearchByUid(String objectType, String id) {
+        var connector = initializedConnector();
+        var results = new ArrayList<ConnectorObject>();
+        var filter = new EqualsFilter(new Uid(id));
+        connector.executeQuery(new ObjectClass(objectType), filter, results::add, new OperationOptions(Map.of()));
+        assertNotNull(results);
+        assertEquals(results.size(), 1);
+        assertEquals(results.get(0).getUid().getUidValue(), id);
+    }
+
+    public void testSearchByValue(Filter filter, String objectType, String attrName, Object attrVal,
+                                  String assertId, Integer assertSize) {
+        var connector = initializedConnector();
+        var results = new ArrayList<ConnectorObject>();
+
+        connector.executeQuery(new ObjectClass(objectType), filter, results::add, new OperationOptions(Map.of()));
+        assertNotNull(results);
+
+        if (assertSize != null) {
+
+            assertEquals(results.size(), assertSize);
+        }
+
+        if (assertId != null) {
+            assertEquals(results.get(0).getUid().getUidValue(), assertId);
+        }
+    }
+
+    public void testSearchContainsValue(String objectType, String attrName, Object attrVal,
+                                        String assertId, Integer assertSize) {
+        var filter = (ContainsFilter) FilterBuilder.contains(AttributeBuilder.build(attrName,
+                attrVal));
+        testSearchByValue(filter, objectType, attrName, attrVal, assertId, assertSize);
+    }
+
+    public void testSearchContainsValue(String objectType, String attrName, Object attrVal,
+                                        String assertId) {
+        var filter = (ContainsFilter) FilterBuilder.contains(AttributeBuilder.build(attrName,
+                attrVal));
+        testSearchByValue(filter, objectType, attrName, attrVal, assertId, null);
+    }
+
+    public void testSearchContainsValue(String objectType, String attrName, Object attrVal) {
+        var filter = (ContainsFilter) FilterBuilder.contains(AttributeBuilder.build(attrName,
+                attrVal));
+        testSearchByValue(filter, objectType, attrName, attrVal, null, null);
+    }
+
+    public void testSearchEqualsValue(String objectType, String attrName, Object attrVal,
+                                      String assertId, Integer assertSize) {
+        var filter = (EqualsFilter) FilterBuilder.equalTo(AttributeBuilder.build(attrName,
+                attrVal));
+        testSearchByValue(filter, objectType, attrName, attrVal, assertId, assertSize);
+    }
+
+    public void testSearchEqualsValue(String objectType, String attrName, Object attrVal,
+                                      String assertId) {
+        var filter = (EqualsFilter) FilterBuilder.equalTo(AttributeBuilder.build(attrName,
+                attrVal));
+        testSearchByValue(filter, objectType, attrName, attrVal, assertId, null);
+    }
+
+    public void testSearchEqualsValue(String objectType, String attrName, Object attrVal) {
+        var filter = (EqualsFilter) FilterBuilder.equalTo(AttributeBuilder.build(attrName,
+                attrVal));
+        testSearchByValue(filter, objectType, attrName, attrVal, null, null);
+    }
+}

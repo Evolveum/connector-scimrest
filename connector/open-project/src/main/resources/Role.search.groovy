@@ -6,20 +6,13 @@
  */
 objectClass("Role") {
 
-    // TODO maybe custom search would be a better idea if sorting, ordering and some other filters are needed....
     search {
         endpoint("roles/") {
             objectExtractor {
                 var jsonArray = response.body().get("_embedded").get("elements");
                 return jsonArray;
             }
-//            pagingSupport {
-//                request.queryParameter("pageSize", paging.pageSize)
-//                        .queryParameter("offset", paging.pageOffset)
-//            }
             emptyFilterSupported true
-            supportedFilter(attribute("name").eq().anySingleValue()) {
-            }
         }
 
         endpoint("roles/{id}") {

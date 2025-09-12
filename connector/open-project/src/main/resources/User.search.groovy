@@ -4,6 +4,7 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
+import java.nio.charset.StandardCharsets
 objectClass("User") {
     search {
 
@@ -14,22 +15,43 @@ objectClass("User") {
             }
             pagingSupport {
                 request.queryParameter("pageSize", paging.pageSize)
-                       .queryParameter("offset", paging.pageOffset)
+                        .queryParameter("offset", paging.pageOffset)
             }
             emptyFilterSupported true
-
             supportedFilter(attribute("name").eq().anySingleValue()) {
-                request.queryParameter("filters",value)
+                String filter = "[{ \"name\": { \"operator\": \"=\", \"values\": [\"${value}\"] } }]"
+                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
             }
             supportedFilter(attribute("name").contains().anySingleValue()) {
-                request.queryParameter("filters",value)
+
+                String filter = "[{ \"name\": { \"operator\": \"~\", \"values\": [\"${value}\"] } }]"
+                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
             }
-            supportedFilter(attribute("login").eq().anySingleValue()) {
-                request.queryParameter("filters",value)
-            }
-            supportedFilter(attribute("login").contains().anySingleValue()) {
-                request.queryParameter("filters",value)
-            }
+// TODO connid error, operations not supported for __NAME attr
+//            supportedFilter(attribute("login").eq().anySingleValue()) {
+//
+//                String filter = "[{ \"login\": { \"operator\": \"=\", \"values\": [\"${value}\"] } }]"
+//                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
+//            }
+//            supportedFilter(attribute("login").contains().anySingleValue()) {
+//
+//                String filter = "[{ \"login\": { \"operator\": \"&=\", \"values\": [\"${value}\"] } }]"
+//                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
+//            }
+
+// TODO complex attrs
+//            supportedFilter(attribute("status").contains().anySingleValue()) {
+//                request.queryParameter("filters",value)
+//            }
+//            supportedFilter(attribute("status").eq().anySingleValue()) {
+//                request.queryParameter("filters",value)
+//            }
+//            supportedFilter(attribute("group").eq().anySingleValue()) {
+//                request.queryParameter("filters",value)
+//            }
+//            supportedFilter(attribute("group").contains().anySingleValue()) {
+//                request.queryParameter("filters",value)
+//            }
         }
         endpoint("users/{id}") {
             singleResult()

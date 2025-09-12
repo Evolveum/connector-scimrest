@@ -1,3 +1,5 @@
+import java.nio.charset.StandardCharsets
+
 /*
  * Copyright (c) 2025 Evolveum and contributors
  *
@@ -6,7 +8,6 @@
  */
 objectClass("Project") {
 
-    // TODO maybe custom search would be a better idea if sorting, ordering and some other filters are needed....
     search {
         endpoint("projects/") {
             objectExtractor {
@@ -18,8 +19,13 @@ objectClass("Project") {
                         .queryParameter("offset", paging.pageOffset)
             }
             emptyFilterSupported true
-            supportedFilter(attribute("name").eq().anySingleValue()) {
-            }
+
+            // TODO connid error, operations not supported for __UID attr
+//            supportedFilter(attribute("id").contains().anySingleValue()) {
+//
+//                String filter = "[{ \"id\": { \"operator\": \"&=\", \"values\": [\"${value}\"] } }]"
+//                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
+//            }
         }
 
         endpoint("projects/{id}") {
