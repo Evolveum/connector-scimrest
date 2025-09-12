@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.forgejo;
 
+import com.evolveum.polygon.scimrest.groovy.impl.ReadOnlyConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
@@ -23,7 +24,7 @@ public class TestForgejoConnector {
     @Test
     public void testSchema() {
         var connector = new ForgejoConnector();
-        var configuration = new ForgejoConfiguration();
+        var configuration = new ReadOnlyConfiguration();
         connector.init(configuration);
 
         var schema = connector.schema();

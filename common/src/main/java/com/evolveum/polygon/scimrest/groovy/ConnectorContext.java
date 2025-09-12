@@ -74,13 +74,17 @@ public class ConnectorContext implements ContextLookup, RetrievableContext {
 
     public void initializeScim() {
         if (configuration instanceof ScimClientConfiguration scimConf) {
-            scim = new ScimContext(this, scimConf);
+            if (scimConf.getScimBaseUrl() != null) {
+                scim = new ScimContext(this, scimConf);
+            }
         }
     }
 
     public void initializeRest(RestContext.AuthorizationCustomizer authorizationCustomizer) {
         if (configuration instanceof RestClientConfiguration restCfg) {
-            rest = new RestContext(restCfg, authorizationCustomizer);
+            if (restCfg.getBaseAddress() != null) {
+                rest = new RestContext(restCfg, authorizationCustomizer);
+            }
         }
     }
 
