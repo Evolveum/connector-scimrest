@@ -3,3 +3,4 @@
 /docs/tasks.md
 *.iml
 local
+.idea

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="EnvironmentManager">
+    <option name="environments">
+      <list>
+        <Environment>
+          <option name="color">
+            <Color>
+              <option name="blue" value="230" />
+              <option name="green" value="170" />
+              <option name="red" value="184" />
+            </Color>
+          </option>
+          <option name="id" value="19d2132f-271a-4878-a287-ac3198be5dec" />
+          <option name="name" value="Default" />
+          <option name="url" value="http://localhost:8080/midpoint" />
+        </Environment>
+        <Environment>
+          <option name="color">
+            <Color>
+              <option name="blue" value="168" />
+              <option name="green" value="205" />
+              <option name="red" value="230" />
+            </Color>
+          </option>
+          <option name="id" value="74357311-495a-465e-bfbb-4e0fbe2a842d" />
+          <option name="name" value="Demo" />
+          <option name="url" value="https://demo.evolveum.com/midpoint" />
+        </Environment>
+      </list>
+    </option>
+    <option name="selectedId" value="19d2132f-271a-4878-a287-ac3198be5dec" />
+  </component>
+  <component name="MidPointManager">
+    <option name="askToAddMidpointFacet" value="true" />
+    <option name="askToValidateEnvironmentCredentials" value="true" />
+    <option name="dowloadFilePattern" value="objects/$T/$n.xml" />
+    <option name="generatedFilePattern" value="scratches/gen/$n.xml" />
+    <option name="midpointVersion" value="4.9" />
+    <option name="projectId" value="92e6b3fe-c44c-4b1c-a8be-0390e3373e59" />
+    <option name="restResponseTimeout" value="60" />
+    <option name="typesToDownloadLimit" value="100" />
+    <option name="downloadTypesExclude" value="UserType,ShadowType,CaseType,ReportDataType,ConnectorType,AccessCertificationCampaignType,NodeType" />
+  </component>
+</project>

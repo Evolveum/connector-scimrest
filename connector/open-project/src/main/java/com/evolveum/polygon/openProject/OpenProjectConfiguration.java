@@ -1,0 +1,34 @@
+package com.evolveum.polygon.openProject;
+
+
+import com.evolveum.polygon.scimrest.config.ConfigurationMixin;
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.spi.ConfigurationProperty;
+
+public class OpenProjectConfiguration extends BaseRestGroovyConnectorConfiguration implements RestClientConfiguration.BasicAuthorization {
+
+    private String userName;
+    private GuardedString password;
+
+    @Override
+    @ConfigurationProperty(groupMessageKey = "rest.auth.userName", required = false)
+    public String getRestUsername() {
+        return userName;
+    }
+
+    @Override
+    @ConfigurationProperty(groupMessageKey = "rest.auth.password", required = true)
+    public GuardedString getRestPassword() {
+        return password;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public void setPassword(GuardedString password) {
+        this.password = password;
+    }
+}
