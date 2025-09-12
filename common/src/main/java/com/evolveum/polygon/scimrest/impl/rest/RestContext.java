@@ -229,6 +229,7 @@ public class RestContext implements RetrievableContext {
          *
          */
         void customize(RestClientConfiguration configuration, RequestBuilder request);
+
     }
 
     /**

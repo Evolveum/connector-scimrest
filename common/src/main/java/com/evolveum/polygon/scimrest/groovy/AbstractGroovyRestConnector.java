@@ -17,7 +17,6 @@ import org.identityconnectors.framework.spi.Configuration;
 public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase {
 
     private ConnectorContext context;
-
     @Override
     public BaseGroovyConnectorConfiguration getConfiguration() {
         return context.configuration();
@@ -61,13 +60,16 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         var handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
         initializeObjectClassHandler(handlersBuilder);
 
+
         if (context.isScimEnabled()) {
             context.scim().contributeToHandlers(handlersBuilder);
         }
         context.handlers(handlersBuilder.build());
 
         // Finally we initialize REST client if present
-        context.initializeRest(authorizationCustomizer());
+        var authentication = handlersBuilder.buildAuthentication();
+
+        context.initializeRest(authentication);
     }
 
     protected RestContext.AuthorizationCustomizer authorizationCustomizer() {

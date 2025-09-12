@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest;
 
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.spi.ObjectClassOperation;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 

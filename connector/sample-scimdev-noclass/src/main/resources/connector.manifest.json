@@ -1,0 +1,11 @@
+{
+    "application": {
+        "name": "SCIM.dev",
+        "description": "SCIM Playground is a SCIM test server and playground environment designed to help you play, learn, and test SCIM with ease.\n"
+    },
+    "connector": {
+        "schema": [
+            { "script": "Schema.schema.groovy" }
+        ]
+    }
+}

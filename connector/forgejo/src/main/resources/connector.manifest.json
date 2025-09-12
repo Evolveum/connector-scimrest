@@ -1,0 +1,25 @@
+{
+  "application": {
+    "name": "Forgejo",
+    "description": "Forgejo is a self-hosted lightweight software forge.\nEasy to install and low maintenance, it just does the job.\n"
+  },
+  "connector": {
+    "schema": [
+      { "script": "/User.native.schema.groovy" },
+      { "script": "/User.connid.schema.groovy" },
+      { "script": "/Organization.native.schema.groovy" },
+      { "script": "/Organization.connid.schema.groovy" },
+      { "script": "/Team.native.schema.groovy" },
+      { "script": "/Team.connid.schema.groovy" },
+      { "script": "/associations.new.schema.groovy" }
+    ],
+    "operation": [
+      { "script":  "/authorization.op.groovy"},
+      { "script": "/User.search.groovy" },
+      { "script": "/Organization.search.groovy" },
+      { "script": "/Team.search.groovy" },
+      { "script": "/Team.custom.minimal.search.groovy" },
+      { "script": "/User.organization.support.search.groovy" }
+    ]
+  }
+}

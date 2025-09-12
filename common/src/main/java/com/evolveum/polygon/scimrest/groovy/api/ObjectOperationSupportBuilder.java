@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface OperationSupportBuilder {
+public interface ObjectOperationSupportBuilder {
 
     SearchOperationBuilder search(@DelegatesTo(SearchOperationBuilder.class) Closure<?> o);
 
