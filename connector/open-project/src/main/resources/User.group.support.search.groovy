@@ -1,47 +1,41 @@
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference
 
+import java.nio.charset.StandardCharsets
+
 /*
  * Copyright (c) 2025 Evolveum and contributors
  *
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-objectClass("User") {
-    search {
-        attributeResolver {
-            attribute "group"
-            resolutionType PER_OBJECT
-            implementation {
-                var userGroups = new ArrayList()
-                var uFilter = objectClass("User").attributeFilter("id").eq(value)
-                // Let's get all user organizations
-                var user = objectClass("User").search(uFilter)
 
-                for (var u : users) {
-
-                    // TODO pseudocode, i.e. complex attr value fetch
-                    def hFilter =  u.memberships.href;
-                    def filter = hFilter.substring(hFilter.indexOf("?") + 1)
-
-                    memberships = objectClass("Membership").search(filter)
-                    // For each team we need to get it's all members, because there is no endpoint which allows us
-                    // to search teams by it's member.
-                    for (var membership : memberships) {
-
-                        def principalHref = membership.principal.href;
-//                        var teamMembersFilter = objectClass("User").attributeFilter("team")
-//                                .eq(team);
-//                        var usersInTeam = objectClass("User").search(teamMembersFilter)
-//                        if (usersInTeam.any {it.uid.equals(value.build().uid)}) {
-//                            userTeams.add(new ConnectorObjectReference(team))
+// TODO pseudocode
+//objectClass("User") {
+//    search {
+//        attributeResolver {
+//            attribute "group"
+//            resolutionType PER_OBJECT
+//            implementation {
+//                var groups = objectClass("Group").searchAll()
+//                var userGroups  = new ArrayList()
+//                for (var g : groups) {
+//
+//                    // TODO pseudocode, i.e. complex attr value fetch
+//                    var oId =  g.members.id;
+//                    var oType =  g.members._type;
+//
+//                    if("User".equals(oType)){
+//                        if(value.value.uid.equals(oId)){
+//                            userGroups.add(g);
+//                            continue;
 //                        }
-                    }
-                }
-                value.addAttribute("group", userGroups)
-            }
-        }
-    }
-}
+//                    }
+//                }
+//                value.addAttribute("group", userGroups)
+//            }
+//        }
+//    }
+//}
 
 
 objectClass("Group") {
@@ -53,8 +47,8 @@ objectClass("Group") {
                         .queryParameter("page", paging.pageOffset)
             }
             supportedFilter(attribute("group").eq().anySingleValue()) {
-                //TODO why value.value.name???
-                request.queryParameter("group", value.value.name)
+                String filter = "[{ \"group\": { \"operator\": \"=\", \"values\": [\"${value.value.uid}\"] } }]"
+                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
             }
         }
     }

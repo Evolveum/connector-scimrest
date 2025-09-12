@@ -4,23 +4,23 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-relationship("UserGroupMembership") {
+relationship("UserProjectPrincipal") {
     subject("User") {
-        attribute("group") {
+        attribute("project") {
             resolver {
                 resolutionType PER_OBJECT
                 search {
-                    attributeFilter("member").eq(value)
+                    attributeFilter("project").eq(value)
                 }
             }
         }
     }
-    object("Group") {
+    object("Project") {
         attribute("member") {
             resolver {
                 resolutionType PER_OBJECT
                 search {
-                    attributeFilter("group").eq(value)
+                    attributeFilter("member").eq(value)
                 }
             }
         }

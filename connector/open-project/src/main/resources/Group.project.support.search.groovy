@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-objectClass("User") {
+objectClass("Group") {
     search {
         endpoint("projects/") {
             responseFormat JSON_ARRAY
