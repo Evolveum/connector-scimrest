@@ -170,6 +170,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
     class JsonBuilder implements AttributeProtocolMappingBuilder, JsonMapping {
 
         private String name;
+        private AttributePath path;
         private String type;
         private String openApiFormat;
         private ValueMapping<Object, JsonNode> implementation;
@@ -181,7 +182,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
 
         @Override
         public JsonMapping name(String protocolName) {
-            this.name = name;
+            this.name = protocolName;
             return this;
         }
 
@@ -193,6 +194,12 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
         @Override
         public JsonMapping type(String jsonType) {
             type = jsonType;
+            return this;
+        }
+
+        @Override
+        public JsonMapping path(AttributePath path) {
+            this.path = path;
             return this;
         }
 
@@ -232,7 +239,10 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
                 // we need to to ConnID override
                 implementation = ValueTypeOverrideMapping.of(connIdType, implementation);
             }
-            return new JsonAttributeMapping(name, implementation);
+            if (path == null) {
+                path = AttributePath.of(name);
+            }
+            return new JsonAttributeMapping(path, implementation);
         }
     }
 

@@ -6,10 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolverBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.SearchOperationBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.SearchScriptBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.*;
 import com.evolveum.polygon.scimrest.impl.AttributeResolvingSearchHandler;
 import com.evolveum.polygon.scimrest.impl.FilterBasedSearchDispatcher;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
@@ -27,6 +24,7 @@ public class RestSearchOperationBuilder implements ObjectClassOperationBuilder<E
     Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
     Set<FilterAwareSearchProcessorBuilder> builders = new HashSet<>();
     Set<ScriptedAttributeResolverBuilder> resolvers = new HashSet<>();
+    private NormalizationBuilderImpl normalizationBuilder;
     private ScimSearchHandler.Builder scim;
 
     public RestSearchOperationBuilder(BaseOperationSupportBuilder parent) {
@@ -65,6 +63,14 @@ public class RestSearchOperationBuilder implements ObjectClassOperationBuilder<E
         return GroovyClosures.callAndReturnDelegate(definition, ret);
     }
 
+    @Override
+    public NormalizationBuilder normalize(Closure<?> definition) {
+        if (normalizationBuilder == null) {
+            normalizationBuilder = new NormalizationBuilderImpl();
+        }
+        return GroovyClosures.callAndReturnDelegate(definition, normalizationBuilder);
+    }
+
     public ExecuteQueryProcessor build() {
         if (endpointBuilder.isEmpty() && scim == null) {
             // We don't have any endpoints, so we don't need to build anything, this results in search operation
@@ -72,7 +78,14 @@ public class RestSearchOperationBuilder implements ObjectClassOperationBuilder<E
             return null;
         }
 
-        return buildAttributeResolver(buildFilterDispatcher());
+        return buildAttributeResolver(buildNormalizationHandler(buildFilterDispatcher()));
+    }
+
+    private ExecuteQueryProcessor buildNormalizationHandler(ExecuteQueryProcessor executeQueryProcessor) {
+        if (normalizationBuilder == null) {
+            return executeQueryProcessor;
+        }
+        return normalizationBuilder.build(executeQueryProcessor);
     }
 
     private ExecuteQueryProcessor buildFilterDispatcher() {

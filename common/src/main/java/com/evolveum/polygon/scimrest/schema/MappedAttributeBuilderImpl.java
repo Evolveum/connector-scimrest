@@ -13,6 +13,7 @@ import com.evolveum.polygon.scimrest.groovy.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Uid;
 
 public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl implements RestReferenceAttributeBuilder {
@@ -65,6 +66,9 @@ public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl 
     public MappedAttribute build() {
         // FIXME: Could this be part of ConnID schema contributor?
         if (Uid.NAME.equals(connIdName)) {
+            connId().type(String.class);
+        }
+        if (Name.NAME.equals(connIdName)) {
             connId().type(String.class);
         }
         return new MappedAttribute(this);

@@ -120,6 +120,12 @@ public interface RestAttributeBuilder {
         JsonMapping implementation(ValueMapping<?, JsonNode> mapping);
 
         JsonMapping implementation(@DelegatesTo(ValueMappingBuilder.class) Closure<?> closure);
+
+        default AttributePath attribute(String name) {
+            return AttributePath.of(name);
+        }
+
+        JsonMapping path(AttributePath path);
     }
 
     interface ScimMapping {
