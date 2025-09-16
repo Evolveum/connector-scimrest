@@ -19,6 +19,8 @@ public interface SearchOperationBuilder {
     AttributeResolverBuilder attributeResolver(
             @DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition);
 
+    NormalizationBuilder normalize(@DelegatesTo(value = NormalizationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition);
+
     SearchScriptBuilder custom(@DelegatesTo(SearchScriptBuilder.class) Closure<?> definition);
 
     ScimSearchBuilder scim();

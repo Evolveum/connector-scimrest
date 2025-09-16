@@ -4,10 +4,22 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
+import org.identityconnectors.framework.common.objects.ConnectorObject
 
 
 objectClass("Membership") {
     search {
+        normalize {
+            toSingleValue "roles"
+            rewriteUid {
+                def ref = (ConnectorObject) value.getValue()
+                return original + ":" +  ref.uid.uidValue
+            }
+            rewriteName {
+                def ref = (ConnectorObject) value.getValue()
+                return original + ":" +  ref.name.nameValue
+            }
+        }
 
         endpoint("memberships/") {
             objectExtractor {
