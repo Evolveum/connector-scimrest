@@ -12,8 +12,7 @@ import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import java.util.ArrayList;
 import java.util.Map;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 public class BaseTest {
 
@@ -51,7 +50,7 @@ public class BaseTest {
     }
 
 
-    public void testSearchByUid(String objectType, String id) {
+    public ArrayList<ConnectorObject> testSearchByUid(String objectType, String id) {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
         var filter = new EqualsFilter(new Uid(id));
@@ -59,7 +58,10 @@ public class BaseTest {
         assertNotNull(results);
         assertEquals(results.size(), 1);
         assertEquals(results.get(0).getUid().getUidValue(), id);
+
+        return results;
     }
+
 
     public void testSearchByValue(Filter filter, String objectType, String attrName, Object attrVal,
                                   String assertId, Integer assertSize) {
@@ -117,5 +119,10 @@ public class BaseTest {
         var filter = (EqualsFilter) FilterBuilder.equalTo(AttributeBuilder.build(attrName,
                 attrVal));
         testSearchByValue(filter, objectType, attrName, attrVal, null, null);
+    }
+
+    public boolean compareReferencedName(Object o, String name) {
+        return o instanceof ConnectorObjectReference cor && cor.getValue() instanceof
+                ConnectorObject co && co.getName().getNameValue().equals(name);
     }
 }

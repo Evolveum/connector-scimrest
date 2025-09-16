@@ -7,6 +7,8 @@
     <file url="file://$PROJECT_DIR$/connector/forgejo/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/connector/generic/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/connector/generic/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/connector/open-project/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/connector/open-project/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/connector/sample-scimdev/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/connector/sample-scimdev/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/connector/src/main/java" charset="UTF-8" />

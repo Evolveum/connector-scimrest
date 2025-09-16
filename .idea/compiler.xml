@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
+    <excludeFromCompile>
+      <directory url="file://$PROJECT_DIR$/connector/open-project/src/main/resources/archetype-resources" includeSubdirectories="true" />
+    </excludeFromCompile>
     <annotationProcessing>
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -9,8 +12,12 @@
         <module name="connector-forgejo" />
         <module name="connector-scimrest-generic" />
         <module name="connector-scimrest-common" />
+        <module name="open-project" />
         <module name="connector-sample-scimdev" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="connector-scimrest-connectors" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
