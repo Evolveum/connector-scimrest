@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.api.ObjectClassSchemaBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
@@ -32,12 +33,14 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
 
     private final String name;
     private final ObjectClassInfoBuilder connIdBuilder = new ObjectClassInfoBuilder();
+    private final RestSchemaBuilder parent;
     Map<String, MappedAttributeBuilderImpl> nativeAttributes = new HashMap<>();
     private String description;
     private ScimMapping scim;
 
     public MappedObjectClassBuilder(RestSchemaBuilder restSchemaBuilder, String name) {
         this.name = name;
+        this.parent = restSchemaBuilder;
         connIdBuilder.setType(name);
     }
 
@@ -56,6 +59,11 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
         return (MappedAttributeBuilderImpl) builder;
     }
 
+    @Override
+    public ObjectClassSchemaBuilder embedded(boolean embedded) {
+        connIdBuilder.setEmbedded(true);
+        return this;
+    }
 
     @Override
     public MappedBasicAttributeBuilderImpl attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
@@ -141,6 +149,10 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
             }
         }
         return true;
+    }
+
+    public ContextLookup contextLookup() {
+        return parent.contextLookup();
     }
 
 

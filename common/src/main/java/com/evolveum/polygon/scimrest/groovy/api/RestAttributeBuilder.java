@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.scimrest.ValueMapping;
 import com.evolveum.polygon.scimrest.api.AttributePath;
+import com.fasterxml.jackson.databind.JsonNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -98,6 +99,10 @@ public interface RestAttributeBuilder {
         return this;
     }
 
+
+    void complexType(String objectClass);
+
+
     default RestAttributeBuilder openApiFormat(String openapiFormat) {
         json().openApiFormat(openapiFormat);
         return this;
@@ -112,6 +117,9 @@ public interface RestAttributeBuilder {
         JsonMapping openApiFormat(String openapiFormat);
 
 
+        JsonMapping implementation(ValueMapping<?, JsonNode> mapping);
+
+        JsonMapping implementation(@DelegatesTo(ValueMappingBuilder.class) Closure<?> closure);
     }
 
     interface ScimMapping {

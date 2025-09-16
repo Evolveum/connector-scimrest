@@ -43,7 +43,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
     private void initialize() {
 
-        var schemaBuilder = new RestSchemaBuilder(getClass());
+        var schemaBuilder = new RestSchemaBuilder(getClass(), context);
 
         initializeSchema(new GroovySchemaLoader(context.configuration().groovyContext(), schemaBuilder));
         // Populate with SCIM schema

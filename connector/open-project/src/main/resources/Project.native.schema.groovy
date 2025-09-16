@@ -66,13 +66,15 @@ objectClass("Project") {
     }
 
     //TODO complex type, relevant?, embedded=true
-//    attribute("statusExplanation") {
-//        readable true;
-//        updateable true;
-//        creatable true;
-//        returnedByDefault true;
-//        required false;
-//    }
+    attribute("statusExplanation") {
+        complexType "Formattable"
+
+        readable true;
+        updateable true;
+        creatable true;
+        returnedByDefault true;
+        required false;
+    }
 
     attribute("public") {
         jsonType "boolean"

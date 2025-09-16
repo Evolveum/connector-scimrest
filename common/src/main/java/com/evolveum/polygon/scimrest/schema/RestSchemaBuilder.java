@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
@@ -23,9 +24,11 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
 
     private final SchemaBuilder schemaBuilder;
     private final Map<String, MappedObjectClassBuilder> objectClasses = new HashMap<>();
+    private ContextLookup contextLookup;
 
-    public RestSchemaBuilder(Class<? extends Connector> connectorClass) {
+    public RestSchemaBuilder(Class<? extends Connector> connectorClass, ContextLookup context) {
         this.schemaBuilder = new SchemaBuilder(connectorClass);
+        this.contextLookup = context;
     }
 
     @Override
@@ -74,5 +77,9 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
 
     public Iterable<MappedObjectClassBuilder> allObjectClasses() {
         return objectClasses.values();
+    }
+
+    public ContextLookup contextLookup() {
+        return this.contextLookup;
     }
 }

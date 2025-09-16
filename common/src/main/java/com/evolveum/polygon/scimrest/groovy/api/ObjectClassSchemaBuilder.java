@@ -13,6 +13,8 @@ public interface ObjectClassSchemaBuilder {
 
     ObjectClassSchemaBuilder description(String description);
 
+    ObjectClassSchemaBuilder embedded(boolean embedded);
+
     /**
      * Creates / gets attribute definition with the specified name.
      *

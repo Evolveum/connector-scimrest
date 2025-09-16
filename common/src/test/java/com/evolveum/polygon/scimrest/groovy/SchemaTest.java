@@ -15,7 +15,7 @@ public class SchemaTest {
     @Test
     public void testSchemaLoading() {
         var context = new GroovyContext();
-        var schema = new RestSchemaBuilder(AbstractGroovyRestConnector.class);
+        var schema = new RestSchemaBuilder(AbstractGroovyRestConnector.class, null);
         var loader = new GroovySchemaLoader(context, schema);
         loader.load("""
                objectClass("user") {
