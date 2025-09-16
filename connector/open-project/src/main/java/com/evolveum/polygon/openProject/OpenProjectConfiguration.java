@@ -1,7 +1,11 @@
+/*
+ * Copyright (c) 2025 Evolveum and contributors
+ *
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ *
+ */
 package com.evolveum.polygon.openProject;
 
-
-import com.evolveum.polygon.scimrest.config.ConfigurationMixin;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
