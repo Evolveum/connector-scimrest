@@ -44,6 +44,11 @@ public interface RestReferenceAttributeDelegator extends RestReferenceAttributeB
     }
 
     @Override
+    default void complexType(String objectClass) {
+        delegate().complexType(objectClass);
+    }
+
+    @Override
     default RestAttributeBuilder returnedByDefault(boolean returnedByDefault) {
         return delegate().returnedByDefault(returnedByDefault);
     }

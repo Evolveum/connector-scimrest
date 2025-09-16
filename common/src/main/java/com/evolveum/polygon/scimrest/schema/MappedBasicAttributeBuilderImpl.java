@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.OpenApiValueMapping;
 import com.evolveum.polygon.scimrest.ValueMapping;
 import com.evolveum.polygon.scimrest.api.AttributePath;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
+import org.identityconnectors.framework.common.objects.EmbeddedObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,12 +33,13 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
     boolean emulated = false;
 
     String remoteName;
-    private String description;
 
 
     private ScimBuilder scim;
     String connIdName;
     Class<?> connIdType;
+
+    private String complexType;
 
     public MappedBasicAttributeBuilderImpl(MappedObjectClassBuilder restObjectClassBuilder, String name) {
         this.remoteName = name;
@@ -93,9 +96,23 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
 
     @Override
     public MappedBasicAttributeBuilderImpl description(String description) {
-        this.description = description;
+        connIdBuilder.setDescription(description);
         return this;
     }
+
+
+    @Override
+    public void complexType(String objectClass) {
+        this.complexType = objectClass;
+        connId().type(EmbeddedObject.class);
+        connIdBuilder.setReferencedObjectClassName(objectClass);
+        json().implementation(new EmbeddedObjectJsonMapping(contextLookup(), objectClass));
+    }
+
+    protected ContextLookup contextLookup() {
+        return objectClass.contextLookup();
+    }
+
 
     @Override
     public MappedBasicAttributeBuilderImpl returnedByDefault(boolean returnedByDefault) {
@@ -155,6 +172,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
         private String name;
         private String type;
         private String openApiFormat;
+        private ValueMapping<Object, JsonNode> implementation;
 
 
         JsonBuilder() {
@@ -185,6 +203,21 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
         }
 
         @Override
+        public JsonMapping implementation(ValueMapping<?, JsonNode> mapping) {
+            this.implementation = (ValueMapping) mapping;
+            return this;
+        }
+
+        @Override
+        public JsonMapping implementation(@DelegatesTo(ValueMappingBuilder.class) Closure<?> closure) {
+            Class<?> typeClass = connIdType != null ? connIdType : Object.class;
+            var builder = new ValueMappingBuilderImpl<>(typeClass,JsonNode.class);
+            GroovyClosures.callAndReturnDelegate(closure, builder);
+            this.implementation = (ValueMapping) builder.build();
+            return this;
+        }
+
+        @Override
         public Class<?> suggestedConnIdType() {
             return null;
         }
@@ -192,14 +225,14 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
         @Override
         public AttributeProtocolMapping<?,?> build() {
 
-            ValueMapping<Object, JsonNode> valueMapping = OpenApiValueMapping.from(type, openApiFormat);
-            if (connIdType != null && !connIdType.equals(valueMapping.connIdType())) {
-                // we need to to ConnID override
-                valueMapping = ValueTypeOverrideMapping.of(connIdType, valueMapping);
+            if (this.implementation == null) {
+                implementation = OpenApiValueMapping.from(type, openApiFormat);
             }
-
-
-            return new JsonAttributeMapping(name, valueMapping);
+            if (connIdType != null && !connIdType.equals(implementation.connIdType())) {
+                // we need to to ConnID override
+                implementation = ValueTypeOverrideMapping.of(connIdType, implementation);
+            }
+            return new JsonAttributeMapping(name, implementation);
         }
     }
 

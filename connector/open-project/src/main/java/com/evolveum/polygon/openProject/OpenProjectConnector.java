@@ -28,6 +28,7 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
         loader.loadFromResource("/Project.connid.schema.groovy");
         loader.loadFromResource("/Role.native.schema.groovy");
         loader.loadFromResource("/Role.connid.schema.groovy");
+        loader.loadFromResource("/Formattable.native.schema.groovy");
 //        loader.loadFromResource("/Principal.native.schema.groovy");
 //        loader.loadFromResource("/association.schema.groovy");
     }
