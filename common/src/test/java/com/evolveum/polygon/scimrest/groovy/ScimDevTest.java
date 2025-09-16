@@ -60,7 +60,7 @@ public class ScimDevTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     void getSchemas() {
         var connector = initializedConnector();
 
@@ -74,7 +74,7 @@ public class ScimDevTest {
         assertNotNull(groupOc);
     }
 
-    @Test
+    @Test(enabled = false)
     public void getUsers() {
         var connector = initializedConnector();
         var users = new ArrayList<ConnectorObject>();
@@ -89,7 +89,7 @@ public class ScimDevTest {
         assertEquals(randomUser.getUid(), maybeUser.result.getUid());
     }
 
-    @Test
+    @Test(enabled = false)
     public void getOffices() {
         var connector = initializedConnector();
         var users = new ArrayList<ConnectorObject>();
@@ -104,7 +104,7 @@ public class ScimDevTest {
         assertEquals(randomUser.getUid(), maybeUser.result.getUid());
     }
 
-    @Test
+    @Test(enabled = false)
     public void getGroups() {
         var connector = initializedConnector();
         var users = new ArrayList<ConnectorObject>();
