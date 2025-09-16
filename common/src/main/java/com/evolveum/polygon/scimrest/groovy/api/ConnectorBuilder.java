@@ -17,7 +17,7 @@ public interface ConnectorBuilder extends OperationBuilder, SchemaBuilder {
     ObjectClassBuilder objectClass(String className);
 
     @Override
-    ObjectClassBuilder objectClass(String className, @DelegatesTo(value = ObjectOperationSupportBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+    ObjectClassBuilder objectClass(String className, @DelegatesTo(value = ObjectClassBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     interface ObjectClassBuilder extends  ObjectClassSchemaBuilder, ObjectOperationSupportBuilder {
 

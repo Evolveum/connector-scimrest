@@ -66,6 +66,10 @@ public class RestPagingAwareObjectRetriever {
                 var totalCount = specification.extractTotalResultCount(response);
                 if (totalCount != null && totalProcessed >= totalCount) {
                     shouldContinue = false;
+                } else if (batchProcessed < pageLimit) {
+                    // If we do not have access to total count and page contains less results than page limit
+                    // we can assume it is last page.
+                    shouldContinue = false;
                 }
                 currentPage++;
             } while (shouldContinue);
