@@ -2,13 +2,12 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.impl.ReadOnlyConfiguration;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.common.security.GuardedString;
 
-public interface AuthorizationCustomizationBuilder {
+public interface AuthenticationCustomizationBuilder {
 
     RestBuilder rest(@DelegatesTo(RestBuilder.class) Closure<?> closure);
 

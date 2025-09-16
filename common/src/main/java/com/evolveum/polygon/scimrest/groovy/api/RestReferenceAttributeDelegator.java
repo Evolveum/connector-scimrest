@@ -64,6 +64,11 @@ public interface RestReferenceAttributeDelegator extends RestReferenceAttributeB
     }
 
     @Override
+    default RestAttributeBuilder description(String description) {
+        return delegate().description(description);
+    }
+
+    @Override
     default void emulated(boolean emulated) {
         delegate().emulated(emulated);
     }

@@ -8,9 +8,7 @@ package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.CompositeObjectClassHandler;
 import com.evolveum.polygon.scimrest.ObjectClassHandler;
-import com.evolveum.polygon.scimrest.groovy.api.AuthorizationCustomizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.ObjectOperationSupportBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.TestOperationBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
 import com.evolveum.polygon.scimrest.spi.ObjectClassOperation;

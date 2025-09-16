@@ -21,4 +21,26 @@
     <packaging>jar</packaging>
     <name>Polygon SCIM2 Generic Connector</name>
 
+    <properties>
+        <connectorPackage>com.evolveum.polygon.scimrest.groovy.impl</connectorPackage>
+        <connectorClass>ManifestBasedConnector</connectorClass>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifestEntries>
+                            <ConnectorBundle-ConnectorClass>com.evolveum.polygon.scimrest.groovy.impl.ManifestBasedConnector</ConnectorBundle-ConnectorClass>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

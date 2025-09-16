@@ -36,7 +36,7 @@
                     <archive>
                         <index>true</index>
                         <manifestEntries>
-                            <ConnectorBundle-ConnectorClass>com.evolveum.polygon.scimrest.groovy.impl.ReadOnlyConnector</ConnectorBundle-ConnectorClass>
+                            <ConnectorBundle-ConnectorClass>com.evolveum.polygon.scimrest.groovy.impl.ManifestBasedConnector</ConnectorBundle-ConnectorClass>
                         </manifestEntries>
                     </archive>
                 </configuration>

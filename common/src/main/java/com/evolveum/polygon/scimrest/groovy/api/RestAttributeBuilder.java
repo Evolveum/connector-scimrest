@@ -33,6 +33,8 @@ public interface RestAttributeBuilder {
      */
     RestAttributeBuilder required(boolean required);
 
+    RestAttributeBuilder description(String description);
+
     RestAttributeBuilder returnedByDefault(boolean returnedByDefault);
 
     RestAttributeBuilder multiValued(boolean multiValued);

@@ -14,7 +14,12 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.spi.ConfigurationClass;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
-public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration implements ScimClientConfiguration.BearerToken, RestClientConfiguration.TokenAuthorization {
+@ConfigurationClass(overrideFile = "configurationOverride.properties")
+public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration implements
+        ScimClientConfiguration.BearerToken,
+        RestClientConfiguration.BasicAuthorization,
+        RestClientConfiguration.ApiKeyAuthorization,
+        RestClientConfiguration.TokenAuthorization {
 
 
     private String restTokenName;
@@ -24,8 +29,13 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private GuardedString scimBearerToken;
     private String scimBaseUrl;
 
+
+    private GuardedString restPassword;
+    private String restUsername;
+    private GuardedString restApiKey;
+
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.auth.tokenName", required = true)
+    @ConfigurationProperty(groupMessageKey = "rest.auth.tokenName")
     public String getRestTokenName() {
         return restTokenName;
     }
@@ -61,6 +71,10 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
         return scimBaseUrl;
     }
 
+
+
+
+
     public void setRestTokenName(String restTokenName) {
         this.restTokenName = restTokenName;
     }
@@ -83,5 +97,36 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
 
     public void setScimBaseUrl(String scimBaseUrl) {
         this.scimBaseUrl = scimBaseUrl;
+    }
+
+    @Override
+    @ConfigurationProperty(groupMessageKey = "rest.auth.apiKey", required = true)
+    public GuardedString getRestApiKey() {
+        return this.restApiKey;
+    }
+
+    @Override
+
+    @ConfigurationProperty(groupMessageKey = "rest.auth.username", required = true)
+    public String getRestUsername() {
+        return this.restUsername;
+    }
+
+    @Override
+    @ConfigurationProperty(groupMessageKey = "rest.auth.password", required = true)
+    public GuardedString getRestPassword() {
+        return this.restPassword;
+    }
+
+    public void setRestPassword(GuardedString restPassword) {
+        this.restPassword = restPassword;
+    }
+
+    public void setRestUsername(String restUsername) {
+        this.restUsername = restUsername;
+    }
+
+    public void setRestApiKey(GuardedString restApiKey) {
+        this.restApiKey = restApiKey;
     }
 }

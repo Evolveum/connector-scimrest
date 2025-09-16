@@ -8,9 +8,10 @@ package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.config.GroovyConfiguration;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
+import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.StatefulConfiguration;
 
-public abstract class BaseGroovyConnectorConfiguration implements StatefulConfiguration, GroovyConfiguration {
+public abstract class BaseGroovyConnectorConfiguration implements Configuration, GroovyConfiguration {
 
     private ConnectorMessages messages;
 
@@ -24,11 +25,6 @@ public abstract class BaseGroovyConnectorConfiguration implements StatefulConfig
     @Override
     public void setConnectorMessages(ConnectorMessages messages) {
         this.messages = messages;
-    }
-
-    @Override
-    public void release() {
-
     }
 
     public GroovyContext groovyContext() {

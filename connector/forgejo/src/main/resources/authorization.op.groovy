@@ -1,4 +1,4 @@
-authorization {
+authentication {
     rest {
         tokenBased {
             request.header("Authorization", "token " + decrypt(configuration.restTokenValue))

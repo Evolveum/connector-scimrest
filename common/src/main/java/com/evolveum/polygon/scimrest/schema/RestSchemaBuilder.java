@@ -10,8 +10,10 @@ import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Connector;
 
 import java.util.HashMap;
@@ -47,6 +49,10 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
     }
 
     public RestSchema build() {
+        if (objectClasses.isEmpty()) {
+            initializeDummySchema();
+        }
+
         Map<ObjectClass, MappedObjectClass> objectClassMap = new HashMap<>();
         for (var ocBuilder : objectClasses.values()) {
             var objectClassDef = ocBuilder.build();
@@ -54,6 +60,16 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
             objectClassMap.put(objectClassDef.objectClass(), objectClassDef);
         }
         return new RestSchema(schemaBuilder.build(), objectClassMap);
+    }
+
+    /**
+     * This is workaround for state in connector development (and MidPoint), which prevents issuing test connection
+     * without any object class
+     */
+    private void initializeDummySchema() {
+        var oc = objectClass("__Dummy");
+        oc.attribute("id").connId().name(Uid.NAME).type(String.class);
+        oc.attribute("name").connId().name(Name.NAME).type(String.class);
     }
 
     public Iterable<MappedObjectClassBuilder> allObjectClasses() {

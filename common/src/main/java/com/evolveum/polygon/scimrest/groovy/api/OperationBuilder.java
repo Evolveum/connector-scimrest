@@ -1,7 +1,6 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -15,6 +14,6 @@ public interface OperationBuilder {
 
     TestOperationBuilder test(@DelegatesTo(TestOperationBuilder.class) Closure<?> o);
 
-    AuthorizationCustomizationBuilder authorization(@DelegatesTo(AuthorizationCustomizationBuilder.class) Closure<?> o);
+    AuthenticationCustomizationBuilder authentication(@DelegatesTo(AuthenticationCustomizationBuilder.class) Closure<?> o);
 
 }

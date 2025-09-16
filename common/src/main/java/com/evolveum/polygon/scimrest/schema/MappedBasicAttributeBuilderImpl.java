@@ -91,6 +91,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
         return this;
     }
 
+    @Override
     public MappedBasicAttributeBuilderImpl description(String description) {
         this.description = description;
         return this;

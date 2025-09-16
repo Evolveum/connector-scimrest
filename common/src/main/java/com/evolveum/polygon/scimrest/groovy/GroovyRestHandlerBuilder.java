@@ -24,7 +24,7 @@ public class GroovyRestHandlerBuilder extends RestHandlerBuilder {
         this.shell = context.createShell();
         shell.setVariable("objectClass", new MethodClosure(this, "objectClass"));
         shell.setVariable("test", new MethodClosure(this, "test"));
-        shell.setVariable("authorization", new MethodClosure(this, "authorization"));
+        shell.setVariable("authentication", new MethodClosure(this, "authentication"));
 
     }
 

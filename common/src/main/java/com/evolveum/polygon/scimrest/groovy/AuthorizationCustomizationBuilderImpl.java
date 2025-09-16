@@ -2,11 +2,11 @@ package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.api.AuthorizationCustomizationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import groovy.lang.Closure;
 
-public class AuthorizationCustomizationBuilderImpl implements AuthorizationCustomizationBuilder {
+public class AuthorizationCustomizationBuilderImpl implements AuthenticationCustomizationBuilder {
 
     private final DispatchingAuthorizationCustomizer dispatcher = new DispatchingAuthorizationCustomizer();
 
@@ -59,7 +59,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthorizationCusto
         }
 
         private record Context(RestContext.RequestBuilder request,
-                               RestClientConfiguration configuration) implements AuthorizationCustomizationBuilder.CustomizationContext {
+                               RestClientConfiguration configuration) implements AuthenticationCustomizationBuilder.CustomizationContext {
 
 
             @Override
