@@ -6,6 +6,8 @@ import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuild
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import groovy.lang.Closure;
 
+import java.util.Base64;
+
 public class AuthorizationCustomizationBuilderImpl implements AuthenticationCustomizationBuilder {
 
     private final DispatchingAuthorizationCustomizer dispatcher = new DispatchingAuthorizationCustomizer();
@@ -13,14 +15,15 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
     public AuthorizationCustomizationBuilderImpl() {
         addCustomizer(RestClientConfiguration.BasicAuthorization.class, (conf, request) -> {
                 var basicConf = conf.require(RestClientConfiguration.BasicAuthorization.class);
-                var value = ""; // Fixme
-                request.header("Authorization", "basic " +  value);
-            });
+                var tokenAccessor = new GuardedStringAccessor();
+                basicConf.getRestPassword().access(tokenAccessor);
+                request.basicAuthorization(basicConf.getRestUsername(), tokenAccessor.getClearString());
+                });
         addCustomizer(RestClientConfiguration.TokenAuthorization.class, (conf, request) -> {
             var tokenConf = conf.require(RestClientConfiguration.TokenAuthorization.class);
             var decryptor = new GuardedStringAccessor();
             tokenConf.getRestTokenValue().access(decryptor);
-            request.header("Authorization", "bearer " + decryptor.getClearString());
+            request.header("Authorization", "Bearer " + decryptor.getClearString());
         });
     }
 

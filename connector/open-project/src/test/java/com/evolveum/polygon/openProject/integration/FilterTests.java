@@ -21,7 +21,7 @@ public class FilterTests extends BaseTest{
     }
 
     //TODO
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void test023SearchAllRoles() {
         testSearchAll("Role");
     }

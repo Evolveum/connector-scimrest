@@ -29,6 +29,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -196,6 +197,12 @@ public class RestContext implements RetrievableContext {
 
         public RequestBuilder header(String name, String value) {
             this.request.header(name, value);
+            return this;
+        }
+
+        public RequestBuilder basicAuthorization(String username, String password) {
+            String value = Base64.getEncoder().encodeToString((username+":"+password).getBytes());
+            this.request.header("Authorization", "Basic " +  value);
             return this;
         }
     }
