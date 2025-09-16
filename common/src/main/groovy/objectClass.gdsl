@@ -12,13 +12,13 @@ def opCtx = context(scope=scriptScope(),filetypes: ["op.groovy"])
 
 contributor(schemaCtx) {
     // Delegate top-level objectClass calls to RestSchemaBuilder
-    delegatesTo(findClass('com.evolveum.polygon.scimrest.groovy.api.SchemaBuilder'))
+    delegatesTo(findClass('com.evolveum.polygon.scimrest.groovy.api.ConnectorBuilder'))
 }
 
 contribute(searchCtx) {
-    delegatesTo(findClass('com.evolveum.polygon.scimrest.groovy.api.OperationBuilder'))
+    delegatesTo(findClass('com.evolveum.polygon.scimrest.groovy.api.ConnectorBuilder'))
 }
 
 contribute(opCtx) {
-    delegatesTo(findClass('com.evolveum.polygon.scimrest.groovy.api.OperationBuilder'))
+    delegatesTo(findClass('com.evolveum.polygon.scimrest.groovy.api.ConnectorBuilder'))
 }
