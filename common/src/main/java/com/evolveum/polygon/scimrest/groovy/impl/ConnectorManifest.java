@@ -2,6 +2,7 @@ package com.evolveum.polygon.scimrest.groovy.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
@@ -14,7 +15,11 @@ public class ConnectorManifest {
 
     public ConnectorManifest(InputStream resource) {
         try {
-            json = new ObjectMapper().readTree(resource);
+            if (resource == null) {
+                json = JsonNodeFactory.instance.objectNode();
+            } else {
+                json = new ObjectMapper().readTree(resource);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Can not read connector manifest", e);
         } finally {
