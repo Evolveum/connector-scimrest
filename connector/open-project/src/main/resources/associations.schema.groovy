@@ -16,14 +16,6 @@ relationship("UserProjectMembership") {
         }
     }
     object("Membership") {
-        attribute("member") {
-
-            resolver {
-                resolutionType PER_OBJECT
-                search {
-                    attributeFilter("member").eq(value)
-                }
-            }
-        }
+        attribute("principal")
     }
 }

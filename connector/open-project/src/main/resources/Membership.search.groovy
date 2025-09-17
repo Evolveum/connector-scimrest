@@ -13,11 +13,18 @@ objectClass("Membership") {
             toSingleValue "roles"
             rewriteUid {
                 def ref = (ConnectorObject) value.getValue()
-                return original + ":" +  ref.uid.uidValue
+                return original + ":" + ref.uid.uidValue
             }
             rewriteName {
                 def ref = (ConnectorObject) value.getValue()
-                return original + ":" +  ref.name.nameValue
+                return original + ":" + ref.name.nameValue
+            }
+            restoreUid {
+                return original.substring(0, original.indexOf(':'));
+            }
+            restoreName {
+
+                return original.substring(0, original.indexOf(':'));
             }
         }
 
@@ -28,7 +35,7 @@ objectClass("Membership") {
             }
             pagingSupport {
                 request.queryParameter("pageSize", paging.pageSize)
-                       .queryParameter("offset", paging.pageOffset)
+                        .queryParameter("offset", paging.pageOffset)
             }
             emptyFilterSupported true
 

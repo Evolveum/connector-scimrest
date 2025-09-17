@@ -61,7 +61,7 @@ public class FilterTests extends BaseTest{
 
     @Test(enabled = true)
     public void test035SearchMembershipByUid() {
-        testSearchByUid("Membership", "1491");
+        testSearchByUid("Membership", "1491:/api/v3/roles/8");
     }
 
     ///  Search equals filter
@@ -72,7 +72,7 @@ public class FilterTests extends BaseTest{
     }
 
     @Test(enabled = true)
-    public void test041SearchUserContainsFilter() {
+    public void test042SearchUserContainsFilter() {
         testSearchContainsValue("User", "name","Open");
     }
 
