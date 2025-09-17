@@ -26,11 +26,17 @@ public class FilterTests extends BaseTest{
         testSearchAll("Project");
     }
 
-    //TODO
+
     @Test(enabled = true)
     public void test023SearchAllRoles() {
         testSearchAll("Role");
     }
+
+    @Test(enabled = true)
+    public void test024SearchAllMemberships() {
+        testSearchAll("Membership");
+    }
+
 
     ///  Search uid
     @Test(enabled = true)
@@ -51,6 +57,11 @@ public class FilterTests extends BaseTest{
     @Test(enabled = true)
     public void test034SearchProjectByUid() {
         testSearchByUid("Project", "3");
+    }
+
+    @Test(enabled = true)
+    public void test035SearchMembershipByUid() {
+        testSearchByUid("Membership", "1491");
     }
 
     ///  Search equals filter

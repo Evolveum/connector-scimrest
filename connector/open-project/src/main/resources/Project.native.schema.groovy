@@ -65,7 +65,7 @@ objectClass("Project") {
         description "Indicates whether the project is currently active or already archived";
     }
 
-    //TODO complex type, relevant?, embedded=true
+
     attribute("statusExplanation") {
         complexType "Formattable"
 
@@ -86,94 +86,15 @@ objectClass("Project") {
         description "Indicates whether the project is accessible for everybody";
     }
 
-    //TODO complex type,embedded=true
-//    attribute("description") {
-//    readable true;
-//    updateable true;
-//    creatable true;
-//    returnedByDefault true;
-//    required false;
-//    description "Array of all ancestors of the project, down from the root node (first element) to the parent (last element).";
-//    }
 
-    //TODO complex type, relevant=false?, reference=true
-//    attribute("ancestors") {
-//    readable true;
-//    updateable false;
-//    creatable false;
-//    returnedByDefault false;
-//    required false;
-    //multiValued true
-//    description "Array of all ancestors of the project, down from the root node (first element) to the parent (last element).";
-//    }
+    attribute("description") {
 
-    //TODO complex type, relevant=false? ,reference=true
-//    attribute("categories") {
-//        readable true;
-//        updateable false;
-//        creatable false;
-//        returnedByDefault false;
-//        required false;
-    //    multiValued true
-//        description "Categories available in this project";
-//    }
+        complexType "Formattable"
+        readable true;
+        updateable true;
+        creatable true;
+        returnedByDefault true;
+        required false;
+    }
 
-    //TODO complex type, relevant=false?, reference=true
-//    attribute("types") {
-//        readable true;
-//        updateable false;
-//        creatable false;
-//        returnedByDefault false;
-//        required false;
-//        multiValued true
-//        description "Types available in this project";
-//    }
-
-    //TODO complex type, relevant=false?, reference=true
-//    attribute("versions") {
-//        readable true;
-//        updateable false;
-//        creatable false;
-//        returnedByDefault false;
-//        required false;
-//        multiValued true
-//        description "Versions available in this project";
-//    }
-
-    //TODO complex type, reference=true
-//    attribute("memberships") {
-//        readable true;
-//        updateable false;
-//        creatable false;
-//        returnedByDefault false;
-//        required false;
-//        multiValued true
-        description "Memberships in the project.";
-//    }
-
-    //TODO missing schema info, check docu ...
-//    attribute("workPackages") {
-//        multiValued true
-//        description "Work Packages of this project";
-//    }
-
-    //TODO complex type, reference=true
-//    attribute("parent") {
-//        readable true;
-//        updateable true;
-//        creatable true;
-//        returnedByDefault true;
-//        required false;
-        description "Parent project of the project";
-//    }
-
-    //TODO complex type, relevant=false?, reference=true
-//    attribute("status") {
-//        readable true;
-//        updateable true;
-//        creatable true;
-//        returnedByDefault true;
-//        required false;
-//        description "Denotes the status of the project, so whether the project is on track, at risk or is having trouble.";
-//    }
 }

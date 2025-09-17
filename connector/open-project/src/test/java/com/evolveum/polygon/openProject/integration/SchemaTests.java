@@ -32,4 +32,9 @@ public class SchemaTests extends BaseTest{
         testSchema("Project");
     }
 
+    @Test
+    public void test014SchemaMembership() {
+        testSchema("Membership");
+    }
+
 }

@@ -4,8 +4,6 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-import java.nio.charset.StandardCharsets
-
 
 objectClass("Project") {
 
@@ -21,12 +19,6 @@ objectClass("Project") {
             }
             emptyFilterSupported true
 
-            // TODO connid error, operations not supported for __UID attr
-//            supportedFilter(attribute("id").contains().anySingleValue()) {
-//
-//                String filter = "[{ \"id\": { \"operator\": \"&=\", \"values\": [\"${value}\"] } }]"
-//                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
-//            }
         }
 
         endpoint("projects/{id}") {

@@ -4,6 +4,7 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
+
 package com.evolveum.polygon.openProject.integration;
 
 import com.evolveum.polygon.openProject.OpenProjectConfiguration;

@@ -5,15 +5,11 @@
  *
  */
 
-// TODO change also in VAIA foundry, params not right?
 objectClass("Principal") {
-    attribute("_hint") {
-        jsonType "String";
-        readable true;
-        returnedByDefault true;
-    }
+    description("Principals are the superclass of users, groups and placeholder users")
+    embedded true
     attribute("_type") {
-        jsonType "String";
+        jsonType "string";
         readable true;
         returnedByDefault true;
     }

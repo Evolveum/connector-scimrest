@@ -10,6 +10,7 @@ import org.identityconnectors.framework.common.objects.ConnectorObjectReference
 import org.identityconnectors.framework.common.objects.ObjectClass
 
 objectClass("Membership") {
+    embedded(true);
     attribute("id") {
         jsonType "integer";
         readable true;
@@ -43,8 +44,24 @@ objectClass("Membership") {
         returnedByDefault true;
         description "Time of latest update";
     }
+
+    attribute("principal") {
+
+        json {
+            path attribute("_embedded").child("principal")
+        }
+
+        complexType "Principal"
+        readable true;
+        updateable false;
+        creatable true;
+        returnedByDefault true;
+        required true;
+    }
+
     reference("roles") {
         objectClass "Role"
+
         json {
             path attribute("_links").child("roles")
             implementation {
@@ -52,6 +69,29 @@ objectClass("Membership") {
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Role"))
                             .setUid(it.get("href").asText())
+                            .setName(it.get("title").asText())
+                    return new ConnectorObjectReference(obj.build());
+                }
+            }
+        }
+    }
+
+    reference("project") {
+        objectClass "Project"
+//        relationship("MembershipProject"){
+//            subject("Membership"){}
+//            object("Project"){}
+//        }
+        json {
+            path attribute("_links").child("project")
+            implementation {
+                deserialize {
+                    var href = it.get("href").asText();
+                    var pid = href.substring(href.lastIndexOf("/") + 1)
+
+                    var obj = new ConnectorObjectBuilder()
+                            .setObjectClass(new ObjectClass("Project"))
+                            .setUid(pid)
                             .setName(it.get("title").asText())
                     return new ConnectorObjectReference(obj.build());
                 }

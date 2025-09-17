@@ -33,7 +33,7 @@ objectClass("Membership") {
             emptyFilterSupported true
 
         }
-        endpoint("users/{id}") {
+        endpoint("memberships/{id}") {
             singleResult()
             supportedFilter(attribute("id").eq().anySingleValue()) {
                 request.pathParameter("id", value)
