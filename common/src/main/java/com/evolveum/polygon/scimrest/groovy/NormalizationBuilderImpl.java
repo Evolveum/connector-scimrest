@@ -12,6 +12,7 @@ import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
 import groovy.lang.Closure;
 
 import java.util.function.BiFunction;
+import java.util.function.UnaryOperator;
 
 public class NormalizationBuilderImpl implements NormalizationBuilder {
 
@@ -19,6 +20,9 @@ public class NormalizationBuilderImpl implements NormalizationBuilder {
     private String attributeToNormalize;
     private BiFunction<String, Object, String> nameTransformer;
     private BiFunction<String, Object, String> uidTransformer;
+    private UnaryOperator<String> nameRestorer;
+    private UnaryOperator<String> uidRestorer;
+
 
     @Override
     public NormalizationBuilder toSingleValue(String attribute) {
@@ -38,9 +42,23 @@ public class NormalizationBuilderImpl implements NormalizationBuilder {
         return this;
     }
 
+    @Override
+    public NormalizationBuilder restoreUid(Closure<?> implementation) {
+        uidRestorer = new GroovyRestore(implementation);
+        return this;
+    }
+
+    @Override
+    public NormalizationBuilder restoreName(Closure<?> implementation) {
+        nameRestorer = new GroovyRestore(implementation);
+        return this;
+    }
+
     ExecuteQueryProcessor build(ExecuteQueryProcessor executeQueryProcessor) {
 
-        return new NormalizationQueryProcessor(attributeToNormalize, executeQueryProcessor, nameTransformer, uidTransformer);
+//        return new NormalizationQueryProcessor(attributeToNormalize, executeQueryProcessor, nameTransformer, uidTransformer);
+        return new NormalizationQueryProcessor(attributeToNormalize, executeQueryProcessor,
+                nameTransformer, uidTransformer, nameRestorer, uidRestorer);
     }
 
     private record GroovyRewrite(Closure<?> implementation) implements BiFunction<String, Object, String> {
@@ -49,6 +67,14 @@ public class NormalizationBuilderImpl implements NormalizationBuilder {
         @Override
         public String apply(String original, Object value) {
             return GroovyClosures.copyAndCall((Closure<String>) implementation, new RewriteContext(original, value));
+        }
+    }
+
+    private record GroovyRestore(Closure<?> implementation) implements UnaryOperator<String> {
+
+        @Override
+        public String apply(String value) {
+            return GroovyClosures.copyAndCall((Closure<String>) implementation, new RewriteContext(value,null));
         }
     }
 }

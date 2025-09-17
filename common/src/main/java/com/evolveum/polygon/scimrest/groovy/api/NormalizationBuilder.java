@@ -26,6 +26,9 @@ public interface NormalizationBuilder {
 
     NormalizationBuilder rewriteName(@DelegatesTo(value = RewriteContext.class) Closure<?> implementation);
 
+    NormalizationBuilder restoreUid(@DelegatesTo(value = RewriteContext.class) Closure<?> implementation);
+
+    NormalizationBuilder restoreName(@DelegatesTo(value = RewriteContext.class) Closure<?> implementation);
 
 
     record RewriteContext(String original, Object value) {
