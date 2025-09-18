@@ -42,13 +42,13 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.auth.tokenValue", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.tokenValue")
     public GuardedString getRestTokenValue() {
         return restTokenValue;
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.address.base", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.address.base")
     public String getBaseAddress() {
         return baseAddress;
     }
@@ -60,19 +60,19 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "ssl.trustAll", required = true)
+    @ConfigurationProperty(displayMessageKey = "ssl.trustAll")
     public Boolean getTrustAllCertificates() {
         return trustAllCertificates;
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.auth.tokenValue", required = true)
+    @ConfigurationProperty(displayMessageKey = "scim.auth.tokenValue")
     public GuardedString getScimBearerToken() {
         return scimBearerToken;
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.address.base", required = true)
+    @ConfigurationProperty(displayMessageKey = "scim.address.base")
     public String getScimBaseUrl() {
         return scimBaseUrl;
     }
@@ -108,20 +108,20 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.auth.apiKey", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.apiKey")
     public GuardedString getRestApiKey() {
         return this.restApiKey;
     }
 
     @Override
 
-    @ConfigurationProperty(displayMessageKey = "rest.auth.username", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.username")
     public String getRestUsername() {
         return this.restUsername;
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.auth.password", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.password")
     public GuardedString getRestPassword() {
         return this.restPassword;
     }
