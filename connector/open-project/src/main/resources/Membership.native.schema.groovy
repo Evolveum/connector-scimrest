@@ -67,13 +67,17 @@ objectClass("Membership") {
             implementation {
                 deserialize {
 
-                    var href = it.get("href").asText();
+                    if(it == null){
+                        return null
+                    }
+
+                    var href = it.get("href")?.asText();
                     var pid = href.substring(href.lastIndexOf("/") + 1)
 
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Principal"))
                             .setUid(pid)
-                            .setName(it.get("title").asText())
+                            .setName(it.get("title")?.asText())
                     return new ConnectorObjectReference(obj.build());
                 }
             }
@@ -87,10 +91,13 @@ objectClass("Membership") {
             path attribute("_links").child("roles")
             implementation {
                 deserialize {
+                    if(it == null){
+                        return null
+                    }
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Role"))
-                            .setUid(it.get("href").asText())
-                            .setName(it.get("title").asText())
+                            .setUid(it.get("href")?.asText())
+                            .setName(it.get("title")?.asText())
                     return new ConnectorObjectReference(obj.build());
                 }
             }
@@ -107,13 +114,17 @@ objectClass("Membership") {
             path attribute("_links").child("project")
             implementation {
                 deserialize {
-                    var href = it.get("href").asText();
+
+                    if(it == null){
+                        return null
+                    }
+                    var href = it.get("href")?.asText();
                     var pid = href.substring(href.lastIndexOf("/") + 1)
 
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Project"))
                             .setUid(pid)
-                            .setName(it.get("title").asText())
+                            .setName(it.get("title")?.asText())
                     return new ConnectorObjectReference(obj.build());
                 }
             }

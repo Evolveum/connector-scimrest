@@ -41,12 +41,12 @@ public class FilterTests extends BaseTest{
     ///  Search uid
     @Test(enabled = true)
     public void test031SearchUserByUid() {
-        testSearchByUid("User", "1");
+        testSearchByUid("User", "2324");
     }
     //TODO
     @Test(enabled = false)
     public void test032SearchGroupByUid() {
-        testSearchByUid("Group", "");
+        testSearchByUid("Group", "2107");
     }
 
     @Test(enabled = true)
