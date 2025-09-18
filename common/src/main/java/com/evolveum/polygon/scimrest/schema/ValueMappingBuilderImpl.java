@@ -27,7 +27,7 @@ public class ValueMappingBuilderImpl<C,P> implements ValueMappingBuilder<C,P> {
 
     @Override
     public ValueMappingBuilder<C,P> deserialize(Closure<C> closure) {
-        this.deserialize = GroovyClosures.asFunction(closure);
+        this.deserialize = new DeserializeFunction<C,P>(closure);
         return this;
     }
 
@@ -62,6 +62,16 @@ public class ValueMappingBuilderImpl<C,P> implements ValueMappingBuilder<C,P> {
         @Override
         public C toConnIdValue(P value) throws IllegalArgumentException {
             return deserialize.apply(value);
+        }
+    }
+
+    private record DeserializeFunction<C,P>(Closure<C> closure) implements Function<P, C> {
+
+        @Override
+        public C apply(P p) {
+            var context = new DeserializationContext<>(p);
+
+            return (C) GroovyClosures.copyAndCall(closure, context);
         }
     }
 }

@@ -6,7 +6,7 @@ import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
-@ConnectorClass(displayNameKey = "readonly.connector.display", configurationClass = ReadOnlyConfiguration.class)
+@ConnectorClass(displayNameKey = "manifest.connector.display", configurationClass = ReadOnlyConfiguration.class, messageCatalogPaths = "Messages")
 public class ManifestBasedConnector extends AbstractGroovyRestConnector<ReadOnlyConfiguration> {
 
     private static final String CONNECTOR_MANIFEST = "/connector.manifest.json";

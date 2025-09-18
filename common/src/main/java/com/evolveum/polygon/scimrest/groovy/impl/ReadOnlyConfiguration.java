@@ -33,47 +33,55 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private GuardedString restPassword;
     private String restUsername;
     private GuardedString restApiKey;
+    private String restTestEndpoint;
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.auth.tokenName")
+    @ConfigurationProperty(displayMessageKey = "rest.auth.tokenName")
     public String getRestTokenName() {
         return restTokenName;
     }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.auth.tokenValue", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.tokenValue")
     public GuardedString getRestTokenValue() {
         return restTokenValue;
     }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.address.base", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.address.base")
     public String getBaseAddress() {
         return baseAddress;
     }
 
+    @Override
+    @ConfigurationProperty(displayMessageKey = "rest.address.test")
+    public String getRestTestEndpoint() {
+        return restTestEndpoint;
+    }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "ssl.trustAll", required = true)
+    @ConfigurationProperty(displayMessageKey = "ssl.trustAll")
     public Boolean getTrustAllCertificates() {
         return trustAllCertificates;
     }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "scim.auth.tokenValue", required = true)
+    @ConfigurationProperty(displayMessageKey = "scim.auth.tokenValue")
     public GuardedString getScimBearerToken() {
         return scimBearerToken;
     }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "scim.address.base", required = true)
+    @ConfigurationProperty(displayMessageKey = "scim.address.base")
     public String getScimBaseUrl() {
         return scimBaseUrl;
     }
 
 
 
-
+    public void setRestTestEndpoint(String restTestEndpoint) {
+        this.restTestEndpoint = restTestEndpoint;
+    }
 
     public void setRestTokenName(String restTokenName) {
         this.restTokenName = restTokenName;
@@ -100,20 +108,20 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.auth.apiKey", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.apiKey")
     public GuardedString getRestApiKey() {
         return this.restApiKey;
     }
 
     @Override
 
-    @ConfigurationProperty(groupMessageKey = "rest.auth.username", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.username")
     public String getRestUsername() {
         return this.restUsername;
     }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.auth.password", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.password")
     public GuardedString getRestPassword() {
         return this.restPassword;
     }
