@@ -45,18 +45,39 @@ objectClass("Membership") {
         description "Time of latest update";
     }
 
-    attribute("principal") {
+//    attribute("principal") {
+//
+//        json {
+//            path attribute("_links").child("principal")
+//        }
+//
+//        complexType "Principal"
+//        readable true;
+//        updateable false;
+//        creatable true;
+//        returnedByDefault true;
+//        required true;
+//    }
+
+    reference("principal") {
+        objectClass "Principal"
 
         json {
-            path attribute("_embedded").child("principal")
-        }
+            path attribute("_links").child("principal")
+            implementation {
+                deserialize {
 
-        complexType "Principal"
-        readable true;
-        updateable false;
-        creatable true;
-        returnedByDefault true;
-        required true;
+                    var href = it.get("href").asText();
+                    var pid = href.substring(href.lastIndexOf("/") + 1)
+
+                    var obj = new ConnectorObjectBuilder()
+                            .setObjectClass(new ObjectClass("Principal"))
+                            .setUid(pid)
+                            .setName(it.get("title").asText())
+                    return new ConnectorObjectReference(obj.build());
+                }
+            }
+        }
     }
 
     reference("roles") {

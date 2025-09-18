@@ -6,6 +6,8 @@
  */
 import org.identityconnectors.framework.common.objects.ConnectorObject
 
+import java.nio.charset.StandardCharsets
+
 
 objectClass("Membership") {
     search {
@@ -38,6 +40,14 @@ objectClass("Membership") {
                         .queryParameter("offset", paging.pageOffset)
             }
             emptyFilterSupported true
+
+            supportedFilter(attribute("principal").eq().anySingleValue()) {
+                var valList = value.value.uid.getValue();
+                var val =  valList.get(0);
+
+                String filter = "[{ \"principal\": { \"operator\": \"=\", \"values\": [\"${val}\"] } }]"
+                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
+            }
 
         }
         endpoint("memberships/{id}") {

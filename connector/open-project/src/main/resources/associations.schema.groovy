@@ -6,11 +6,11 @@
  */
 relationship("UserProjectMembership") {
     subject("User") {
-        attribute("project") {
+        attribute("membership") {
             resolver {
                 resolutionType PER_OBJECT
                 search {
-                    attributeFilter("project").eq(value)
+                    attributeFilter("principal").eq(value)
                 }
             }
         }

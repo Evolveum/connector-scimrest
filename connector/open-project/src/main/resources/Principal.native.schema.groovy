@@ -8,7 +8,7 @@
 objectClass("Principal") {
     description("Principals are the superclass of users, groups and placeholder users")
     embedded true
-    attribute("_type") {
+    attribute("name") {
         jsonType "string";
         readable true;
         returnedByDefault true;
@@ -20,4 +20,17 @@ objectClass("Principal") {
         required true;
         description "User’s id";
     }
+
+//    attribute("href") {
+//        jsonType "string";
+//        readable true;
+//        returnedByDefault true;
+//    }
+//    attribute("title") {
+//        jsonType "string";
+//        readable true;
+//        returnedByDefault true;
+//        required true;
+//        description "User’s id";
+//    }
 }
