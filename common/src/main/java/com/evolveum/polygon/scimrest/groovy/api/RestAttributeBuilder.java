@@ -50,6 +50,10 @@ public interface RestAttributeBuilder {
      */
     RestAttributeBuilder creatable(boolean creatable);
 
+    default RestAttributeBuilder updatable(boolean updatable) {
+        return updateable(updatable);
+    }
+
     RestAttributeBuilder updateable(boolean updateable);
 
     void emulated(boolean emulated);

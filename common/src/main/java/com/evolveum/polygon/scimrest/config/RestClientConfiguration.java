@@ -7,12 +7,16 @@
 package com.evolveum.polygon.scimrest.config;
 
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.spi.ConfigurationProperty;
 
 public interface RestClientConfiguration extends ConfigurationMixin {
 
     String getBaseAddress();
 
     Boolean getTrustAllCertificates();
+
+    @ConfigurationProperty(displayMessageKey = "rest.address.test")
+    String getRestTestEndpoint();
 
     /**
      *

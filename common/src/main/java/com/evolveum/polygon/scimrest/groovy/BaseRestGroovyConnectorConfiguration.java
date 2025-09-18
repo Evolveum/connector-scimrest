@@ -13,6 +13,7 @@ public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyCon
 
     private String baseAddress;
     private Boolean trustAllCertificates;
+    private String restTestEndpoint;
 
 
     @Override
@@ -33,5 +34,14 @@ public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyCon
 
     public void setTrustAllCertificates(Boolean trustAllCertificates) {
         this.trustAllCertificates = trustAllCertificates;
+    }
+
+    @Override
+    public String getRestTestEndpoint() {
+        return restTestEndpoint;
+    }
+
+    public void setRestTestEndpoint(String restTestEndpoint) {
+        this.restTestEndpoint = restTestEndpoint;
     }
 }
