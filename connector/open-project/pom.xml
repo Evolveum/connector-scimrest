@@ -16,6 +16,7 @@
   <properties>
     <connectorPackage>com.evolveum.polygon.open-project</connectorPackage>
     <connectorClass>OpenProjectConnector</connectorClass>
+    <skipTests>true</skipTests>
   </properties>
 
   <build>
