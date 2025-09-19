@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Jackson-based Body Handler for {@link java.net.http.HttpClient}
@@ -29,7 +30,7 @@ public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpRespon
         mapper.registerModule(new JsonOrgModule());
 
         if (responseInfo.statusCode() == 200) {
-                var upstream = HttpResponse.BodySubscribers.ofInputStream();
+                var upstream = HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8);
                 return HttpResponse.BodySubscribers.mapping(upstream, m -> {
                     try {
                         var treeNode = mapper.readTree(m);

@@ -39,7 +39,7 @@ objectClass("Membership") {
             }
         }
 
-        endpoint("memberships/") {
+        endpoint("memberships") {
             objectExtractor {
 
                 if(response.body()==null){
@@ -60,7 +60,8 @@ objectClass("Membership") {
                 var valList = value.value.uid.getValue();
                 var val =  valList.get(0);
 
-                String filter = "[{ \"principal\": { \"operator\": \"=\", \"values\": [\"${val}\"] } }]"
+                // [{"principal":{"operator":"=","values":["2273"]}}]
+                String filter = "[{\"principal\":{\"operator\":\"=\",\"values\":[\"${val}\"]}}]"
                 request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
             }
 

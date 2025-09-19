@@ -56,12 +56,14 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
     private class AttributeResolutionCoordinator implements BatchAwareResultHandler {
         private final ResultsHandler delegate;
         private final ContextLookup contextLookup;
+        private final boolean allowPartials;
 
         List<ConnectorObjectBuilder> outstanding = new ArrayList<>();
 
         public AttributeResolutionCoordinator(ContextLookup lookup, ResultsHandler resultsHandler, OperationOptions operationOptions) {
             this.delegate = resultsHandler;
             this.contextLookup = lookup;
+            this.allowPartials = Boolean.TRUE.equals(operationOptions.getAllowPartialAttributeValues());
         }
 
         @Override
@@ -69,11 +71,17 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
             var builder = new ConnectorObjectBuilder().add(original);
             for (AttributeResolver resolver : perObject) {
                 if (resolver.getSupportedAttributes().stream().anyMatch(a -> original.getAttributeByName(a.connId().getName()) == null)) {
-                    resolver.resolveSingle(contextLookup, builder);
+                    try {
+                        resolver.resolveSingle(contextLookup, builder);
+                    } catch (Exception e) {
+                        if (!allowPartials) {
+                            throw e;
+                        }
+                    }
                 }
             }
             if (batched.isEmpty()) {
-                delegate.handle(builder.build());
+                return delegate.handle(builder.build());
             } else {
                 outstanding.add(builder);
             }
@@ -88,9 +96,12 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
             for (AttributeResolver resolver : batched) {
                 resolver.resolve(contextLookup, batch);
             }
-
+            var shouldContinue = true;
             for (ConnectorObjectBuilder builder : batch) {
-                delegate.handle(builder.build());
+                shouldContinue = delegate.handle(builder.build());
+                if (!shouldContinue) {
+                    break;
+                }
             }
         }
     }
