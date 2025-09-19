@@ -16,6 +16,7 @@ import com.evolveum.polygon.scimrest.groovy.api.ValueMappingBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.EmbeddedObject;
 
@@ -105,6 +106,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
     public void complexType(String objectClass) {
         this.complexType = objectClass;
         connId().type(EmbeddedObject.class);
+        connIdBuilder.setRoleInReference(AttributeInfo.RoleInReference.SUBJECT.toString());
         connIdBuilder.setReferencedObjectClassName(objectClass);
         json().implementation(new EmbeddedObjectJsonMapping(contextLookup(), objectClass));
     }

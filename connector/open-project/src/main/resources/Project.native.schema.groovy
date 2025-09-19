@@ -70,7 +70,6 @@ objectClass("Project") {
 
     attribute("statusExplanation") {
         complexType "Formattable"
-        role AttributeInfo.RoleInReference.SUBJECT
         readable true;
         updateable true;
         creatable true;
@@ -92,7 +91,6 @@ objectClass("Project") {
     attribute("description") {
 
         complexType "Formattable"
-        role AttributeInfo.RoleInReference.SUBJECT
         readable true;
         updateable true;
         creatable true;
