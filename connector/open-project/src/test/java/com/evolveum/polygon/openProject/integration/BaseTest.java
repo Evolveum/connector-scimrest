@@ -28,8 +28,8 @@ public class BaseTest {
         var configuration = new OpenProjectConfiguration();
 
         configuration.setBaseAddress("");
-        configuration.setUserName("");
-        configuration.setPassword(new GuardedString("".toCharArray()));
+        configuration.setRestUsername("");
+        configuration.setRestPassword(new GuardedString("".toCharArray()));
 
         connector.init(configuration);
         return connector;
