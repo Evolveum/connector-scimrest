@@ -88,7 +88,7 @@ objectClass("Membership") {
             implementation {
                 deserialize {
                     if(it == null){
-                        return null
+                        it = value;
                     }
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Role"))
@@ -112,7 +112,7 @@ objectClass("Membership") {
                 deserialize {
 
                     if(it == null){
-                        return null
+                        it = value;
                     }
                     var href = it.get("href")?.asText();
                     var pid = href.substring(href.lastIndexOf("/") + 1)
