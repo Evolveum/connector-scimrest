@@ -1,3 +1,5 @@
+import org.json.JSONArray
+
 /*
  * Copyright (c) 2025 Evolveum and contributors
  *
@@ -10,6 +12,10 @@ objectClass("Project") {
     search {
         endpoint("projects/") {
             objectExtractor {
+                if(response.body()==null){
+                    return new JSONArray();
+                }
+
                 var jsonArray = response.body().get("_embedded").get("elements");
                 return jsonArray;
             }

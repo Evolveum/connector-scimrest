@@ -4,12 +4,19 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
+
+import org.json.JSONArray
+
 import java.nio.charset.StandardCharsets
 objectClass("User") {
     search {
 
         endpoint("users/") {
             objectExtractor {
+                if(response.body()==null){
+                    return new JSONArray();
+                }
+
                 var jsonArray = response.body().get("_embedded").get("elements");
                 return jsonArray;
             }

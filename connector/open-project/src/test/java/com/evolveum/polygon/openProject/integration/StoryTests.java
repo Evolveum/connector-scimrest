@@ -32,4 +32,9 @@ public class StoryTests extends BaseTest {
         assertTrue(objects.getValue().stream().
                 anyMatch(o -> compareReferencedName(o, "test")));
     }
+
+    @Test(enabled = true)
+    public void test130SearchUserHugo() {
+        testSearchByUid("User", "2258");
+    }
 }

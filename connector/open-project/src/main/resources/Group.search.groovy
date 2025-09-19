@@ -1,3 +1,5 @@
+import org.json.JSONArray
+
 /*
  * Copyright (c) 2025 Evolveum and contributors
  *
@@ -9,6 +11,11 @@ objectClass("Group") {
     search {
         endpoint("groups/") {
             objectExtractor {
+
+                if(response.body()==null){
+                    return new JSONArray();
+                }
+
                 return response.body().get("_embedded").get("elements");
             }
             emptyFilterSupported true
