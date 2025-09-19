@@ -28,11 +28,11 @@ public class OpenProjectConfiguration extends BaseRestGroovyConnectorConfigurati
         return password;
     }
 
-    public void setUserName(String userName) {
+    public void setRestUsername(String userName) {
         this.userName = userName;
     }
 
-    public void setPassword(GuardedString password) {
+    public void setRestPassword(GuardedString password) {
         this.password = password;
     }
 }
