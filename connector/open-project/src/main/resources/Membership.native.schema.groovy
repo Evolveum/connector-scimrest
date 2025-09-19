@@ -87,11 +87,13 @@ objectClass("Membership") {
             path attribute("_links").child("roles")
             implementation {
                 deserialize {
-
+                    if(it == null){
+                        return null
+                    }
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Role"))
-                            .setUid(value.get("href").asText())
-                            .setName(value.get("title").asText())
+                            .setUid(it.get("href")?.asText())
+                            .setName(it.get("title")?.asText())
                     return new ConnectorObjectReference(obj.build());
                 }
             }
@@ -109,13 +111,16 @@ objectClass("Membership") {
             implementation {
                 deserialize {
 
-                    var href = value.get("href")?.asText();
+                    if(it == null){
+                        return null
+                    }
+                    var href = it.get("href")?.asText();
                     var pid = href.substring(href.lastIndexOf("/") + 1)
 
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Project"))
                             .setUid(pid)
-                            .setName(value.get("title")?.asText())
+                            .setName(it.get("title")?.asText())
                     return new ConnectorObjectReference(obj.build());
                 }
             }
