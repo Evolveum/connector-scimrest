@@ -51,7 +51,10 @@ public class RestPagingAwareObjectRetriever {
                 for (var remoteObj : remoteObjs) {
                     ConnectorObject obj = deserializeFromRemote(remoteObj);
                     if (obj != null) {
-                        handler.handle(obj);
+                        shouldContinue = handler.handle(obj);
+                        if (!shouldContinue) {
+                            break;
+                        }
                         batchProcessed++;
                     }
                 }
