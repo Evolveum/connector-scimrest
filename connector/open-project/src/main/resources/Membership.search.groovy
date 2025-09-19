@@ -38,7 +38,7 @@ objectClass("Membership") {
             }
         }
 
-        endpoint("memberships/") {
+        endpoint("memberships") {
             objectExtractor {
                 var jsonArray = response.body().get("_embedded").get("elements");
                 return jsonArray;
@@ -54,7 +54,8 @@ objectClass("Membership") {
                 var valList = value.value.uid.getValue();
                 var val =  valList.get(0);
 
-                String filter = "[{ \"principal\": { \"operator\": \"=\", \"values\": [\"${val}\"] } }]"
+                // [{"principal":{"operator":"=","values":["2273"]}}]
+                String filter = "[{\"principal\":{\"operator\":\"=\",\"values\":[\"${val}\"]}}]"
                 request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
             }
 
