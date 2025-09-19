@@ -72,7 +72,7 @@ public class RestSearchOperationBuilder implements ObjectClassOperationBuilder<E
     }
 
     public ExecuteQueryProcessor build() {
-        if (endpointBuilder.isEmpty() && scim == null) {
+        if (builders.isEmpty() && scim == null) {
             // We don't have any endpoints, so we don't need to build anything, this results in search operation
             // being unsupported.
             return null;
