@@ -14,10 +14,18 @@ objectClass("Membership") {
         normalize {
             toSingleValue "roles"
             rewriteUid {
+                if(value == null
+                ){
+                    return original;
+                }
                 def ref = (ConnectorObject) value.getValue()
                 return original + ":" + ref.uid.uidValue
             }
             rewriteName {
+                if(value == null
+                ){
+                    return original
+                }
                 def ref = (ConnectorObject) value.getValue()
                 return original + ":" + ref.name.nameValue
             }
@@ -42,6 +50,7 @@ objectClass("Membership") {
             emptyFilterSupported true
 
             supportedFilter(attribute("principal").eq().anySingleValue()) {
+
                 var valList = value.value.uid.getValue();
                 var val =  valList.get(0);
 

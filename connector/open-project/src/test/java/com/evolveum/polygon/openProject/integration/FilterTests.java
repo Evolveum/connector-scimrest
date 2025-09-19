@@ -44,7 +44,7 @@ public class FilterTests extends BaseTest{
         testSearchByUid("User", "2324");
     }
     //TODO
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void test032SearchGroupByUid() {
         testSearchByUid("Group", "2107");
     }
