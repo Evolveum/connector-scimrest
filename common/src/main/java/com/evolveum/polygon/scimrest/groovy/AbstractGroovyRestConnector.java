@@ -8,11 +8,19 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.ObjectClassHandler;
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.spi.Configuration;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.http.HttpResponse;
 
 public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase {
 
@@ -89,9 +97,37 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
     @Override
     public void test() {
-
-
+        // SCIM Test is done automaticly during schema discovery
         // FIXME: Implement later
+        var restClientConfig = getConfiguration().configuration(RestClientConfiguration.class);
+        if (restClientConfig != null && restClientConfig.getRestTestEndpoint() != null) {
+            var request = context.rest().newAuthorizedRequest();
+            request.subpath(restClientConfig.getRestTestEndpoint());
+            try {
+                var response = context.rest().executeRequest(request, HttpResponse.BodyHandlers.discarding());
+                if (!isSuccess(response.statusCode())) {
+                    switch (response.statusCode()) {
+                        case 401:
+                        case 403:
+                            throw new ConnectionFailedException("Authentication required, HTTP status code " + response.statusCode());
+                        default:
+                            throw new ConnectionFailedException("Connection failed. HTTP status code " + response.statusCode());
+                    }
+                }
+            } catch (URISyntaxException e) {
+                throw new ConfigurationException("Incorrectly configured address",e);
+            } catch (IOException e) {
+                throw new ConnectionFailedException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+    }
+
+    private boolean isSuccess(int statusCode) {
+        return statusCode >= 200 && statusCode < 400;
     }
 
     @Override
