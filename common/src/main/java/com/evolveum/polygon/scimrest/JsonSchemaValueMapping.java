@@ -139,7 +139,7 @@ public enum JsonSchemaValueMapping implements JsonValueMapping {
 
     @Override
     public Object toConnIdValue(JsonNode value) throws IllegalArgumentException {
-        if (value == null) {
+        if (value == null || value instanceof NullNode) {
             return null;
         }
         throw new IllegalArgumentException("Can not convert " + value + " to a " + connidClass.getSimpleName());

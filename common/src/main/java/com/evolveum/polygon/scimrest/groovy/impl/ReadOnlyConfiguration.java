@@ -25,7 +25,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private String restTokenName;
     private GuardedString restTokenValue;
     private String baseAddress;
-    private Boolean trustAllCertificates;
+    private Boolean trustAllCertificates = true;
     private GuardedString scimBearerToken;
     private String scimBaseUrl;
 
