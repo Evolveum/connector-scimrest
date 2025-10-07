@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest;
 
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
@@ -75,9 +76,15 @@ public abstract class ClassHandlerConnectorBase implements Connector,
 
     @Override
     public void executeQuery(ObjectClass objectClass, Filter query, ResultsHandler handler, OperationOptions options) {
-        handlerFor(objectClass)
-                .checkSupported(ExecuteQueryProcessor.class)
-                .executeQuery(context(), query, handler, options);
+        try {
+            handlerFor(objectClass)
+                    .checkSupported(ExecuteQueryProcessor.class)
+                    .executeQuery(context(), query, handler, options);
+        } catch (ConnectorException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ConnectorException(e);
+        }
     }
 
     @Override

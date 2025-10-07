@@ -8,7 +8,10 @@ package com.evolveum.polygon.scimrest.impl.rest;
 
 import com.evolveum.polygon.scimrest.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.groovy.api.Checks;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 
@@ -21,9 +24,11 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -90,7 +95,7 @@ public class RestContext implements RetrievableContext {
      * @throws IOException if an I/O error occurs while sending or receiving
      * @throws InterruptedException if the operation is interrupted
      */
-    public <T> HttpResponse<T> executeRequest(RequestBuilder requestBuilder, HttpResponse.BodyHandler<T> jsonBodyHandler) throws URISyntaxException, IOException, InterruptedException {
+    public <T> HttpResponse<T> executeRequest(RequestBuilder requestBuilder, HttpResponse.BodyHandler<T> jsonBodyHandler) throws IOException, InterruptedException {
         var request = requestBuilder.build();
         LOG.ok("Executing request {0}", request);
         return client.send(request, jsonBodyHandler);
@@ -122,7 +127,7 @@ public class RestContext implements RetrievableContext {
         StringBuilder subpath = new StringBuilder();
         Map<String, String> queryParameters = new HashMap<>();
 
-        public HttpRequest build() throws URISyntaxException {
+        public HttpRequest build() {
             request.uri(buildUri());
             return request.build();
         }
@@ -135,7 +140,7 @@ public class RestContext implements RetrievableContext {
             return this;
         }
 
-        private URI buildUri() throws URISyntaxException {
+        private URI buildUri() {
             var builder = new StringBuilder();
             builder.append(baseUri);
             builder.append("/");
@@ -157,7 +162,15 @@ public class RestContext implements RetrievableContext {
                     builder.append("&");
                 }
             }
-            return new URI(builder.toString());
+            var uri = builder.toString();
+            try {
+                return new URI(uri);
+            }  catch (URISyntaxException e) {
+                // Builded URI is invalid, this could be because of misconfiguration and/or implemenation
+                Checks.checkConfigurationBaseUri(baseUri);
+                throw new ConnectorException("Computed URI: " + uri + "is not valid", e);
+            }
+
         }
 
         public RequestBuilder apiEndpoint(String endpoint) {
@@ -166,13 +179,16 @@ public class RestContext implements RetrievableContext {
         }
 
         public RequestBuilder query(String key, String value) {
-            this.queryParameters.put(key, value);
-            return this;
+            return queryParameter(key, value);
         }
 
         public RequestBuilder queryParameter(String key, String value) {
-            this.queryParameters.put(key, value);
+            this.queryParameters.put(key, urlEncode(value));
             return this;
+        }
+
+        private String urlEncode(String value) {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8);
         }
 
         public RequestBuilder queryParameter(String key, Number value) {
