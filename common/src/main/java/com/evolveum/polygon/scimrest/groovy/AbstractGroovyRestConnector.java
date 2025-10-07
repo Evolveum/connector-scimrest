@@ -14,6 +14,7 @@ import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.spi.Configuration;
@@ -97,7 +98,8 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
     @Override
     public void test() {
-        // SCIM Test is done automaticly during schema discovery
+        initialize();
+        // SCIM Test is done automatically during schema discovery
         // FIXME: Implement later
         var restClientConfig = getConfiguration().configuration(RestClientConfiguration.class);
         if (restClientConfig != null && restClientConfig.getRestTestEndpoint() != null) {
@@ -109,13 +111,11 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
                     switch (response.statusCode()) {
                         case 401:
                         case 403:
-                            throw new ConnectionFailedException("Authentication required, HTTP status code " + response.statusCode());
+                            throw new InvalidCredentialException("Authentication required, HTTP status code " + response.statusCode());
                         default:
                             throw new ConnectionFailedException("Connection failed. HTTP status code " + response.statusCode());
                     }
                 }
-            } catch (URISyntaxException e) {
-                throw new ConfigurationException("Incorrectly configured address",e);
             } catch (IOException e) {
                 throw new ConnectionFailedException(e);
             } catch (InterruptedException e) {
