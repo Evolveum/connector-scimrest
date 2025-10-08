@@ -34,6 +34,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,6 +68,10 @@ public class RestContext implements RetrievableContext {
                 throw new RuntimeException(e);
             }
         }
+        // FIXME: Make connection timeouts configurable
+        builder.connectTimeout(Duration.of(30, ChronoUnit.SECONDS));
+        // FIXME: This should be configurable
+        builder.followRedirects(HttpClient.Redirect.NORMAL);
         this.client = builder.build();
         this.customizer = customizer;
     }
