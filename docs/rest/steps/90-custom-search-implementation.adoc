@@ -87,7 +87,7 @@ is responsible for implementing the functionality
 
 ===== Available Objects and Methods in Custom Search
 
-* `requestFilter` - The filter that should be interpreted by this custom
+* `[line-through]#requestFilter#` `supportedFilter` - The filter that should be interpreted by this custom
 search
 * `resultHandler` - The result handler that should be used to report
 found objects of the object class this search handler is implemented for
