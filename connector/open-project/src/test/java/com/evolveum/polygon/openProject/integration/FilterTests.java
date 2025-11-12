@@ -68,12 +68,12 @@ public class FilterTests extends BaseTest{
 
     @Test(enabled = true)
     public void test041SearchUserEqualsFilter() {
-        testSearchEqualsValue("User", "name","OpenProject Admin");
+        testSearchEqualsValue("User", "name","Ismael Ivy");
     }
 
     @Test(enabled = true)
     public void test042SearchUserContainsFilter() {
-        testSearchContainsValue("User", "name","Open");
+        testSearchContainsValue("User", "name","Ismael");
     }
 
     @Test(enabled = false)

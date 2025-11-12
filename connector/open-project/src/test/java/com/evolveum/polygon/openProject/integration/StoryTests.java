@@ -37,4 +37,14 @@ public class StoryTests extends BaseTest {
     public void test130SearchUserHugo() {
         testSearchByUid("User", "2258");
     }
+
+    @Test(enabled = true)
+    public void test140SearchUserEqualsFilter() {
+        testSearchEqualsValue("User", "admin",true, 4);
+    }
+
+    @Test(enabled = true)
+    public void test150SearchUserEqualsFilter() {
+        testSearchEqualsValue("User", "language","en");
+    }
 }
