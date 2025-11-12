@@ -42,7 +42,7 @@ objectClass("User") {
         }
 
         custom {
-//            // This search supports empty filter
+
             emptyFilterSupported false
             supportedFilter(FilterSpecification.attribute("admin").eq().anySingleValue());
             supportedFilter(FilterSpecification.attribute("language").eq().anySingleValue());
