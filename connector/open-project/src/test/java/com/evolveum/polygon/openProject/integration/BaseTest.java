@@ -71,7 +71,7 @@ public class BaseTest {
 
 
     public void testSearchByValue(Filter filter, String objectType, String attrName, Object attrVal,
-                                  String assertId, Integer assertSize) {
+                                  Integer assertSize, String assertId) {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
 
@@ -92,14 +92,21 @@ public class BaseTest {
                                         String assertId, Integer assertSize) {
         var filter = (ContainsFilter) FilterBuilder.contains(AttributeBuilder.build(attrName,
                 attrVal));
-        testSearchByValue(filter, objectType, attrName, attrVal, assertId, assertSize);
+        testSearchByValue(filter, objectType, attrName, attrVal, assertSize, assertId);
+    }
+
+    public void testSearchContainsValue(String objectType, String attrName, Object attrVal,
+                                        Integer assertSize) {
+        var filter = (ContainsFilter) FilterBuilder.contains(AttributeBuilder.build(attrName,
+                attrVal));
+        testSearchByValue(filter, objectType, attrName, attrVal, assertSize, null);
     }
 
     public void testSearchContainsValue(String objectType, String attrName, Object attrVal,
                                         String assertId) {
         var filter = (ContainsFilter) FilterBuilder.contains(AttributeBuilder.build(attrName,
                 attrVal));
-        testSearchByValue(filter, objectType, attrName, attrVal, assertId, null);
+        testSearchByValue(filter, objectType, attrName, attrVal, 1, assertId);
     }
 
     public void testSearchContainsValue(String objectType, String attrName, Object attrVal) {
@@ -112,20 +119,26 @@ public class BaseTest {
                                       String assertId, Integer assertSize) {
         var filter = (EqualsFilter) FilterBuilder.equalTo(AttributeBuilder.build(attrName,
                 attrVal));
-        testSearchByValue(filter, objectType, attrName, attrVal, assertId, assertSize);
+        testSearchByValue(filter, objectType, attrName, attrVal,  assertSize, assertId);
     }
 
     public void testSearchEqualsValue(String objectType, String attrName, Object attrVal,
                                       String assertId) {
         var filter = (EqualsFilter) FilterBuilder.equalTo(AttributeBuilder.build(attrName,
                 attrVal));
-        testSearchByValue(filter, objectType, attrName, attrVal, assertId, null);
+        testSearchByValue(filter, objectType, attrName, attrVal, 1, assertId);
     }
 
     public void testSearchEqualsValue(String objectType, String attrName, Object attrVal) {
         var filter = (EqualsFilter) FilterBuilder.equalTo(AttributeBuilder.build(attrName,
                 attrVal));
         testSearchByValue(filter, objectType, attrName, attrVal, null, null);
+    }
+
+    public void testSearchEqualsValue(String objectType, String attrName, Object attrVal, Integer asserSize) {
+        var filter = (EqualsFilter) FilterBuilder.equalTo(AttributeBuilder.build(attrName,
+                attrVal));
+        testSearchByValue(filter, objectType, attrName, attrVal, asserSize, null);
     }
 
     public boolean compareReferencedName(Object o, String name) {
