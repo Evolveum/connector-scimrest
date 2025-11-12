@@ -47,7 +47,8 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
 
     private boolean shouldPerformAttributeResolution(OperationOptions operationOptions) {
         if (operationOptions == null) {
-            return true;
+
+            return false;
         }
         var skipResolution = operationOptions.getOptions().get(SKIP_ATTRIBUTE_RESOLUTION_OPTION);
         return !Boolean.TRUE.equals(skipResolution);

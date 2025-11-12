@@ -9,10 +9,17 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
+
 public interface SearchScriptBuilder {
 
 
     SearchScriptBuilder emptyFilterSupported(boolean emptyFilterSupported);
 
     SearchScriptBuilder implementation(@DelegatesTo(SearchScriptContext.class) Closure<?> implementation);
+
+    SearchScriptBuilder supportedFilter(FilterSpecification filterSpec);
+
+    FilterSpecification.Attribute attribute(String name);
+
+
 }

@@ -7,12 +7,17 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
+import com.evolveum.polygon.scimrest.groovy.api.SearchEndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.SearchScriptBuilder;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
 import groovy.lang.Closure;
+import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
+import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ScriptedGroovySearchBuilderImpl implements SearchScriptBuilder, FilterAwareSearchProcessorBuilder {
@@ -21,6 +26,7 @@ public class ScriptedGroovySearchBuilderImpl implements SearchScriptBuilder, Fil
     public MappedObjectClass objectClass;
     public Set<FilterSpecification> supportedFilters = new HashSet<>();
     private Boolean emptyFilterSupported;
+//    Set<FilterToRequestMapper> filterMappers = new HashSet<>();
     Closure<?> implementationPrototype;
     private boolean enabled = true;
 
@@ -42,6 +48,28 @@ public class ScriptedGroovySearchBuilderImpl implements SearchScriptBuilder, Fil
     }
 
     @Override
+    public SearchScriptBuilder supportedFilter(FilterSpecification filterSpec) {
+//        filterMappers.add(new GroovyBasedFilterHandler(filterSpec));
+        supportedFilters.add(filterSpec);
+        if (emptyFilterSupported == null) {
+            // If empty filter support was not specified explicitly, we assume that it is not supported
+            // when adding explicit filtering
+            emptyFilterSupported = false;
+        }
+        return this;
+    }
+
+    @Override
+    public FilterSpecification.Attribute attribute(String name) {
+        var connId = objectClass.attributeFromProtocolName(name).connId();
+        if (connId != null) {
+            // FIXME: Create deffered search here
+            return FilterSpecification.attribute(connId.getName());
+        }
+        return FilterSpecification.attribute(name);
+    }
+
+    @Override
     public boolean emptyFilterSupported() {
         return emptyFilterSupported;
     }
@@ -55,4 +83,7 @@ public class ScriptedGroovySearchBuilderImpl implements SearchScriptBuilder, Fil
     public FilterAwareExecuteQueryProcessor build() {
         return new ScriptedGroovySearchProcessor(this);
     }
+
+//    private record GroovyBasedFilterHandler(FilterSpecification filterSpecification){
+//    }
 }
