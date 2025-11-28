@@ -92,6 +92,17 @@ objectClass("User") {
         required true;
         description "User’s login name";
     }
+
+    attribute("status") {
+        jsonType "string";
+        creatable true;
+        //updateable true;
+        readable true;
+        returnedByDefault true;
+        required true;
+        description "Status";
+    }
+
     //TODO association ....
 //    attribute("memberships") {
 //        jsonType "reference";

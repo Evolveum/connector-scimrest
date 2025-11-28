@@ -42,6 +42,7 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
         builder.loadFromResource("/Project.search.groovy");
         builder.loadFromResource("/Role.search.groovy");
         builder.loadFromResource("/Membership.search.groovy");
+        builder.loadFromResource("/User.op.groovy");
     }
 
     @Override
