@@ -16,7 +16,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.util.List;
 
-public interface SearchEndpointBuilder {
+public interface RestSearchEndpointBuilder extends EndpointBuilder {
 
     Class<ArrayNode> JSON_ARRAY = ArrayNode.class;
     Class<ObjectNode> JSON_OBJECT = ObjectNode.class;
@@ -39,7 +39,7 @@ public interface SearchEndpointBuilder {
      * @param closure A closure that modifies request to include paging information.
      * @return This builder instance, allowing method chaining.
      */
-    SearchEndpointBuilder pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure);
+    RestSearchEndpointBuilder pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure);
 
 
     /**
@@ -49,18 +49,18 @@ public interface SearchEndpointBuilder {
      *
      * @param emptyFilterSupported true if the endpoint should be used for searches without filters.
      */
-    SearchEndpointBuilder emptyFilterSupported(boolean emptyFilterSupported);
+    RestSearchEndpointBuilder emptyFilterSupported(boolean emptyFilterSupported);
 
 
-    SearchEndpointBuilder singleResult();
+    RestSearchEndpointBuilder singleResult();
 
 
-    SearchEndpointBuilder objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+    RestSearchEndpointBuilder objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     FilterSpecification.Attribute attribute(String name);
 
 
-    SearchEndpointBuilder supportedFilter(FilterSpecification filterSpec, @DelegatesTo(value = FilterSupportBase.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+    RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec, @DelegatesTo(value = FilterSupportBase.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     record PagingSupportBase(RestContext.RequestBuilder request, PagingInfo paging) {
         public PagingInfo getPaging() {

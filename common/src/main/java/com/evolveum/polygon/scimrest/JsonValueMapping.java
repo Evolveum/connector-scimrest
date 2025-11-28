@@ -7,8 +7,10 @@
 package com.evolveum.polygon.scimrest;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 
 public interface JsonValueMapping extends ValueMapping<Object, JsonNode> {
 
+    JsonNodeFactory NODE_FACTORY = new JsonNodeFactory(true);
 }

@@ -21,6 +21,11 @@ public enum JsonSchemaValueMapping implements JsonValueMapping {
             }
             return super.toConnIdValue(value);
         }
+
+        @Override
+        public JsonNode toWireValue(Object value) throws IllegalArgumentException {
+            return NODE_FACTORY.textNode((String) value);
+        }
     },
     INTEGER("integer", "A signed integer value", Integer.class, IntNode.class) {
         @Override
@@ -96,8 +101,8 @@ public enum JsonSchemaValueMapping implements JsonValueMapping {
             throw new IllegalArgumentException("Cannot convert " + value.getClass() + " to " + this.getClass().getSimpleName());
         }
 
-    }
-    ;
+    };
+
 
     private final Set<Class<? extends JsonNode>> availableWireTypes;
     private final Class<?> connidClass;

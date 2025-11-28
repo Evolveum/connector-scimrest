@@ -6,11 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.scimrest.groovy.api.*;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
-import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
-import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
-import com.evolveum.polygon.scimrest.groovy.api.SearchEndpointBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.ResponseWrapper;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -23,7 +20,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import java.net.http.HttpResponse;
 import java.util.*;
 
-public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProcessorBuilder, SearchEndpointBuilder {
+public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProcessorBuilder, RestSearchEndpointBuilder {
 
     final MappedObjectClass objectClass;
     ResponseObjectExtractor<BF, OF> objectExtractor = r -> {
@@ -77,6 +74,11 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     public EndpointBasedSearchBuilder<BF, OF>  emptyFilterSupported(boolean emptyFilterSupported) {
         this.emptyFilterSupported = emptyFilterSupported;
         return this;
+    }
+
+    @Override
+    public void httpOperation(HttpMethod method) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override

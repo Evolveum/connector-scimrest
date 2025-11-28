@@ -227,6 +227,18 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
         }
 
         @Override
+        public MappingTableBuilder mappingTable() {
+            // FIXME: Implement later
+            return null;
+        }
+
+        @Override
+        public MappingTableBuilder mappingTable(Closure<?> closure) {
+            // FIXME: Implement later
+            return null;
+        }
+
+        @Override
         public Class<?> suggestedConnIdType() {
             return null;
         }
@@ -300,7 +312,19 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
 
 
         @Override
-        public ScimBuilder implementation(ValueMapping<?,?> mapping) {
+        public MappingTableBuilder mappingTable() {
+            // FIXME: Implement later
+            return null;
+        }
+
+        @Override
+        public MappingTableBuilder mappingTable(Closure<?> closure) {
+            // FIXME: Implement later
+            return null;
+        }
+
+        @Override
+        public ScimBuilder implementation(ValueMapping<?,JsonNode> mapping) {
             this.implementation = mapping;
             return this;
         }

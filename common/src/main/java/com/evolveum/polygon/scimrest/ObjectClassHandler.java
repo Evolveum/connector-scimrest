@@ -25,4 +25,5 @@ public interface ObjectClassHandler {
     <T extends ObjectClassOperation> T  checkSupported(Class<T> operationType) throws UnsupportedOperationException;
 
     ObjectClass objectClass();
+
 }

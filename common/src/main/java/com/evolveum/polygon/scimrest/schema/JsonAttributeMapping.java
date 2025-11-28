@@ -11,6 +11,8 @@ import com.evolveum.polygon.scimrest.api.AttributePath;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeDelta;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,5 +69,16 @@ public class JsonAttributeMapping implements AttributeProtocolMapping<ObjectNode
             return List.of(maybeVal);
         }
         return null;
+    }
+
+    public void toJsonNode(Attribute attribute, ObjectNode parent) {
+        var values = attribute.getValue().stream().map(valueMapping::toWireValue).toList();
+        // FIXME: Add support for deep paths
+        if (values.isEmpty()) {
+            return;
+        }
+        var name = path.onlyAttribute();
+        parent.set(name.name(),values.size() == 1 ? values.get(0) : parent.arrayNode().addAll(values));
+
     }
 }

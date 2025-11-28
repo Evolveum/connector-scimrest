@@ -9,12 +9,12 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface SearchOperationBuilder {
+public interface RestSearchOperationBuilder {
 
-    SearchEndpointBuilder endpoint(String path);
+    RestSearchEndpointBuilder endpoint(String path);
 
-    SearchEndpointBuilder endpoint(String path,
-                                   @DelegatesTo(value = SearchEndpointBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> builder);
+    RestSearchEndpointBuilder endpoint(String path,
+                                       @DelegatesTo(value = RestSearchEndpointBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> builder);
 
     AttributeResolverBuilder attributeResolver(
             @DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition);

@@ -55,4 +55,8 @@ public class MappedObjectClass {
     public String name() {
         return objectClass().getObjectClassValue();
     }
+
+    public MappedAttribute attributeFromConnIdName(String name) {
+        return connIdAttributes.get(name);
+    }
 }

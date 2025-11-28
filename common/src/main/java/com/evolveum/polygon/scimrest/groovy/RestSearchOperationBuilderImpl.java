@@ -18,7 +18,7 @@ import groovy.lang.DelegatesTo;
 
 import java.util.*;
 
-public class RestSearchOperationBuilder implements ObjectClassOperationBuilder<ExecuteQueryProcessor>, SearchOperationBuilder {
+public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuilder<ExecuteQueryProcessor>, RestSearchOperationBuilder, RestObjectOperationBuilder<ExecuteQueryProcessor> {
 
     private final BaseOperationSupportBuilder parent;
     Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
@@ -27,7 +27,7 @@ public class RestSearchOperationBuilder implements ObjectClassOperationBuilder<E
     private NormalizationBuilderImpl normalizationBuilder;
     private ScimSearchHandler.Builder scim;
 
-    public RestSearchOperationBuilder(BaseOperationSupportBuilder parent) {
+    public RestSearchOperationBuilderImpl(BaseOperationSupportBuilder parent) {
         this.parent = parent;
     }
 

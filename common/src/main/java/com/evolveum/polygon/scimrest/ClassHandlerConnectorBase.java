@@ -6,7 +6,10 @@
  */
 package com.evolveum.polygon.scimrest;
 
+import com.evolveum.polygon.scimrest.spi.CreateOperation;
+import com.evolveum.polygon.scimrest.spi.DeleteOperation;
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import com.evolveum.polygon.scimrest.spi.UpdateOperation;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
@@ -47,14 +50,13 @@ public abstract class ClassHandlerConnectorBase implements Connector,
 
     @Override
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes, OperationOptions options) {
-        throw new UnsupportedOperationException("Not supported yet.");
-        //return handlerFor(objectClass).checkSupported(CreateOp.class).create(createAttributes, options);
+        var object = handlerFor(objectClass).checkSupported(CreateOperation.class).create(createAttributes, options);
+        return object.getUid();
     }
 
     @Override
     public void delete(ObjectClass objectClass, Uid uid, OperationOptions options) {
-        throw new UnsupportedOperationException("Not supported yet.");
-        //handlerFor(objectClass).checkSupported(DeleteOp.class).delete(uid, options);
+        handlerFor(objectClass).checkSupported(DeleteOperation.class).delete(uid, options);
     }
 
     @Override
@@ -89,7 +91,6 @@ public abstract class ClassHandlerConnectorBase implements Connector,
 
     @Override
     public Set<AttributeDelta> updateDelta(ObjectClass objclass, Uid uid, Set<AttributeDelta> modifications, OperationOptions options) {
-        throw new UnsupportedOperationException("Not supported yet.");
-        //return handlerFor(objclass).checkSupported(UpdateDeltaOp.class).updateDelta(uid, modifications, options);
+        return handlerFor(objclass).checkSupported(UpdateOperation.class).updateDelta(uid, modifications, options);
     }
 }

@@ -22,14 +22,14 @@ import java.nio.charset.StandardCharsets;
  * @param responseType Supported Response Type one of {@link JSONObject} or {@link JSONArray}
  * @param <T> Body Response Type
  */
-public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpResponse.BodyHandler<T> {
+public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpResponse.BodyHandler<Object> {
 
     @Override
-    public HttpResponse.BodySubscriber<T> apply(HttpResponse.ResponseInfo responseInfo) {
+    public HttpResponse.BodySubscriber<Object> apply(HttpResponse.ResponseInfo responseInfo) {
         var mapper = new ObjectMapper();
         mapper.registerModule(new JsonOrgModule());
 
-        if (responseInfo.statusCode() == 200) {
+        if (responseInfo.statusCode() >= 200 && responseInfo.statusCode() < 204) {
                 var upstream = HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8);
                 return HttpResponse.BodySubscribers.mapping(upstream, m -> {
                     try {
@@ -40,7 +40,9 @@ public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpRespon
                     }
                 });
         }
-        return HttpResponse.BodySubscribers.replacing(null);
+        // FIXME: Maybe fallback based on returned content type?
+
+        return (HttpResponse.BodySubscriber) HttpResponse.BodySubscribers.ofByteArray();
 
     }
 }

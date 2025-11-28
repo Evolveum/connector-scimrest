@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.scimrest.ValueMapping;
 import com.evolveum.polygon.scimrest.api.AttributePath;
+import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.fasterxml.jackson.databind.JsonNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -68,6 +69,11 @@ public interface RestAttributeBuilder {
     JsonMapping json(@DelegatesTo(value = JsonMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     ConnIdMapping connId();
+
+    default ConnIdMapping connId(@DelegatesTo(ConnIdMapping.class) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, connId());
+    }
+
     /**
      * Sets the protocol name for the current attribute.
      *
@@ -114,16 +120,28 @@ public interface RestAttributeBuilder {
 
     ScimMapping scim(@DelegatesTo(value = ScimMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
-    interface JsonMapping {
+
+    interface MappingBuilder<T extends MappingBuilder<T>> {
+
+        T implementation(ValueMapping<?, JsonNode> mapping);
+
+        T implementation(@DelegatesTo(ValueMappingBuilder.class) Closure<?> closure);
+
+        MappingTableBuilder mappingTable();
+
+        MappingTableBuilder mappingTable(@DelegatesTo(value = MappingTableBuilder.class) Closure<?> closure);
+    }
+
+    interface MappingTableBuilder {
+
+        MappingTableBuilder pair(Object remote, Object local);
+    }
+
+    interface JsonMapping extends MappingBuilder<JsonMapping> {
         String name();
         JsonMapping name(String protocolName);
         JsonMapping type(String jsonType);
         JsonMapping openApiFormat(String openapiFormat);
-
-
-        JsonMapping implementation(ValueMapping<?, JsonNode> mapping);
-
-        JsonMapping implementation(@DelegatesTo(ValueMappingBuilder.class) Closure<?> closure);
 
         default AttributePath attribute(String name) {
             return AttributePath.of(name);
@@ -132,7 +150,7 @@ public interface RestAttributeBuilder {
         JsonMapping path(AttributePath path);
     }
 
-    interface ScimMapping {
+    interface ScimMapping extends MappingBuilder<ScimMapping> {
         /**
          * Name of the matching SCIM attribute
          **/
@@ -171,10 +189,6 @@ public interface RestAttributeBuilder {
         }
 
         AttributePath extension(String uriOrAlias);
-
-        ScimMapping implementation(ValueMapping<?,?> mapping);
-
-        ScimMapping implementation(@DelegatesTo(value = ValueMappingBuilder.class) Closure<?> closure);
 
         AttributePath path();
     }

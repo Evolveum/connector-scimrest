@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.impl.rest;
 import com.evolveum.polygon.scimrest.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.Checks;
+import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -101,7 +102,7 @@ public class RestContext implements RetrievableContext {
      * @throws IOException if an I/O error occurs while sending or receiving
      * @throws InterruptedException if the operation is interrupted
      */
-    public <T> HttpResponse<T> executeRequest(RequestBuilder requestBuilder, HttpResponse.BodyHandler<T> jsonBodyHandler) throws IOException, InterruptedException {
+    public HttpResponse<?> executeRequest(RequestBuilder requestBuilder, HttpResponse.BodyHandler<?> jsonBodyHandler) throws IOException, InterruptedException {
         var request = requestBuilder.build();
         LOG.ok("Executing request {0}", request);
         return client.send(request, jsonBodyHandler);
@@ -124,6 +125,9 @@ public class RestContext implements RetrievableContext {
         private final HttpRequest.Builder request = HttpRequest.newBuilder();
         private final String baseUri;
 
+        private HttpMethod httpMethod = HttpMethod.GET;
+        private byte[] body;
+
 
         public RequestBuilder(String baseUri) {
             this.baseUri = baseUri;
@@ -135,7 +139,21 @@ public class RestContext implements RetrievableContext {
 
         public HttpRequest build() {
             request.uri(buildUri());
+
+            switch (httpMethod) {
+                case GET -> request.GET();
+                case PUT -> request.PUT(bodyPublisher());
+                case POST -> request.POST(bodyPublisher());
+                case DELETE -> request.DELETE();
+                case PATCH -> request.method("PATCH", bodyPublisher());
+
+            }
+
             return request.build();
+        }
+
+        private HttpRequest.BodyPublisher bodyPublisher() {
+            return HttpRequest.BodyPublishers.ofByteArray(body);
         }
 
         public RequestBuilder subpath(String subpath) {
@@ -184,6 +202,11 @@ public class RestContext implements RetrievableContext {
             return this;
         }
 
+        public RequestBuilder httpMethod(HttpMethod httpMethod) {
+            this.httpMethod = httpMethod;
+            return this;
+        }
+
         public RequestBuilder query(String key, String value) {
             return queryParameter(key, value);
         }
@@ -219,6 +242,11 @@ public class RestContext implements RetrievableContext {
 
         public RequestBuilder header(String name, String value) {
             this.request.header(name, value);
+            return this;
+        }
+
+        public RequestBuilder body(byte[] body) {
+            this.body = body;
             return this;
         }
 
