@@ -12,6 +12,7 @@ objectClass("Project") {
     search {
         endpoint("projects/") {
             objectExtractor {
+
                 if(response.body()==null){
                     return new JSONArray();
                 }

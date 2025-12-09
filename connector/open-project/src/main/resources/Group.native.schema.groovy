@@ -1,3 +1,4 @@
+import org.identityconnectors.framework.common.objects.AttributeInfo
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference
 import org.identityconnectors.framework.common.objects.ObjectClass
@@ -52,6 +53,9 @@ objectClass("Group") {
     reference("members") {
         description("The list all all the users that are members of the group")
         objectClass "User"
+        role(AttributeInfo.RoleInReference.OBJECT)
+        subtype("UserGroupMembership")
+        multiValued(true)
 
         json {
             path attribute("_links").child("members")

@@ -11,12 +11,12 @@ import org.identityconnectors.framework.common.objects.Attribute
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter
 import org.json.JSONArray
 
-import java.nio.charset.StandardCharsets
 
 objectClass("User") {
     search {
         endpoint("users/") {
             objectExtractor {
+
                 if (response.body() == null) {
                     return new JSONArray();
                 }
@@ -32,12 +32,12 @@ objectClass("User") {
 
             supportedFilter(attribute("name").eq().anySingleValue()) {
                 String filter = "[{ \"name\": { \"operator\": \"=\", \"values\": [\"${value}\"] } }]"
-                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
+                request.queryParameter("filters", filter)
             }
             supportedFilter(attribute("name").contains().anySingleValue()) {
 
                 String filter = "[{ \"name\": { \"operator\": \"~\", \"values\": [\"${value}\"] } }]"
-                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
+                request.queryParameter("filters", filter)
             }
         }
 

@@ -58,11 +58,22 @@ objectClass("Membership") {
             supportedFilter(attribute("principal").eq().anySingleValue()) {
 
                 var valList = value.value.uid.getValue();
+
+                var status = value.value.getAttributeByName("status");
+
+                var statusVal = status.getValue().get(0);
+
+                if("locked".equals(statusVal)){
+                    // TODO workaround, locked users have this request blocked.
+
+                    return null;
+                }
+
                 var val =  valList.get(0);
 
                 // [{"principal":{"operator":"=","values":["2273"]}}]
                 String filter = "[{\"principal\":{\"operator\":\"=\",\"values\":[\"${val}\"]}}]"
-                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))
+                request.queryParameter("filters", filter)
             }
 
         }
