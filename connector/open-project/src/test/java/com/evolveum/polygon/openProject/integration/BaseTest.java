@@ -10,29 +10,47 @@ package com.evolveum.polygon.openProject.integration;
 import com.evolveum.polygon.openProject.OpenProjectConfiguration;
 import com.evolveum.polygon.openProject.OpenProjectConnector;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.api.APIConfiguration;
+import org.identityconnectors.framework.api.ConnectorFacade;
+import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.identityconnectors.test.common.TestHelpers;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.testng.Assert.*;
 
 public class BaseTest {
 
-    private OpenProjectConnector initializedConnector() {
-        var connector = new OpenProjectConnector();
-        var configuration = new OpenProjectConfiguration();
+    protected ConnectorFacade initializedConnector() {
+        OpenProjectConfiguration config = new OpenProjectConfiguration();
 
-        configuration.setBaseAddress("");
-        configuration.setRestUsername("");
-        configuration.setRestPassword(new GuardedString("".toCharArray()));
+        config.setBaseAddress("http://127.0.0.1:8080/api/v3");
+        config.setRestUsername("");
+        config.setRestPassword(new GuardedString("".toCharArray()));
 
-        connector.init(configuration);
-        return connector;
+        return initializedConnector(config);
+    }
+
+    private ConnectorFacade initializedConnector(OpenProjectConfiguration config) {
+        ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
+
+
+        APIConfiguration apiConfiguration = TestHelpers.createTestConfiguration(OpenProjectConnector.class, config);
+        apiConfiguration.getResultsHandlerConfiguration().setEnableAttributesToGetSearchResultsHandler(false);
+        apiConfiguration.getResultsHandlerConfiguration().setEnableCaseInsensitiveFilter(false);
+        apiConfiguration.getResultsHandlerConfiguration().setEnableFilteredResultsHandler(false);
+        apiConfiguration.getResultsHandlerConfiguration().setEnableNormalizingResultsHandler(false);
+        apiConfiguration.getResultsHandlerConfiguration().setFilteredResultsHandlerInValidationMode(false);
+
+        return factory.newInstance(apiConfiguration);
     }
 
     public void testSchema(String objectType) {
@@ -51,7 +69,7 @@ public class BaseTest {
     public void testSearchAll(String objectType) {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
-        connector.executeQuery(new ObjectClass(objectType), null,
+        connector.search(new ObjectClass(objectType), null,
                 results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
     }
@@ -61,7 +79,7 @@ public class BaseTest {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
         var filter = new EqualsFilter(new Uid(id));
-        connector.executeQuery(new ObjectClass(objectType), filter, results::add, new OperationOptions(Map.of()));
+        connector.search(new ObjectClass(objectType), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 1);
         assertEquals(results.get(0).getUid().getUidValue(), id);
@@ -75,7 +93,7 @@ public class BaseTest {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
 
-        connector.executeQuery(new ObjectClass(objectType), filter, results::add, new OperationOptions(Map.of()));
+        connector.search(new ObjectClass(objectType), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
 
         if (assertSize != null) {
@@ -144,5 +162,21 @@ public class BaseTest {
     public boolean compareReferencedName(Object o, String name) {
         return o instanceof ConnectorObjectReference cor && cor.getValue() instanceof
                 ConnectorObject co && co.getName().getNameValue().equals(name);
+    }
+
+    public void testCreate(String objectType, Set<Attribute> attributeSet) {
+
+        var connector = initializedConnector();
+        Uid uid = connector.create(new ObjectClass(objectType), attributeSet,
+                new OperationOptions(Map.of()) );
+        assertNotNull(uid);
+    }
+
+    public void testUpdate(String objectType, Uid uid , Set<AttributeDelta> attributeDeltaSet) {
+
+        var connector = initializedConnector();
+        connector.updateDelta(new ObjectClass(objectType), uid, attributeDeltaSet,
+                new OperationOptions(Map.of()));
+        //TODO assertion
     }
 }
