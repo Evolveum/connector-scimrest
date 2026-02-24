@@ -36,7 +36,7 @@ objectClass("User") {
         jsonType "string";
         openApiFormat "email";
         updateable true;
-        creatable false;
+        creatable true;
         readable true;
         returnedByDefault true;
         description "User’s email address";
@@ -96,7 +96,7 @@ objectClass("User") {
     attribute("status") {
         jsonType "string";
         creatable true;
-        //updateable true;
+        updateable true;
         readable true;
         returnedByDefault true;
         required true;
