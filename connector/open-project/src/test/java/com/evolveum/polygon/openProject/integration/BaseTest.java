@@ -179,4 +179,11 @@ public class BaseTest {
                 new OperationOptions(Map.of()));
         //TODO assertion
     }
+    public void testDelete(String objectType, Uid uid) {
+
+        var connector = initializedConnector();
+        connector.delete(new ObjectClass(objectType), uid,
+                new OperationOptions(Map.of()));
+        //TODO assertion
+    }
 }
