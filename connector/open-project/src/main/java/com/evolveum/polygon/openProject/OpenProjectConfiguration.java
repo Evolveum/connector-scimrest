@@ -17,13 +17,13 @@ public class OpenProjectConfiguration extends BaseRestGroovyConnectorConfigurati
     private GuardedString password;
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.auth.userName", required = false)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.userName",helpMessageKey = "rest.auth.userName.help",required = false)
     public String getRestUsername() {
         return userName;
     }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.auth.password", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.auth.password",helpMessageKey = "rest.auth.password.help", required = true)
     public GuardedString getRestPassword() {
         return password;
     }

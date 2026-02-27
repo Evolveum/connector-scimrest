@@ -16,7 +16,7 @@ import org.identityconnectors.framework.spi.ConnectorClass;
 
 import java.util.Base64;
 
-@ConnectorClass(displayNameKey = "openProject.rest.display", configurationClass = OpenProjectConfiguration.class)
+@ConnectorClass(displayNameKey = "openProject.rest.display", configurationClass = OpenProjectConfiguration.class,  messageCatalogPaths = "Messages")
 public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjectConfiguration> {
     @Override
     protected void initializeSchema(GroovySchemaLoader loader) {
@@ -45,6 +45,7 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
         builder.loadFromResource("/User.op.groovy");
         builder.loadFromResource("/User.create.op.groovy");
         builder.loadFromResource("/User.update.op.groovy");
+//        builder.loadFromResource("/User.delete.op.groovy");
     }
 
     @Override
