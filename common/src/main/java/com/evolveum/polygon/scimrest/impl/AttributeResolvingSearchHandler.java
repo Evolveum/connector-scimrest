@@ -15,6 +15,7 @@ import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,7 @@ public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
                         resolver.resolveSingle(contextLookup, builder);
                     } catch (Exception e) {
                         if (!allowPartials) {
-                            throw e;
+                            throw new ConnectorException("Attribute resolution failed", e);
                         }
                     }
                 }

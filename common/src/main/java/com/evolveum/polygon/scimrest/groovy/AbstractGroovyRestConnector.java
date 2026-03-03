@@ -119,11 +119,9 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
             } catch (IOException e) {
                 throw new ConnectionFailedException(e);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                throw new ConnectionBrokenException("Operation was interrupted", e);
             }
         }
-
-
     }
 
     private boolean isSuccess(int statusCode) {

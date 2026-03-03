@@ -20,6 +20,7 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.net.http.HttpResponse;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 // FIXME: Consider making this JSON agnostic and format / parsing handling will be injected.
 public class RestPagingAwareObjectRetriever {
@@ -77,8 +78,7 @@ public class RestPagingAwareObjectRetriever {
                 currentPage++;
             } while (shouldContinue);
         } catch (Exception e) {
-            // FIXME: Add proper error handling here and maybe translation to ConnID exceptions
-            throw new RuntimeException(e);
+            throw new ConnectorException("REST pagination failed", e);
         }
     }
 

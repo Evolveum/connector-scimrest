@@ -66,7 +66,7 @@ public class RestContext implements RetrievableContext {
                 sslContext.init(null, new TrustManager[]{TRUST_ALL}, new SecureRandom());
                 builder.sslContext(sslContext);
             } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                throw new RuntimeException(e);
+                throw new ConfigurationException("SSL configuration failed", e);
             }
         }
         // FIXME: Make connection timeouts configurable
@@ -230,7 +230,7 @@ public class RestContext implements RetrievableContext {
             var keySearch = "{"+key+"}";
             var position = apiEndpoint.indexOf(keySearch);
             if (position < 0) {
-                throw new IllegalArgumentException("Path parameter " + key + " not found in " + subpath);
+                throw new ConnectorException("Path parameter " + key + " not found in " + apiEndpoint);
             }
             apiEndpoint = apiEndpoint.replace(keySearch, value);
             return this;

@@ -19,11 +19,10 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 import java.util.HashSet;
 import java.util.Set;
-
-// FIXME: Consider making this JSON agnostic and format / parsing handling will be injected.
 public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
     private final MappedObjectClass objectClass;
@@ -78,8 +77,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
                 currentPage++;
             } while (shouldContinue);
         } catch (Exception e) {
-            // FIXME: Add proper error handling here and maybe translation to ConnID exceptions
-            throw new RuntimeException(e);
+            throw new ConnectorException("SCIM search failed", e);
         }
     }
 
@@ -132,7 +130,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
             handler.handle(obj);
             BatchAwareResultHandler.batchFinished(handler);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ConnectorException("SCIM retrieve failed", e);
         }
     }
 

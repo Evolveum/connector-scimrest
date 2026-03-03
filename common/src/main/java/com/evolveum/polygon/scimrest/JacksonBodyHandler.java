@@ -12,9 +12,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 /**
  * Jackson-based Body Handler for {@link java.net.http.HttpClient}
@@ -36,7 +36,7 @@ public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpRespon
                         var treeNode = mapper.readTree(m);
                         return responseType.cast(treeNode);
                     } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+                        throw new ConnectorException("Failed to parse response body", e);
                     }
                 });
         }

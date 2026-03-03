@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import java.util.List;
 
 public class ConnectorManifest {
@@ -21,7 +23,7 @@ public class ConnectorManifest {
                 json = new ObjectMapper().readTree(resource);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Can not read connector manifest", e);
+            throw new ConfigurationException("Failed to read connector manifest", e);
         } finally {
             //resource.close();
         }
