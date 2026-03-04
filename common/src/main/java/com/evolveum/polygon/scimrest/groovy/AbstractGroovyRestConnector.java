@@ -99,8 +99,8 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     @Override
     public void test() {
         initialize();
-        // SCIM Test is done automatically during schema discovery
-        // FIXME: Implement later
+        // SCIM Test connection is done automatically during schema discovery
+        // FIXME: But makes sense to do again, if connector is poolable (in future)
         var restClientConfig = getConfiguration().configuration(RestClientConfiguration.class);
         if (restClientConfig != null && restClientConfig.getRestTestEndpoint() != null) {
             var request = context.rest().newAuthorizedRequest();
@@ -118,6 +118,8 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
                 }
             } catch (IOException e) {
                 throw new ConnectionFailedException(e);
+            } catch (IllegalArgumentException e) {
+                throw new ConnectionFailedException("DNS or URI configuration error: " + e.getMessage(), e);
             } catch (InterruptedException e) {
                 throw new ConnectionBrokenException("Operation was interrupted", e);
             }

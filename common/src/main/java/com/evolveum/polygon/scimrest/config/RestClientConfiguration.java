@@ -18,6 +18,11 @@ public interface RestClientConfiguration extends ConfigurationMixin {
     @ConfigurationProperty(displayMessageKey = "rest.address.test")
     String getRestTestEndpoint();
 
+    @ConfigurationProperty(displayMessageKey = "rest.timeout.seconds", required = false)
+    default Integer getTimeoutSeconds() {
+        return 30;
+    }
+
     /**
      *
      * Represents an HTTP Basic Authorization configuration.

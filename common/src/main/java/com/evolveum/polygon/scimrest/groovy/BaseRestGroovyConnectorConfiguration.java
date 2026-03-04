@@ -14,6 +14,7 @@ public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyCon
     private String baseAddress;
     private Boolean trustAllCertificates;
     private String restTestEndpoint;
+    private Integer timeoutSeconds = 30;
 
 
     @Override
@@ -43,5 +44,14 @@ public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyCon
 
     public void setRestTestEndpoint(String restTestEndpoint) {
         this.restTestEndpoint = restTestEndpoint;
+    }
+
+    @Override
+    public Integer getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
+
+    public void setTimeoutSeconds(Integer timeoutSeconds) {
+        this.timeoutSeconds = timeoutSeconds;
     }
 }

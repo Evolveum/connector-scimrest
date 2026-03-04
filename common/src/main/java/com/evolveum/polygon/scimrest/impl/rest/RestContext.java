@@ -52,6 +52,7 @@ import java.util.Map;
 public class RestContext implements RetrievableContext {
 
     private static final Log LOG = Log.getLog(RestContext.class);
+    private static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
     private final AuthorizationCustomizer customizer;
     private final RestClientConfiguration configuration;
@@ -69,9 +70,7 @@ public class RestContext implements RetrievableContext {
                 throw new ConfigurationException("SSL configuration failed", e);
             }
         }
-        // FIXME: Make connection timeouts configurable
-        builder.connectTimeout(Duration.of(30, ChronoUnit.SECONDS));
-        // FIXME: This should be configurable
+        builder.connectTimeout(Duration.of(configuration.getTimeoutSeconds().longValue(), ChronoUnit.SECONDS));
         builder.followRedirects(HttpClient.Redirect.NORMAL);
         this.client = builder.build();
         this.customizer = customizer;
@@ -85,7 +84,8 @@ public class RestContext implements RetrievableContext {
      *         and customized for authorization.
      */
     public RequestBuilder newAuthorizedRequest() {
-        var request = new RequestBuilder(configuration.getBaseAddress());
+        var timeoutSeconds = configuration.getTimeoutSeconds() != null ? configuration.getTimeoutSeconds() : DEFAULT_TIMEOUT_SECONDS;
+        var request = new RequestBuilder(configuration.getBaseAddress(), Duration.of( timeoutSeconds, ChronoUnit.SECONDS));
         this.customizer.customize(configuration, request);
         return request;
     }
@@ -124,13 +124,19 @@ public class RestContext implements RetrievableContext {
 
         private final HttpRequest.Builder request = HttpRequest.newBuilder();
         private final String baseUri;
+        private final Duration timeout;
 
         private HttpMethod httpMethod = HttpMethod.GET;
         private byte[] body;
 
 
         public RequestBuilder(String baseUri) {
+            this(baseUri, null);
+        }
+        
+        public RequestBuilder(String baseUri, Duration timeout) {
             this.baseUri = baseUri;
+            this.timeout = timeout;
         }
 
         String apiEndpoint;
@@ -146,7 +152,10 @@ public class RestContext implements RetrievableContext {
                 case POST -> request.POST(bodyPublisher());
                 case DELETE -> request.DELETE();
                 case PATCH -> request.method("PATCH", bodyPublisher());
-
+            }
+            
+            if (timeout != null) {
+                request.timeout(timeout);
             }
 
             return request.build();
@@ -157,25 +166,33 @@ public class RestContext implements RetrievableContext {
         }
 
         public RequestBuilder subpath(String subpath) {
-            if (!subpath.isEmpty() && !subpath.endsWith("/")) {
-                this.subpath.append("/");
+            if (!subpath.isEmpty()) {
+                // Remove leading slash to avoid double slash when combined with separator
+                String subpathToAdd = subpath.startsWith("/") ? subpath.substring(1) : subpath;
+                this.subpath.append("/").append(subpathToAdd);
             }
-            this.subpath.append(subpath);
             return this;
         }
 
         private URI buildUri() {
             var builder = new StringBuilder();
             builder.append(baseUri);
-            builder.append("/");
-            if (apiEndpoint != null) {
+            if (apiEndpoint != null && !apiEndpoint.isEmpty()) {
+                if (!builder.toString().endsWith("/")) {
+                    builder.append("/");
+                }
                 builder.append(apiEndpoint);
             }
             if (!subpath.isEmpty()) {
                 if (!builder.toString().endsWith("/")) {
                     builder.append("/");
                 }
-                builder.append(subpath);
+                String subpathStr = subpath.toString();
+                if (subpathStr.startsWith("/")) {
+                    builder.append(subpathStr.substring(1));
+                } else {
+                    builder.append(subpathStr);
+                }
             }
             if (queryParameters != null) {
                 builder.append("?");
