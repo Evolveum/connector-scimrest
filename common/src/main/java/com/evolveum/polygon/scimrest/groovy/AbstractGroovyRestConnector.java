@@ -11,7 +11,6 @@ import com.evolveum.polygon.scimrest.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
-import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
@@ -20,12 +19,25 @@ import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.spi.Configuration;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
 
 public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase {
 
+    private final boolean reinitializeOnEachCall;
+
+    private boolean initialized;
     private ConnectorContext context;
+
+    @Deprecated
+    protected AbstractGroovyRestConnector() {
+        this(true);
+    }
+
+    protected AbstractGroovyRestConnector(boolean reinitializeOnEachCall) {
+        this.reinitializeOnEachCall = reinitializeOnEachCall;
+    }
+
+
     @Override
     public BaseGroovyConnectorConfiguration getConfiguration() {
         return context.configuration();
@@ -51,7 +63,13 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     }
 
     private void initialize() {
+        if (reinitializeOnEachCall || !initialized) {
+            initialize0();
+            initialized = true;
+        }
+    }
 
+    private void initialize0() {
         var schemaBuilder = new RestSchemaBuilder(getClass(), context);
 
         initializeSchema(new GroovySchemaLoader(context.configuration().groovyContext(), schemaBuilder));

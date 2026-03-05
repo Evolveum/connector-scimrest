@@ -12,12 +12,20 @@ import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.spi.ConnectorClass;
+import org.identityconnectors.framework.spi.PoolableConnector;
 
 import java.util.Base64;
 
 @ConnectorClass(displayNameKey = "openProject.rest.display", configurationClass = OpenProjectConfiguration.class,  messageCatalogPaths = "Messages")
-public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjectConfiguration> {
+public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjectConfiguration>
+        implements PoolableConnector {
+
+    public OpenProjectConnector() {
+        super(false);
+    }
+
     @Override
     protected void initializeSchema(GroovySchemaLoader loader) {
         loader.loadFromResource("/User.native.schema.groovy");
@@ -60,5 +68,9 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
                 request.header("Authorization", "Basic " + basicValueB64);
             }
         };
+    }
+
+    @Override
+    public void checkAlive() throws ConnectionBrokenException {
     }
 }
