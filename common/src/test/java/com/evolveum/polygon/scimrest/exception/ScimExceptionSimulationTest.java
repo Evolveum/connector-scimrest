@@ -13,7 +13,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.testng.Assert.*;
 
 public class ScimExceptionSimulationTest extends WireMockTestSupport {

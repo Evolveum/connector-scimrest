@@ -8,14 +8,17 @@ package com.evolveum.polygon.scimrest.exception;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.testng.Assert;
+
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 public class WireMockTestSupport {
 
     protected WireMockServer wireMockServer;
 
     protected void setUpWireMock() {
-        wireMockServer = new WireMockServer();
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockServer.start();
         WireMock.configureFor("localhost", wireMockServer.port());
     }

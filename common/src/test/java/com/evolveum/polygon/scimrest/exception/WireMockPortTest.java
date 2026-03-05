@@ -1,6 +1,7 @@
 package com.evolveum.polygon.scimrest.exception;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -10,6 +11,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.testng.Assert.*;
 
 public class WireMockPortTest {
@@ -26,7 +28,7 @@ public class WireMockPortTest {
 
     @Test
     public void testWireMockPortIsCorrect() {
-        wireMockServer = new WireMockServer();
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockServer.start();
         int port = wireMockServer.port();
         System.err.println("WireMock started on port: " + port);
