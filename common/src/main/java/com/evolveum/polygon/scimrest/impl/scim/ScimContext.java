@@ -111,21 +111,46 @@ public class ScimContext implements RetrievableContext {
      * @return
      */
     private String relativeEndpoint(URI endpoint) {
-        return relativeEndpoint(endpoint.toString());
-    }
-    private String relativeEndpoint(String endpointStr) {
-        // Drop HTTP // HTTPS prefix from both
-        endpointStr = removeProtocol(endpointStr);
-        var baseUrl = removeProtocol(configuration.getScimBaseUrl());
-
-        if (endpointStr.startsWith(baseUrl)) {
-            return endpointStr.substring(baseUrl.length());
+        if (endpoint == null) {
+            throw new IllegalArgumentException("endpoint is null");
         }
-        throw new IllegalArgumentException("Can not relativize endpoint.");
-    }
+        //Get the base URI from configuration
+        URI base = URI.create(configuration.getScimBaseUrl().trim());
+        // Fail early if base URL is missing path
+        String basePath = base.getPath();
+        if (basePath == null || basePath.isEmpty()) {
+            throw new IllegalArgumentException("Base URL is missing");
+        }
+        if (!basePath.endsWith("/")) {
+            basePath = basePath + "/";
+        }
 
-    private String removeProtocol(String endpointStr) {
-        return endpointStr.replaceFirst("^https?://", "");
+        //1) Endpoint is returned relative to base URL (conforming to the RFC: https://datatracker.ietf.org/doc/html/rfc7643#section-6)
+        if (!endpoint.isAbsolute() && endpoint.getHost() == null) {
+            String path = endpoint.getPath();
+            if (path == null || path.isBlank() || path.equals("/")) {
+                throw new IllegalArgumentException("Endpoint is blank or root: " + endpoint);
+            }
+            return path.startsWith("/") ? path : "/" + path;
+        }
+
+        //2) Endpoint is absolute URL; verify it is under base URL
+        String epPath = endpoint.getPath();
+        if (epPath == null || epPath.isEmpty()) {
+            throw new IllegalArgumentException("Absolute endpoint has empty path: " + endpoint);
+        }
+
+        if (!epPath.startsWith(basePath)) {
+            throw new IllegalArgumentException(
+                    "Endpoint path: " + epPath + "not under basePath=" + basePath
+            );
+        }
+
+        String rel = epPath.substring(basePath.length()); // e.g. "Users"
+        if (rel.isEmpty()) {
+            return "/";
+        }
+        return rel.startsWith("/") ? rel : "/" + rel;
     }
 
     public void contributeToSchema(RestSchemaBuilder schemaBuilder) {
@@ -169,7 +194,7 @@ public class ScimContext implements RetrievableContext {
     }
 
     public ObjectClass objectClassFromUri(String ref) {
-        var uri = relativeEndpoint(ref);
+        var uri = relativeEndpoint(URI.create(ref));
         for (var resource : resources.values()) {
             if (uri.startsWith(resource.relativeEndpoint())) {
                 var objectClass = resourceToObjectClass.get(resource.resource().getName());
