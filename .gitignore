@@ -4,3 +4,7 @@
 *.iml
 local
 .idea
+**/.classpath
+.classpath
+**/.settings
+**/.project
