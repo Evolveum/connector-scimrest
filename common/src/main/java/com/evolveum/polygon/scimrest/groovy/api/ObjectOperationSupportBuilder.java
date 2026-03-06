@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
+import com.evolveum.polygon.scimrest.groovy.Script;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -24,27 +25,27 @@ public interface ObjectOperationSupportBuilder {
 
     RestDeleteOperationBuilder delete();
 
-    default RestSearchOperationBuilder search(@DelegatesTo(value = RestSearchOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+    default RestSearchOperationBuilder search(@DelegatesTo(value = RestSearchOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, search());
     }
 
-    default RestListOperationBuilder list(@DelegatesTo(value = RestListOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+    default RestListOperationBuilder list(@DelegatesTo(value = RestListOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, list());
     };
 
-    default ReadOperationBuilder read(@DelegatesTo(value = ReadOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+    default ReadOperationBuilder read(@DelegatesTo(value = ReadOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, read());
     }
 
-    default RestCreateOperationBuilder create(@DelegatesTo(value = RestCreateOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+    default RestCreateOperationBuilder create(@DelegatesTo(value = RestCreateOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, create());
     }
 
-    default RestUpdateOperationBuilder update(@DelegatesTo(value = RestUpdateOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+    default RestUpdateOperationBuilder update(@DelegatesTo(value = RestUpdateOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, update());
     }
 
-    default RestDeleteOperationBuilder delete(@DelegatesTo(value = RestDeleteOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+    default RestDeleteOperationBuilder delete(@DelegatesTo(value = RestDeleteOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, delete());
     }
 }

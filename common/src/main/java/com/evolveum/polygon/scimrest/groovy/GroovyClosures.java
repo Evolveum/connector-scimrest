@@ -14,6 +14,9 @@ public class GroovyClosures {
 
     /**
      * Calls the provided closure with the specified delegate and returns the delegate.
+     * <p>
+     * Use this for initialization closures (annotated with {@link Script.Initialization}).
+     * These closures execute immediately during configuration and return the builder.
      *
      * @param <T>      The type of the delegate.
      * @param closure  The closure to be executed.
@@ -29,6 +32,9 @@ public class GroovyClosures {
 
     /**
      * Creates a copy of the provided closure and executes it with the specified delegate.
+     * <p>
+     * Use this for runtime closures (annotated with {@link Script.Runtime}).
+     * These closures are stored as prototypes and executed later during operations.
      *
      * @param <T> The type of the delegate.
      * @param prototype The original closure to be copied and executed.

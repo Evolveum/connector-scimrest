@@ -45,12 +45,12 @@ public class RestHandlerBuilder implements OperationBuilder {
     }
 
     @Override
-    public TestOperationBuilder test(Closure<?> o) {
+    public TestOperationBuilder test(@Script.Initialization Closure<?> o) {
         return GroovyClosures.callAndReturnDelegate(o, testOperation);
     }
 
     @Override
-    public AuthenticationCustomizationBuilder authentication(Closure<?> o) {
+    public AuthenticationCustomizationBuilder authentication(@Script.Initialization Closure<?> o) {
         return GroovyClosures.callAndReturnDelegate(o, authorization);
     }
 

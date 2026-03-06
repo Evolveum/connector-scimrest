@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.scimrest.groovy.Script;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClassBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -15,8 +16,8 @@ public interface SchemaBuilder {
 
     ObjectClassSchemaBuilder objectClass(String name);
 
-    ObjectClassSchemaBuilder objectClass(String name, @DelegatesTo(ObjectClassSchemaBuilder.class) Closure<?> closure);
+    ObjectClassSchemaBuilder objectClass(String name, @DelegatesTo(ObjectClassSchemaBuilder.class) @Script.Initialization Closure<?> closure);
 
-    RestRelationshipBuilder relationship(String name, @DelegatesTo(RestRelationshipBuilder.class) Closure<?> closure);
+    RestRelationshipBuilder relationship(String name, @DelegatesTo(RestRelationshipBuilder.class) @Script.Initialization Closure<?> closure);
 
 }

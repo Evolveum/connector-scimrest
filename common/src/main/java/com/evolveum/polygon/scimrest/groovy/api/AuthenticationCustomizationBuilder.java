@@ -2,6 +2,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.groovy.Script;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -9,12 +10,12 @@ import org.identityconnectors.common.security.GuardedString;
 
 public interface AuthenticationCustomizationBuilder {
 
-    RestBuilder rest(@DelegatesTo(RestBuilder.class) Closure<?> closure);
+    RestBuilder rest(@DelegatesTo(RestBuilder.class) @Script.Initialization Closure<?> closure);
 
 
     interface RestBuilder {
 
-        RestContext.AuthorizationCustomizer customizer(Class<? extends RestClientConfiguration> type, @DelegatesTo(CustomizationContext.class) Closure<?> o);
+        RestContext.AuthorizationCustomizer customizer(Class<? extends RestClientConfiguration> type, @DelegatesTo(CustomizationContext.class) @Script.Initialization Closure<?> o);
 
 
         default RestContext.AuthorizationCustomizer basic(@DelegatesTo(value = CustomizationContext.class, strategy = Closure.DELEGATE_ONLY) Closure<?> o) {
