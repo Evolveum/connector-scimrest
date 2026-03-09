@@ -11,8 +11,10 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.testng.annotations.Test;
 
@@ -33,6 +35,9 @@ public class ScimDevTest {
 
     private class TestConfiguration extends BaseRestGroovyConnectorConfiguration implements ScimClientConfiguration.BearerToken {
 
+        public TestConfiguration() {
+            setDevelopmentMode(true);
+        }
 
         @Override
         public GuardedString getScimBearerToken() {
@@ -60,7 +65,7 @@ public class ScimDevTest {
         }
     }
 
-    @Test(enabled = false)
+    @Test
     void getSchemas() {
         var connector = initializedConnector();
 
@@ -72,6 +77,14 @@ public class ScimDevTest {
 
         var groupOc = schema.findObjectClassInfo("Group");
         assertNotNull(groupOc);
+
+        var schemaOC = schema.findObjectClassInfo("conndev_ScimSchema");
+        assertNotNull(schemaOC);
+        assertEquals("conndev_ScimSchema", schemaOC.getType());
+        
+        var resourceOC = schema.findObjectClassInfo("conndev_ScimResource");
+        assertNotNull(resourceOC);
+        assertEquals("conndev_ScimResource", resourceOC.getType());
     }
 
     @Test(enabled = false)
@@ -119,6 +132,44 @@ public class ScimDevTest {
         assertEquals(randomUser.getUid(), maybeUser.result.getUid());
 
 
+    }
+
+    @Test
+    public void searchSchemas() {
+        var connector = initializedConnector();
+        var schemas = new ArrayList<ConnectorObject>();
+        var schemaOC = new ObjectClass("conndev_ScimSchema");
+        connector.executeQuery(schemaOC, null, schemas::add, null);
+        
+        assertFalse(schemas.isEmpty(), "Schemas should not be empty");
+        
+        var randomSchema = schemas.get(new Random().nextInt(schemas.size()));
+        assertNotNull(randomSchema);
+        
+        var schemaUid = randomSchema.getUid();
+        var maybeSchema = new ExpectSingle();
+        connector.executeQuery(schemaOC, FilterBuilder.equalTo(schemaUid), maybeSchema, null);
+        assertNotNull(maybeSchema.result);
+        assertEquals(schemaUid, maybeSchema.result.getUid());
+    }
+
+    @Test
+    public void searchResources() {
+        var connector = initializedConnector();
+        var resources = new ArrayList<ConnectorObject>();
+        var resourceOC = new ObjectClass("conndev_ScimResource");
+        connector.executeQuery(resourceOC, null, resources::add, null);
+        
+        assertFalse(resources.isEmpty(), "Resources should not be empty");
+        
+        var randomResource = resources.get(new Random().nextInt(resources.size()));
+        assertNotNull(randomResource);
+        
+        var resourceUid = randomResource.getUid();
+        var maybeResource = new ExpectSingle();
+        connector.executeQuery(resourceOC, FilterBuilder.equalTo(resourceUid), maybeResource, null);
+        assertNotNull(maybeResource.result);
+        assertEquals(resourceUid, maybeResource.result.getUid());
     }
 
 
