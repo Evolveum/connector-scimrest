@@ -13,6 +13,9 @@ import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
+import com.evolveum.polygon.scimrest.impl.CreateOperationHandler;
+import com.evolveum.polygon.scimrest.impl.DeleteOperationHandler;
+import com.evolveum.polygon.scimrest.impl.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimDevelopmentMode;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimResourceDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimSchemaDevHandler;
@@ -165,6 +168,11 @@ public class ScimContext implements RetrievableContext {
             if (scim.isEnabled()) {
                 // SCIM Configuration
             }
+
+            // make sure scim create, update and delete builders are initalized if scripts did not modify them
+            ocBuilder.create().scim();
+            ocBuilder.update().scim();
+            ocBuilder.delete().scim();
         }
         
         // Contribute dev handlers if developmentMode is enabled
@@ -236,8 +244,12 @@ public class ScimContext implements RetrievableContext {
         return resources;
     }
 
-    private String objectClassForResource(ScimResourceContext resource) {
-        String resourceName = resource.resource().getName();
-        return resourceToObjectClass.get(resourceName);
+     private String objectClassForResource(ScimResourceContext resource) {
+         String resourceName = resource.resource().getName();
+         return resourceToObjectClass.get(resourceName);
+     }
+
+    public ContextLookup contextLookup() {
+        return contextLookup;
     }
 }

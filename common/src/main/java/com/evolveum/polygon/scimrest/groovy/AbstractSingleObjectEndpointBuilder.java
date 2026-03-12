@@ -17,7 +17,6 @@ public abstract class AbstractSingleObjectEndpointBuilder<I, O, E extends Abstra
     protected HttpMethod httpMethod;
 
     protected final Map<String, PathParameter> pathParameters;
-    protected final Map<String, AttributeSupport.Builder> supportedAttributes = new HashMap<>();
 
 
     public AbstractSingleObjectEndpointBuilder(String path) {
@@ -28,21 +27,6 @@ public abstract class AbstractSingleObjectEndpointBuilder<I, O, E extends Abstra
     public void httpOperation(HttpMethod method) {
         this.httpMethod = method;
     }
-
-
-
-    public E supportedAttributes(String... attributes) {
-        for (String attribute : attributes) {
-            var attrBuilder = supportedAttribute(attribute);
-            // Mark supported here
-        }
-        return self();
-    }
-
-    public AttributeSupport.Builder supportedAttribute(String attribute) {
-        return supportedAttributes.computeIfAbsent(attribute, k -> new AttributeSupport.Builder());
-    }
-
 
     public void pathParameter(String name, Function<ConnectorObject, Object> extractor) {
 

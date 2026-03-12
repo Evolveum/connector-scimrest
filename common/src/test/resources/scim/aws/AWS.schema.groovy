@@ -68,7 +68,6 @@ relationship("OfficeEmployment") {
             }
         }
     }
-
     object("Office") {
         attribute("employees") {
             scim {

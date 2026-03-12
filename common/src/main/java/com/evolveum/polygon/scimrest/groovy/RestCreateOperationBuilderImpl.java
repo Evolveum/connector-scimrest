@@ -5,6 +5,7 @@ import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
 import com.evolveum.polygon.scimrest.impl.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.CreateOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.schema.JsonAttributeMapping;
@@ -13,6 +14,8 @@ import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.CreateOperation;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.javaparser.ast.Node;
+import com.github.javaparser.utils.VisitorMap;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -28,7 +31,8 @@ public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilde
 
 
     private final List<EndpointImpl> endpoints = new ArrayList<>();
-    private final BaseOperationSupportBuilder parent    ;
+    private final BaseOperationSupportBuilder parent;
+    private ScimCreateBuilder scim;
 
     public RestCreateOperationBuilderImpl(BaseOperationSupportBuilder parent) {
         this.parent = parent;
@@ -47,6 +51,14 @@ public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilde
     }
 
     @Override
+    public ScimCreateBuilder scim() {
+        if (scim == null) {
+            scim = new ScimCreateBuilderImpl();
+        }
+        return scim;
+    }
+
+    @Override
     public CreateOperation build() {
         if (endpoints.isEmpty()) {
             return null;
@@ -60,6 +72,7 @@ public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilde
 
         private RequestBuilderImpl request = new RequestBuilderImpl();
         private ResponseBuilderImpl response = new ResponseBuilderImpl();
+        private AttributeSupport.SupportBuilder<Endpoint> supportedAttributes = new AttributeSupport.SupportBuilder<Endpoint>(this);
 
         EndpointImpl(String path) {
             super(path);
@@ -70,10 +83,15 @@ public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilde
             return this;
         }
 
+        @Override
+        public AttributeSupport.Builder supportedAttribute(String attributeName) {
+            return supportedAttributes.supportedAttribute(attributeName);
+        }
+
         CreateOperationHandler build() {
             var supportedAttrs = new HashMap<String, AttributeSupport>();
 
-            for (var supported : supportedAttributes.entrySet()) {
+            for (var supported : supportedAttributes.entries()) {
                 var attr = resolveAttribute(supported.getKey());
                 supportedAttrs.put(attr.connId().getName(), supported.getValue().build(attr));
             }
@@ -212,6 +230,32 @@ public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilde
                 }
             }
             throw new ConnectorException("Cannot create object. HTTP status code: " + httpResponse.statusCode());
+        }
+    }
+
+    private class ScimCreateBuilderImpl implements ScimCreateBuilder {
+
+        boolean enabled = true;
+
+        @Override
+        public AttributeValueFilter<AttributeLimitations> supportedAttribute(String attributeName) {
+            return null;
+        }
+
+        @Override
+        public ScimCreateBuilder enabled(boolean value) {
+            this.enabled = value;
+            return this;
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        @Override
+        public Limitations limitations() {
+            return null;
         }
     }
 }

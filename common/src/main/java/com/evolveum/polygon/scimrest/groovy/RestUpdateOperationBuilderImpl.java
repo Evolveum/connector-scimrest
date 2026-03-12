@@ -2,14 +2,13 @@ package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.*;
-import com.evolveum.polygon.scimrest.impl.CreateOperationHandler;
-import com.evolveum.polygon.scimrest.impl.CreateOperationStrategyHandler;
+import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import com.evolveum.polygon.scimrest.impl.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.UpdateOperationStrategyHandler;
+import com.evolveum.polygon.scimrest.impl.scim.ScimUpdateHandler;
 import com.evolveum.polygon.scimrest.schema.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.evolveum.polygon.scimrest.spi.CreateOperation;
 import com.evolveum.polygon.scimrest.spi.UpdateOperation;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -20,17 +19,18 @@ import org.identityconnectors.framework.common.objects.*;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilder, RestObjectOperationBuilder<UpdateOperation> {
 
     private final BaseOperationSupportBuilder parent;
-    private List<EndpointImpl> endpoints = new ArrayList<>();
+    private final List<EndpointImpl> endpoints = new ArrayList<>();
+    private ScimUpdateBuilderImpl scim;
 
     public RestUpdateOperationBuilderImpl(BaseOperationSupportBuilder parent) {
         this.parent = parent;
     }
+
     @Override
     public Endpoint endpoint(HttpMethod method, String path) {
         for (var endpoint : endpoints) {
@@ -45,13 +45,40 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
     }
 
     @Override
+    public ScimUpdateBuilder scim() {
+        if (this.scim == null) {
+            this.scim = new ScimUpdateBuilderImpl(parent.context);
+        }
+        return scim;
+    }
+
+    @Override
     public UpdateOperation build() {
-        if (endpoints.isEmpty()) {
+        if (endpoints.isEmpty() && scimNotUsed()) {
             return null;
         }
-        var handlers = endpoints.stream().map(EndpointImpl::build).toList();
-
+        var handlers = new ArrayList<UpdateOperationHandler>();
+        handlers.addAll(endpoints.stream().map(EndpointImpl::build).toList());
+        
+        // Add SCIM handler if configured
+        if (scim != null && scim.isEnabled()) {
+            var scimHandler = scim.build();
+            if (scimHandler != null) {
+                handlers.add(scimHandler);
+            }
+        }
+        
         return new UpdateOperationStrategyHandler(parent.context, parent.getObjectClass().objectClass(), handlers);
+    }
+
+    private boolean scimNotUsed() {
+        if (scim == null) {
+            return true;
+        }
+        if (!scim.enabled) {
+            return true;
+        }
+        return !scim.put.enabled && !scim.patch.enabled;
     }
 
     private MappedAttribute resolveAttribute(String key) {
@@ -59,10 +86,11 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
         return parent.getObjectClass().attributeFromProtocolName(key);
     }
 
-    class EndpointImpl extends AbstractSingleObjectEndpointBuilder<UpdateRequest, ConnectorObject, EndpointImpl> implements Endpoint {
+    class EndpointImpl extends AbstractSingleObjectEndpointBuilder<UpdateRequest, ConnectorObject, EndpointImpl> implements Endpoint  {
 
         private final RequestBuilderImpl request = new RequestBuilderImpl();
         private final ResponseBuilderImpl response = new ResponseBuilderImpl();
+        protected final AttributeSupport.SupportBuilder<Endpoint> supportedAttributes = new AttributeSupport.SupportBuilder<>(this);
 
         public EndpointImpl(String path) {
             super(path);
@@ -74,9 +102,19 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
         }
 
         @Override
+        public AttributeValueFilter supportedAttribute(String attributeName) {
+            return supportedAttributes.supportedAttribute(attributeName);
+        }
+
+        @Override
         public AttributeValueFilter supportedAttribute(String attributeName, Closure<?> closure) {
             var attr = supportedAttribute(attributeName);
             return GroovyClosures.callAndReturnDelegate(closure, attr);
+        }
+
+        @Override
+        public Endpoint supportedAttributes(String... attributes) {
+            return null;
         }
 
         @Override
@@ -92,7 +130,7 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
         UpdateOperationHandler build() {
             var supportedAttrs = new HashMap<String, AttributeSupport>();
 
-            for (var supported : supportedAttributes.entrySet()) {
+            for (var supported : supportedAttributes.entries()) {
                 var attr = resolveAttribute(supported.getKey());
                 if (attr == null) {
                     throw new ConnectorException("Attribute " + supported.getKey() + " not found in schema");
@@ -144,8 +182,6 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
                            boolean requiresOriginalState) implements UpdateOperationHandler {
 
 
-
-
         @Override
         public void update(UpdateRequest updateRequest, OperationOptions options) {
             var request = context.rest().newAuthorizedRequest();
@@ -154,7 +190,7 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
             // FIXME: Use proper path parameter computation
             request.pathParameter("id", updateRequest.uid().getUidValue());
 
-            if (contentType != null ) {
+            if (contentType != null) {
                 request.header("Content-Type", contentType);
                 request.body(requestBody.apply(updateRequest));
             }
@@ -168,9 +204,6 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
                 throw new ConnectorException("Cannot create request object", e);
             }
         }
-
-
-
 
         @Override
         public Capability<AttributeDelta, UpdateOperationHandler> canHandle(Collection<AttributeDelta> request, OperationOptions options) {
@@ -188,7 +221,8 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
         }
     }
 
-    private record DefaultSerializationTransformer(MappedObjectClass schema, HashMap<String, AttributeSupport> supportedAttrs) implements Function<UpdateRequest, byte[]> {
+    private record DefaultSerializationTransformer(MappedObjectClass schema,
+                                                   HashMap<String, AttributeSupport> supportedAttrs) implements Function<UpdateRequest, byte[]> {
 
         public static final JsonNodeFactory FACTORY = new JsonNodeFactory(false);
 
@@ -216,7 +250,8 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
         }
     }
 
-    private record DefaultResponseHandler(MappedObjectClass objectClass) implements Function<HttpResponse<?>, ConnectorObject> {
+    private record DefaultResponseHandler(
+            MappedObjectClass objectClass) implements Function<HttpResponse<?>, ConnectorObject> {
 
         @Override
         public ConnectorObject apply(HttpResponse<?> httpResponse) {
@@ -242,4 +277,83 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
             throw new ConnectorException("Cannot create object. HTTP status code: " + httpResponse.statusCode());
         }
     }
+
+    private class ScimUpdateBuilderImpl implements ScimUpdateBuilder {
+
+        public ScimPutBuilder put;
+        public ScimPatchBuilder patch;
+        private boolean enabled = true;
+        private final ConnectorContext context;
+
+        public ScimUpdateBuilderImpl(ConnectorContext context) {
+            this.context = context;
+        }
+
+        @Override
+        public ScimUpdateBuilder enabled(boolean enabled) {
+            this.enabled = enabled;
+            return this;
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        @Override
+        public Limitations limitations() {
+            return null;
+        }
+
+        @Override
+        public Limitations limitations(Closure<?> closure) {
+            return null;
+        }
+
+        @Override
+        public Put put() {
+            return put;
+        }
+
+        @Override
+        public Patch patch() {
+            return patch;
+        }
+
+        protected ScimUpdateHandler build() {
+            if (!enabled) {
+                return null;
+            }
+            return new ScimUpdateHandler(parent.getObjectClass().objectClass(), parent.context.scim());
+        }
+
+    }
+
+
+
+    private class ScimPatchBuilder implements ScimUpdateBuilder.Patch {
+
+        protected boolean enabled;
+
+
+
+
+        @Override
+        public ScimUpdateBuilder.AttributeValueFilter supportedAttribute(String attribute) {
+            throw new UnsupportedOperationException();
+        }
+
+    }
+
+    protected class ScimPutBuilder implements ScimUpdateBuilder.Put {
+
+        protected boolean enabled;
+
+        @Override
+        public ScimUpdateBuilder.AttributeValueFilter supportedAttribute(String attribute) {
+            throw new UnsupportedOperationException();
+        }
+
+    }
+
 }

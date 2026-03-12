@@ -6,6 +6,10 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
+import com.evolveum.polygon.scimrest.groovy.Script;
+import com.evolveum.polygon.scimrest.groovy.api.scim.ScimOperationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.scim.ScimSearchBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -24,5 +28,13 @@ public interface RestSearchOperationBuilder {
     SearchScriptBuilder custom(@DelegatesTo(SearchScriptBuilder.class) Closure<?> definition);
 
     ScimSearchBuilder scim();
+
+    default ScimSearchBuilder scim(@DelegatesTo(value = ScimSearchBuilder.class, strategy = Closure.DELEGATE_ONLY)
+                                   @Script.Initialization
+                                   Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, scim());
+    }
+
+
 
 }

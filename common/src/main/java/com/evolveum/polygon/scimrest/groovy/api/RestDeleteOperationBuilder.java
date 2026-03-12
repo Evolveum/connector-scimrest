@@ -27,7 +27,18 @@ public interface RestDeleteOperationBuilder extends RestObjectOperationBuilder<R
         return GroovyClosures.callAndReturnDelegate(value, endpoint(path));
     }
 
+    Scim scim();
+
+    default Scim scim(@DelegatesTo(value = Scim.class, strategy = Closure.DELEGATE_ONLY) Closure<?> value ) {
+        return GroovyClosures.callAndReturnDelegate(value, scim());
+    }
+
+    interface Scim {
+
+    }
+
     interface Endpoint extends EndpointBuilder.SingleObject<Uid,Void> {
 
     }
+
 }

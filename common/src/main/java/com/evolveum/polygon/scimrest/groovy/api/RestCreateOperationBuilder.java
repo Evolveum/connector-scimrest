@@ -1,6 +1,8 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
+import com.evolveum.polygon.scimrest.groovy.Script;
+import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -21,12 +23,31 @@ public interface RestCreateOperationBuilder extends RestOperationBuilder<RestCre
         return GroovyClosures.callAndReturnDelegate(value, endpoint(path));
     }
 
-    default Endpoint endpoint(HttpMethod method, String path, @DelegatesTo(value = Endpoint.class, strategy = Closure.DELEGATE_ONLY) Closure<?> value) {
+    default Endpoint endpoint(HttpMethod method, String path,
+                              @DelegatesTo(value = Endpoint.class, strategy = Closure.DELEGATE_ONLY)
+                              @Script.Initialization
+                              Closure<?> value) {
         return GroovyClosures.callAndReturnDelegate(value, endpoint(method, path));
     }
 
-    interface Endpoint extends EndpointBuilder.SingleObject<Set<Attribute>, ConnectorObject> {
+    ScimCreateBuilder scim();
 
-        Endpoint supportedAttributes(String... attributes);
+    default ScimCreateBuilder scim(@DelegatesTo(value = ScimCreateBuilder.class, strategy = Closure.DELEGATE_ONLY)
+                                   @Script.Initialization
+                                   Closure<?> value ) {
+        return GroovyClosures.callAndReturnDelegate(value, scim());
     }
+
+    interface Endpoint extends EndpointBuilder.SingleObject<Set<Attribute>, ConnectorObject>, RestUpdateOperationBuilder.AttributeSpecific<RestUpdateOperationBuilder.AttributeValueFilter, Endpoint> {
+
+
+        @Override
+        default RestUpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName,
+                                                            @DelegatesTo(value = RestUpdateOperationBuilder.AttributeValueFilter.class, strategy = Closure.DELEGATE_ONLY)
+                                                            @Script.Initialization
+                                                            Closure<?> closure) {
+            return GroovyClosures.callAndReturnDelegate(closure, supportedAttribute(attributeName));
+        }
+    }
+
 }

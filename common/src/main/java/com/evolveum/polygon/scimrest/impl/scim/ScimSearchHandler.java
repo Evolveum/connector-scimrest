@@ -7,11 +7,12 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.scimrest.groovy.api.scim.ScimSearchBuilder;
 import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
 import com.evolveum.polygon.scimrest.groovy.FilterAwareSearchProcessorBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
-import com.evolveum.polygon.scimrest.groovy.api.ScimSearchBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.scim.ScimOperationBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.schema.ScimAttributeMapping;
 import com.unboundid.scim2.common.GenericScimResource;
@@ -141,6 +142,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
         private boolean anyFilterSupported  = true;
         private final Set<FilterSpecification> supportedFilters = new HashSet<>();
         private final MappedObjectClass objectClass;
+        private Limitations limitations;
 
         public Builder(MappedObjectClass objectClass) {
             this.objectClass = objectClass;
@@ -151,7 +153,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
         }
 
         @Override
-        public ScimSearchBuilder enabled(boolean enabled) {
+        public Builder enabled(boolean enabled) {
             this.enabled = enabled;
             return this;
         }
@@ -161,20 +163,25 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
             return emptySupported;
         }
 
-        public ScimSearchBuilder emptyFilterSupported(boolean emptySupported) {
+        public Builder emptyFilterSupported(boolean emptySupported) {
             this.emptySupported = emptySupported;
             return this;
         }
 
-        public ScimSearchBuilder anyFilterSupported(boolean anyFilterSupported) {
+        public Builder anyFilterSupported(boolean anyFilterSupported) {
             this.anyFilterSupported = anyFilterSupported;
             return this;
         }
 
-        public ScimSearchBuilder supportedFilters(FilterSpecification filterSpecification) {
+        public Builder supportedFilters(FilterSpecification filterSpecification) {
             supportedFilters.add(filterSpecification);
             this.anyFilterSupported = false;
             return this;
+        }
+
+        @Override
+        public Limitations limitations() {
+            return limitations;
         }
 
         @Override
