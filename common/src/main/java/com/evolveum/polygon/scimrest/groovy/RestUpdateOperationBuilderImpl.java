@@ -78,7 +78,7 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
         if (!scim.enabled) {
             return true;
         }
-        return !scim.put.enabled && !scim.patch.enabled;
+        return !(scim.put != null && scim.put.enabled) && !(scim.patch != null && scim.patch.enabled);
     }
 
     private MappedAttribute resolveAttribute(String key) {

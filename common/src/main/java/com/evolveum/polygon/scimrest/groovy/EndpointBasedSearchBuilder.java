@@ -96,6 +96,13 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         return FilterSpecification.attribute(name);
     }
 
+
+    @Override
+    public RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec) {
+        // FIXME: implement builder here
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
     @Override
     public EndpointBasedSearchBuilder<BF, OF> supportedFilter(FilterSpecification filterSpec, @DelegatesTo(FilterSupportBase.class) @Script.Runtime Closure<?> closure) {
         filterMappers.add(new GroovyBasedFilterHandler(filterSpec,closure));
