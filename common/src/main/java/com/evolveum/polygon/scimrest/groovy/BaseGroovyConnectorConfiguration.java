@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.config.GroovyConfiguration;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.spi.Configuration;
+import org.identityconnectors.framework.spi.ConfigurationProperty;
 import org.identityconnectors.framework.spi.StatefulConfiguration;
 
 public abstract class BaseGroovyConnectorConfiguration implements Configuration, GroovyConfiguration {
@@ -16,6 +17,8 @@ public abstract class BaseGroovyConnectorConfiguration implements Configuration,
     private ConnectorMessages messages;
 
     private GroovyContext groovyContext;
+
+    private Boolean developmentMode = false;
 
     @Override
     public ConnectorMessages getConnectorMessages() {
@@ -25,6 +28,15 @@ public abstract class BaseGroovyConnectorConfiguration implements Configuration,
     @Override
     public void setConnectorMessages(ConnectorMessages messages) {
         this.messages = messages;
+    }
+
+    @ConfigurationProperty(groupMessageKey = "rest.developmentMode", required = false)
+    public Boolean getDevelopmentMode() {
+        return developmentMode;
+    }
+
+    public void setDevelopmentMode(Boolean developmentMode) {
+        this.developmentMode = developmentMode;
     }
 
     public GroovyContext groovyContext() {

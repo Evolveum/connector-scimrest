@@ -17,6 +17,11 @@ public class RestDeleteOperationBuilderImpl implements RestObjectOperationBuilde
     }
 
     @Override
+    public Scim scim() {
+        return null;
+    }
+
+    @Override
     public DeleteOperation build() {
         return null;
     }

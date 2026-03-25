@@ -31,25 +31,25 @@ public class NormalizationBuilderImpl implements NormalizationBuilder {
     }
 
     @Override
-    public NormalizationBuilder rewriteUid(Closure<?> implementation) {
+    public NormalizationBuilder rewriteUid(@Script.Runtime Closure<?> implementation) {
         uidTransformer = new GroovyRewrite(implementation);
         return this;
     }
 
     @Override
-    public NormalizationBuilder rewriteName(Closure<?> implementation) {
+    public NormalizationBuilder rewriteName(@Script.Runtime Closure<?> implementation) {
         nameTransformer = new GroovyRewrite(implementation);
         return this;
     }
 
     @Override
-    public NormalizationBuilder restoreUid(Closure<?> implementation) {
+    public NormalizationBuilder restoreUid(@Script.Runtime Closure<?> implementation) {
         uidRestorer = new GroovyRestore(implementation);
         return this;
     }
 
     @Override
-    public NormalizationBuilder restoreName(Closure<?> implementation) {
+    public NormalizationBuilder restoreName(@Script.Runtime Closure<?> implementation) {
         nameRestorer = new GroovyRestore(implementation);
         return this;
     }

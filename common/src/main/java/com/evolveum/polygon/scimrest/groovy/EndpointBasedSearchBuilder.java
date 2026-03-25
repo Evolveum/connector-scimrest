@@ -47,13 +47,13 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     }
 
     @Override
-    public EndpointBasedSearchBuilder<BF, OF> objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure) {
+    public EndpointBasedSearchBuilder<BF, OF> objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_FIRST) @Script.Runtime Closure<?> closure) {
         this.objectExtractor  = new GroovyObjectExtractor<>(closure);
         return this;
     }
 
     @Override
-    public EndpointBasedSearchBuilder<BF, OF> pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure) {
+    public EndpointBasedSearchBuilder<BF, OF> pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) @Script.Runtime Closure<?> closure) {
         this.pagingSupport = new GroovyPagingSupport(closure);
         return this;
     }
@@ -96,8 +96,15 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         return FilterSpecification.attribute(name);
     }
 
+
     @Override
-    public EndpointBasedSearchBuilder<BF, OF> supportedFilter(FilterSpecification filterSpec, @DelegatesTo(FilterSupportBase.class) Closure<?> closure) {
+    public RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec) {
+        // FIXME: implement builder here
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public EndpointBasedSearchBuilder<BF, OF> supportedFilter(FilterSpecification filterSpec, @DelegatesTo(FilterSupportBase.class) @Script.Runtime Closure<?> closure) {
         filterMappers.add(new GroovyBasedFilterHandler(filterSpec,closure));
         if (emptyFilterSupported == null) {
             // If empty filter support was not specified explicitly, we assume that it is not supported

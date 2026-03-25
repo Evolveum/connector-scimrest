@@ -7,6 +7,7 @@
 
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.scimrest.groovy.Script;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -15,20 +16,20 @@ public interface NormalizationBuilder {
     /**
      * Normalizes attribute to single value ones.
      *
-     * This creates multiple objects from single object and UIDs needs to be recomputed.
+     * This creates multiple objects from single object and UIDs need to be recomputed.
      *
      * @param attribute
      * @return
      */
     NormalizationBuilder toSingleValue(String attribute);
 
-    NormalizationBuilder rewriteUid(@DelegatesTo(value = RewriteContext.class) Closure<?> implementation);
+    NormalizationBuilder rewriteUid(@DelegatesTo(value = RewriteContext.class) @Script.Runtime Closure<?> implementation);
 
-    NormalizationBuilder rewriteName(@DelegatesTo(value = RewriteContext.class) Closure<?> implementation);
+    NormalizationBuilder rewriteName(@DelegatesTo(value = RewriteContext.class) @Script.Runtime Closure<?> implementation);
 
-    NormalizationBuilder restoreUid(@DelegatesTo(value = RewriteContext.class) Closure<?> implementation);
+    NormalizationBuilder restoreUid(@DelegatesTo(value = RewriteContext.class) @Script.Runtime Closure<?> implementation);
 
-    NormalizationBuilder restoreName(@DelegatesTo(value = RewriteContext.class) Closure<?> implementation);
+    NormalizationBuilder restoreName(@DelegatesTo(value = RewriteContext.class) @Script.Runtime Closure<?> implementation);
 
 
     record RewriteContext(String original, Object value) {

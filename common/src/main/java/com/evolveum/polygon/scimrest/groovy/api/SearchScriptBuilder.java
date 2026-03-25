@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.scimrest.groovy.Script;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -15,7 +16,7 @@ public interface SearchScriptBuilder {
 
     SearchScriptBuilder emptyFilterSupported(boolean emptyFilterSupported);
 
-    SearchScriptBuilder implementation(@DelegatesTo(SearchScriptContext.class) Closure<?> implementation);
+    SearchScriptBuilder implementation(@DelegatesTo(SearchScriptContext.class) @Script.Runtime Closure<?> implementation);
 
     SearchScriptBuilder supportedFilter(FilterSpecification filterSpec);
 

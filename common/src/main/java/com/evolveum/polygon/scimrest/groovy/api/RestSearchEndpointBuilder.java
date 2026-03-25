@@ -16,7 +16,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.util.List;
 
-public interface RestSearchEndpointBuilder extends EndpointBuilder {
+public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandlerBuilder<RestSearchEndpointBuilder> {
 
     Class<ArrayNode> JSON_ARRAY = ArrayNode.class;
     Class<ObjectNode> JSON_OBJECT = ObjectNode.class;
@@ -42,25 +42,13 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder {
     RestSearchEndpointBuilder pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure);
 
 
-    /**
-     * Sets whether the search endpoint supports filtering with empty filter criteria.
-     *
-     * Only one such endpoint / custom script may be defined for whole search handler.
-     *
-     * @param emptyFilterSupported true if the endpoint should be used for searches without filters.
-     */
-    RestSearchEndpointBuilder emptyFilterSupported(boolean emptyFilterSupported);
-
-
     RestSearchEndpointBuilder singleResult();
 
 
     RestSearchEndpointBuilder objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
-    FilterSpecification.Attribute attribute(String name);
-
-
     RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec, @DelegatesTo(value = FilterSupportBase.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+
 
     record PagingSupportBase(RestContext.RequestBuilder request, PagingInfo paging) {
         public PagingInfo getPaging() {

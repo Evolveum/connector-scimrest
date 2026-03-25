@@ -51,14 +51,14 @@ public class ScriptedAttributeResolverBuilder implements AttributeResolverBuilde
     }
 
     @Override
-    public AttributeResolverBuilder search(@DelegatesTo(AttributeResolutionContext.class) Closure<Filter> closure) {
+    public AttributeResolverBuilder search(@DelegatesTo(AttributeResolutionContext.class) @Script.Runtime Closure<Filter> closure) {
         // FIXME: rewrite that implementation will wrap logic already.
         this.implementation = new SearchBased(closure);
         return this;
     }
 
     @Override
-    public ScriptedAttributeResolverBuilder implementation(@DelegatesTo(AttributeResolutionContext.class) Closure<?> closure) {
+    public ScriptedAttributeResolverBuilder implementation(@DelegatesTo(AttributeResolutionContext.class) @Script.Runtime Closure<?> closure) {
         this.implementation = new ClosureBased(closure);
         return this;
     }

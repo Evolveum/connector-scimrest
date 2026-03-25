@@ -85,6 +85,10 @@ public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilde
         return this;
     }
 
+    public <T extends ObjectClassOperation> void registerOperation(Class<T> operationType, T operation) {
+        buildedOperations.put(operationType, operation);
+    }
+
     public ObjectClassHandler build() {
         buildOperationIfEmpty(ExecuteQueryProcessor.class, searchOpBuilder);
         buildOperationIfEmpty(CreateOperation.class, createOpBuilder);

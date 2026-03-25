@@ -49,7 +49,7 @@ public class ScriptedSingleAttributeResolverBuilder implements AttributeResolver
     }
 
     @Override
-    public ScriptedSingleAttributeResolverBuilder implementation(@DelegatesTo(AttributeResolutionContext.class) Closure<?> closure) {
+    public ScriptedSingleAttributeResolverBuilder implementation(@DelegatesTo(AttributeResolutionContext.class) @Script.Runtime Closure<?> closure) {
         this.implementation = new ClosureBased(closure);
         return this;
     }

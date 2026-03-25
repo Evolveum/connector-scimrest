@@ -8,10 +8,14 @@ package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
+import com.evolveum.polygon.scimrest.impl.scim.dev.ScimDevelopmentMode;
+import com.evolveum.polygon.scimrest.impl.scim.dev.ScimResourceDevHandler;
+import com.evolveum.polygon.scimrest.impl.scim.dev.ScimSchemaDevHandler;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
 import com.unboundid.scim2.client.ScimService;
 import com.unboundid.scim2.common.types.SchemaResource;
@@ -38,6 +42,7 @@ public class ScimContext implements RetrievableContext {
     private final ScimService scimClient;
     private final Client httpClient;
     private final ScimClientConfiguration configuration;
+    private final boolean developmentMode;
 
     private ServiceProviderConfigResource providerConfig;
 
@@ -49,9 +54,10 @@ public class ScimContext implements RetrievableContext {
     private Map<String, ScimResourceContext> objectClassToResource;
 
 
-    public ScimContext(ContextLookup contextLookup, ScimClientConfiguration scimConf) {
+    public ScimContext(ContextLookup contextLookup, ScimClientConfiguration scimConf, boolean developmentMode) {
         this.contextLookup = contextLookup;
         this.configuration = scimConf;
+        this.developmentMode = developmentMode;
         var bearerConf = scimConf.supports(ScimClientConfiguration.BearerToken.class);
 
         var classLoader = Thread.currentThread().getContextClassLoader();
@@ -138,6 +144,12 @@ public class ScimContext implements RetrievableContext {
         for (var resource : resources.values()) {
             translator.populateSchema(resource, schemaBuilder);
         }
+        
+        // Contribute dev schema object classes if developmentMode is enabled
+        if (developmentMode) {
+            var devTranslator = new ScimDevelopmentMode();
+            devTranslator.contributeSchemaObjects(schemaBuilder);
+        }
     }
 
     public void contributeToHandlers(RestHandlerBuilder handlerBuilder) {
@@ -153,11 +165,53 @@ public class ScimContext implements RetrievableContext {
             if (scim.isEnabled()) {
                 // SCIM Configuration
             }
+
+            // make sure scim create, update and delete builders are initalized if scripts did not modify them
+            ocBuilder.create().scim();
+            ocBuilder.update().scim();
+            ocBuilder.delete().scim();
+        }
+        
+        // Contribute dev handlers if developmentMode is enabled
+        if (developmentMode) {
+            contributeDevHandlers(handlerBuilder);
         }
     }
 
-    private String objectClassForResource(ScimResourceContext resource) {
-        return resourceToObjectClass.get(resource.resource().getName());
+    public void contributeDevHandlers(RestHandlerBuilder handlerBuilder) {
+        var schemaObjectClass = getSchemaObjectClass();
+        var resourceObjectClass = getResourceObjectClass();
+        
+        if (schemaObjectClass != null) {
+            var schemaHandler = new ScimSchemaDevHandler(this);
+            handlerBuilder.objectClass(schemaObjectClass.name())
+                .search(schemaHandler);
+        }
+        
+        if (resourceObjectClass != null) {
+            var resourceHandler = new ScimResourceDevHandler(this);
+            handlerBuilder.objectClass(resourceObjectClass.name())
+                .search(resourceHandler);
+        }
+    }
+
+    private com.evolveum.polygon.scimrest.schema.MappedObjectClass getSchemaObjectClass() {
+        if (contextLookup instanceof com.evolveum.polygon.scimrest.groovy.ConnectorContext connectorContext) {
+            var schema = connectorContext.schema();
+            if (schema != null) {
+                return schema.objectClass("conndev_ScimSchema");
+            }
+        }
+        return null;
+    }
+
+    private com.evolveum.polygon.scimrest.schema.MappedObjectClass getResourceObjectClass() {
+        var connectorContext = contextLookup.get(ConnectorContext.class);
+        var schema = connectorContext.schema();
+        if (schema != null) {
+            return schema.objectClass("conndev_ScimResource");
+        }
+        return null;
     }
 
     public ScimService scimClient() {
@@ -177,5 +231,22 @@ public class ScimContext implements RetrievableContext {
             }
         }
         return null;
+    }
+
+    public Map<String, SchemaResource> getSchemas() {
+        return schemas;
+    }
+
+    public Map<String, ScimResourceContext> getResources() {
+        return resources;
+    }
+
+     private String objectClassForResource(ScimResourceContext resource) {
+         String resourceName = resource.resource().getName();
+         return resourceToObjectClass.get(resourceName);
+     }
+
+    public ContextLookup contextLookup() {
+        return contextLookup;
     }
 }

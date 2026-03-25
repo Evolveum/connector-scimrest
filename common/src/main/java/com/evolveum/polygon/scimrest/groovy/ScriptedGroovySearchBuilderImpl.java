@@ -37,7 +37,7 @@ public class ScriptedGroovySearchBuilderImpl implements SearchScriptBuilder, Fil
     }
 
     @Override
-    public SearchScriptBuilder implementation(Closure<?> implementation) {
+    public SearchScriptBuilder implementation(@Script.Runtime Closure<?> implementation) {
         this.implementationPrototype = implementation;
         return this;
     }

@@ -1,18 +1,15 @@
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.api.AttributePath;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
+import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
-import org.identityconnectors.framework.common.objects.AttributeInfo;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public record AttributeSupport(MappedAttribute attributeInfo, Collection<Object> values, Collection<Transition> transitions) {
+
 
     record Transition(Object from, Object to) {
 
@@ -57,6 +54,39 @@ public record AttributeSupport(MappedAttribute attributeInfo, Collection<Object>
 
         }
         return false;
+    }
+
+
+    public static class SupportBuilder<T extends RestUpdateOperationBuilder.AttributeSpecific<RestUpdateOperationBuilder.AttributeValueFilter, T>> implements RestUpdateOperationBuilder.AttributeSpecific<RestUpdateOperationBuilder.AttributeValueFilter,T> {
+
+        private final T parent;
+        protected final Map<String, Builder> supportedAttributes = new HashMap<>();
+
+        public SupportBuilder(T parent) {
+            this.parent = parent;
+        }
+
+        public T supportedAttributes(String... attributes) {
+            for (String attribute : attributes) {
+                var attrBuilder = supportedAttribute(attribute);
+                // Mark supported here
+            }
+            return parent;
+        }
+
+        public AttributeSupport.Builder supportedAttribute(String attribute) {
+            return supportedAttributes.computeIfAbsent(attribute, k -> new AttributeSupport.Builder());
+        }
+
+        @Override
+        public AttributeSupport.Builder supportedAttribute(String attributeName, Closure<?> closure) {
+            var attr = supportedAttribute(attributeName);
+            return GroovyClosures.callAndReturnDelegate(closure, attr);
+        }
+
+        public Set<Map.Entry<String, Builder>> entries() {
+            return supportedAttributes.entrySet();
+        }
     }
 
     public static class Builder implements RestUpdateOperationBuilder.AttributeValueFilter {
