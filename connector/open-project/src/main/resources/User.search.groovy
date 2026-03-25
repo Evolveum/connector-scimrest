@@ -7,12 +7,15 @@
 
 
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification
+import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.objects.Attribute
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter
 import org.json.JSONArray
 
 
 objectClass("User") {
+    var LOG = Log.getLog(this.getClass())
+
     search {
         endpoint("users/") {
             objectExtractor {
@@ -20,7 +23,6 @@ objectClass("User") {
                 if (response.body() == null) {
                     return new JSONArray();
                 }
-
                 var jsonArray = response.body().get("_embedded").get("elements");
                 return jsonArray;
             }
@@ -29,7 +31,6 @@ objectClass("User") {
                         .queryParameter("offset", paging.pageOffset)
             }
             emptyFilterSupported true
-
             supportedFilter(attribute("name").eq().anySingleValue()) {
                 String filter = "[{ \"name\": { \"operator\": \"=\", \"values\": [\"${value}\"] } }]"
                 request.queryParameter("filters", filter)
@@ -48,6 +49,10 @@ objectClass("User") {
             supportedFilter(FilterSpecification.attribute("language").eq().anySingleValue());
 
             implementation {
+                if(LOG.isInfo()){
+
+                    LOG.info("Query not supported by the remote system, handling explicitly in connector.")
+                }
 
                 def filter = filter();
                 if (filter instanceof EqualsFilter) {
@@ -55,6 +60,12 @@ objectClass("User") {
                     Set<String> handledAttributes = Set.of("admin", "language");
 
                     def attrName = ((EqualsFilter) filter).getName();
+
+                    if(LOG.isInfo()){
+
+                        LOG.info("Handling 'Equals Filter' based query for the attribute {0}", attrName)
+                    }
+
                     if (handledAttributes.contains(attrName)) {
                         def attr = ((EqualsFilter) filter).getAttribute();
                         def valList = attr.getValue();

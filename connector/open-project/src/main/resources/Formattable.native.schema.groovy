@@ -9,14 +9,14 @@ objectClass("Formattable") {
     description "Projects are containers structuring the information (e.g. work packages, wikis) into smaller groups."
 
     attribute("format") {
-        jsonType "string";
-        returnedByDefault true;
+        jsonType "string"
+        returnedByDefault true
         description "Indicates the formatting language of the raw text"
     }
     attribute("raw") {
         jsonType "string"
         description "The raw text, as entered by the user"
-        returnedByDefault true;
+        returnedByDefault true
     }
     attribute("html") {
         jsonType "string"

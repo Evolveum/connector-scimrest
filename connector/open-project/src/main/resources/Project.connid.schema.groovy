@@ -5,6 +5,6 @@
  *
  */
 objectClass("Project") {
-    connIdAttribute("UID", "id");
-    connIdAttribute("NAME", "name");
+    connIdAttribute("UID", "id")
+    connIdAttribute("NAME", "name")
 }

@@ -10,39 +10,39 @@ import org.identityconnectors.framework.common.objects.ConnectorObjectReference
 import org.identityconnectors.framework.common.objects.ObjectClass
 
 objectClass("Membership") {
-    embedded(true);
+    embedded(true)
     attribute("id") {
-        jsonType "integer";
-        readable true;
-        returnedByDefault true;
-        required true;
-        description "Membership id";
+        jsonType "integer"
+        readable true
+        returnedByDefault true
+        required true
+        description "Membership id"
     }
     attribute("name") {
         json {
             type "integer"
             name "id"
-        };
-        readable true;
-        returnedByDefault true;
-        required true;
-        description "Membership name (copy of id)";
+        }
+        readable true
+        returnedByDefault true
+        required true
+        description "Membership name (copy of id)"
     }
 
     attribute("createdAt") {
-        jsonType "string";
+        jsonType "string"
         openApiFormat "date-time"
-        readable true;
-        returnedByDefault true;
-        description "Time of creation";
+        readable true
+        returnedByDefault true
+        description "Time of creation"
     }
 
     attribute("updatedAt") {
-        jsonType "string";
+        jsonType "string"
         openApiFormat "date-time"
-        readable true;
-        returnedByDefault true;
-        description "Time of latest update";
+        readable true
+        returnedByDefault true
+        description "Time of latest update"
     }
 
 //    attribute("principal") {
@@ -52,11 +52,11 @@ objectClass("Membership") {
 //        }
 //
 //        complexType "Principal"
-//        readable true;
-//        updateable false;
-//        creatable true;
-//        returnedByDefault true;
-//        required true;
+//        readable true
+//        updateable false
+//        creatable true
+//        returnedByDefault true
+//        required true
 //    }
 
     reference("principal") {
@@ -67,14 +67,14 @@ objectClass("Membership") {
             implementation {
                 deserialize {
 
-                    var href = value.get("href")?.asText();
+                    var href = value.get("href")?.asText()
                     var pid = href.substring(href.lastIndexOf("/") + 1)
 
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Principal"))
                             .setUid(pid)
                             .setName(value.get("title")?.asText())
-                    return new ConnectorObjectReference(obj.build());
+                    return new ConnectorObjectReference(obj.build())
                 }
             }
         }
@@ -88,13 +88,13 @@ objectClass("Membership") {
             implementation {
                 deserialize {
                     if(it == null){
-                        it = value;
+                        it = value
                     }
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Role"))
                             .setUid(it.get("href")?.asText())
                             .setName(it.get("title")?.asText())
-                    return new ConnectorObjectReference(obj.build());
+                    return new ConnectorObjectReference(obj.build())
                 }
             }
         }
@@ -112,16 +112,16 @@ objectClass("Membership") {
                 deserialize {
 
                     if(it == null){
-                        it = value;
+                        it = value
                     }
-                    var href = it.get("href")?.asText();
+                    var href = it.get("href")?.asText()
                     var pid = href.substring(href.lastIndexOf("/") + 1)
 
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("Project"))
                             .setUid(pid)
                             .setName(it.get("title")?.asText())
-                    return new ConnectorObjectReference(obj.build());
+                    return new ConnectorObjectReference(obj.build())
                 }
             }
         }

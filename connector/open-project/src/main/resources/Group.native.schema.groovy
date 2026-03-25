@@ -13,42 +13,42 @@ objectClass("Group") {
     description "Team represents a team in an organization"
 
     attribute("id") {
-        jsonType "integer";
-        readable true;
-        updateable false;
-        creatable false;
-        returnedByDefault true;
-        required true;
-        description "User’s id";
+        jsonType "integer"
+        readable true
+        updateable false
+        creatable false
+        returnedByDefault true
+        required true
+        description "User’s id"
     }
     attribute("name") {
         jsonType "string"
-        readable true;
-        updateable true;
-        creatable true;
-        returnedByDefault true;
-        required true;
-        description "Group’s full name, formatting depends on instance settings";
+        readable true
+        updateable true
+        creatable true
+        returnedByDefault true
+        required true
+        description "Group’s full name, formatting depends on instance settings"
     }
     attribute("created_at") {
         jsonType "string"
-        openApiFormat "date-time";
-        readable true;
-        updateable false;
-        creatable false;
-        returnedByDefault true;
-        required false;
-        description "Time of creation";
+        openApiFormat "date-time"
+        readable true
+        updateable false
+        creatable false
+        returnedByDefault true
+        required false
+        description "Time of creation"
     }
     attribute("updated_at") {
         jsonType "string"
-        openApiFormat "date-time";
-        readable true;
-        updateable false;
-        creatable false;
-        returnedByDefault true;
-        required false;
-        description "Time of the most recent change to the user";
+        openApiFormat "date-time"
+        readable true
+        updateable false
+        creatable false
+        returnedByDefault true
+        required false
+        description "Time of the most recent change to the user"
     }
     reference("members") {
         description("The list all all the users that are members of the group")
@@ -62,14 +62,14 @@ objectClass("Group") {
             implementation {
                 deserialize {
 
-                    var href = value.get("href")?.asText();
+                    var href = value.get("href")?.asText()
                     var pid = href.substring(href.lastIndexOf("/") + 1)
 
                     var obj = new ConnectorObjectBuilder()
                             .setObjectClass(new ObjectClass("User"))
                             .setUid(pid)
                             .setName(value.get("title")?.asText())
-                    return new ConnectorObjectReference(obj.build());
+                    return new ConnectorObjectReference(obj.build())
                 }
             }
         }

@@ -5,7 +5,7 @@
  *
  */
 objectClass("User") {
-    connIdAttribute("UID", "id");
-    connIdAttribute("NAME", "login");
-//    connIdAttribute("ENABLE", "status");
+    connIdAttribute("UID", "id")
+    connIdAttribute("NAME", "login")
+//    connIdAttribute("ENABLE", "status")
 }

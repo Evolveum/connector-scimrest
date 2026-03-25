@@ -8,21 +8,21 @@ objectClass("Role") {
     description "When principals (groups or users) are assigned to a project, they are receive roles in that project."
 
     attribute("id") {
-        jsonType "integer";
-        readable true;
-        updateable false;
-        creatable false;
-        returnedByDefault true;
-        required true;
-        description "Role id";
+        jsonType "integer"
+        readable true
+        updateable false
+        creatable false
+        returnedByDefault true
+        required true
+        description "Role id"
     }
     attribute("name") {
         jsonType "string"
-        readable true;
-        updateable true;
-        creatable true;
-        returnedByDefault true;
-        required true;
-        description "Group’s full name, formatting depends on instance settings";
+        readable true
+        updateable true
+        creatable true
+        returnedByDefault true
+        required true
+        description "Group’s full name, formatting depends on instance settings"
     }
 }
