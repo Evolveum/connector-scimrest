@@ -3,10 +3,9 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
+import com.evolveum.polygon.scimrest.impl.rest.OAuth2TokenManager;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import groovy.lang.Closure;
-
-import java.util.Base64;
 
 public class AuthorizationCustomizationBuilderImpl implements AuthenticationCustomizationBuilder {
 
@@ -25,6 +24,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             tokenConf.getRestTokenValue().access(decryptor);
             request.header("Authorization", "Bearer " + decryptor.getClearString());
         });
+        addCustomizer(RestClientConfiguration.OAuth2Authorization.class, new OAuth2AuthorizationCustomizer());
     }
 
 
@@ -77,8 +77,34 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         }
     }
 
+    private static class OAuth2AuthorizationCustomizer implements RestContext.AuthorizationCustomizer {
+
+        private final OAuth2TokenManager tokenManager = new OAuth2TokenManager();
+
+        @Override
+        public void customize(RestClientConfiguration configuration, RestContext.RequestBuilder request) {
+            var context = new Context(request, configuration, tokenManager);
+            var oauth2Conf = context.getConfiguration().require(RestClientConfiguration.OAuth2Authorization.class);
+            context.tokenManager().applyToken(oauth2Conf, context.getRequest());
+        }
+
+        private record Context(RestContext.RequestBuilder request,
+                               RestClientConfiguration configuration,
+                               OAuth2TokenManager tokenManager) implements AuthenticationCustomizationBuilder.CustomizationContext {
+
+            @Override
+            public RestClientConfiguration getConfiguration() {
+                return configuration;
+            }
+
+            @Override
+            public RestContext.RequestBuilder getRequest() {
+                return request;
+            }
+        }
+    }
+
     public RestContext.AuthorizationCustomizer build() {
         return dispatcher;
     }
-
 }
