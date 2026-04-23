@@ -38,7 +38,9 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
 
     private String restOAuth2TokenUrl;
     private String restOAuth2ClientId;
+    private String restOAuth2GrantType;
     private GuardedString restOAuth2ClientSecret;
+    private GuardedString restOAuth2PrivateKey;
 
     @Override
     @ConfigurationProperty(displayMessageKey = "rest.auth.tokenName")
@@ -163,13 +165,34 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientSecret", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientSecret")
     public GuardedString getRestOAuth2ClientSecret() {
         return restOAuth2ClientSecret;
     }
 
     public void setRestOAuth2ClientSecret(GuardedString restOAuth2ClientSecret) {
         this.restOAuth2ClientSecret = restOAuth2ClientSecret;
+    }
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.grantType")
+    public String getRestOAuth2GrantType() {
+        return restOAuth2GrantType != null ? restOAuth2GrantType
+                : RestClientConfiguration.OAuth2Authorization.super.getRestOAuth2GrantType();
+    }
+
+    public void setRestOAuth2GrantType(String restOAuth2GrantType) {
+        this.restOAuth2GrantType = restOAuth2GrantType;
+    }
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.privateKey")
+    public GuardedString getRestOAuth2PrivateKey() {
+        return restOAuth2PrivateKey;
+    }
+
+    public void setRestOAuth2PrivateKey(GuardedString restOAuth2PrivateKey) {
+        this.restOAuth2PrivateKey = restOAuth2PrivateKey;
     }
 
 }

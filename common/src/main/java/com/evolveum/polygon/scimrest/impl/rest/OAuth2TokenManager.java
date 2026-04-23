@@ -7,8 +7,10 @@
 package com.evolveum.polygon.scimrest.impl.rest;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
+import com.evolveum.polygon.scimrest.config.OAuth2GrantType;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
+import com.evolveum.polygon.scimrest.groovy.api.JwtAssertionBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
@@ -19,6 +21,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Manages the OAuth2 access token lifecycle for a connector instance.
@@ -26,7 +29,7 @@ import java.util.Map;
  * <h2>Token fetch flow</h2>
  * <ol>
  *   <li>{@link #validateToken()}            — decides whether the cached token is still usable.</li>
- *   <li>{@link #customizeBuildTokenRequest} — builds the token request (auth, grant type, scope).</li>
+ *   <li>{@link #customizeBuildTokenRequest} — builds the grant-type-specific token request.</li>
  *   <li>{@link #processTokenResponse}       — extracts token and expiry from the server response.</li>
  *   <li>{@link #applyTokenToRequest}        — attaches the token to every outgoing API request.</li>
  * </ol>
@@ -36,8 +39,9 @@ import java.util.Map;
 public class OAuth2TokenManager {
 
     private static final Log LOG = Log.getLog(OAuth2TokenManager.class);
-    private static final long EXPIRY_BUFFER_SECONDS = 60;
-private final HttpClient httpClient;
+    private static final long JWT_ASSERTION_VALIDITY_SECONDS = 300;
+
+    private final HttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final OAuth2Context oauth2Context = new OAuth2Context();
 
@@ -83,8 +87,7 @@ private final HttpClient httpClient;
     private void refreshToken(RestClientConfiguration.OAuth2Authorization config) {
         LOG.ok("Fetching new OAuth2 access token from {0}", config.getRestOAuth2TokenUrl());
 
-        var tokenRequest = new RestContext.RequestBuilder(config.getRestOAuth2TokenUrl(),
-                Duration.ofSeconds(30));
+        var tokenRequest = new RestContext.RequestBuilder(config.getRestOAuth2TokenUrl(), Duration.ofSeconds(30));
         tokenRequest.httpMethod(HttpMethod.POST);
         tokenRequest.header("Content-Type", "application/x-www-form-urlencoded");
 
@@ -108,6 +111,14 @@ private final HttpClient httpClient;
     protected void customizeBuildTokenRequest(RestContext.RequestBuilder request) {
         var config = oauth2Context.getConfiguration();
 
+        switch (OAuth2GrantType.parse(config.getRestOAuth2GrantType())) {
+            case JWT_BEARER -> buildJwtBearerRequest(request, config);
+            case CLIENT_CREDENTIALS -> buildClientCredentialsRequest(request, config);
+        }
+    }
+
+    private void buildClientCredentialsRequest(RestContext.RequestBuilder request,
+                                               RestClientConfiguration.OAuth2Authorization config) {
         var secretAccessor = new GuardedStringAccessor();
         config.getRestOAuth2ClientSecret().access(secretAccessor);
         String clientSecret = secretAccessor.getClearString();
@@ -122,8 +133,26 @@ private final HttpClient httpClient;
             request.formParam(OAuth2Context.GRANT_TYPE, OAuth2Context.REFRESH_TOKEN);
             request.formParam(OAuth2Context.REFRESH_TOKEN, existingRefreshToken);
         } else {
-            request.formParam(OAuth2Context.GRANT_TYPE, "client_credentials");
+            request.formParam(OAuth2Context.GRANT_TYPE, OAuth2GrantType.CLIENT_CREDENTIALS.getName());
         }
+    }
+
+    private void buildJwtBearerRequest(RestContext.RequestBuilder request,
+                                       RestClientConfiguration.OAuth2Authorization config) {
+        LOG.ok("Building JWT Bearer assertion for client {0}", config.getRestOAuth2ClientId());
+        long now = Instant.now().getEpochSecond();
+        String assertion = new JwtAssertionBuilder()
+                .claim("iss", config.getRestOAuth2ClientId())
+                .claim("sub", config.getRestOAuth2ClientId())
+                .claim("aud", config.getRestOAuth2TokenUrl())
+                .claim("iat", now)
+                .claim("exp", now + JWT_ASSERTION_VALIDITY_SECONDS)
+                .claim("jti", UUID.randomUUID().toString())
+                .sign(config.getRestOAuth2PrivateKey(), "SHA256withRSA", "RSA");
+
+        request.formParam(OAuth2Context.GRANT_TYPE, OAuth2GrantType.JWT_BEARER.getName())
+               .formParam("client_id", config.getRestOAuth2ClientId())
+               .formParam("assertion", assertion);
     }
 
     private void parseAndStoreTokenResponse(String responseBody) {
@@ -135,10 +164,9 @@ private final HttpClient httpClient;
         }
         Long expiresIn = oauth2Context.expiresIn();
         if (expiresIn != null) {
-            Instant expiresAt = Instant.now().plusSeconds(expiresIn - EXPIRY_BUFFER_SECONDS);
+            Instant expiresAt = Instant.now().plusSeconds(expiresIn);
             oauth2Context.set(OAuth2Context.EXPIRES_AT, expiresAt);
-            LOG.ok("OAuth2 token expires at {0} (expires_in={1}s, buffer={2}s)",
-                    expiresAt, expiresIn, EXPIRY_BUFFER_SECONDS);
+            LOG.ok("OAuth2 token expires at {0} (expires_in={1}s)", expiresAt, expiresIn);
         } else {
             LOG.ok("OAuth2 token has no expiry, treating as always valid");
         }
