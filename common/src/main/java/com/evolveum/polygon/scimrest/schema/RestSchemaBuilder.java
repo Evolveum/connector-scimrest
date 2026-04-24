@@ -22,12 +22,12 @@ import java.util.Map;
 
 public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.api.SchemaBuilder {
 
-    private final SchemaBuilder schemaBuilder;
+    private final Class<? extends Connector> connectorClass;
     private final Map<String, MappedObjectClassBuilder> objectClasses = new HashMap<>();
     private ContextLookup contextLookup;
 
     public RestSchemaBuilder(Class<? extends Connector> connectorClass, ContextLookup context) {
-        this.schemaBuilder = new SchemaBuilder(connectorClass);
+        this.connectorClass = connectorClass;
         this.contextLookup = context;
     }
 
@@ -56,13 +56,14 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
             initializeDummySchema();
         }
 
+        var freshSchemaBuilder = new SchemaBuilder(connectorClass);
         Map<ObjectClass, MappedObjectClass> objectClassMap = new HashMap<>();
         for (var ocBuilder : objectClasses.values()) {
             var objectClassDef = ocBuilder.build();
-            schemaBuilder.defineObjectClass(objectClassDef.connId());
+            freshSchemaBuilder.defineObjectClass(objectClassDef.connId());
             objectClassMap.put(objectClassDef.objectClass(), objectClassDef);
         }
-        return new RestSchema(schemaBuilder.build(), objectClassMap);
+        return new RestSchema(freshSchemaBuilder.build(), objectClassMap);
     }
 
     /**
