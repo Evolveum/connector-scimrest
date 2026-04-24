@@ -7,28 +7,31 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
-import com.evolveum.polygon.scimrest.impl.rest.OAuth2TokenManager;
 import groovy.lang.Closure;
 
 public class AuthorizationCustomizationBuilderImpl implements AuthenticationCustomizationBuilder {
 
     private final DispatchingAuthorizationCustomizer dispatcher = new DispatchingAuthorizationCustomizer();
+    private final GroovyOAuth2TokenManager oauth2TokenManager = new GroovyOAuth2TokenManager();
 
     public AuthorizationCustomizationBuilderImpl() {
         addCustomizer(RestClientConfiguration.BasicAuthorization.class, (conf, request) -> {
-                var basicConf = conf.require(RestClientConfiguration.BasicAuthorization.class);
-                var tokenAccessor = new GuardedStringAccessor();
-                basicConf.getRestPassword().access(tokenAccessor);
-                String credentials = basicConf.getRestUsername() + ":" + tokenAccessor.getClearString();
-                request.header("Authorization", "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8)));
-                });
+            var basicConf = conf.require(RestClientConfiguration.BasicAuthorization.class);
+            var tokenAccessor = new GuardedStringAccessor();
+            basicConf.getRestPassword().access(tokenAccessor);
+            String credentials = basicConf.getRestUsername() + ":" + tokenAccessor.getClearString();
+            request.header("Authorization", "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8)));
+        });
         addCustomizer(RestClientConfiguration.TokenAuthorization.class, (conf, request) -> {
             var tokenConf = conf.require(RestClientConfiguration.TokenAuthorization.class);
             var decryptor = new GuardedStringAccessor();
             tokenConf.getRestTokenValue().access(decryptor);
             request.header("Authorization", "Bearer " + decryptor.getClearString());
         });
-        addCustomizer(RestClientConfiguration.OAuth2Authorization.class, new OAuth2AuthorizationCustomizer());
+        addCustomizer(RestClientConfiguration.OAuth2Authorization.class, (conf, request) -> {
+            var oauth2Conf = conf.require(RestClientConfiguration.OAuth2Authorization.class);
+            oauth2TokenManager.applyToken(oauth2Conf, request);
+        });
     }
 
     public void addCustomizer(Class<? extends RestClientConfiguration> clazz, AuthorizationCustomizer<RestClientConfiguration> customizer) {
@@ -48,6 +51,16 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
                 dispatcher.addCustomizer(type, customizer);
                 return customizer;
             }
+
+            @Override
+            public void oauth2(Closure<?> o) {
+                var builder = new OAuth2BuilderImpl(oauth2TokenManager);
+                Closure<?> copy = (Closure<?>) o.clone();
+                copy.setDelegate(builder);
+                copy.setResolveStrategy(Closure.DELEGATE_FIRST);
+                copy.call(oauth2TokenManager.getOauth2Context());
+                builder.apply();
+            }
         };
     }
 
@@ -66,7 +79,6 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         private record Context(HttpRequestDTO request,
                                RestClientConfiguration configuration) implements AuthenticationCustomizationBuilder.CustomizationContext {
 
-
             @Override
             public RestClientConfiguration getConfiguration() {
                 return configuration;
@@ -79,30 +91,48 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         }
     }
 
-    private static class OAuth2AuthorizationCustomizer implements RestContext.AuthorizationCustomizer {
+    static class OAuth2BuilderImpl implements AuthenticationCustomizationBuilder.OAuth2Builder {
 
-        private final OAuth2TokenManager tokenManager = new OAuth2TokenManager();
+        private final GroovyOAuth2TokenManager tokenManager;
 
-        @Override
-        public void customize(RestClientConfiguration configuration, HttpRequestDTO request) {
-            var context = new Context(request, configuration, tokenManager);
-            var oauth2Conf = context.getConfiguration().require(RestClientConfiguration.OAuth2Authorization.class);
-            context.tokenManager().applyToken(oauth2Conf, context.getRequest());
+        private Closure<?> buildTokenRequestHook;
+        private Closure<?> parseTokenResponseHook;
+        private Closure<?> validateTokenHook;
+        private Closure<?> applyTokenHook;
+
+        OAuth2BuilderImpl(GroovyOAuth2TokenManager tokenManager) {
+            this.tokenManager = tokenManager;
         }
 
-        private record Context(HttpRequestDTO request,
-                               RestClientConfiguration configuration,
-                               OAuth2TokenManager tokenManager) implements AuthenticationCustomizationBuilder.CustomizationContext {
+        @Override
+        public AuthenticationCustomizationBuilder.OAuth2Builder buildTokenRequest(Closure<?> hook) {
+            this.buildTokenRequestHook = hook;
+            return this;
+        }
 
-            @Override
-            public RestClientConfiguration getConfiguration() {
-                return configuration;
-            }
+        @Override
+        public AuthenticationCustomizationBuilder.OAuth2Builder parseTokenResponse(Closure<?> hook) {
+            this.parseTokenResponseHook = hook;
+            return this;
+        }
 
-            @Override
-            public HttpRequestDTO getRequest() {
-                return request;
-            }
+        @Override
+        public AuthenticationCustomizationBuilder.OAuth2Builder validateToken(Closure<?> hook) {
+            this.validateTokenHook = hook;
+            return this;
+        }
+
+        @Override
+        public AuthenticationCustomizationBuilder.OAuth2Builder applyToken(Closure<?> hook) {
+            this.applyTokenHook = hook;
+            return this;
+        }
+
+        void apply() {
+            if (buildTokenRequestHook != null)  tokenManager.setBuildTokenRequestHook(buildTokenRequestHook);
+            if (parseTokenResponseHook != null) tokenManager.setParseTokenResponseHook(parseTokenResponseHook);
+            if (validateTokenHook != null)      tokenManager.setValidateTokenHook(validateTokenHook);
+            if (applyTokenHook != null)         tokenManager.setApplyTokenHook(applyTokenHook);
         }
     }
 

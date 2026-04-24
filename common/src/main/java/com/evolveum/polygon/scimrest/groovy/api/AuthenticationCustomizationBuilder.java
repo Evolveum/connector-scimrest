@@ -31,6 +31,15 @@ public interface AuthenticationCustomizationBuilder {
             return customizer(RestClientConfiguration.ApiKeyAuthorization.class, o);
         }
 
+        void oauth2(@DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                    @Script.Initialization Closure<?> o);
+    }
+
+    interface OAuth2Builder {
+        OAuth2Builder buildTokenRequest(@Script.Runtime Closure<?> hook);
+        OAuth2Builder parseTokenResponse(@Script.Runtime Closure<?> hook);
+        OAuth2Builder validateToken(@Script.Runtime Closure<?> hook);
+        OAuth2Builder applyToken(@Script.Runtime Closure<?> hook);
     }
 
     interface CustomizationContext {

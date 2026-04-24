@@ -58,6 +58,16 @@ public class OAuth2Context {
         attributes.put(key, value);
     }
 
+    /** Groovy {@code []} read operator — equivalent to {@link #get}. */
+    public Object getAt(String key) {
+        return get(key);
+    }
+
+    /** Groovy {@code []} write operator — equivalent to {@link #set}. */
+    public void putAt(String key, Object value) {
+        set(key, value);
+    }
+
     void setConfiguration(RestClientConfiguration.OAuth2Authorization configuration) {
         this.configuration = configuration;
     }
