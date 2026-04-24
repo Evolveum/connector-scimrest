@@ -9,7 +9,8 @@ import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.impl.rest.RestContext;
+import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
@@ -99,7 +100,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         context.initializeRest(authentication);
     }
 
-    protected RestContext.AuthorizationCustomizer authorizationCustomizer() {
+    protected AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer() {
         return (c,v) -> {};
     }
 

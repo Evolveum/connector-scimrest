@@ -7,11 +7,11 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 
-import com.evolveum.polygon.scimrest.impl.rest.RestContext;
+import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
 import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
 
 public interface PagingHandler {
 
-    void handlePaging(RestContext.RequestBuilder builder, PagingInfo pagingInfo);
+    void handlePaging(HttpRequestDTO builder, PagingInfo pagingInfo);
 
 }

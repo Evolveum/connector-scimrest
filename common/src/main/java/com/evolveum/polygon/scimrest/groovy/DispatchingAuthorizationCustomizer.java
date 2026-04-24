@@ -1,19 +1,18 @@
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
+import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.impl.rest.RestContext;
-import com.evolveum.polygon.scimrest.impl.rest.RestContext.AuthorizationCustomizer;
-
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class DispatchingAuthorizationCustomizer implements AuthorizationCustomizer {
+public class DispatchingAuthorizationCustomizer implements AuthorizationCustomizer<RestClientConfiguration> {
 
-    Map<Class<? extends RestClientConfiguration>, AuthorizationCustomizer> customizers = new HashMap<Class<? extends RestClientConfiguration>, AuthorizationCustomizer>();
+    Map<Class<? extends RestClientConfiguration>, AuthorizationCustomizer<RestClientConfiguration>> customizers = new HashMap<>();
 
     @Override
-    public void customize(RestClientConfiguration configuration, RestContext.RequestBuilder request) {
+    public void customize(RestClientConfiguration configuration, HttpRequestDTO request) {
         for (var customizer : customizers.entrySet()) {
             if (RestClientConfiguration.isConfigured(customizer.getKey(), configuration)) {
                 customizer.getValue().customize(configuration, request);
@@ -21,7 +20,7 @@ public class DispatchingAuthorizationCustomizer implements AuthorizationCustomiz
         }
     }
 
-    public void addCustomizer(Class<? extends RestClientConfiguration> clazz, AuthorizationCustomizer customizer) {
+    public void addCustomizer(Class<? extends RestClientConfiguration> clazz, AuthorizationCustomizer<RestClientConfiguration> customizer) {
         customizers.put(clazz, customizer);
     }
 }

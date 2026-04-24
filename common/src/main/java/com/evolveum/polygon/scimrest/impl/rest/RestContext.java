@@ -9,12 +9,9 @@ package com.evolveum.polygon.scimrest.impl.rest;
 import com.evolveum.polygon.scimrest.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.Checks;
-import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
 
 
 import javax.net.ssl.SSLContext;
@@ -25,11 +22,9 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -37,11 +32,9 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
+import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
 
 /**
  * The RestContext class provides a context for executing HTTP requests
@@ -56,11 +49,11 @@ public class RestContext implements RetrievableContext {
     private static final Log LOG = Log.getLog(RestContext.class);
     private static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
-    private final AuthorizationCustomizer customizer;
+    private final AuthorizationCustomizer<RestClientConfiguration> customizer;
     private final RestClientConfiguration configuration;
     private final HttpClient client;
 
-    public RestContext(RestClientConfiguration configuration, AuthorizationCustomizer customizer) {
+    public RestContext(RestClientConfiguration configuration, AuthorizationCustomizer<RestClientConfiguration> customizer) {
         this.configuration = configuration;
         var builder = HttpClient.newBuilder();
         if (Boolean.TRUE.equals(configuration.getTrustAllCertificates())) {
@@ -85,9 +78,10 @@ public class RestContext implements RetrievableContext {
      * @return a new instance of {@code RequestBuilder} that has been initialized with the base URI
      *         and customized for authorization.
      */
-    public RequestBuilder newAuthorizedRequest() {
+    public HttpRequestDTO newAuthorizedRequest() {
         var timeoutSeconds = configuration.getTimeoutSeconds() != null ? configuration.getTimeoutSeconds() : DEFAULT_TIMEOUT_SECONDS;
-        var request = new RequestBuilder(configuration.getBaseAddress(), Duration.of( timeoutSeconds, ChronoUnit.SECONDS));
+        var request = new HttpRequestDTO(configuration.getBaseAddress());
+        request.timeout(Duration.of(timeoutSeconds, ChronoUnit.SECONDS));
         this.customizer.customize(configuration, request);
         return request;
     }
@@ -104,244 +98,18 @@ public class RestContext implements RetrievableContext {
      * @throws IOException if an I/O error occurs while sending or receiving
      * @throws InterruptedException if the operation is interrupted
      */
-    public HttpResponse<?> executeRequest(RequestBuilder requestBuilder, HttpResponse.BodyHandler<?> jsonBodyHandler) throws IOException, InterruptedException {
-        var request = requestBuilder.build();
+    public HttpResponse<?> executeRequest(HttpRequestDTO requestBuilder, HttpResponse.BodyHandler<?> jsonBodyHandler) throws IOException, InterruptedException {
+        HttpRequest request;
+        try {
+            request = new JdkHttpRequestConverter().convert(requestBuilder);
+        } catch (ConnectorException e) {
+            Checks.checkConfigurationBaseUri(configuration.getBaseAddress());
+            throw e;
+        }
         LOG.ok("Executing request {0}", request);
         return client.send(request, jsonBodyHandler);
     }
 
-    /**
-     * A utility class for building and configuring HTTP requests for RestContext.
-     *
-     * This class is exposed to Groovy Scripts.
-     *
-     * This class provides methods to set various components of a request such as the API endpoint, query parameters,
-     * headers, and subpaths. Additionally, it simplifies constructing URIs and associating path parameters with
-     * placeholders in the endpoint.
-     *
-     * This class is designed to be used as part of the {@code RestContext} for creating and sending HTTP requests
-     * that comply with specific configurations and authorization customizations.
-     */
-    public static class RequestBuilder {
-
-        private final HttpRequest.Builder request = HttpRequest.newBuilder();
-        private final String baseUri;
-        private final Duration timeout;
-
-        private HttpMethod httpMethod = HttpMethod.GET;
-        private byte[] body;
-        private final FormBodyBuilder formBodyBuilder = new FormBodyBuilder();
-
-
-        public RequestBuilder(String baseUri) {
-            this(baseUri, null);
-        }
-        
-        public RequestBuilder(String baseUri, Duration timeout) {
-            this.baseUri = baseUri;
-            this.timeout = timeout;
-        }
-
-        String apiEndpoint;
-        StringBuilder subpath = new StringBuilder();
-        Map<String, String> queryParameters = new HashMap<>();
-
-        public HttpRequest build() {
-            if (!formBodyBuilder.isEmpty()) {
-                body = formBodyBuilder.build();
-            }
-            request.uri(buildUri());
-
-            switch (httpMethod) {
-                case GET -> request.GET();
-                case PUT -> request.PUT(bodyPublisher());
-                case POST -> request.POST(bodyPublisher());
-                case DELETE -> request.DELETE();
-                case PATCH -> request.method("PATCH", bodyPublisher());
-            }
-            
-            if (timeout != null) {
-                request.timeout(timeout);
-            }
-
-            return request.build();
-        }
-
-        private HttpRequest.BodyPublisher bodyPublisher() {
-            return HttpRequest.BodyPublishers.ofByteArray(body);
-        }
-
-        public RequestBuilder subpath(String subpath) {
-            if (!subpath.isEmpty()) {
-                // Remove leading slash to avoid double slash when combined with separator
-                String subpathToAdd = subpath.startsWith("/") ? subpath.substring(1) : subpath;
-                this.subpath.append("/").append(subpathToAdd);
-            }
-            return this;
-        }
-
-        private URI buildUri() {
-            var builder = new StringBuilder();
-            builder.append(baseUri);
-            if (apiEndpoint != null && !apiEndpoint.isEmpty()) {
-                if (!builder.toString().endsWith("/")) {
-                    builder.append("/");
-                }
-                builder.append(apiEndpoint);
-            }
-            if (!subpath.isEmpty()) {
-                if (!builder.toString().endsWith("/")) {
-                    builder.append("/");
-                }
-                String subpathStr = subpath.toString();
-                if (subpathStr.startsWith("/")) {
-                    builder.append(subpathStr.substring(1));
-                } else {
-                    builder.append(subpathStr);
-                }
-            }
-            if (queryParameters != null) {
-                builder.append("?");
-                for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
-                    builder.append(entry.getKey());
-                    builder.append("=");
-                    builder.append(entry.getValue());
-                    builder.append("&");
-                }
-            }
-            var uri = builder.toString();
-            try {
-                return new URI(uri);
-            }  catch (URISyntaxException e) {
-                // Builded URI is invalid, this could be because of misconfiguration and/or implemenation
-                Checks.checkConfigurationBaseUri(baseUri);
-                throw new ConnectorException("Computed URI: " + uri + "is not valid", e);
-            }
-
-        }
-
-        public RequestBuilder apiEndpoint(String endpoint) {
-            this.apiEndpoint = endpoint;
-            return this;
-        }
-
-        public RequestBuilder httpMethod(HttpMethod httpMethod) {
-            this.httpMethod = httpMethod;
-            return this;
-        }
-
-        public RequestBuilder query(String key, String value) {
-            return queryParameter(key, value);
-        }
-
-        public RequestBuilder queryParameter(String key, String value) {
-            this.queryParameters.put(key, urlEncode(value));
-            return this;
-        }
-
-        private String urlEncode(String value) {
-            return URLEncoder.encode(value, StandardCharsets.UTF_8);
-        }
-
-        public RequestBuilder queryParameter(String key, Number value) {
-            this.queryParameters.put(key, value.toString());
-            return this;
-        }
-
-        public RequestBuilder pathParameter(String key, String value) {
-            // FIXME: Replace with real UriTemplates in future
-            var keySearch = "{"+key+"}";
-            var position = apiEndpoint.indexOf(keySearch);
-            if (position < 0) {
-                throw new ConnectorException("Path parameter " + key + " not found in " + apiEndpoint);
-            }
-            apiEndpoint = apiEndpoint.replace(keySearch, value);
-            return this;
-        }
-
-        public RequestBuilder pathParameter(String key, Attribute value) {
-            return pathParameter(key, AttributeUtil.getAsStringValue(value));
-        }
-
-        public RequestBuilder formParam(String key, String value) {
-            formBodyBuilder.add(key, value);
-            return this;
-        }
-
-        public RequestBuilder header(String name, String value) {
-            this.request.header(name, value);
-            return this;
-        }
-
-        public RequestBuilder body(byte[] body) {
-            this.body = body;
-            return this;
-        }
-
-        public RequestBuilder basicAuthorization(String username, String password) {
-            String value = Base64.getEncoder().encodeToString((username+":"+password).getBytes());
-            this.request.header("Authorization", "Basic " +  value);
-            return this;
-        }
-
-        /**
-         * Accumulates URL-encoded form parameters and serializes them into a
-         * {@code application/x-www-form-urlencoded} byte array on {@link #build()}.
-         */
-        static class FormBodyBuilder {
-
-            private final List<Map.Entry<String, String>> params = new ArrayList<>();
-
-            void add(String key, String value) {
-                params.add(Map.entry(key, value));
-            }
-
-            boolean isEmpty() {
-                return params.isEmpty();
-            }
-
-            byte[] build() {
-                var parts = new ArrayList<String>();
-                for (var entry : params) {
-                    parts.add(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8)
-                            + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
-                }
-                return String.join("&", parts).getBytes(StandardCharsets.UTF_8);
-            }
-        }
-    }
-
-    /**
-     * Defines a mechanism for customizing the authorization of HTTP requests.
-     * Implementations of this interface are used to modify the configuration
-     * and request details to add specific authorization settings.
-     *
-     * The {@code customize} method is typically invoked during the construction
-     * of HTTP requests in a context where authorization is required. It is
-     * responsible for applying authorization headers, tokens, or other
-     * necessary configurations to the HTTP request to ensure secure communication.
-     *
-     * The interface is intended to be implemented by Groovy Connectors if default
-     * supported authorization schemes does not work.
-     *
-     * One such example is Forgejo, which does requires token being prefixed by word token.
-     */
-    public interface AuthorizationCustomizer {
-
-        /**
-         * Customizes the HTTP request configuration and request properties to apply
-         * specific authorization logic or additional settings.
-         *
-         * @param configuration the HTTP client configuration that provides details
-         *                       like base address and authorization settings.
-         * @param request        the HTTP request builder that can be modified to
-         *                       include custom headers, parameters, or other request
-         *                       configurations.
-         *
-         */
-        void customize(RestClientConfiguration configuration, RequestBuilder request);
-
-    }
 
     /**
      * A TrustManager implementation that accepts all TLS/SSL certificates without validation.

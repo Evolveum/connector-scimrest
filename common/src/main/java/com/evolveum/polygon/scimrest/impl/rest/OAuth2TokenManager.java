@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl.rest;
 
+import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.OAuth2GrantType;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
@@ -59,7 +60,7 @@ public class OAuth2TokenManager {
     // -------------------------------------------------------------------------
 
     public void applyToken(RestClientConfiguration.OAuth2Authorization config,
-                           RestContext.RequestBuilder request) {
+                           HttpRequestDTO request) {
         oauth2Context.setConfiguration(config);
         ensureValidToken(config);
         applyTokenToRequest(request);
@@ -87,14 +88,15 @@ public class OAuth2TokenManager {
     private void refreshToken(RestClientConfiguration.OAuth2Authorization config) {
         LOG.ok("Fetching new OAuth2 access token from {0}", config.getRestOAuth2TokenUrl());
 
-        var tokenRequest = new RestContext.RequestBuilder(config.getRestOAuth2TokenUrl(), Duration.ofSeconds(30));
-        tokenRequest.httpMethod(HttpMethod.POST);
-        tokenRequest.header("Content-Type", "application/x-www-form-urlencoded");
+        var tokenRequest = new HttpRequestDTO(config.getRestOAuth2TokenUrl())
+            .timeout(Duration.ofSeconds(30))
+            .httpMethod(HttpMethod.POST)
+            .header("Content-Type", "application/x-www-form-urlencoded");
 
         customizeBuildTokenRequest(tokenRequest);
 
         try {
-            var response = httpClient.send(tokenRequest.build(), HttpResponse.BodyHandlers.ofString());
+            var response = httpClient.send(new JdkHttpRequestConverter().convert(tokenRequest), HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new ConnectorIOException(
                         "OAuth2 token request failed with HTTP status " + response.statusCode());
@@ -108,7 +110,7 @@ public class OAuth2TokenManager {
         }
     }
 
-    protected void customizeBuildTokenRequest(RestContext.RequestBuilder request) {
+    protected void customizeBuildTokenRequest(HttpRequestDTO request) {
         var config = oauth2Context.getConfiguration();
 
         switch (OAuth2GrantType.parse(config.getRestOAuth2GrantType())) {
@@ -117,7 +119,7 @@ public class OAuth2TokenManager {
         }
     }
 
-    private void buildClientCredentialsRequest(RestContext.RequestBuilder request,
+    private void buildClientCredentialsRequest(HttpRequestDTO request,
                                                RestClientConfiguration.OAuth2Authorization config) {
         var secretAccessor = new GuardedStringAccessor();
         config.getRestOAuth2ClientSecret().access(secretAccessor);
@@ -137,7 +139,7 @@ public class OAuth2TokenManager {
         }
     }
 
-    private void buildJwtBearerRequest(RestContext.RequestBuilder request,
+    private void buildJwtBearerRequest(HttpRequestDTO request,
                                        RestClientConfiguration.OAuth2Authorization config) {
         LOG.ok("Building JWT Bearer assertion for client {0}", config.getRestOAuth2ClientId());
         long now = Instant.now().getEpochSecond();
@@ -185,7 +187,7 @@ public class OAuth2TokenManager {
         }
     }
 
-    protected void applyTokenToRequest(RestContext.RequestBuilder request) {
+    protected void applyTokenToRequest(HttpRequestDTO request) {
         request.header("Authorization", "Bearer " + oauth2Context.accessToken());
     }
 }
