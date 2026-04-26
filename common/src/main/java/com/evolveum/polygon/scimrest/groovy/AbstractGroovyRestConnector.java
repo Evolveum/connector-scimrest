@@ -8,7 +8,6 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.ObjectClassHandler;
-import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
@@ -77,9 +76,8 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         var handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
         initializeObjectClassHandler(handlersBuilder);
 
-        var authentication = handlersBuilder.buildAuthentication();
-        context.initializeRest(authentication);
-        context.initializeScim();
+        context.initializeRest(handlersBuilder.restCustomizer());
+        context.initializeScim(handlersBuilder.scimCustomizer());
         if (context.isScimEnabled()) {
             context.scim().initialize();
             context.scim().contributeToSchema(schemaBuilder);

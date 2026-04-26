@@ -6,6 +6,7 @@ import com.evolveum.polygon.common.GuardedStringAccessor;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
 import groovy.lang.Closure;
 
@@ -13,6 +14,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
     private final DispatchingAuthorizationCustomizer dispatcher = new DispatchingAuthorizationCustomizer();
     private final GroovyOAuth2TokenManager oauth2TokenManager = new GroovyOAuth2TokenManager();
+    private final DispatchingScimAuthorizationCustomizer scimDispatcher = new DispatchingScimAuthorizationCustomizer();
 
     public AuthorizationCustomizationBuilderImpl() {
         addCustomizer(RestClientConfiguration.BasicAuthorization.class, (conf, request) -> {
@@ -32,15 +34,72 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             var oauth2Conf = conf.require(RestClientConfiguration.OAuth2Authorization.class);
             oauth2TokenManager.applyToken(oauth2Conf, request);
         });
+
+        addScimCustomizer(ScimClientConfiguration.BearerToken.class, (conf, request) -> {
+            var bearer = conf.require(ScimClientConfiguration.BearerToken.class);
+            var accessor = new GuardedStringAccessor();
+            bearer.getScimBearerToken().access(accessor);
+            request.header("Authorization", "Bearer " + accessor.getClearString());
+        });
+        addScimCustomizer(ScimClientConfiguration.HttpBasic.class, (conf, request) -> {
+            var basic = conf.require(ScimClientConfiguration.HttpBasic.class);
+            var accessor = new GuardedStringAccessor();
+            basic.getScimPassword().access(accessor);
+            String credentials = basic.getScimUsername() + ":" + accessor.getClearString();
+            request.header("Authorization", "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8)));
+        });
     }
 
     public void addCustomizer(Class<? extends RestClientConfiguration> clazz, AuthorizationCustomizer<RestClientConfiguration> customizer) {
         dispatcher.addCustomizer(clazz, customizer);
     }
 
+    public void addScimCustomizer(Class<? extends ScimClientConfiguration> clazz, AuthorizationCustomizer<ScimClientConfiguration> customizer) {
+        scimDispatcher.addCustomizer(clazz, customizer);
+    }
+
     @Override
     public RestBuilder rest(Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, rest());
+    }
+
+    @Override
+    public ScimBuilder scim(Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, scim());
+    }
+
+    ScimBuilder scim() {
+        return new ScimBuilderImpl();
+    }
+
+    class ScimBuilderImpl implements ScimBuilder {
+        @Override
+        public AuthorizationCustomizer<ScimClientConfiguration> customizer(Class<? extends ScimClientConfiguration> type, Closure<?> o) {
+            var customizer = new GroovyScimAuthorizationCustomizer(o);
+            scimDispatcher.addCustomizer(type, customizer);
+            return customizer;
+        }
+    }
+
+    static class GroovyScimAuthorizationCustomizer implements AuthorizationCustomizer<ScimClientConfiguration> {
+        private final Closure<?> closure;
+
+        public GroovyScimAuthorizationCustomizer(Closure<?> closure) {
+            this.closure = closure;
+        }
+
+        @Override
+        public void customize(ScimClientConfiguration configuration, HttpRequestDTO request) {
+            GroovyClosures.copyAndCall(closure, new Context(request, configuration));
+        }
+
+        private record Context(HttpRequestDTO request, ScimClientConfiguration configuration)
+                implements AuthenticationCustomizationBuilder.ScimCustomizationContext {
+            @Override
+            public ScimClientConfiguration getConfiguration() { return configuration; }
+            @Override
+            public HttpRequestDTO getRequest() { return request; }
+        }
     }
 
     RestBuilder rest() {
@@ -136,7 +195,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         }
     }
 
-    public AuthorizationCustomizer<RestClientConfiguration> build() {
+    public AuthorizationCustomizer<RestClientConfiguration> restCustomizer() {
         return dispatcher;
+    }
+
+    public AuthorizationCustomizer<ScimClientConfiguration> scimCustomizer() {
+        return scimDispatcher;
     }
 }

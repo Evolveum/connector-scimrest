@@ -6,8 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim;
 
-import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.RetrievableContext;
@@ -23,7 +24,6 @@ import com.unboundid.scim2.common.types.ServiceProviderConfigResource;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.client.JerseyClientBuilder;
-import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.glassfish.jersey.internal.RuntimeDelegateImpl;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -54,25 +54,26 @@ public class ScimContext implements RetrievableContext {
     private Map<String, ScimResourceContext> objectClassToResource;
 
 
-    public ScimContext(ContextLookup contextLookup, ScimClientConfiguration scimConf, boolean developmentMode) {
+    public ScimContext(ContextLookup contextLookup, ScimClientConfiguration scimConf, boolean developmentMode,
+                       AuthorizationCustomizer<ScimClientConfiguration> authentication) {
         this.contextLookup = contextLookup;
         this.configuration = scimConf;
         this.developmentMode = developmentMode;
-        var bearerConf = scimConf.supports(ScimClientConfiguration.BearerToken.class);
 
         var classLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(configuration.getClass().getClassLoader());
             RuntimeDelegate.setInstance(new RuntimeDelegateImpl());
             var clientBuilder = new JerseyClientBuilder();
-            if (bearerConf != null && bearerConf.isScimBearerTokenConfigured()) {
-                var accessor = new GuardedStringAccessor();
-                bearerConf.getScimBearerToken().access(accessor);
-                clientBuilder.register(OAuth2ClientSupport.feature(accessor.getClearString()));
-
+            // FIXME: ScimClientConfiguration should have getTrustAllCertificates() directly once
+            //  BaseScimGroovyConnectorConfiguration is introduced as a parallel to BaseRestGroovyConnectorConfiguration
+            if (scimConf instanceof RestClientConfiguration restConf && Boolean.TRUE.equals(restConf.getTrustAllCertificates())) {
                 var sslContext = SSLContext.getInstance("SSL");
                 sslContext.init(null, new TrustManager[]{RestContext.TRUST_ALL}, new SecureRandom());
                 clientBuilder.sslContext(sslContext);
+            }
+            if (authentication != null) {
+                clientBuilder.register(new JerseyRequestCustomizerFilter(authentication, scimConf));
             }
             this.httpClient = clientBuilder.build();
             this.scimClient = new ScimService(httpClient.target(scimConf.getScimBaseUrl()));

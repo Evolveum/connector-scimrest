@@ -4,6 +4,7 @@ import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.Script;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -13,6 +14,7 @@ public interface AuthenticationCustomizationBuilder {
 
     RestBuilder rest(@DelegatesTo(RestBuilder.class) @Script.Initialization Closure<?> closure);
 
+    ScimBuilder scim(@DelegatesTo(ScimBuilder.class) @Script.Initialization Closure<?> closure);
 
     interface RestBuilder {
 
@@ -42,9 +44,38 @@ public interface AuthenticationCustomizationBuilder {
         OAuth2Builder applyToken(@Script.Runtime Closure<?> hook);
     }
 
+    interface ScimBuilder {
+
+        AuthorizationCustomizer<ScimClientConfiguration> customizer(Class<? extends ScimClientConfiguration> type,
+                @DelegatesTo(ScimCustomizationContext.class) @Script.Initialization Closure<?> o);
+
+        default AuthorizationCustomizer<ScimClientConfiguration> bearer(
+                @DelegatesTo(value = ScimCustomizationContext.class, strategy = Closure.DELEGATE_ONLY) Closure<?> o) {
+            return customizer(ScimClientConfiguration.BearerToken.class, o);
+        }
+
+        default AuthorizationCustomizer<ScimClientConfiguration> httpBasic(
+                @DelegatesTo(value = ScimCustomizationContext.class, strategy = Closure.DELEGATE_ONLY) Closure<?> o) {
+            return customizer(ScimClientConfiguration.HttpBasic.class, o);
+        }
+    }
+
     interface CustomizationContext {
 
         RestClientConfiguration getConfiguration();
+
+        HttpRequestDTO getRequest();
+
+        default String decrypt(GuardedString value) {
+            var accessor = new GuardedStringAccessor();
+            value.access(accessor);
+            return accessor.getClearString();
+        }
+    }
+
+    interface ScimCustomizationContext {
+
+        ScimClientConfiguration getConfiguration();
 
         HttpRequestDTO getRequest();
 

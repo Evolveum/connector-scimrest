@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.OperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.TestOperationBuilder;
@@ -55,7 +56,11 @@ public class RestHandlerBuilder implements OperationBuilder {
         return GroovyClosures.callAndReturnDelegate(o, authorization);
     }
 
-    public AuthorizationCustomizer<RestClientConfiguration> buildAuthentication() {
-        return authorization.build();
+    public AuthorizationCustomizer<RestClientConfiguration> restCustomizer() {
+        return authorization.restCustomizer();
+    }
+
+    public AuthorizationCustomizer<ScimClientConfiguration> scimCustomizer() {
+        return authorization.scimCustomizer();
     }
 }

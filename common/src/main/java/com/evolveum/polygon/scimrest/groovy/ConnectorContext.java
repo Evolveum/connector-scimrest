@@ -73,10 +73,10 @@ public class ConnectorContext implements ContextLookup, RetrievableContext {
         return scim;
     }
 
-    public void initializeScim() {
+    public void initializeScim(AuthorizationCustomizer<ScimClientConfiguration> authentication) {
         if (configuration instanceof ScimClientConfiguration scimConf) {
             if (scimConf.getScimBaseUrl() != null) {
-                scim = new ScimContext(this, scimConf, Boolean.TRUE.equals(getDevelopmentMode()));
+                scim = new ScimContext(this, scimConf, Boolean.TRUE.equals(getDevelopmentMode()), authentication);
             }
         }
     }
