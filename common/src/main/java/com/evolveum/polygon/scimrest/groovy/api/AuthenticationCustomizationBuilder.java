@@ -58,6 +58,9 @@ public interface AuthenticationCustomizationBuilder {
                 @DelegatesTo(value = ScimCustomizationContext.class, strategy = Closure.DELEGATE_ONLY) Closure<?> o) {
             return customizer(ScimClientConfiguration.HttpBasic.class, o);
         }
+
+        void oauth2(@DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                    @Script.Initialization Closure<?> o);
     }
 
     interface CustomizationContext {

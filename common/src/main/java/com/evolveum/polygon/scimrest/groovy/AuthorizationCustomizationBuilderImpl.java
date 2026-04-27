@@ -16,6 +16,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
     private final DispatchingAuthorizationCustomizer dispatcher = new DispatchingAuthorizationCustomizer();
     private final GroovyOAuth2TokenManager oauth2TokenManager = new GroovyOAuth2TokenManager();
     private final DispatchingScimAuthorizationCustomizer scimDispatcher = new DispatchingScimAuthorizationCustomizer();
+    private final GroovyOAuth2TokenManager scimOAuth2TokenManager = new GroovyOAuth2TokenManager();
 
     public AuthorizationCustomizationBuilderImpl() {
         addCustomizer(RestClientConfiguration.BasicAuthorization.class, (conf, request) -> {
@@ -36,6 +37,10 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             oauth2TokenManager.applyToken(OAuth2Context.Config.from(oauth2Conf), request);
         });
 
+        addScimCustomizer(ScimClientConfiguration.OAuth2Authorization.class, (conf, request) -> {
+            var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2Authorization.class);
+            scimOAuth2TokenManager.applyToken(OAuth2Context.Config.from(oauth2Conf), request);
+        });
         addScimCustomizer(ScimClientConfiguration.BearerToken.class, (conf, request) -> {
             var bearer = conf.require(ScimClientConfiguration.BearerToken.class);
             var accessor = new GuardedStringAccessor();
@@ -79,6 +84,16 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             var customizer = new GroovyScimAuthorizationCustomizer(o);
             scimDispatcher.addCustomizer(type, customizer);
             return customizer;
+        }
+
+        @Override
+        public void oauth2(Closure<?> o) {
+            var builder = new OAuth2BuilderImpl(scimOAuth2TokenManager);
+            Closure<?> copy = (Closure<?>) o.clone();
+            copy.setDelegate(builder);
+            copy.setResolveStrategy(Closure.DELEGATE_FIRST);
+            copy.call(scimOAuth2TokenManager.getOauth2Context());
+            builder.apply();
         }
     }
 
