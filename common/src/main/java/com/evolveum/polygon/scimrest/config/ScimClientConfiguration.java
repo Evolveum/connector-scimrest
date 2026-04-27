@@ -29,15 +29,19 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
         }
     }
 
-    interface OAuthGrant extends ScimClientConfiguration {
-
-        GuardedString getScimOAuthClientId();
-
-        GuardedString getScimOAuthClientSecret();
+    interface OAuth2Authorization extends ScimClientConfiguration {
 
         String getScimOAuthTokenUrl();
 
-        String getScimOAuthAuthorizationUrl();
+        String getScimOAuthClientId();
+
+        GuardedString getScimOAuthClientSecret();
+
+        default String getScimOAuthGrantType() {
+            return OAuth2GrantType.CLIENT_CREDENTIALS.getName();
+        }
+
+        GuardedString getScimOAuthPrivateKey();
     }
 
 }
