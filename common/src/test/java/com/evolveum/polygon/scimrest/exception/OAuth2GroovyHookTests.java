@@ -280,10 +280,13 @@ public class OAuth2GroovyHookTests extends AbstractOAuth2Tests {
         @Override protected void initializeSchema(GroovySchemaLoader loader) {}
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {
             if (groovyScript != null) {
                 builder.loadFromString(groovyScript);
             }
         }
+
+        @Override
+        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {}
     }
 }

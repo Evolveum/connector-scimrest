@@ -244,7 +244,9 @@ public class OAuth2ClientCredentialsTests extends AbstractOAuth2Tests {
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
-        }
+        protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
+
+        @Override
+        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {}
     }
 }

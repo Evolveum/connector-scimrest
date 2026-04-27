@@ -29,6 +29,11 @@ public class ManifestBasedConnector extends AbstractGroovyRestConnector<ReadOnly
     }
 
     @Override
+    protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {
+        manifest.authorizationScripts().forEach(builder::loadFromResource);
+    }
+
+    @Override
     protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
         manifest.operationScripts().forEach(builder::loadFromResource);
     }

@@ -175,6 +175,7 @@ public class OAuth2JwtBearerTests extends AbstractOAuth2Tests {
         JwtTestConnector(BaseRestGroovyConnectorConfiguration config) { this.config = config; }
 
         @Override protected void initializeSchema(GroovySchemaLoader loader) {}
+        @Override protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
         @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {}
     }
 }

@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
-import com.evolveum.polygon.scimrest.impl.rest.RestContext;
+import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.PoolableConnector;
@@ -44,6 +44,9 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
     }
 
     @Override
+    protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
+
+    @Override
     protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
         builder.loadFromResource("/User.search.groovy");
         builder.loadFromResource("/Group.search.groovy");
@@ -57,7 +60,7 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
     }
 
     @Override
-    protected RestContext.AuthorizationCustomizer authorizationCustomizer() {
+    protected AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer() {
         return (c,request) -> {
             if (c instanceof RestClientConfiguration.BasicAuthorization basicAuthorization) {
                 var tokenAccessor = new GuardedStringAccessor();

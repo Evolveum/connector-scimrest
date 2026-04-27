@@ -74,7 +74,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         initializeSchema(new GroovySchemaLoader(context.configuration().groovyContext(), schemaBuilder));
 
         var handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
-        initializeObjectClassHandler(handlersBuilder);
+        initializeAuthorizationHandler(handlersBuilder);
 
         context.initializeRest(handlersBuilder.restCustomizer());
         context.initializeScim(handlersBuilder.scimCustomizer());
@@ -89,8 +89,12 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
             context.scim().contributeToHandlers(handlersBuilder);
         }
 
+        initializeObjectClassHandler(handlersBuilder);
+
         context.handlers(handlersBuilder.build());
     }
+
+    protected abstract void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder);
 
     protected AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer() {
         return (c,v) -> {};

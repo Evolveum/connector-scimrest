@@ -59,9 +59,11 @@ public class ScimDevTest {
         }
 
         @Override
+        protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
+
+        @Override
         protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
             // no custom scripts
-
         }
     }
 

@@ -22,6 +22,9 @@ public class ConnectorDevelopmentKit extends AbstractGroovyRestConnector<Develop
     }
 
     @Override
+    protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
+
+    @Override
     protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
         for(var script : getConfiguration().configuration(DevelopmentKitConfiguration.class).getOperationScripts()) {
             builder.loadFromString(script);
