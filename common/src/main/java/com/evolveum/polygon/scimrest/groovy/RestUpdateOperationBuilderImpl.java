@@ -114,7 +114,11 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
 
         @Override
         public Endpoint supportedAttributes(String... attributes) {
-            return null;
+            for (String attribute: attributes){
+
+                supportedAttribute(attribute);
+            }
+            return this;
         }
 
         @Override
