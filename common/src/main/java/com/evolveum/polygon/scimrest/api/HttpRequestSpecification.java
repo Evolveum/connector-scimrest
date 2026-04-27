@@ -33,7 +33,7 @@ import java.util.*;
  *         .timeout(Duration.ofSeconds(30));
  * }</pre>
  */
-public class HttpRequestDTO {
+public class HttpRequestSpecification {
 
     private final String baseUri;
     private HttpMethod httpMethod = HttpMethod.GET;
@@ -47,16 +47,16 @@ public class HttpRequestDTO {
     private HttpVersion version;
     private boolean expectContinue = false;
 
-    public HttpRequestDTO(String baseUri) {
+    public HttpRequestSpecification(String baseUri) {
         this.baseUri = baseUri;
     }
 
-    public HttpRequestDTO timeout(Duration timeout) {
+    public HttpRequestSpecification timeout(Duration timeout) {
         this.timeout = timeout;
         return this;
     }
 
-    public HttpRequestDTO subpath(String path) {
+    public HttpRequestSpecification subpath(String path) {
         if (path != null && !path.isEmpty()) {
             if (this.subpath.length() > 0 || path.replace("/", "").length() > 0) {
                 this.subpath.append("/").append(path.startsWith("/") ? path.substring(1) : path);
@@ -65,35 +65,35 @@ public class HttpRequestDTO {
         return this;
     }
 
-    public HttpRequestDTO apiEndpoint(String endpoint) {
+    public HttpRequestSpecification apiEndpoint(String endpoint) {
         this.apiEndpoint = endpoint;
         return this;
     }
 
-    public HttpRequestDTO httpMethod(HttpMethod method) {
+    public HttpRequestSpecification httpMethod(HttpMethod method) {
         this.httpMethod = method;
         return this;
     }
 
-    public HttpRequestDTO query(String key, Object value) {
+    public HttpRequestSpecification query(String key, Object value) {
         if (value != null) {
             this.queryParameters.put(key, value.toString());
         }
         return this;
     }
 
-    public HttpRequestDTO queryParameter(String key, Object value) {
+    public HttpRequestSpecification queryParameter(String key, Object value) {
         return query(key, value);
     }
 
-    public HttpRequestDTO pathParameter(String key, Object value) {
+    public HttpRequestSpecification pathParameter(String key, Object value) {
         if (value != null) {
             this.pathParameters.put(key, value);
         }
         return this;
     }
 
-    public HttpRequestDTO formParam(String key, String value) {
+    public HttpRequestSpecification formParam(String key, String value) {
         if (value != null) {
             String pair = urlEncode(key) + "=" + urlEncode(value);
             String current = body != null ? new String(body, StandardCharsets.UTF_8) : "";
@@ -102,27 +102,27 @@ public class HttpRequestDTO {
         return this;
     }
 
-    public HttpRequestDTO header(String name, String value) {
+    public HttpRequestSpecification header(String name, String value) {
         if (value != null) this.headers.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
         return this;
     }
 
-    public HttpRequestDTO body(byte[] body) {
+    public HttpRequestSpecification body(byte[] body) {
         this.body = body;
         return this;
     }
 
-    public HttpRequestDTO body(String body) {
+    public HttpRequestSpecification body(String body) {
         this.body = body != null ? body.getBytes(StandardCharsets.UTF_8) : null;
         return this;
     }
 
-    public HttpRequestDTO version(HttpVersion version) {
+    public HttpRequestSpecification version(HttpVersion version) {
         this.version = version;
         return this;
     }
 
-    public HttpRequestDTO expectContinue(boolean expectContinue) {
+    public HttpRequestSpecification expectContinue(boolean expectContinue) {
         this.expectContinue = expectContinue;
         return this;
     }

@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.api;
 
 /**
- * Converts an {@link HttpRequestDTO} into a concrete HTTP request object suitable
+ * Converts an {@link HttpRequestSpecification} into a concrete HTTP request object suitable
  * for a specific HTTP client library.
  *
  * <p>Implementations are responsible for translating the protocol-agnostic data
@@ -25,11 +25,11 @@ package com.evolveum.polygon.scimrest.api;
 public interface HttpRequestConverter<T> {
 
     /**
-     * Converts the given {@link HttpRequestDTO} to a concrete HTTP request.
+     * Converts the given {@link HttpRequestSpecification} to a concrete HTTP request.
      *
      * @param dto the data-transfer object carrying all request configuration
      * @return a fully configured HTTP request of type {@code T}
      */
-    T convert(HttpRequestDTO dto);
+    T convert(HttpRequestSpecification dto);
 
 }

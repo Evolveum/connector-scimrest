@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.impl.rest.OAuth2TokenManager;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
@@ -40,7 +40,7 @@ public class GroovyOAuth2TokenManager extends OAuth2TokenManager {
     }
 
     @Override
-    protected void customizeBuildTokenRequest(HttpRequestDTO request) {
+    protected void customizeBuildTokenRequest(HttpRequestSpecification request) {
         if (buildTokenRequestHook != null) {
             callHook(buildTokenRequestHook, request);
         } else {
@@ -62,7 +62,7 @@ public class GroovyOAuth2TokenManager extends OAuth2TokenManager {
     }
 
     @Override
-    protected void applyTokenToRequest(HttpRequestDTO request) {
+    protected void applyTokenToRequest(HttpRequestSpecification request) {
         if (applyTokenHook != null) {
             callHook(applyTokenHook, request);
         } else {

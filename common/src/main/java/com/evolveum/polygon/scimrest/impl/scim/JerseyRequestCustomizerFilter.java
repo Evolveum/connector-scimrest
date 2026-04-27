@@ -1,7 +1,7 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import jakarta.ws.rs.client.ClientRequestContext;
@@ -23,7 +23,7 @@ public class JerseyRequestCustomizerFilter implements ClientRequestFilter {
 
     @Override
     public void filter(ClientRequestContext requestContext) throws IOException {
-        var dto = new HttpRequestDTO(configuration.getScimBaseUrl());
+        var dto = new HttpRequestSpecification(configuration.getScimBaseUrl());
         try {
             dto.httpMethod(HttpMethod.valueOf(requestContext.getMethod()));
         } catch (IllegalArgumentException ignored) {

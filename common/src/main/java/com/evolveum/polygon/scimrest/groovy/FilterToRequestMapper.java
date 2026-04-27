@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
@@ -20,9 +20,9 @@ public interface FilterToRequestMapper {
         return filterSpecification().matches(filter);
     }
 
-    void mapToRequest(HttpRequestDTO builder, Filter filter);
+    void mapToRequest(HttpRequestSpecification builder, Filter filter);
 
-    static FilterToRequestMapper from(FilterSpecification specification, BiConsumer<HttpRequestDTO, Filter> mapper) {
+    static FilterToRequestMapper from(FilterSpecification specification, BiConsumer<HttpRequestSpecification, Filter> mapper) {
         return new FilterToRequestMapper() {
             @Override
             public FilterSpecification filterSpecification() {
@@ -30,7 +30,7 @@ public interface FilterToRequestMapper {
             }
 
             @Override
-            public void mapToRequest(HttpRequestDTO builder, Filter filter) {
+            public void mapToRequest(HttpRequestSpecification builder, Filter filter) {
                 mapper.accept(builder, filter);
             }
         };

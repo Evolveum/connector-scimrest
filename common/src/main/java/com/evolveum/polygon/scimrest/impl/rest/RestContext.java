@@ -20,7 +20,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -34,7 +33,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 
 /**
  * The RestContext class provides a context for executing HTTP requests
@@ -78,9 +77,9 @@ public class RestContext implements RetrievableContext {
      * @return a new instance of {@code RequestBuilder} that has been initialized with the base URI
      *         and customized for authorization.
      */
-    public HttpRequestDTO newAuthorizedRequest() {
+    public HttpRequestSpecification newAuthorizedRequest() {
         var timeoutSeconds = configuration.getTimeoutSeconds() != null ? configuration.getTimeoutSeconds() : DEFAULT_TIMEOUT_SECONDS;
-        var request = new HttpRequestDTO(configuration.getBaseAddress());
+        var request = new HttpRequestSpecification(configuration.getBaseAddress());
         request.timeout(Duration.of(timeoutSeconds, ChronoUnit.SECONDS));
         this.customizer.customize(configuration, request);
         return request;
@@ -98,7 +97,7 @@ public class RestContext implements RetrievableContext {
      * @throws IOException if an I/O error occurs while sending or receiving
      * @throws InterruptedException if the operation is interrupted
      */
-    public HttpResponse<?> executeRequest(HttpRequestDTO requestBuilder, HttpResponse.BodyHandler<?> jsonBodyHandler) throws IOException, InterruptedException {
+    public HttpResponse<?> executeRequest(HttpRequestSpecification requestBuilder, HttpResponse.BodyHandler<?> jsonBodyHandler) throws IOException, InterruptedException {
         HttpRequest request;
         try {
             request = new JdkHttpRequestConverter().convert(requestBuilder);

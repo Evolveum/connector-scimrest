@@ -1,7 +1,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -105,16 +105,16 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         }
 
         @Override
-        public void customize(ScimClientConfiguration configuration, HttpRequestDTO request) {
+        public void customize(ScimClientConfiguration configuration, HttpRequestSpecification request) {
             GroovyClosures.copyAndCall(closure, new Context(request, configuration));
         }
 
-        private record Context(HttpRequestDTO request, ScimClientConfiguration configuration)
+        private record Context(HttpRequestSpecification request, ScimClientConfiguration configuration)
                 implements AuthenticationCustomizationBuilder.ScimCustomizationContext {
             @Override
             public ScimClientConfiguration getConfiguration() { return configuration; }
             @Override
-            public HttpRequestDTO getRequest() { return request; }
+            public HttpRequestSpecification getRequest() { return request; }
         }
     }
 
@@ -147,11 +147,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         }
 
         @Override
-        public void customize(RestClientConfiguration configuration, HttpRequestDTO request) {
+        public void customize(RestClientConfiguration configuration, HttpRequestSpecification request) {
             GroovyClosures.copyAndCall(closure, new Context(request, configuration));
         }
 
-        private record Context(HttpRequestDTO request,
+        private record Context(HttpRequestSpecification request,
                                RestClientConfiguration configuration) implements AuthenticationCustomizationBuilder.CustomizationContext {
 
             @Override
@@ -160,7 +160,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             }
 
             @Override
-            public HttpRequestDTO getRequest() {
+            public HttpRequestSpecification getRequest() {
                 return request;
             }
         }

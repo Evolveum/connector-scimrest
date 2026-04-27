@@ -1,7 +1,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 
 import java.util.LinkedHashMap;
@@ -12,7 +12,7 @@ public class DispatchingScimAuthorizationCustomizer implements AuthorizationCust
     private final Map<Class<? extends ScimClientConfiguration>, AuthorizationCustomizer<ScimClientConfiguration>> customizers = new LinkedHashMap<>();
 
     @Override
-    public void customize(ScimClientConfiguration configuration, HttpRequestDTO request) {
+    public void customize(ScimClientConfiguration configuration, HttpRequestSpecification request) {
         for (var entry : customizers.entrySet()) {
             if (configuration.supports(entry.getKey()) != null) {
                 entry.getValue().customize(configuration, request);

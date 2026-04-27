@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
 import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
 import org.json.JSONObject;
@@ -20,7 +20,7 @@ public interface RestSearchOperationHandler<BF, OF> {
 
     Iterable<OF> extractRemoteObject(HttpResponse<BF> response);
 
-    void addUriAndPaging(HttpRequestDTO requestBuilder, int currentPage, int pageLimit);
+    void addUriAndPaging(HttpRequestSpecification requestBuilder, int currentPage, int pageLimit);
 
     static <BF,OF> Builder<BF,OF> builder() {
         return new Builder<>();
@@ -33,7 +33,7 @@ public interface RestSearchOperationHandler<BF, OF> {
     class Builder<BF, OF> {
 
         private Function<HttpResponse<BF>, Iterable<OF>> extractor = null;
-        private BiConsumer<HttpRequestDTO, PagingInfo> pagingConsumer = (req, resp) -> {};
+        private BiConsumer<HttpRequestSpecification, PagingInfo> pagingConsumer = (req, resp) -> {};
         private TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
         private Class<?> responseType = JSONObject.class;
 
@@ -42,7 +42,7 @@ public interface RestSearchOperationHandler<BF, OF> {
             return this;
         }
 
-        public Builder<BF,OF> addRequestUri(BiConsumer<HttpRequestDTO, PagingInfo> pagingConsumer) {
+        public Builder<BF,OF> addRequestUri(BiConsumer<HttpRequestSpecification, PagingInfo> pagingConsumer) {
             this.pagingConsumer = pagingConsumer;
             return this;
         }
@@ -65,7 +65,7 @@ public interface RestSearchOperationHandler<BF, OF> {
                 }
 
                 @Override
-                public void addUriAndPaging(HttpRequestDTO requestBuilder, int currentPage, int pageLimit) {
+                public void addUriAndPaging(HttpRequestSpecification requestBuilder, int currentPage, int pageLimit) {
                     pagingConsumer.accept(requestBuilder, new PagingInfo(pageLimit, currentPage));
                 }
 

@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl.rest;
 
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
@@ -43,7 +43,7 @@ public class RestPagingAwareObjectRetriever {
         try {
             do {
                 var batchProcessed = 0;
-                HttpRequestDTO requestBuilder = context.newAuthorizedRequest();
+                HttpRequestSpecification requestBuilder = context.newAuthorizedRequest();
                 specification.addUriAndPaging(requestBuilder, currentPage, pageLimit);
                 var bodyHandler = bodyHandlerFrom(specification);
                 var response = context.executeRequest(requestBuilder, bodyHandler);

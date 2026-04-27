@@ -2,7 +2,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.Script;
@@ -67,7 +67,7 @@ public interface AuthenticationCustomizationBuilder {
 
         RestClientConfiguration getConfiguration();
 
-        HttpRequestDTO getRequest();
+        HttpRequestSpecification getRequest();
 
         default String decrypt(GuardedString value) {
             var accessor = new GuardedStringAccessor();
@@ -80,7 +80,7 @@ public interface AuthenticationCustomizationBuilder {
 
         ScimClientConfiguration getConfiguration();
 
-        HttpRequestDTO getRequest();
+        HttpRequestSpecification getRequest();
 
         default String decrypt(GuardedString value) {
             var accessor = new GuardedStringAccessor();

@@ -1,7 +1,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 
 import java.util.HashMap;
@@ -12,7 +12,7 @@ public class DispatchingAuthorizationCustomizer implements AuthorizationCustomiz
     Map<Class<? extends RestClientConfiguration>, AuthorizationCustomizer<RestClientConfiguration>> customizers = new HashMap<>();
 
     @Override
-    public void customize(RestClientConfiguration configuration, HttpRequestDTO request) {
+    public void customize(RestClientConfiguration configuration, HttpRequestSpecification request) {
         for (var customizer : customizers.entrySet()) {
             if (RestClientConfiguration.isConfigured(customizer.getKey(), configuration)) {
                 customizer.getValue().customize(configuration, request);

@@ -24,6 +24,6 @@ public interface AuthorizationCustomizer<C extends ConfigurationMixin> {
      * @param request       the HTTP request builder that can be modified to include custom headers,
      *                      parameters, or other request configurations
      */
-    void customize(C configuration, HttpRequestDTO request);
+    void customize(C configuration, HttpRequestSpecification request);
 
 }

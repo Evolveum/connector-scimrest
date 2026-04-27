@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl.rest;
 
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.OAuth2GrantType;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
@@ -58,7 +58,7 @@ public class OAuth2TokenManager {
 
     // -------------------------------------------------------------------------
 
-    public void applyToken(OAuth2Context.Config config, HttpRequestDTO request) {
+    public void applyToken(OAuth2Context.Config config, HttpRequestSpecification request) {
         oauth2Context.setConfiguration(config);
         ensureValidToken(config);
         applyTokenToRequest(request);
@@ -86,7 +86,7 @@ public class OAuth2TokenManager {
     private void refreshToken(OAuth2Context.Config config) {
         LOG.ok("Fetching new OAuth2 access token from {0}", config.tokenUrl());
 
-        var tokenRequest = new HttpRequestDTO(config.tokenUrl())
+        var tokenRequest = new HttpRequestSpecification(config.tokenUrl())
             .timeout(Duration.ofSeconds(30))
             .httpMethod(HttpMethod.POST)
             .header("Content-Type", "application/x-www-form-urlencoded");
@@ -108,7 +108,7 @@ public class OAuth2TokenManager {
         }
     }
 
-    protected void customizeBuildTokenRequest(HttpRequestDTO request) {
+    protected void customizeBuildTokenRequest(HttpRequestSpecification request) {
         var config = oauth2Context.getConfiguration();
 
         switch (OAuth2GrantType.parse(config.grantType())) {
@@ -117,7 +117,7 @@ public class OAuth2TokenManager {
         }
     }
 
-    private void buildClientCredentialsRequest(HttpRequestDTO request, OAuth2Context.Config config) {
+    private void buildClientCredentialsRequest(HttpRequestSpecification request, OAuth2Context.Config config) {
         var secretAccessor = new GuardedStringAccessor();
         config.clientSecret().access(secretAccessor);
         String clientSecret = secretAccessor.getClearString();
@@ -136,7 +136,7 @@ public class OAuth2TokenManager {
         }
     }
 
-    private void buildJwtBearerRequest(HttpRequestDTO request, OAuth2Context.Config config) {
+    private void buildJwtBearerRequest(HttpRequestSpecification request, OAuth2Context.Config config) {
         LOG.ok("Building JWT Bearer assertion for client {0}", config.clientId());
         long now = Instant.now().getEpochSecond();
         String assertion = new JwtAssertionBuilder()
@@ -183,7 +183,7 @@ public class OAuth2TokenManager {
         }
     }
 
-    protected void applyTokenToRequest(HttpRequestDTO request) {
+    protected void applyTokenToRequest(HttpRequestSpecification request) {
         request.header("Authorization", "Bearer " + oauth2Context.accessToken());
     }
 }

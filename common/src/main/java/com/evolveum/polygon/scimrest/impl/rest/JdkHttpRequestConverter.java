@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.impl.rest;
 
 import com.evolveum.polygon.scimrest.api.HttpRequestConverter;
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.HttpVersion;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -21,7 +21,7 @@ import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Converts an {@link HttpRequestDTO} into a {@link java.net.http.HttpRequest} for use
+ * Converts an {@link HttpRequestSpecification} into a {@link java.net.http.HttpRequest} for use
  * with the JDK's built-in {@code java.net.http.HttpClient}.
  *
  * <p>This converter is responsible for all JDK-specific translation concerns:
@@ -37,7 +37,7 @@ import java.nio.charset.StandardCharsets;
 public class JdkHttpRequestConverter implements HttpRequestConverter<HttpRequest> {
 
     @Override
-    public HttpRequest convert(HttpRequestDTO dto) {
+    public HttpRequest convert(HttpRequestSpecification dto) {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
         String uriString = buildUriString(dto);
         try {
@@ -80,7 +80,7 @@ public class JdkHttpRequestConverter implements HttpRequestConverter<HttpRequest
         return requestBuilder.build();
     }
 
-    private static String buildUriString(HttpRequestDTO dto) {
+    private static String buildUriString(HttpRequestSpecification dto) {
         String endpoint = dto.getApiEndpoint();
         if (endpoint != null) {
             for (var entry : dto.getPathParameters().entrySet()) {

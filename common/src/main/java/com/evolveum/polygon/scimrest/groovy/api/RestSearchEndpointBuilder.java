@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
-import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -50,19 +50,19 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
     RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec, @DelegatesTo(value = FilterSupportBase.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
 
-    record PagingSupportBase(HttpRequestDTO request, PagingInfo paging) {
+    record PagingSupportBase(HttpRequestSpecification request, PagingInfo paging) {
         public PagingInfo getPaging() {
             return paging;
         }
 
-        public HttpRequestDTO getRequest() {
+        public HttpRequestSpecification getRequest() {
             return request;
         }
     }
 
-    record FilterSupportBase(HttpRequestDTO request, Filter filter, Object value, List<Object> values) {
+    record FilterSupportBase(HttpRequestSpecification request, Filter filter, Object value, List<Object> values) {
 
-        public HttpRequestDTO getRequest() {
+        public HttpRequestSpecification getRequest() {
             return request;
         }
 
