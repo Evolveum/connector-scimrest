@@ -8,6 +8,7 @@ import java.util.Base64;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
+import com.evolveum.polygon.scimrest.impl.rest.OAuth2Context;
 import groovy.lang.Closure;
 
 public class AuthorizationCustomizationBuilderImpl implements AuthenticationCustomizationBuilder {
@@ -32,7 +33,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         });
         addCustomizer(RestClientConfiguration.OAuth2Authorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(RestClientConfiguration.OAuth2Authorization.class);
-            oauth2TokenManager.applyToken(oauth2Conf, request);
+            oauth2TokenManager.applyToken(OAuth2Context.Config.from(oauth2Conf), request);
         });
 
         addScimCustomizer(ScimClientConfiguration.BearerToken.class, (conf, request) -> {

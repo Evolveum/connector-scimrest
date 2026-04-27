@@ -114,7 +114,7 @@ public class OAuth2GroovyHookTests extends WireMockTestSupport {
                         oauth2 { oauth2Context ->
                             buildTokenRequest { request ->
                                 request.formParam("grant_type",    "client_credentials")
-                                request.formParam("client_id",     configuration.restOAuth2ClientId)
+                                request.formParam("client_id",     configuration.clientId)
                                 request.formParam("custom_param",  "extra-value")
                             }
                         }

@@ -9,7 +9,6 @@ package com.evolveum.polygon.scimrest.impl.rest;
 import com.evolveum.polygon.scimrest.api.HttpRequestDTO;
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.OAuth2GrantType;
-import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.JwtAssertionBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,14 +58,13 @@ public class OAuth2TokenManager {
 
     // -------------------------------------------------------------------------
 
-    public void applyToken(RestClientConfiguration.OAuth2Authorization config,
-                           HttpRequestDTO request) {
+    public void applyToken(OAuth2Context.Config config, HttpRequestDTO request) {
         oauth2Context.setConfiguration(config);
         ensureValidToken(config);
         applyTokenToRequest(request);
     }
 
-    private void ensureValidToken(RestClientConfiguration.OAuth2Authorization config) {
+    private void ensureValidToken(OAuth2Context.Config config) {
         if (!validateToken()) {
             synchronized (this) {
                 if (!validateToken()) {
@@ -85,10 +83,10 @@ public class OAuth2TokenManager {
         return expiresAt == null || Instant.now().isBefore(expiresAt);
     }
 
-    private void refreshToken(RestClientConfiguration.OAuth2Authorization config) {
-        LOG.ok("Fetching new OAuth2 access token from {0}", config.getRestOAuth2TokenUrl());
+    private void refreshToken(OAuth2Context.Config config) {
+        LOG.ok("Fetching new OAuth2 access token from {0}", config.tokenUrl());
 
-        var tokenRequest = new HttpRequestDTO(config.getRestOAuth2TokenUrl())
+        var tokenRequest = new HttpRequestDTO(config.tokenUrl())
             .timeout(Duration.ofSeconds(30))
             .httpMethod(HttpMethod.POST)
             .header("Content-Type", "application/x-www-form-urlencoded");
@@ -113,19 +111,18 @@ public class OAuth2TokenManager {
     protected void customizeBuildTokenRequest(HttpRequestDTO request) {
         var config = oauth2Context.getConfiguration();
 
-        switch (OAuth2GrantType.parse(config.getRestOAuth2GrantType())) {
+        switch (OAuth2GrantType.parse(config.grantType())) {
             case JWT_BEARER -> buildJwtBearerRequest(request, config);
             case CLIENT_CREDENTIALS -> buildClientCredentialsRequest(request, config);
         }
     }
 
-    private void buildClientCredentialsRequest(HttpRequestDTO request,
-                                               RestClientConfiguration.OAuth2Authorization config) {
+    private void buildClientCredentialsRequest(HttpRequestDTO request, OAuth2Context.Config config) {
         var secretAccessor = new GuardedStringAccessor();
-        config.getRestOAuth2ClientSecret().access(secretAccessor);
+        config.clientSecret().access(secretAccessor);
         String clientSecret = secretAccessor.getClearString();
 
-        request.formParam(OAuth2Context.CLIENT_ID, config.getRestOAuth2ClientId())
+        request.formParam(OAuth2Context.CLIENT_ID, config.clientId())
                .formParam(OAuth2Context.CLIENT_SECRET, clientSecret);
 
         String existingRefreshToken = oauth2Context.refreshToken();
@@ -139,21 +136,20 @@ public class OAuth2TokenManager {
         }
     }
 
-    private void buildJwtBearerRequest(HttpRequestDTO request,
-                                       RestClientConfiguration.OAuth2Authorization config) {
-        LOG.ok("Building JWT Bearer assertion for client {0}", config.getRestOAuth2ClientId());
+    private void buildJwtBearerRequest(HttpRequestDTO request, OAuth2Context.Config config) {
+        LOG.ok("Building JWT Bearer assertion for client {0}", config.clientId());
         long now = Instant.now().getEpochSecond();
         String assertion = new JwtAssertionBuilder()
-                .claim("iss", config.getRestOAuth2ClientId())
-                .claim("sub", config.getRestOAuth2ClientId())
-                .claim("aud", config.getRestOAuth2TokenUrl())
+                .claim("iss", config.clientId())
+                .claim("sub", config.clientId())
+                .claim("aud", config.tokenUrl())
                 .claim("iat", now)
                 .claim("exp", now + JWT_ASSERTION_VALIDITY_SECONDS)
                 .claim("jti", UUID.randomUUID().toString())
-                .sign(config.getRestOAuth2PrivateKey(), "SHA256withRSA", "RSA");
+                .sign(config.privateKey(), "SHA256withRSA", "RSA");
 
         request.formParam(OAuth2Context.GRANT_TYPE, OAuth2GrantType.JWT_BEARER.getName())
-               .formParam("client_id", config.getRestOAuth2ClientId())
+               .formParam("client_id", config.clientId())
                .formParam("assertion", assertion);
     }
 

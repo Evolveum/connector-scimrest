@@ -7,6 +7,8 @@
 package com.evolveum.polygon.scimrest.impl.rest;
 
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
+import org.identityconnectors.common.security.GuardedString;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,6 +30,34 @@ import java.util.Map;
  */
 public class OAuth2Context {
 
+    public record Config(
+            String tokenUrl,
+            String clientId,
+            GuardedString clientSecret,
+            String grantType,
+            GuardedString privateKey
+    ) {
+        public static Config from(RestClientConfiguration.OAuth2Authorization conf) {
+            return new Config(
+                    conf.getRestOAuth2TokenUrl(),
+                    conf.getRestOAuth2ClientId(),
+                    conf.getRestOAuth2ClientSecret(),
+                    conf.getRestOAuth2GrantType(),
+                    conf.getRestOAuth2PrivateKey()
+            );
+        }
+
+        public static Config from(ScimClientConfiguration.OAuth2Authorization conf) {
+            return new Config(
+                    conf.getScimOAuthTokenUrl(),
+                    conf.getScimOAuthClientId(),
+                    conf.getScimOAuthClientSecret(),
+                    conf.getScimOAuthGrantType(),
+                    conf.getScimOAuthPrivateKey()
+            );
+        }
+    }
+
     public static final String ACCESS_TOKEN  = "access_token";
     public static final String EXPIRES_IN    = "expires_in";
     public static final String EXPIRES_AT    = "expires_at";
@@ -38,9 +68,9 @@ public class OAuth2Context {
     public static final String SCOPE         = "scope";
 
     private final Map<String, Object> attributes = new LinkedHashMap<>();
-    private RestClientConfiguration.OAuth2Authorization configuration;
+    private Config configuration;
 
-    public RestClientConfiguration.OAuth2Authorization getConfiguration() {
+    public Config getConfiguration() {
         return configuration;
     }
 
@@ -68,7 +98,7 @@ public class OAuth2Context {
         set(key, value);
     }
 
-    void setConfiguration(RestClientConfiguration.OAuth2Authorization configuration) {
+    void setConfiguration(Config configuration) {
         this.configuration = configuration;
     }
 
