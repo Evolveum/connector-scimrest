@@ -4,7 +4,7 @@ objectClass("User") {
             request {
                 contentType APPLICATION_JSON
             }
-            supportedAttributes "admin", "email","login", "language","lastName", "firstName", "status"
+            supportedAttributes "admin", "email","login", "language","lastName", "firstName"
         }
 
         endpoint(POST, "/users/{id}/lock") {
