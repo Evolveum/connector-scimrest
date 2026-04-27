@@ -78,44 +78,62 @@ public interface RestClientConfiguration extends ConfigurationMixin {
     }
 
     /**
-     * OAuth 2.0 Client Credentials authorization configuration.
+     * OAuth 2.0 authorization configuration.
      *
-     * The connector uses the provided credentials to obtain an access token from the authorization server
-     * and attaches it as a Bearer token to every outgoing request. Tokens are cached and refreshed
-     * automatically when they expire.
+     * Supports multiple grant types selected via {@link #getRestOAuth2GrantType()}:
+     * <ul>
+     *   <li>{@code client_credentials} (default) — authenticates with client ID and secret.</li>
+     *   <li>{@code urn:ietf:params:oauth:grant-type:jwt-bearer} (RFC 7523) — authenticates by signing
+     *       a JWT assertion with a private key; no client secret is needed.</li>
+     * </ul>
+     *
+     * Tokens are cached and refreshed automatically when they expire.
      */
     interface OAuth2Authorization extends RestClientConfiguration {
 
-        /**
-         * URL of the OAuth 2.0 authorization server token endpoint.
-         *
-         * @return the token endpoint URL as a String
-         */
+        /** URL of the OAuth 2.0 authorization server token endpoint. */
         String getRestOAuth2TokenUrl();
 
         /**
          * Client identifier issued by the authorization server.
-         *
-         * @return the client ID as a String
+         * Used as {@code client_id} for {@code client_credentials} and as the {@code iss}/{@code sub}
+         * claims for {@code jwt-bearer}.
          */
         String getRestOAuth2ClientId();
 
         /**
-         * Client secret issued by the authorization server.
-         *
-         * @return the client secret as a {@link GuardedString}
+         * Client secret. Required for {@code client_credentials} grant type.
+         * Not used for {@code jwt-bearer}.
          */
         GuardedString getRestOAuth2ClientSecret();
+
+        /**
+         * OAuth 2.0 grant type. Defaults to {@code client_credentials}.
+         * Use {@code jwt_bearer} for JWT Bearer (RFC 7523).
+         */
+        @ConfigurationProperty(displayMessageKey = "rest.oauth2.grantType")
+        default String getRestOAuth2GrantType() {
+            return OAuth2GrantType.CLIENT_CREDENTIALS.getName();
+        }
+
+        /**
+         * PEM-encoded PKCS#8 private key used to sign the JWT assertion.
+         * Required for {@code jwt-bearer} grant type. Not used for {@code client_credentials}.
+         */
+        @ConfigurationProperty(displayMessageKey = "rest.oauth2.privateKey")
+        GuardedString getRestOAuth2PrivateKey();
 
     }
 
 
     static boolean isConfigured(Class<? extends RestClientConfiguration> type, RestClientConfiguration configuration) {
         if (OAuth2Authorization.class.isAssignableFrom(type)) {
-            return (configuration instanceof OAuth2Authorization oauth2
-                    && oauth2.getRestOAuth2TokenUrl() != null
-                    && oauth2.getRestOAuth2ClientId() != null
-                    && oauth2.getRestOAuth2ClientSecret() != null);
+            if (!(configuration instanceof OAuth2Authorization oauth2)) return false;
+            if (oauth2.getRestOAuth2TokenUrl() == null || oauth2.getRestOAuth2ClientId() == null) return false;
+            if (OAuth2GrantType.JWT_BEARER.equals(oauth2.getRestOAuth2GrantType())) {
+                return oauth2.getRestOAuth2PrivateKey() != null;
+            }
+            return oauth2.getRestOAuth2ClientSecret() != null;
         }
         if (ApiKeyAuthorization.class.isAssignableFrom(type)) {
             return (configuration instanceof ApiKeyAuthorization api && api.getRestApiKey() != null);
