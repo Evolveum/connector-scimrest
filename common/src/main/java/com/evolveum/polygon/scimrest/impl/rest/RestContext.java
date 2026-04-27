@@ -37,8 +37,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -128,6 +130,7 @@ public class RestContext implements RetrievableContext {
 
         private HttpMethod httpMethod = HttpMethod.GET;
         private byte[] body;
+        private final FormBodyBuilder formBodyBuilder = new FormBodyBuilder();
 
 
         public RequestBuilder(String baseUri) {
@@ -144,6 +147,9 @@ public class RestContext implements RetrievableContext {
         Map<String, String> queryParameters = new HashMap<>();
 
         public HttpRequest build() {
+            if (!formBodyBuilder.isEmpty()) {
+                body = formBodyBuilder.build();
+            }
             request.uri(buildUri());
 
             switch (httpMethod) {
@@ -257,6 +263,11 @@ public class RestContext implements RetrievableContext {
             return pathParameter(key, AttributeUtil.getAsStringValue(value));
         }
 
+        public RequestBuilder formParam(String key, String value) {
+            formBodyBuilder.add(key, value);
+            return this;
+        }
+
         public RequestBuilder header(String name, String value) {
             this.request.header(name, value);
             return this;
@@ -271,6 +282,32 @@ public class RestContext implements RetrievableContext {
             String value = Base64.getEncoder().encodeToString((username+":"+password).getBytes());
             this.request.header("Authorization", "Basic " +  value);
             return this;
+        }
+
+        /**
+         * Accumulates URL-encoded form parameters and serializes them into a
+         * {@code application/x-www-form-urlencoded} byte array on {@link #build()}.
+         */
+        static class FormBodyBuilder {
+
+            private final List<Map.Entry<String, String>> params = new ArrayList<>();
+
+            void add(String key, String value) {
+                params.add(Map.entry(key, value));
+            }
+
+            boolean isEmpty() {
+                return params.isEmpty();
+            }
+
+            byte[] build() {
+                var parts = new ArrayList<String>();
+                for (var entry : params) {
+                    parts.add(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8)
+                            + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+                }
+                return String.join("&", parts).getBytes(StandardCharsets.UTF_8);
+            }
         }
     }
 

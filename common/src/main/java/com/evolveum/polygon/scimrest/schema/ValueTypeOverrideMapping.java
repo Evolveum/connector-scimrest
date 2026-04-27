@@ -34,6 +34,10 @@ record ValueTypeOverrideMapping<O, D, P>(Class<O> connIdType, ValueMapping<D,P> 
             return new ValueTypeOverrideMapping<>(String.class, cast(Long.class, valueMapping),
                     Long::parseLong, Object::toString);
         }
+        if (Number.class.equals(original)) {
+            return new ValueTypeOverrideMapping<>(String.class, cast(Number.class, valueMapping),
+                    Long::parseLong, Object::toString);
+        }
         throw new IllegalArgumentException("Unsupported override type combination: " + valueMapping.connIdType());
     }
     // FIXME: Add other conversion for ConnID

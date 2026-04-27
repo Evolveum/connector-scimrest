@@ -19,7 +19,8 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
         ScimClientConfiguration.BearerToken,
         RestClientConfiguration.BasicAuthorization,
         RestClientConfiguration.ApiKeyAuthorization,
-        RestClientConfiguration.TokenAuthorization {
+        RestClientConfiguration.TokenAuthorization,
+        RestClientConfiguration.OAuth2Authorization {
 
 
     private String restTokenName;
@@ -34,6 +35,10 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private String restUsername;
     private GuardedString restApiKey;
     private String restTestEndpoint;
+
+    private String restOAuth2TokenUrl;
+    private String restOAuth2ClientId;
+    private GuardedString restOAuth2ClientSecret;
 
     @Override
     @ConfigurationProperty(displayMessageKey = "rest.auth.tokenName")
@@ -114,7 +119,6 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-
     @ConfigurationProperty(displayMessageKey = "rest.auth.username")
     public String getRestUsername() {
         return this.restUsername;
@@ -137,4 +141,35 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     public void setRestApiKey(GuardedString restApiKey) {
         this.restApiKey = restApiKey;
     }
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.tokenUrl", required = true)
+    public String getRestOAuth2TokenUrl() {
+        return restOAuth2TokenUrl;
+    }
+
+    public void setRestOAuth2TokenUrl(String restOAuth2TokenUrl) {
+        this.restOAuth2TokenUrl = restOAuth2TokenUrl;
+    }
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientId", required = true)
+    public String getRestOAuth2ClientId() {
+        return restOAuth2ClientId;
+    }
+
+    public void setRestOAuth2ClientId(String restOAuth2ClientId) {
+        this.restOAuth2ClientId = restOAuth2ClientId;
+    }
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientSecret", required = true)
+    public GuardedString getRestOAuth2ClientSecret() {
+        return restOAuth2ClientSecret;
+    }
+
+    public void setRestOAuth2ClientSecret(GuardedString restOAuth2ClientSecret) {
+        this.restOAuth2ClientSecret = restOAuth2ClientSecret;
+    }
+
 }
