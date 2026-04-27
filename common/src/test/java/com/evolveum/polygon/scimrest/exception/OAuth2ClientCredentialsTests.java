@@ -24,7 +24,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 /**
  * Tests for OAuth2 Client Credentials flow: token fetch, reuse, and refresh.
  */
-public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
+public class OAuth2ClientCredentialsTests extends AbstractOAuth2Tests {
 
     private static final String TOKEN_ENDPOINT = "/oauth2/token";
     private static final String API_ENDPOINT = "/api/resource";
@@ -41,8 +41,8 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     @Test
     public void testTokenFetchedOnFirstRequest() {
-        stubTokenEndpoint("first-access-token", 3600);
-        stubApiEndpoint("first-access-token");
+        stubTokenEndpoint(TOKEN_ENDPOINT, "first-access-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "first-access-token");
 
         var connector = createConnector(wireMockServer.port(), TOKEN_ENDPOINT, "client-id",
                 new GuardedString("client-secret".toCharArray()), null);
@@ -55,8 +55,8 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     @Test
     public void testTokenReusedOnSubsequentRequests() {
-        stubTokenEndpoint("reused-token", 3600);
-        stubApiEndpoint("reused-token");
+        stubTokenEndpoint(TOKEN_ENDPOINT, "reused-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "reused-token");
 
         var connector = createConnector(wireMockServer.port(), TOKEN_ENDPOINT, "client-id",
                 new GuardedString("client-secret".toCharArray()), null);
@@ -71,15 +71,15 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     @Test
     public void testTokenRefreshedWhenExpired() throws InterruptedException {
-        stubTokenEndpoint("expired-token", -1);
-        stubApiEndpoint("expired-token"); // returns 200 even for expired token — API behavior is not under test here
+        stubTokenEndpoint(TOKEN_ENDPOINT, "expired-token", -1);
+        stubRestApiEndpoint(API_ENDPOINT, "expired-token"); // returns 200 even for expired token — API behavior is not under test here
 
         var connector = createConnector(wireMockServer.port(), TOKEN_ENDPOINT, "client-id",
                 new GuardedString("client-secret".toCharArray()), null);
         connector.test();
 
-        stubTokenEndpoint("refreshed-token", 3600);
-        stubApiEndpoint("refreshed-token");
+        stubTokenEndpoint(TOKEN_ENDPOINT, "refreshed-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "refreshed-token");
         connector.test();
 
         // Token endpoint called twice - once for initial fetch, once for refresh
@@ -88,8 +88,8 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     @Test
     public void testTokenRequestContainsCorrectFormParameters() {
-        stubTokenEndpoint("scoped-token", 3600);
-        stubApiEndpoint("scoped-token");
+        stubTokenEndpoint(TOKEN_ENDPOINT, "scoped-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "scoped-token");
 
         var connector = createConnector(wireMockServer.port(), TOKEN_ENDPOINT, "my-client-id",
                 new GuardedString("my-secret".toCharArray()), null);
@@ -103,7 +103,7 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     @Test
     public void testConnectorFailsWhenTokenEndpointReturns401() {
-        stubTokenEndpoint(401);
+        stubTokenEndpointError(TOKEN_ENDPOINT, 401);
 
         var connector = createConnector(wireMockServer.port(), TOKEN_ENDPOINT, "bad-client",
                 new GuardedString("bad-secret".toCharArray()), null);
@@ -121,10 +121,10 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     @Test
     public void testRefreshTokenUsedWhenServerProvidesOne() {
-        stubTokenEndpoint("first-token", -1, "client_credentials", "my-refresh-token");
-        stubApiEndpoint("first-token"); // returns 200 even for expired token — API behavior is not under test here
-        stubTokenEndpoint("refreshed-token", 3600, "refresh_token", null);
-        stubApiEndpoint("refreshed-token");
+        stubTokenEndpoint(TOKEN_ENDPOINT, "first-token", -1, "client_credentials", "my-refresh-token");
+        stubRestApiEndpoint(API_ENDPOINT, "first-token"); // returns 200 even for expired token — API behavior is not under test here
+        stubTokenEndpoint(TOKEN_ENDPOINT, "refreshed-token", 3600, "refresh_token", null);
+        stubRestApiEndpoint(API_ENDPOINT, "refreshed-token");
 
         var connector = createConnector(wireMockServer.port(), TOKEN_ENDPOINT, "client-id",
                 new GuardedString("client-secret".toCharArray()), null);
@@ -141,9 +141,9 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     @Test
     public void testFallsBackToClientCredentialsAfterRefreshTokenFailure() {
-        stubTokenEndpoint("first-token", -1, "client_credentials", "expired-refresh");
-        stubApiEndpoint("first-token"); // returns 200 even for expired token — API behavior is not under test here
-        stubTokenEndpoint(400, "refresh_token");
+        stubTokenEndpoint(TOKEN_ENDPOINT, "first-token", -1, "client_credentials", "expired-refresh");
+        stubRestApiEndpoint(API_ENDPOINT, "first-token"); // returns 200 even for expired token — API behavior is not under test here
+        stubTokenEndpointError(TOKEN_ENDPOINT, 400, "refresh_token");
 
         var connector = createConnector(wireMockServer.port(), TOKEN_ENDPOINT, "client-id",
                 new GuardedString("client-secret".toCharArray()), null);
@@ -156,8 +156,8 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
             assertTrue(e.getMessage().contains("400"));
         }
 
-        stubTokenEndpoint("new-token", 3600, "client_credentials", null);
-        stubApiEndpoint("new-token");
+        stubTokenEndpoint(TOKEN_ENDPOINT, "new-token", 3600, "client_credentials", null);
+        stubRestApiEndpoint(API_ENDPOINT, "new-token");
 
         connector.test();
 
@@ -171,45 +171,6 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     private int requestCount(RequestPatternBuilder pattern) {
         return wireMockServer.findAll(pattern).size();
-    }
-
-    private void stubTokenEndpoint(String accessToken, int expiresIn) {
-        stubTokenEndpoint(accessToken, expiresIn, null, null);
-    }
-
-    private void stubTokenEndpoint(String accessToken, int expiresIn, String grantType, String refreshToken) {
-        var stub = post(urlEqualTo(TOKEN_ENDPOINT));
-        if (grantType != null)
-            stub = stub.withRequestBody(containing("grant_type=" + grantType));
-        String body = "{\"access_token\":\"" + accessToken + "\",\"expires_in\":" + expiresIn
-                + (refreshToken != null ? ",\"refresh_token\":\"" + refreshToken + "\"" : "") + "}";
-        wireMockServer.stubFor(stub.willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody(body)));
-    }
-
-    private void stubTokenEndpoint(int errorStatus) {
-        stubTokenEndpoint(errorStatus, null);
-    }
-
-    private void stubTokenEndpoint(int errorStatus, String grantType) {
-        var stub = post(urlEqualTo(TOKEN_ENDPOINT));
-        if (grantType != null)
-            stub = stub.withRequestBody(containing("grant_type=" + grantType));
-        wireMockServer.stubFor(stub.willReturn(aResponse()
-                .withStatus(errorStatus)
-                .withHeader("Content-Type", "application/json")
-                .withBody("{\"error\":\"oauth2_error\"}")));
-    }
-
-    private void stubApiEndpoint(String expectedToken) {
-        wireMockServer.stubFor(get(urlEqualTo(API_ENDPOINT))
-                .withHeader("Authorization", equalTo("Bearer " + expectedToken))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"status\":\"ok\"}")));
     }
 
     private OAuth2TestConnector createConnector(int port, String tokenEndpoint, String clientId,
@@ -267,7 +228,6 @@ public class OAuth2ClientCredentialsTests extends WireMockTestSupport {
         public GuardedString getRestOAuth2PrivateKey() {
             return null;
         }
-
     }
 
     private static class OAuth2TestConnector extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {

@@ -24,7 +24,7 @@ import static org.testng.Assert.*;
  *
  * Covers all four hook points: validateToken, buildTokenRequest, parseTokenResponse, applyToken.
  */
-public class OAuth2GroovyHookTests extends WireMockTestSupport {
+public class OAuth2GroovyHookTests extends AbstractOAuth2Tests {
 
     private static final String TOKEN_ENDPOINT = "/oauth/token";
     private static final String API_ENDPOINT   = "/api/verify";
@@ -49,8 +49,8 @@ public class OAuth2GroovyHookTests extends WireMockTestSupport {
      */
     @Test
     public void testRefreshTokenFlowViaGroovyHooks() {
-        stubTokenEndpoint("new-access-token", 3600);
-        stubApiEndpoint("new-access-token");
+        stubTokenEndpoint(TOKEN_ENDPOINT, "new-access-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "new-access-token");
 
         var script = """
                 authentication {
@@ -105,8 +105,8 @@ public class OAuth2GroovyHookTests extends WireMockTestSupport {
      */
     @Test
     public void testBuildTokenRequestHookAddsCustomParameter() {
-        stubTokenEndpointMatchingBody("custom_param=extra-value", "hook-token", 3600);
-        stubApiEndpoint("hook-token");
+        stubTokenEndpointMatchingBody(TOKEN_ENDPOINT, "custom_param=extra-value", "hook-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "hook-token");
 
         var script = """
                 authentication {
@@ -138,7 +138,7 @@ public class OAuth2GroovyHookTests extends WireMockTestSupport {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"data\":{\"token\":\"nested-token\"},\"ok\":true}")));
-        stubApiEndpoint("nested-token");
+        stubRestApiEndpoint(API_ENDPOINT, "nested-token");
 
         var script = """
                 authentication {
@@ -169,7 +169,7 @@ public class OAuth2GroovyHookTests extends WireMockTestSupport {
      */
     @Test
     public void testApplyTokenHookUsesCustomHeader() {
-        stubTokenEndpoint("my-token", 3600);
+        stubTokenEndpoint(TOKEN_ENDPOINT, "my-token", 3600);
         wireMockServer.stubFor(get(urlEqualTo(API_ENDPOINT))
                 .withHeader("X-Auth-Token", equalTo("my-token"))
                 .willReturn(aResponse().withStatus(200)
@@ -238,32 +238,6 @@ public class OAuth2GroovyHookTests extends WireMockTestSupport {
     }
 
     // --- helpers ---
-
-    private void stubTokenEndpoint(String accessToken, int expiresIn) {
-        wireMockServer.stubFor(post(urlEqualTo(TOKEN_ENDPOINT))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"access_token\":\"" + accessToken + "\",\"expires_in\":" + expiresIn + "}")));
-    }
-
-    private void stubTokenEndpointMatchingBody(String bodyContains, String accessToken, int expiresIn) {
-        wireMockServer.stubFor(post(urlEqualTo(TOKEN_ENDPOINT))
-                .withRequestBody(containing(bodyContains))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"access_token\":\"" + accessToken + "\",\"expires_in\":" + expiresIn + "}")));
-    }
-
-    private void stubApiEndpoint(String expectedToken) {
-        wireMockServer.stubFor(get(urlEqualTo(API_ENDPOINT))
-                .withHeader("Authorization", equalTo("Bearer " + expectedToken))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"status\":\"ok\"}")));
-    }
 
     private AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> createConnector(String groovyScript) {
         var config = new OAuth2TestConfig(wireMockServer.port());
