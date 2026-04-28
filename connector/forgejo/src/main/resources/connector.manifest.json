@@ -13,8 +13,10 @@
       { "script": "/Team.connid.schema.groovy" },
       { "script": "/associations.new.schema.groovy" }
     ],
+    "authorization": [
+      { "script": "/authorization.op.groovy" }
+    ],
     "operation": [
-      { "script":  "/authorization.op.groovy"},
       { "script": "/User.search.groovy" },
       { "script": "/Organization.search.groovy" },
       { "script": "/Team.search.groovy" },

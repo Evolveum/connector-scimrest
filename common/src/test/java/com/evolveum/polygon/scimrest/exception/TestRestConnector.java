@@ -21,6 +21,9 @@ public class TestRestConnector extends AbstractGroovyRestConnector<BaseRestGroov
     }
 
     @Override
+    protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
+
+    @Override
     protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
         // No handlers needed for test
     }

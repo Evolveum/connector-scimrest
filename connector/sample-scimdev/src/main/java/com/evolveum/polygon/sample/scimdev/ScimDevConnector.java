@@ -21,6 +21,9 @@ public class ScimDevConnector extends AbstractGroovyRestConnector<ScimDevConfigu
     }
 
     @Override
+    protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
+
+    @Override
     protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
 
     }

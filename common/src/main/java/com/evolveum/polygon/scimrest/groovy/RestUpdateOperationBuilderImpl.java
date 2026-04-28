@@ -250,7 +250,7 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
                 var updated = delta.applyTo(attr);
                 definition.json().toJsonNode(updated, obj);
             }
-            return obj.toPrettyString().getBytes(StandardCharsets.UTF_8);
+            return obj.toPrettyString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         }
     }
 

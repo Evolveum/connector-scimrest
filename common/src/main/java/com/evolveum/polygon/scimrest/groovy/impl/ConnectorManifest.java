@@ -36,10 +36,10 @@ public class ConnectorManifest {
     List<String> scripts(String type) {
 
         var schemaScripts = connector().get(type);
-        var ret = new ArrayList<String>(schemaScripts.size());
         if (schemaScripts == null || schemaScripts.isEmpty()) {
-            return ret;
+            return new ArrayList<>();
         }
+        var ret = new ArrayList<String>(schemaScripts.size());
         for  (JsonNode schema : schemaScripts) {
             ret.add(schema.get("script").asText());
         }
@@ -48,6 +48,10 @@ public class ConnectorManifest {
 
     public List<String> schemaScripts() {
         return scripts("schema");
+    }
+
+    public List<String> authorizationScripts() {
+        return scripts("authorization");
     }
 
     public List<String> operationScripts() {

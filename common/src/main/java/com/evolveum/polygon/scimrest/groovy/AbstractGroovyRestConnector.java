@@ -8,8 +8,8 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.ObjectClassHandler;
+import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
@@ -71,12 +71,13 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
     private void initialize0() {
         var schemaBuilder = new RestSchemaBuilder(getClass(), context);
-
         initializeSchema(new GroovySchemaLoader(context.configuration().groovyContext(), schemaBuilder));
-        // Populate with SCIM schema
 
-        // Before we build final schema, we populate it with schema discovered via SCIM (if SCIM is enabled)
-        context.initializeScim();
+        var handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
+        initializeAuthorizationHandler(handlersBuilder);
+
+        context.initializeRest(handlersBuilder.restCustomizer());
+        context.initializeScim(handlersBuilder.scimCustomizer());
         if (context.isScimEnabled()) {
             context.scim().initialize();
             context.scim().contributeToSchema(schemaBuilder);
@@ -84,22 +85,18 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
         context.schema(schemaBuilder.build());
 
-        var handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
-        initializeObjectClassHandler(handlersBuilder);
-
-
         if (context.isScimEnabled()) {
             context.scim().contributeToHandlers(handlersBuilder);
         }
+
+        initializeObjectClassHandler(handlersBuilder);
+
         context.handlers(handlersBuilder.build());
-
-        // Finally we initialize REST client if present
-        var authentication = handlersBuilder.buildAuthentication();
-
-        context.initializeRest(authentication);
     }
 
-    protected RestContext.AuthorizationCustomizer authorizationCustomizer() {
+    protected abstract void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder);
+
+    protected AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer() {
         return (c,v) -> {};
     }
 

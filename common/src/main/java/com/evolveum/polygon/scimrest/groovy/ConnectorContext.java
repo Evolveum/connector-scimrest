@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.scimrest.*;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
 import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
@@ -72,10 +73,10 @@ public class ConnectorContext implements ContextLookup, RetrievableContext {
         return scim;
     }
 
-    public void initializeScim() {
+    public void initializeScim(AuthorizationCustomizer<ScimClientConfiguration> authentication) {
         if (configuration instanceof ScimClientConfiguration scimConf) {
             if (scimConf.getScimBaseUrl() != null) {
-                scim = new ScimContext(this, scimConf, Boolean.TRUE.equals(getDevelopmentMode()));
+                scim = new ScimContext(this, scimConf, Boolean.TRUE.equals(getDevelopmentMode()), authentication);
             }
         }
     }
@@ -84,7 +85,7 @@ public class ConnectorContext implements ContextLookup, RetrievableContext {
         return configuration.getDevelopmentMode();
     }
 
-    public void initializeRest(RestContext.AuthorizationCustomizer authorizationCustomizer) {
+    public void initializeRest(AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer) {
         if (configuration instanceof RestClientConfiguration restCfg) {
             if (restCfg.getBaseAddress() != null) {
                 rest = new RestContext(restCfg, authorizationCustomizer);

@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.*;
-import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -124,7 +124,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
     public record GroovyPagingSupport(Closure<?> prototype) implements PagingHandler {
         @Override
-        public void handlePaging(RestContext.RequestBuilder request, PagingInfo pagingInfo) {
+        public void handlePaging(HttpRequestSpecification request, PagingInfo pagingInfo) {
             GroovyClosures.copyAndCall(prototype, new PagingSupportBase(request, pagingInfo));
         }
     }
@@ -134,7 +134,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     private record GroovyBasedFilterHandler(FilterSpecification filterSpecification, Closure<?> prototype) implements FilterToRequestMapper {
 
         @Override
-        public void mapToRequest(RestContext.RequestBuilder builder, Filter filter) {
+        public void mapToRequest(HttpRequestSpecification builder, Filter filter) {
             Object value = null;
             List<Object> values = List.of();
             if (filter instanceof AttributeFilter attrFilter && !attrFilter.getAttribute().getValue().isEmpty()) {

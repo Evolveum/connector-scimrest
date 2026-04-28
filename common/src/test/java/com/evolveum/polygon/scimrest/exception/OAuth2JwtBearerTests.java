@@ -26,7 +26,7 @@ import java.util.Base64;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.*;
 
-public class OAuth2JwtBearerTests extends WireMockTestSupport {
+public class OAuth2JwtBearerTests extends AbstractOAuth2Tests {
 
     private static final String TOKEN_ENDPOINT = "/oauth2/token";
     private static final String API_ENDPOINT   = "/api/resource";
@@ -50,8 +50,8 @@ public class OAuth2JwtBearerTests extends WireMockTestSupport {
 
     @Test
     public void testJwtBearerFlow() {
-        stubTokenEndpoint(200, ACCESS_TOKEN);
-        stubApiEndpoint(ACCESS_TOKEN);
+        stubTokenEndpointWithStatus(TOKEN_ENDPOINT, 200, ACCESS_TOKEN);
+        stubRestApiEndpoint(API_ENDPOINT, ACCESS_TOKEN);
 
         createConnector(keyPair.getPrivate()).test();
 
@@ -82,8 +82,8 @@ public class OAuth2JwtBearerTests extends WireMockTestSupport {
 
     @Test
     public void testInvalidPrivateKeyThrowsException() {
-        stubTokenEndpoint(200, ACCESS_TOKEN);
-        stubApiEndpoint(ACCESS_TOKEN);
+        stubTokenEndpointWithStatus(TOKEN_ENDPOINT, 200, ACCESS_TOKEN);
+        stubRestApiEndpoint(API_ENDPOINT, ACCESS_TOKEN);
 
         var connector = createConnector("not-a-valid-pem-key");
         assertThrows(ConnectorException.class, connector::test);
@@ -91,16 +91,16 @@ public class OAuth2JwtBearerTests extends WireMockTestSupport {
 
     @Test
     public void testTokenEndpointErrorThrowsException() {
-        stubTokenEndpoint(400, null);
-        stubApiEndpoint(ACCESS_TOKEN);
+        stubTokenEndpointWithStatus(TOKEN_ENDPOINT, 400, null);
+        stubRestApiEndpoint(API_ENDPOINT, ACCESS_TOKEN);
 
         assertThrows(ConnectorIOException.class, () -> createConnector(keyPair.getPrivate()).test());
     }
 
     @Test
     public void testUnknownGrantTypeThrowsException() {
-        stubTokenEndpoint(200, ACCESS_TOKEN);
-        stubApiEndpoint(ACCESS_TOKEN);
+        stubTokenEndpointWithStatus(TOKEN_ENDPOINT, 200, ACCESS_TOKEN);
+        stubRestApiEndpoint(API_ENDPOINT, ACCESS_TOKEN);
 
         var config = new JwtTestConfiguration(wireMockServer.port(),
                 new GuardedString(toPem(keyPair.getPrivate()).toCharArray()), "unknown_grant");
@@ -111,26 +111,6 @@ public class OAuth2JwtBearerTests extends WireMockTestSupport {
     }
 
     // --- helpers ---
-
-    private void stubTokenEndpoint(int status, String accessToken) {
-        String body = status == 200
-                ? "{\"access_token\":\"" + accessToken + "\",\"expires_in\":3600}"
-                : "{\"error\":\"invalid_request\"}";
-        wireMockServer.stubFor(post(urlEqualTo(TOKEN_ENDPOINT))
-            .willReturn(aResponse()
-                .withStatus(status)
-                .withHeader("Content-Type", "application/json")
-                .withBody(body)));
-    }
-
-    private void stubApiEndpoint(String expectedToken) {
-        wireMockServer.stubFor(get(urlEqualTo(API_ENDPOINT))
-            .withHeader("Authorization", equalTo("Bearer " + expectedToken))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("{\"status\":\"ok\"}")));
-    }
 
     private String captureAssertion() {
         var requests = wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT)));
@@ -195,6 +175,7 @@ public class OAuth2JwtBearerTests extends WireMockTestSupport {
         JwtTestConnector(BaseRestGroovyConnectorConfiguration config) { this.config = config; }
 
         @Override protected void initializeSchema(GroovySchemaLoader loader) {}
+        @Override protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
         @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {}
     }
 }

@@ -16,6 +16,9 @@ import org.identityconnectors.framework.spi.ConnectorClass;
 public class ReadOnlyConnector extends AbstractGroovyRestConnector<ReadOnlyConfiguration> {
 
     @Override
+    protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
+
+    @Override
     protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
         // FIXME: pointer to static scripted connector entry point script / configuration / manifest
     }
