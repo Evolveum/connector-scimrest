@@ -13,11 +13,11 @@
     <parent>
         <groupId>com.evolveum.polygon.scimrest</groupId>
         <artifactId>connector-scimrest-connectors</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>0.1-preview-mcm</version>
     </parent>
 
     <artifactId>connector-forgejo</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1-preview-mcm</version>
     <packaging>jar</packaging>
     <name>Polygon Forgejo Connector</name>
 

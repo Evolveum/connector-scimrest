@@ -12,7 +12,7 @@
 
     <groupId>com.evolveum.polygon.scimrest</groupId>
     <artifactId>connector-scimrest-parent</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1-preview-mcm</version>
     <packaging>pom</packaging>
 
     <name>Polygon SCIM 2 Connector - Root</name>
