@@ -145,7 +145,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.tokenUrl", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.tokenUrl")
     public String getRestOAuth2TokenUrl() {
         return restOAuth2TokenUrl;
     }
@@ -155,7 +155,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientId", required = true)
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientId")
     public String getRestOAuth2ClientId() {
         return restOAuth2ClientId;
     }
