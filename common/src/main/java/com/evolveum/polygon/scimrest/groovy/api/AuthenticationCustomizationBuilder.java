@@ -1,14 +1,10 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
-import com.evolveum.polygon.common.GuardedStringAccessor;
-import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
-import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.Script;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
-import org.identityconnectors.common.security.GuardedString;
 
 public interface AuthenticationCustomizationBuilder {
 
@@ -18,23 +14,134 @@ public interface AuthenticationCustomizationBuilder {
 
     interface RestBuilder {
 
-        AuthorizationCustomizer<RestClientConfiguration> customizer(Class<? extends RestClientConfiguration> type, @DelegatesTo(CustomizationContext.class) @Script.Initialization Closure<?> o);
+        void withImplementation(Class<? extends RestClientConfiguration> type,
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
 
-
-        default AuthorizationCustomizer<RestClientConfiguration> basic(@DelegatesTo(value = CustomizationContext.class, strategy = Closure.DELEGATE_ONLY) Closure<?> o) {
-            return customizer(RestClientConfiguration.BasicAuthorization.class, o);
+        default void basic(
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o) {
+            withImplementation(RestClientConfiguration.BasicAuthorization.class, o);
         }
 
-        default AuthorizationCustomizer<RestClientConfiguration> tokenBased(@DelegatesTo(value = CustomizationContext.class, strategy = Closure.DELEGATE_ONLY) Closure<?> o) {
-            return customizer(RestClientConfiguration.TokenAuthorization.class, o);
+        default void bearerToken(
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o) {
+            withImplementation(RestClientConfiguration.BearerTokenAuthorization.class, o);
         }
 
-        default AuthorizationCustomizer<RestClientConfiguration> apiKey(@DelegatesTo(value = CustomizationContext.class, strategy = Closure.DELEGATE_ONLY) Closure<?> o) {
-            return customizer(RestClientConfiguration.ApiKeyAuthorization.class, o);
+        default void jwtBearer(
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o) {
+            withImplementation(RestClientConfiguration.JwtBearerAuthorization.class, o);
         }
 
-        void oauth2(@DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
-                    @Script.Initialization Closure<?> o);
+        default void apiKey(
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o) {
+            withImplementation(RestClientConfiguration.ApiKeyAuthorization.class, o);
+        }
+
+        void oauth2ClientCredentials(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
+        void oauth2JwtBearer(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
+        @SuppressWarnings("unchecked")
+        void preference(Class<? extends RestClientConfiguration>... types);
+
+        default Class<? extends RestClientConfiguration> getBasic() {
+            return RestClientConfiguration.BasicAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getBearerToken() {
+            return RestClientConfiguration.BearerTokenAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getJwtBearer() {
+            return RestClientConfiguration.JwtBearerAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getApiKey() {
+            return RestClientConfiguration.ApiKeyAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getOauth2ClientCredentials() {
+            return RestClientConfiguration.OAuth2ClientCredentialsAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getOauth2JwtBearer() {
+            return RestClientConfiguration.OAuth2JwtBearerAuthorization.class;
+        }
+    }
+
+    interface ScimBuilder {
+
+        void withImplementation(Class<? extends ScimClientConfiguration> type,
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
+        default void bearerToken(
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o) {
+            withImplementation(ScimClientConfiguration.BearerTokenAuthorization.class, o);
+        }
+
+        default void jwtBearer(
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o) {
+            withImplementation(ScimClientConfiguration.JwtBearerAuthorization.class, o);
+        }
+
+        default void apiKey(
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o) {
+            withImplementation(ScimClientConfiguration.ApiKeyAuthorization.class, o);
+        }
+
+        default void httpBasic(
+                @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o) {
+            withImplementation(ScimClientConfiguration.HttpBasic.class, o);
+        }
+
+        void oauth2ClientCredentials(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
+        void oauth2JwtBearer(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
+        @SuppressWarnings("unchecked")
+        void preference(Class<? extends ScimClientConfiguration>... types);
+
+        default Class<? extends ScimClientConfiguration> getBearerToken() {
+            return ScimClientConfiguration.BearerTokenAuthorization.class;
+        }
+
+        default Class<? extends ScimClientConfiguration> getJwtBearer() {
+            return ScimClientConfiguration.JwtBearerAuthorization.class;
+        }
+
+        default Class<? extends ScimClientConfiguration> getApiKey() {
+            return ScimClientConfiguration.ApiKeyAuthorization.class;
+        }
+
+        default Class<? extends ScimClientConfiguration> getHttpBasic() {
+            return ScimClientConfiguration.HttpBasic.class;
+        }
+
+        default Class<? extends ScimClientConfiguration> getOauth2ClientCredentials() {
+            return ScimClientConfiguration.OAuth2ClientCredentialsAuthorization.class;
+        }
+
+        default Class<? extends ScimClientConfiguration> getOauth2JwtBearer() {
+            return ScimClientConfiguration.OAuth2JwtBearerAuthorization.class;
+        }
     }
 
     interface OAuth2Builder {
@@ -42,50 +149,15 @@ public interface AuthenticationCustomizationBuilder {
         OAuth2Builder parseTokenResponse(@Script.Runtime Closure<?> hook);
         OAuth2Builder validateToken(@Script.Runtime Closure<?> hook);
         OAuth2Builder applyToken(@Script.Runtime Closure<?> hook);
+
+        OAuth2Builder implementation(
+                @DelegatesTo(value = AuthImplementationContext.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Runtime Closure<?> closure);
     }
 
-    interface ScimBuilder {
-
-        AuthorizationCustomizer<ScimClientConfiguration> customizer(Class<? extends ScimClientConfiguration> type,
-                @DelegatesTo(ScimCustomizationContext.class) @Script.Initialization Closure<?> o);
-
-        default AuthorizationCustomizer<ScimClientConfiguration> bearer(
-                @DelegatesTo(value = ScimCustomizationContext.class, strategy = Closure.DELEGATE_ONLY) Closure<?> o) {
-            return customizer(ScimClientConfiguration.BearerToken.class, o);
-        }
-
-        default AuthorizationCustomizer<ScimClientConfiguration> httpBasic(
-                @DelegatesTo(value = ScimCustomizationContext.class, strategy = Closure.DELEGATE_ONLY) Closure<?> o) {
-            return customizer(ScimClientConfiguration.HttpBasic.class, o);
-        }
-
-        void oauth2(@DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
-                    @Script.Initialization Closure<?> o);
-    }
-
-    interface CustomizationContext {
-
-        RestClientConfiguration getConfiguration();
-
-        HttpRequestSpecification getRequest();
-
-        default String decrypt(GuardedString value) {
-            var accessor = new GuardedStringAccessor();
-            value.access(accessor);
-            return accessor.getClearString();
-        }
-    }
-
-    interface ScimCustomizationContext {
-
-        ScimClientConfiguration getConfiguration();
-
-        HttpRequestSpecification getRequest();
-
-        default String decrypt(GuardedString value) {
-            var accessor = new GuardedStringAccessor();
-            value.access(accessor);
-            return accessor.getClearString();
-        }
+    interface ImplementationBuilder {
+        void implementation(
+                @DelegatesTo(value = AuthImplementationContext.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Runtime Closure<?> closure);
     }
 }

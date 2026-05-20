@@ -9,8 +9,11 @@ package com.evolveum.polygon.scimrest.impl.rest;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.OAuth2GrantType;
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.JwtAssertionBuilder;
+import org.identityconnectors.common.security.GuardedString;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
@@ -25,76 +28,121 @@ import java.util.UUID;
 
 /**
  * Manages the OAuth2 access token lifecycle for a connector instance.
- *
- * <h2>Token fetch flow</h2>
- * <ol>
- *   <li>{@link #validateToken()}            — decides whether the cached token is still usable.</li>
- *   <li>{@link #customizeBuildTokenRequest} — builds the grant-type-specific token request.</li>
- *   <li>{@link #processTokenResponse}       — extracts token and expiry from the server response.</li>
- *   <li>{@link #applyTokenToRequest}        — attaches the token to every outgoing API request.</li>
- * </ol>
- *
- * <p>Thread-safe: token refresh is synchronized so only one thread fetches a new token at a time.
  */
 public class OAuth2TokenManager {
 
+    public record OAuth2Config(
+            String tokenUrl,
+            String clientId,
+            GuardedString clientSecret,
+            String grantType,
+            GuardedString privateKey
+    ) {
+        public static OAuth2Config from(RestClientConfiguration.OAuth2ClientCredentialsAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getRestOAuth2TokenUrl(),
+                    conf.getRestOAuth2ClientId(),
+                    conf.getRestOAuth2ClientSecret(),
+                    OAuth2GrantType.CLIENT_CREDENTIALS.getName(),
+                    null
+            );
+        }
+
+        public static OAuth2Config from(RestClientConfiguration.OAuth2JwtBearerAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getRestOAuth2TokenUrl(),
+                    conf.getRestOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.JWT_BEARER.getName(),
+                    conf.getRestOAuth2PrivateKey()
+            );
+        }
+
+        public static OAuth2Config from(ScimClientConfiguration.OAuth2ClientCredentialsAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getScimOAuth2TokenUrl(),
+                    conf.getScimOAuth2ClientId(),
+                    conf.getScimOAuth2ClientSecret(),
+                    OAuth2GrantType.CLIENT_CREDENTIALS.getName(),
+                    null
+            );
+        }
+
+        public static OAuth2Config from(ScimClientConfiguration.OAuth2JwtBearerAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getScimOAuth2TokenUrl(),
+                    conf.getScimOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.JWT_BEARER.getName(),
+                    conf.getScimOAuth2PrivateKey()
+            );
+        }
+    }
+
+    protected final AuthContext<OAuth2Config> authContext = new AuthContext<>();
+    protected final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(30))
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
+    protected final ObjectMapper objectMapper = new ObjectMapper();
+
     private static final Log LOG = Log.getLog(OAuth2TokenManager.class);
+
+    public static final String ACCESS_TOKEN = "access_token";
+    public static final String EXPIRES_IN = "expires_in";
+    public static final String EXPIRES_AT = "expires_at";
+    public static final String REFRESH_TOKEN = "refresh_token";
+    public static final String CLIENT_ID = "client_id";
+    public static final String CLIENT_SECRET = "client_secret";
+    public static final String GRANT_TYPE = "grant_type";
+
     private static final long JWT_ASSERTION_VALIDITY_SECONDS = 300;
 
-    private final HttpClient httpClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private final OAuth2Context oauth2Context = new OAuth2Context();
-
-    public OAuth2TokenManager() {
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(30))
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .build();
-    }
-
-    public OAuth2Context getOauth2Context() {
-        return oauth2Context;
-    }
-
-    // -------------------------------------------------------------------------
-
-    public void applyToken(OAuth2Context.Config config, HttpRequestSpecification request) {
-        oauth2Context.setConfiguration(config);
-        ensureValidToken(config);
+    public void applyToken(OAuth2Config config, HttpRequestSpecification request) {
+        authContext.setConfiguration(config);
+        ensureValidToken();
         applyTokenToRequest(request);
     }
 
-    private void ensureValidToken(OAuth2Context.Config config) {
+    protected final void ensureValidToken() {
         if (!validateToken()) {
             synchronized (this) {
                 if (!validateToken()) {
-                    refreshToken(config);
+                    performTokenRefresh();
                 }
             }
         }
     }
 
     protected boolean validateToken() {
-        var accessToken = oauth2Context.accessToken();
+        var accessToken = (String) authContext.get(ACCESS_TOKEN);
         if (accessToken == null) {
             return false;
         }
-        Instant expiresAt = oauth2Context.expiresAt();
+        Object val = authContext.get(EXPIRES_AT);
+        Instant expiresAt = val instanceof Instant i ? i : null;
         return expiresAt == null || Instant.now().isBefore(expiresAt);
     }
 
-    private void refreshToken(OAuth2Context.Config config) {
+    protected void applyTokenToRequest(HttpRequestSpecification request) {
+        request.header("Authorization", "Bearer " + authContext.get(ACCESS_TOKEN));
+    }
+
+    protected void performTokenRefresh() {
+        var config = authContext.getConfiguration();
         LOG.ok("Fetching new OAuth2 access token from {0}", config.tokenUrl());
 
         var tokenRequest = new HttpRequestSpecification(config.tokenUrl())
-            .timeout(Duration.ofSeconds(30))
-            .httpMethod(HttpMethod.POST)
-            .header("Content-Type", "application/x-www-form-urlencoded");
+                .timeout(Duration.ofSeconds(30))
+                .httpMethod(HttpMethod.POST)
+                .header("Content-Type", "application/x-www-form-urlencoded");
 
         customizeBuildTokenRequest(tokenRequest);
 
         try {
-            var response = httpClient.send(new JdkHttpRequestConverter().convert(tokenRequest), HttpResponse.BodyHandlers.ofString());
+            var response = httpClient.send(
+                    new JdkHttpRequestConverter().convert(tokenRequest),
+                    HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new ConnectorIOException(
                         "OAuth2 token request failed with HTTP status " + response.statusCode());
@@ -108,8 +156,46 @@ public class OAuth2TokenManager {
         }
     }
 
+    protected void parseAndStoreTokenResponse(String responseBody) {
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
+            processTokenResponse(responseMap);
+
+            Long expiresIn = null;
+            Object val = responseMap.get(EXPIRES_IN);
+            if (val instanceof Long l) expiresIn = l;
+            else if (val instanceof Number n) expiresIn = n.longValue();
+            else if (val instanceof String s) {
+                try {
+                    expiresIn = Long.parseLong(s);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
+            if (expiresIn != null) {
+                Instant expiresAt = Instant.now().plusSeconds(expiresIn);
+                authContext.set(EXPIRES_AT, expiresAt);
+            }
+        } catch (IOException e) {
+            throw new ConnectorIOException("Failed to parse token response: " + e.getMessage(), e);
+        }
+    }
+
+    protected void processTokenResponse(Map<String, Object> response) {
+        Object accessToken = response.get(ACCESS_TOKEN);
+        if (accessToken == null) {
+            throw new ConnectorIOException("OAuth2 token response does not contain 'access_token'");
+        }
+        authContext.set(ACCESS_TOKEN, accessToken.toString());
+        Object refreshToken = response.get(REFRESH_TOKEN);
+        if (refreshToken != null) {
+            authContext.set(REFRESH_TOKEN, refreshToken.toString());
+        }
+    }
+
     protected void customizeBuildTokenRequest(HttpRequestSpecification request) {
-        var config = oauth2Context.getConfiguration();
+        var config = authContext.getConfiguration();
 
         switch (OAuth2GrantType.parse(config.grantType())) {
             case JWT_BEARER -> buildJwtBearerRequest(request, config);
@@ -117,26 +203,26 @@ public class OAuth2TokenManager {
         }
     }
 
-    private void buildClientCredentialsRequest(HttpRequestSpecification request, OAuth2Context.Config config) {
+    private void buildClientCredentialsRequest(HttpRequestSpecification request, OAuth2Config config) {
         var secretAccessor = new GuardedStringAccessor();
         config.clientSecret().access(secretAccessor);
         String clientSecret = secretAccessor.getClearString();
 
-        request.formParam(OAuth2Context.CLIENT_ID, config.clientId())
-               .formParam(OAuth2Context.CLIENT_SECRET, clientSecret);
+        request.formParam(CLIENT_ID, config.clientId())
+                .formParam(CLIENT_SECRET, clientSecret);
 
-        String existingRefreshToken = oauth2Context.refreshToken();
+        String existingRefreshToken = (String) authContext.get(REFRESH_TOKEN);
         if (existingRefreshToken != null) {
             LOG.ok("Using refresh_token grant to obtain new access token");
-            oauth2Context.set(OAuth2Context.REFRESH_TOKEN, null);
-            request.formParam(OAuth2Context.GRANT_TYPE, OAuth2Context.REFRESH_TOKEN);
-            request.formParam(OAuth2Context.REFRESH_TOKEN, existingRefreshToken);
+            authContext.set(REFRESH_TOKEN, null);
+            request.formParam(GRANT_TYPE, REFRESH_TOKEN);
+            request.formParam(REFRESH_TOKEN, existingRefreshToken);
         } else {
-            request.formParam(OAuth2Context.GRANT_TYPE, OAuth2GrantType.CLIENT_CREDENTIALS.getName());
+            request.formParam(GRANT_TYPE, OAuth2GrantType.CLIENT_CREDENTIALS.getName());
         }
     }
 
-    private void buildJwtBearerRequest(HttpRequestSpecification request, OAuth2Context.Config config) {
+    private void buildJwtBearerRequest(HttpRequestSpecification request, OAuth2Config config) {
         LOG.ok("Building JWT Bearer assertion for client {0}", config.clientId());
         long now = Instant.now().getEpochSecond();
         String assertion = new JwtAssertionBuilder()
@@ -146,44 +232,14 @@ public class OAuth2TokenManager {
                 .claim("iat", now)
                 .claim("exp", now + JWT_ASSERTION_VALIDITY_SECONDS)
                 .claim("jti", UUID.randomUUID().toString())
-                .sign(config.privateKey(), "SHA256withRSA", "RSA");
+                .sign("RS256", config.privateKey());
 
-        request.formParam(OAuth2Context.GRANT_TYPE, OAuth2GrantType.JWT_BEARER.getName())
-               .formParam("client_id", config.clientId())
-               .formParam("assertion", assertion);
+        request.formParam(GRANT_TYPE, OAuth2GrantType.JWT_BEARER.getName())
+                .formParam("client_id", config.clientId())
+                .formParam("assertion", assertion);
     }
 
-    private void parseAndStoreTokenResponse(String responseBody) {
-        try {
-            Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
-            processTokenResponse(responseMap);
-        } catch (IOException e) {
-            throw new ConnectorIOException("Failed to parse OAuth2 token response", e);
-        }
-        Long expiresIn = oauth2Context.expiresIn();
-        if (expiresIn != null) {
-            Instant expiresAt = Instant.now().plusSeconds(expiresIn);
-            oauth2Context.set(OAuth2Context.EXPIRES_AT, expiresAt);
-            LOG.ok("OAuth2 token expires at {0} (expires_in={1}s)", expiresAt, expiresIn);
-        } else {
-            LOG.ok("OAuth2 token has no expiry, treating as always valid");
-        }
-    }
-
-    protected void processTokenResponse(Map<String, Object> response) {
-        Object accessToken = response.get(OAuth2Context.ACCESS_TOKEN);
-        if (accessToken == null) {
-            throw new ConnectorIOException("OAuth2 token response does not contain 'access_token'");
-        }
-        oauth2Context.set(OAuth2Context.ACCESS_TOKEN, accessToken.toString());
-        oauth2Context.set(OAuth2Context.EXPIRES_IN, response.get(OAuth2Context.EXPIRES_IN) instanceof Number n ? n.longValue() : null);
-        Object refreshToken = response.get(OAuth2Context.REFRESH_TOKEN);
-        if (refreshToken != null) {
-            oauth2Context.set(OAuth2Context.REFRESH_TOKEN, refreshToken.toString());
-        }
-    }
-
-    protected void applyTokenToRequest(HttpRequestSpecification request) {
-        request.header("Authorization", "Bearer " + oauth2Context.accessToken());
+    public AuthContext<OAuth2Config> getAuthContext() {
+        return authContext;
     }
 }

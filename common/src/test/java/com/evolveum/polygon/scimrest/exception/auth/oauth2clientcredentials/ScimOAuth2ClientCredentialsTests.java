@@ -4,7 +4,7 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.exception;
+package com.evolveum.polygon.scimrest.exception.auth.oauth2clientcredentials;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
@@ -14,13 +14,7 @@ import org.testng.annotations.Test;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.*;
 
-/**
- * Integration tests for SCIM OAuth2 client credentials flow.
- *
- * Verifies that the SCIM Jersey client sends the Bearer token obtained via OAuth2
- * when making requests to SCIM endpoints.
- */
-public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2Tests {
+public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCredentialsTests {
 
     private static final String TOKEN_ENDPOINT = "/oauth2/token";
 
@@ -42,8 +36,9 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2Tests {
         createScimConnector(TOKEN_ENDPOINT, "test-client", new GuardedString("test-secret".toCharArray())).schema();
 
         assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))).size(), 1);
-        assertTrue(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(SCHEMAS_ENDPOINT))
-                .withHeader("Authorization", equalTo("Bearer scim-token"))).size() >= 1);
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(SCHEMAS_ENDPOINT))
+                .withHeader("Authorization", equalTo("Bearer scim-token"))).size(), 1);
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 3);
     }
 
     @Test
@@ -56,6 +51,7 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2Tests {
         connector.schema();
 
         assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))).size(), 1);
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 3);
     }
 
     @Test
@@ -65,9 +61,25 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2Tests {
 
         createScimConnector(TOKEN_ENDPOINT, "my-scim-client", new GuardedString("my-scim-secret".toCharArray())).schema();
 
-        assertTrue(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
+        assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
                 .withRequestBody(containing("grant_type=client_credentials"))
                 .withRequestBody(containing("client_id=my-scim-client"))
-                .withRequestBody(containing("client_secret=my-scim-secret"))).size() >= 1);
+                .withRequestBody(containing("client_secret=my-scim-secret"))).size(), 1);
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 3);
+    }
+
+    @Test
+    public void testConnectorFailsWhenTokenEndpointReturns401() {
+        stubTokenEndpointError(TOKEN_ENDPOINT, 401);
+
+        try {
+            createScimConnector(TOKEN_ENDPOINT, "bad-client",
+                    new GuardedString("bad-secret".toCharArray())).schema();
+            fail("Expected ConnectorException was not thrown");
+        } catch (Exception e) {
+            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException,
+                    "Expected ConnectorException but got: " + e.getClass().getName());
+        }
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
     }
 }
