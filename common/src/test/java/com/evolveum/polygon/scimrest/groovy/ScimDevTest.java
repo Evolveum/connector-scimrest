@@ -33,14 +33,14 @@ public class ScimDevTest {
     private static final ObjectClass GROUP_OC = new ObjectClass("Group");
 
 
-    private class TestConfiguration extends BaseRestGroovyConnectorConfiguration implements ScimClientConfiguration.BearerToken {
+    private class TestConfiguration extends BaseRestGroovyConnectorConfiguration implements ScimClientConfiguration.BearerTokenAuthorization {
 
         public TestConfiguration() {
             setDevelopmentMode(true);
         }
 
         @Override
-        public GuardedString getScimBearerToken() {
+        public GuardedString getScimTokenValue() {
             return new GuardedString(BEARER_TOKEN.toCharArray());
         }
 

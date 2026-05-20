@@ -4,11 +4,19 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.exception;
+package com.evolveum.polygon.scimrest.exception.auth.oauth2clientcredentials;
+
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.exception.WireMockTestSupport;
+import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
+import org.identityconnectors.common.security.GuardedString;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
-abstract class AbstractOAuth2Tests extends WireMockTestSupport {
+abstract class AbstractOAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     protected void stubTokenEndpoint(String url, String accessToken, int expiresIn) {
         stubTokenEndpoint(url, accessToken, expiresIn, null, null);
@@ -71,5 +79,66 @@ abstract class AbstractOAuth2Tests extends WireMockTestSupport {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"status\":\"ok\"}")));
+    }
+
+    protected static class BaseClientCredentialsConfig extends BaseTestConfiguration
+            implements RestClientConfiguration.OAuth2ClientCredentialsAuthorization {
+
+        private final String tokenUrl;
+        private final String clientId;
+        private final GuardedString clientSecret;
+
+        BaseClientCredentialsConfig(int port, String testEndpoint, String tokenUrl,
+                                    String clientId, GuardedString clientSecret) {
+            super(port);
+            setRestTestEndpoint(testEndpoint);
+            this.tokenUrl = tokenUrl;
+            this.clientId = clientId;
+            this.clientSecret = clientSecret;
+        }
+
+        @Override
+        public String getRestOAuth2TokenUrl() {
+            return tokenUrl;
+        }
+
+        @Override
+        public String getRestOAuth2ClientId() {
+            return clientId;
+        }
+
+        @Override
+        public GuardedString getRestOAuth2ClientSecret() {
+            return clientSecret;
+        }
+    }
+
+    protected static class OAuth2RestConnector
+            extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
+
+        private final String script;
+
+        OAuth2RestConnector() {
+            super(false);
+            this.script = null;
+        }
+
+        OAuth2RestConnector(String script) {
+            super(false);
+            this.script = script;
+        }
+
+        @Override
+        protected void initializeSchema(GroovySchemaLoader loader) {
+        }
+
+        @Override
+        protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {
+            if (script != null) builder.loadFromString(script);
+        }
+
+        @Override
+        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        }
     }
 }

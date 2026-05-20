@@ -61,10 +61,10 @@ public class ScimExceptionSimulationTest extends WireMockTestSupport {
     }
 
     // Test configuration
-    private static class TestConfiguration extends BaseRestGroovyConnectorConfiguration implements ScimClientConfiguration.BearerToken {
+    private static class TestConfiguration extends BaseRestGroovyConnectorConfiguration implements ScimClientConfiguration.BearerTokenAuthorization {
         private final int port;
         private String scimBaseUrl;
-        private String bearerToken = "test-token";
+        private String token = "test-token";
 
         TestConfiguration(int port) {
             this.port = port;
@@ -82,8 +82,8 @@ public class ScimExceptionSimulationTest extends WireMockTestSupport {
         }
 
         @Override
-        public GuardedString getScimBearerToken() {
-            return new GuardedString(bearerToken.toCharArray());
+        public GuardedString getScimTokenValue() {
+            return new GuardedString(token.toCharArray());
         }
     }
 
