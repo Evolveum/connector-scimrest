@@ -13,7 +13,7 @@ public class ManifestBasedConnector extends AbstractGroovyRestConnector<ReadOnly
     private final ConnectorManifest manifest;
 
     public ManifestBasedConnector() {
-        // Load connector manifest
+        super(false);
         var resource = getClass().getResourceAsStream(CONNECTOR_MANIFEST);
         this.manifest = new ConnectorManifest(resource);
     }

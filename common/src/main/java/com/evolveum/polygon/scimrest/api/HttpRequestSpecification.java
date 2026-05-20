@@ -51,6 +51,20 @@ public class HttpRequestSpecification {
         this.baseUri = baseUri;
     }
 
+    public HttpRequestSpecification(HttpRequestSpecification source) {
+        this(source.baseUri);
+        this.httpMethod = source.httpMethod;
+        this.apiEndpoint = source.apiEndpoint;
+        this.subpath.append(source.subpath);
+        this.queryParameters.putAll(source.queryParameters);
+        this.pathParameters.putAll(source.pathParameters);
+        source.headers.forEach((k, v) -> this.headers.put(k, new ArrayList<>(v)));
+        this.body = source.body != null ? Arrays.copyOf(source.body, source.body.length) : null;
+        this.timeout = source.timeout;
+        this.version = source.version;
+        this.expectContinue = source.expectContinue;
+    }
+
     public HttpRequestSpecification timeout(Duration timeout) {
         this.timeout = timeout;
         return this;

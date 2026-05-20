@@ -34,6 +34,8 @@ import java.time.temporal.ChronoUnit;
 
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.groovy.AuthPreferenceManager;
 
 /**
  * The RestContext class provides a context for executing HTTP requests
@@ -81,8 +83,18 @@ public class RestContext implements RetrievableContext {
         var timeoutSeconds = configuration.getTimeoutSeconds() != null ? configuration.getTimeoutSeconds() : DEFAULT_TIMEOUT_SECONDS;
         var request = new HttpRequestSpecification(configuration.getBaseAddress());
         request.timeout(Duration.of(timeoutSeconds, ChronoUnit.SECONDS));
-        this.customizer.customize(configuration, request);
         return request;
+    }
+
+    public boolean isPreferenceActive() {
+        return customizer instanceof AuthPreferenceManager<?>;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void runProbe() {
+        if (customizer instanceof AuthPreferenceManager<?> pm) {
+            ((AuthPreferenceManager<RestClientConfiguration>) pm).probe(configuration);
+        }
     }
 
     /**
@@ -97,16 +109,33 @@ public class RestContext implements RetrievableContext {
      * @throws IOException if an I/O error occurs while sending or receiving
      * @throws InterruptedException if the operation is interrupted
      */
-    public HttpResponse<?> executeRequest(HttpRequestSpecification requestBuilder, HttpResponse.BodyHandler<?> jsonBodyHandler) throws IOException, InterruptedException {
+    public HttpResponse<?> executeRequest(HttpRequestSpecification spec, HttpResponse.BodyHandler<?> jsonBodyHandler) throws IOException, InterruptedException {
+        var preAuthCopy = new HttpRequestSpecification(spec);
+        customizer.customize(configuration, spec);
+        var response = doSend(spec, jsonBodyHandler);
+
+        if (response.statusCode() == 401 && customizer instanceof AuthPreferenceManager<?> pm) {
+            @SuppressWarnings("unchecked")
+            var typed = (AuthPreferenceManager<RestClientConfiguration>) pm;
+            typed.reprobe(configuration);
+            customizer.customize(configuration, preAuthCopy);
+            LOG.ok("Retrying request after reprobe");
+            response = doSend(preAuthCopy, jsonBodyHandler);
+        }
+
+        return response;
+    }
+
+    private HttpResponse<?> doSend(HttpRequestSpecification spec, HttpResponse.BodyHandler<?> handler) throws IOException, InterruptedException {
         HttpRequest request;
         try {
-            request = new JdkHttpRequestConverter().convert(requestBuilder);
+            request = new JdkHttpRequestConverter().convert(spec);
         } catch (ConnectorException e) {
             Checks.checkConfigurationBaseUri(configuration.getBaseAddress());
             throw e;
         }
         LOG.ok("Executing request {0}", request);
-        return client.send(request, jsonBodyHandler);
+        return client.send(request, handler);
     }
 
 
