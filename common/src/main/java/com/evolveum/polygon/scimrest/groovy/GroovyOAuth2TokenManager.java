@@ -52,9 +52,8 @@ public class GroovyOAuth2TokenManager extends OAuth2TokenManager {
     protected void processTokenResponse(Map<String, Object> response) {
         if (parseTokenResponseHook != null) {
             callHook(parseTokenResponseHook, response);
-            if (getOauth2Context().accessToken() == null) {
-                throw new ConnectorIOException(
-                        "OAuth2 parseTokenResponse hook did not set 'access_token' on the context");
+            if (getAuthContext().get(ACCESS_TOKEN) == null) {
+                throw new ConnectorIOException("OAuth2 parseTokenResponse hook did not set 'access_token' on the context");
             }
         } else {
             super.processTokenResponse(response);
@@ -72,7 +71,7 @@ public class GroovyOAuth2TokenManager extends OAuth2TokenManager {
 
     private Object callHook(Closure<?> hook, Object... args) {
         Closure<?> copy = (Closure<?>) hook.clone();
-        copy.setDelegate(getOauth2Context());
+        copy.setDelegate(getAuthContext());
         copy.setResolveStrategy(Closure.DELEGATE_FIRST);
         return args.length == 0 ? copy.call() : args.length == 1 ? copy.call(args[0]) : copy.call(args);
     }
