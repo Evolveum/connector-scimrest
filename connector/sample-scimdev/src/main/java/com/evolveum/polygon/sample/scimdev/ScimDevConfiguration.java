@@ -11,17 +11,17 @@ import com.evolveum.polygon.scimrest.groovy.BaseGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
-public class ScimDevConfiguration extends BaseGroovyConnectorConfiguration implements ScimClientConfiguration.BearerToken {
+public class ScimDevConfiguration extends BaseGroovyConnectorConfiguration implements ScimClientConfiguration.BearerTokenAuthorization {
 
     private GuardedString tokenValue;
 
-    public void setScimBearerToken(GuardedString tokenValue) {
+    public void setScimTokenValue(GuardedString tokenValue) {
         this.tokenValue = tokenValue;
     }
 
     @Override
     @ConfigurationProperty(groupMessageKey = "scim.auth.tokenValue", required = true)
-    public GuardedString getScimBearerToken() {
+    public GuardedString getScimTokenValue() {
         return tokenValue;
     }
 
