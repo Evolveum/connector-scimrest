@@ -18,7 +18,7 @@ public class ForgejoConnector extends ManifestBasedConnector {
     @Override
     protected AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer() {
         return (c,request) -> {
-            if (c instanceof RestClientConfiguration.TokenAuthorization tokenAuth) {
+            if (c instanceof RestClientConfiguration.BearerTokenAuthorization tokenAuth) {
                 var tokenAccessor = new GuardedStringAccessor();
                 tokenAuth.getRestTokenValue().access(tokenAccessor);
                 request.header("Authorization", "token " + tokenAccessor.getClearString());

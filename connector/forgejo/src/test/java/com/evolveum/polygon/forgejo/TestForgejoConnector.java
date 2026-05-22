@@ -43,7 +43,6 @@ public class TestForgejoConnector {
         var configuration = new ForgejoConfiguration();
 
         configuration.setBaseAddress("...");
-        configuration.setAuthorizationTokenName("...");
         configuration.setAuthorizationTokenValue(new GuardedString("...".toCharArray()));
 
         connector.init(configuration);

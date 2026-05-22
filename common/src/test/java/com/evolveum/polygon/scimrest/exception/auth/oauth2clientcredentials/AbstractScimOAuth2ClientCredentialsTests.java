@@ -4,7 +4,7 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.exception;
+package com.evolveum.polygon.scimrest.exception.auth.oauth2clientcredentials;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
@@ -15,10 +15,10 @@ import org.identityconnectors.common.security.GuardedString;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
-abstract class AbstractScimOAuth2Tests extends AbstractOAuth2Tests {
+abstract class AbstractScimOAuth2ClientCredentialsTests extends AbstractOAuth2ClientCredentialsTests {
 
-    protected static final String SCIM_BASE_PATH     = "/scim";
-    protected static final String SCHEMAS_ENDPOINT   = SCIM_BASE_PATH + "/Schemas";
+    protected static final String SCIM_BASE_PATH = "/scim";
+    protected static final String SCHEMAS_ENDPOINT = SCIM_BASE_PATH + "/Schemas";
     protected static final String RESOURCES_ENDPOINT = SCIM_BASE_PATH + "/ResourceTypes";
 
     protected static final String EMPTY_LIST_RESPONSE = """
@@ -45,15 +45,15 @@ abstract class AbstractScimOAuth2Tests extends AbstractOAuth2Tests {
     }
 
     protected AbstractGroovyRestConnector<?> createScimConnector(String tokenEndpoint,
-                                                                  String clientId,
-                                                                  GuardedString clientSecret) {
+                                                                 String clientId,
+                                                                 GuardedString clientSecret) {
         return createScimConnector(tokenEndpoint, clientId, clientSecret, null);
     }
 
     protected AbstractGroovyRestConnector<?> createScimConnector(String tokenEndpoint,
-                                                                  String clientId,
-                                                                  GuardedString clientSecret,
-                                                                  String groovyScript) {
+                                                                 String clientId,
+                                                                 GuardedString clientSecret,
+                                                                 String groovyScript) {
         var config = new ScimOAuth2TestConfig(wireMockServer.port(), tokenEndpoint, clientId, clientSecret);
         var connector = new ScimOAuth2TestConnector(groovyScript);
         connector.init(config);
@@ -61,7 +61,7 @@ abstract class AbstractScimOAuth2Tests extends AbstractOAuth2Tests {
     }
 
     protected class ScimOAuth2TestConfig extends BaseGroovyConnectorConfiguration
-            implements ScimClientConfiguration.OAuth2Authorization {
+            implements ScimClientConfiguration.OAuth2ClientCredentialsAuthorization {
 
         private final int port;
         private final String tokenEndpoint;
@@ -75,11 +75,25 @@ abstract class AbstractScimOAuth2Tests extends AbstractOAuth2Tests {
             this.clientSecret = clientSecret;
         }
 
-        @Override public String getScimBaseUrl()           { return "http://localhost:" + port + SCIM_BASE_PATH; }
-        @Override public String getScimOAuthTokenUrl()     { return "http://localhost:" + port + tokenEndpoint; }
-        @Override public String getScimOAuthClientId()     { return clientId; }
-        @Override public GuardedString getScimOAuthClientSecret() { return clientSecret; }
-        @Override public GuardedString getScimOAuthPrivateKey()   { return null; }
+        @Override
+        public String getScimBaseUrl() {
+            return "http://localhost:" + port + SCIM_BASE_PATH;
+        }
+
+        @Override
+        public String getScimOAuth2TokenUrl() {
+            return "http://localhost:" + port + tokenEndpoint;
+        }
+
+        @Override
+        public String getScimOAuth2ClientId() {
+            return clientId;
+        }
+
+        @Override
+        public GuardedString getScimOAuth2ClientSecret() {
+            return clientSecret;
+        }
     }
 
     protected static class ScimOAuth2TestConnector
@@ -92,16 +106,17 @@ abstract class AbstractScimOAuth2Tests extends AbstractOAuth2Tests {
             this.groovyScript = groovyScript;
         }
 
-        @Override protected void initializeSchema(GroovySchemaLoader loader) {}
-
         @Override
-        protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {
-            if (groovyScript != null) {
-                builder.loadFromString(groovyScript);
-            }
+        protected void initializeSchema(GroovySchemaLoader loader) {
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {}
+        protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {
+            if (groovyScript != null) builder.loadFromString(groovyScript);
+        }
+
+        @Override
+        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        }
     }
 }

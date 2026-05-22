@@ -118,25 +118,29 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         // FIXME: But makes sense to do again, if connector is poolable (in future)
         var restClientConfig = getConfiguration().configuration(RestClientConfiguration.class);
         if (restClientConfig != null && restClientConfig.getRestTestEndpoint() != null) {
-            var request = context.rest().newAuthorizedRequest();
-            request.subpath(restClientConfig.getRestTestEndpoint());
-            try {
-                var response = context.rest().executeRequest(request, HttpResponse.BodyHandlers.discarding());
-                if (!isSuccess(response.statusCode())) {
-                    switch (response.statusCode()) {
-                        case 401:
-                        case 403:
-                            throw new InvalidCredentialException("Authentication required, HTTP status code " + response.statusCode());
-                        default:
-                            throw new ConnectionFailedException("Connection failed. HTTP status code " + response.statusCode());
+            if (context.rest().isPreferenceActive()) {
+                context.rest().runProbe();
+            } else {
+                var request = context.rest().newAuthorizedRequest();
+                request.subpath(restClientConfig.getRestTestEndpoint());
+                try {
+                    var response = context.rest().executeRequest(request, HttpResponse.BodyHandlers.discarding());
+                    if (!isSuccess(response.statusCode())) {
+                        switch (response.statusCode()) {
+                            case 401:
+                            case 403:
+                                throw new InvalidCredentialException("Authentication required, HTTP status code " + response.statusCode());
+                            default:
+                                throw new ConnectionFailedException("Connection failed. HTTP status code " + response.statusCode());
+                        }
                     }
+                } catch (IOException e) {
+                    throw new ConnectionFailedException(e);
+                } catch (IllegalArgumentException e) {
+                    throw new ConnectionFailedException("DNS or URI configuration error: " + e.getMessage(), e);
+                } catch (InterruptedException e) {
+                    throw new ConnectionBrokenException("Operation was interrupted", e);
                 }
-            } catch (IOException e) {
-                throw new ConnectionFailedException(e);
-            } catch (IllegalArgumentException e) {
-                throw new ConnectionFailedException("DNS or URI configuration error: " + e.getMessage(), e);
-            } catch (InterruptedException e) {
-                throw new ConnectionBrokenException("Operation was interrupted", e);
             }
         }
     }
