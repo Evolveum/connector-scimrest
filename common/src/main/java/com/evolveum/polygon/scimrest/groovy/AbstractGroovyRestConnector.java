@@ -11,6 +11,7 @@ import com.evolveum.polygon.scimrest.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import jakarta.ws.rs.WebApplicationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
@@ -120,6 +121,22 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         if (restClientConfig != null && restClientConfig.getRestTestEndpoint() != null) {
             if (context.rest().isPreferenceActive()) {
                 context.rest().runProbe();
+            } else if (context.isScimEnabled()) {
+                var testUrl = restClientConfig.getBaseAddress() + restClientConfig.getRestTestEndpoint();
+                try {
+                    context.scim().httpClient().target(testUrl).request().get().close();
+                } catch (WebApplicationException e) {
+                    var status = e.getResponse().getStatus();
+                    switch (status) {
+                        case 401:
+                        case 403:
+                            throw new InvalidCredentialException("Authentication required, HTTP status code " + status, e);
+                        default:
+                            throw new ConnectionFailedException("Connection failed. HTTP status code " + status, e);
+                    }
+                } catch (Exception e) {
+                    throw new ConnectionFailedException(e.getMessage(), e);
+                }
             } else {
                 var request = context.rest().newAuthorizedRequest();
                 request.subpath(restClientConfig.getRestTestEndpoint());

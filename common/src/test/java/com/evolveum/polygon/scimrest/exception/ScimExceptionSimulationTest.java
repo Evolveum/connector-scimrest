@@ -23,6 +23,40 @@ public class ScimExceptionSimulationTest extends WireMockTestSupport {
     }
 
     @Test
+    public void test401UnauthorizedNoJsonbException() {
+        setUpWireMock();
+
+        wireMockServer.stubFor(get(urlPathMatching("/scim/v2/.*"))
+            .willReturn(aResponse().withStatus(401)));
+
+        TestConfiguration config = new TestConfiguration(wireMockServer.port());
+        TestScimConnector connector = new TestScimConnector(config);
+        connector.init(config);
+
+        try {
+            connector.schema();
+            fail("Expected exception was not thrown for SCIM 401");
+        } catch (Exception e) {
+            assertTrue(e.getMessage() != null && containsStatusCode(e, "401"),
+                "Exception chain should reference HTTP 401, got: " + e.getMessage());
+            assertNoJsonbException(e);
+        }
+    }
+
+    private boolean containsStatusCode(Throwable e, String code) {
+        if (e == null) return false;
+        if (e.getMessage() != null && e.getMessage().contains(code)) return true;
+        return containsStatusCode(e.getCause(), code);
+    }
+
+    private void assertNoJsonbException(Throwable e) {
+        if (e == null) return;
+        assertFalse(e.getClass().getName().contains("JsonbException"),
+            "JsonbException should not appear in the cause chain");
+        assertNoJsonbException(e.getCause());
+    }
+
+    @Test
     public void testScimSearchFailure() {
         setUpWireMock();
 

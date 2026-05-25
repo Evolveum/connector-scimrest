@@ -129,6 +129,32 @@ public class BasicAuthTests extends WireMockTestSupport {
     }
 
     /**
+     * Built-in basic auth sends Authorization: Basic <value> without any Groovy script.
+     */
+    @Test
+    public void testBuiltinHttpBasicSentToTestEndpoint() {
+        String expectedHeader = "Basic " + Base64.getEncoder().encodeToString("admin:s3cr3t".getBytes());
+        wireMockServer.stubFor(get(urlEqualTo(API_ENDPOINT))
+                .withHeader("Authorization", equalTo(expectedHeader))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"status\":\"ok\"}")));
+
+        var config = new TestConfiguration(wireMockServer.port());
+        config.testEndpoint = API_ENDPOINT;
+        config.username = "admin";
+        config.password = new GuardedString("s3cr3t".toCharArray());
+
+        var connector = new ScriptConnector(null);
+        connector.init(config);
+        connector.test();
+
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(API_ENDPOINT))
+                .withHeader("Authorization", equalTo(expectedHeader))).size(), 1);
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
+    }
+
+    /**
      * implementation block sets a static Basic auth header.
      */
     @Test

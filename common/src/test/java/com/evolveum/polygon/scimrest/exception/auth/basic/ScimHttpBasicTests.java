@@ -10,6 +10,7 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.exception.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -129,6 +130,29 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 2);
     }
 
+    /**
+     * Built-in SCIM HTTP Basic sends Authorization: Basic <value> to the REST test endpoint.
+     */
+    @Test
+    public void testBuiltinHttpBasicSentToTestEndpoint() {
+        String testEndpoint = "/health";
+        String expectedHeader = "Basic " + Base64.getEncoder().encodeToString("admin:s3cr3t".getBytes());
+        stubScimEndpoints("Authorization", expectedHeader);
+        wireMockServer.stubFor(get(urlEqualTo(testEndpoint))
+                .willReturn(aResponse().withStatus(200)));
+
+        var config = new ScimHttpBasicRestConfig(wireMockServer.port(), "admin",
+                new GuardedString("s3cr3t".toCharArray()));
+        config.setRestTestEndpoint(testEndpoint);
+        var connector = new ScriptConnector(null);
+        connector.init(config);
+        connector.test();
+
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(testEndpoint))
+                .withHeader("Authorization", equalTo(expectedHeader))).size(), 1);
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 3);
+    }
+
     // --- helpers ---
 
     private void stubScimEndpoints(String headerName, String headerValue) {
@@ -150,6 +174,36 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
         var connector = new ScriptConnector(script);
         connector.init(config);
         return connector;
+    }
+
+    private class ScimHttpBasicRestConfig extends BaseRestGroovyConnectorConfiguration
+            implements ScimClientConfiguration.HttpBasic {
+
+        private final int port;
+        private final String username;
+        private final GuardedString password;
+
+        ScimHttpBasicRestConfig(int port, String username, GuardedString password) {
+            this.port = port;
+            this.username = username;
+            this.password = password;
+            setBaseAddress("http://localhost:" + port);
+        }
+
+        @Override
+        public String getScimBaseUrl() {
+            return "http://localhost:" + port + SCIM_BASE_PATH;
+        }
+
+        @Override
+        public String getScimUsername() {
+            return username;
+        }
+
+        @Override
+        public GuardedString getScimPassword() {
+            return password;
+        }
     }
 
     private class ScimHttpBasicConfig extends BaseGroovyConnectorConfiguration

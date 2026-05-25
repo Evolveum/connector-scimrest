@@ -72,6 +72,7 @@ public class ScimContext implements RetrievableContext {
                 sslContext.init(null, new TrustManager[]{RestContext.TRUST_ALL}, new SecureRandom());
                 clientBuilder.sslContext(sslContext);
             }
+            clientBuilder.register(new ScimHttpErrorFilter());
             if (authentication != null) {
                 clientBuilder.register(new JerseyRequestCustomizerFilter(authentication, scimConf));
             }
@@ -242,6 +243,10 @@ public class ScimContext implements RetrievableContext {
 
     public ScimService scimClient() {
         return scimClient;
+    }
+
+    public Client httpClient() {
+        return httpClient;
     }
 
     public ScimResourceContext resourceForObjectClass(ObjectClass objectClass) {
