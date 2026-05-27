@@ -37,7 +37,6 @@ import java.util.Map;
 
 public class ScimContext implements RetrievableContext {
 
-
     private final ContextLookup contextLookup;
     private final ScimService scimClient;
     private final Client httpClient;
@@ -72,6 +71,7 @@ public class ScimContext implements RetrievableContext {
                 sslContext.init(null, new TrustManager[]{RestContext.TRUST_ALL}, new SecureRandom());
                 clientBuilder.sslContext(sslContext);
             }
+            clientBuilder.register(new ScimHttpErrorFilter());
             if (authentication != null) {
                 clientBuilder.register(new JerseyRequestCustomizerFilter(authentication, scimConf));
             }
@@ -96,8 +96,11 @@ public class ScimContext implements RetrievableContext {
                 var primary = schemas.get(resource.getSchema().toString());
                 var extensions = new HashMap<String, SchemaResource>();
                 var relativeEndpoint = relativeEndpoint(resource.getEndpoint());
-                for (var ext : resource.getSchemaExtensions()) {
-                    extensions.put(ext.getSchema().toString(), schemas.get(ext.getSchema().toString()));
+                var schemaExtensions = resource.getSchemaExtensions();
+                if (schemaExtensions != null) {
+                    for (var ext : schemaExtensions) {
+                        extensions.put(ext.getSchema().toString(), schemas.get(ext.getSchema().toString()));
+                    }
                 }
                 resources.put(resource.getId(), new ScimResourceContext(resource, relativeEndpoint, primary, extensions));
             }
@@ -112,8 +115,6 @@ public class ScimContext implements RetrievableContext {
     /**
      * Creates relative URI from absolute URI based on {@link ScimClientConfiguration#getScimBaseUrl()}
      *
-     *
-     *
      * @param endpoint
      * @return
      */
@@ -125,8 +126,8 @@ public class ScimContext implements RetrievableContext {
         URI base = URI.create(configuration.getScimBaseUrl().trim());
         // Fail early if base URL is missing path
         String basePath = base.getPath();
-        if (basePath == null || basePath.isEmpty()) {
-            throw new IllegalArgumentException("Base URL is missing");
+        if (basePath == null) {
+            basePath = "";
         }
         if (!basePath.endsWith("/")) {
             basePath = basePath + "/";
@@ -149,7 +150,7 @@ public class ScimContext implements RetrievableContext {
 
         if (!epPath.startsWith(basePath)) {
             throw new IllegalArgumentException(
-                    "Endpoint path: " + epPath + "not under basePath=" + basePath
+                    "Endpoint path: " + epPath + " not under basePath=" + basePath
             );
         }
 
@@ -242,6 +243,10 @@ public class ScimContext implements RetrievableContext {
 
     public ScimService scimClient() {
         return scimClient;
+    }
+
+    public Client httpClient() {
+        return httpClient;
     }
 
     public ScimResourceContext resourceForObjectClass(ObjectClass objectClass) {

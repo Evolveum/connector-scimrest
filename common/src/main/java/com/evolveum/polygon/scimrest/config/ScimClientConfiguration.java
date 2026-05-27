@@ -7,13 +7,12 @@
 package com.evolveum.polygon.scimrest.config;
 
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.spi.ConfigurationProperty;
 
 public interface ScimClientConfiguration extends ConfigurationMixin {
 
     String getScimBaseUrl();
 
-    interface HttpBasic extends ScimClientConfiguration {
+    interface BasicAuthorization extends ScimClientConfiguration {
 
         String getScimUsername();
 
@@ -37,7 +36,6 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
         String getScimJwtTokenName();
 
         /** JWT signing algorithm. */
-        @ConfigurationProperty(allowedValues = {"HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
         String getScimJwtAlgorithm();
 
         /** Secret or private key used to sign the JWT. */
@@ -58,11 +56,9 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
         GuardedString getScimApiKey();
 
         /** Name of the header or query parameter that carries the key (e.g. {@code X-API-Key}, {@code api_key}). */
-        @ConfigurationProperty(displayMessageKey = "scim.apikey.name")
         String getScimApiKeyName();
 
         /** Where to place the key: {@code header} or {@code query}. */
-        @ConfigurationProperty(displayMessageKey = "scim.apikey.location")
         String getScimApiKeyLocation();
 
     }
@@ -110,8 +106,8 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
             return configuration instanceof BearerTokenAuthorization token
                     && token.getScimTokenValue() != null;
         }
-        if (HttpBasic.class.isAssignableFrom(type)) {
-            return configuration instanceof HttpBasic basic
+        if (BasicAuthorization.class.isAssignableFrom(type)) {
+            return configuration instanceof BasicAuthorization basic
                     && basic.getScimUsername() != null && basic.getScimPassword() != null;
         }
         return false;

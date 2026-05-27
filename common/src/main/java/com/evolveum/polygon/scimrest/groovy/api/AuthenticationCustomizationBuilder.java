@@ -102,10 +102,10 @@ public interface AuthenticationCustomizationBuilder {
             withImplementation(ScimClientConfiguration.ApiKeyAuthorization.class, o);
         }
 
-        default void httpBasic(
+        default void basic(
                 @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o) {
-            withImplementation(ScimClientConfiguration.HttpBasic.class, o);
+            withImplementation(ScimClientConfiguration.BasicAuthorization.class, o);
         }
 
         void oauth2ClientCredentials(
@@ -131,8 +131,8 @@ public interface AuthenticationCustomizationBuilder {
             return ScimClientConfiguration.ApiKeyAuthorization.class;
         }
 
-        default Class<? extends ScimClientConfiguration> getHttpBasic() {
-            return ScimClientConfiguration.HttpBasic.class;
+        default Class<? extends ScimClientConfiguration> getBasic() {
+            return ScimClientConfiguration.BasicAuthorization.class;
         }
 
         default Class<? extends ScimClientConfiguration> getOauth2ClientCredentials() {

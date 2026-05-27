@@ -73,11 +73,10 @@ public class RestContext implements RetrievableContext {
     }
 
     /**
-     * Creates and returns a new request with authorization added using the base address from the configuration
-     * and applying any customizations defined by the provided {@code AuthorizationCustomizer}.
+     * Creates a new request initialized with the base address and timeout from the configuration.
+     * Authorization is applied later when the request is executed via {@link #executeRequest}.
      *
-     * @return a new instance of {@code RequestBuilder} that has been initialized with the base URI
-     *         and customized for authorization.
+     * @return a new {@code HttpRequestSpecification} with base URI and timeout set.
      */
     public HttpRequestSpecification newAuthorizedRequest() {
         var timeoutSeconds = configuration.getTimeoutSeconds() != null ? configuration.getTimeoutSeconds() : DEFAULT_TIMEOUT_SECONDS;

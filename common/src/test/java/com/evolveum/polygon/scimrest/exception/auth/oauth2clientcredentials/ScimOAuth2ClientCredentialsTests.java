@@ -6,6 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.exception.auth.oauth2clientcredentials;
 
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -69,6 +71,27 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCr
     }
 
     @Test
+    public void testOAuth2TokenSentToTestEndpoint() {
+        String testEndpoint = "/health";
+        stubTokenEndpoint(TOKEN_ENDPOINT, "endpoint-scim-token", 3600);
+        stubScimEndpoints("endpoint-scim-token");
+        wireMockServer.stubFor(get(urlEqualTo(testEndpoint))
+                .willReturn(aResponse().withStatus(200)));
+
+        var config = new ScimOAuth2RestConfig(wireMockServer.port(), TOKEN_ENDPOINT, "my-client",
+                new GuardedString("my-secret".toCharArray()));
+        config.setRestTestEndpoint(testEndpoint);
+        var connector = new ScimOAuth2TestConnector(null);
+        connector.init(config);
+        connector.test();
+
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(testEndpoint))
+                .withHeader("Authorization", equalTo("Bearer endpoint-scim-token"))).size(), 1);
+        // 1 token fetch + 2 SCIM discovery + 1 test endpoint
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 4);
+    }
+
+    @Test
     public void testConnectorFailsWhenTokenEndpointReturns401() {
         stubTokenEndpointError(TOKEN_ENDPOINT, 401);
 
@@ -81,5 +104,44 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCr
                     "Expected ConnectorException but got: " + e.getClass().getName());
         }
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
+    }
+
+    // --- config class for test endpoint tests ---
+
+    private class ScimOAuth2RestConfig extends BaseRestGroovyConnectorConfiguration
+            implements ScimClientConfiguration.OAuth2ClientCredentialsAuthorization {
+
+        private final int port;
+        private final String tokenEndpoint;
+        private final String clientId;
+        private final GuardedString clientSecret;
+
+        ScimOAuth2RestConfig(int port, String tokenEndpoint, String clientId, GuardedString clientSecret) {
+            this.port = port;
+            this.tokenEndpoint = tokenEndpoint;
+            this.clientId = clientId;
+            this.clientSecret = clientSecret;
+            setBaseAddress("http://localhost:" + port);
+        }
+
+        @Override
+        public String getScimBaseUrl() {
+            return "http://localhost:" + port + SCIM_BASE_PATH;
+        }
+
+        @Override
+        public String getScimOAuth2TokenUrl() {
+            return "http://localhost:" + port + tokenEndpoint;
+        }
+
+        @Override
+        public String getScimOAuth2ClientId() {
+            return clientId;
+        }
+
+        @Override
+        public GuardedString getScimOAuth2ClientSecret() {
+            return clientSecret;
+        }
     }
 }

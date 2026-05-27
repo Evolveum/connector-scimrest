@@ -16,8 +16,12 @@ import org.identityconnectors.framework.spi.ConfigurationProperty;
 
 @ConfigurationClass(overrideFile = "configurationOverride.properties")
 public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration implements
+        ScimClientConfiguration.BasicAuthorization,
         ScimClientConfiguration.BearerTokenAuthorization,
         ScimClientConfiguration.JwtBearerAuthorization,
+        ScimClientConfiguration.ApiKeyAuthorization,
+        ScimClientConfiguration.OAuth2ClientCredentialsAuthorization,
+        ScimClientConfiguration.OAuth2JwtBearerAuthorization,
         RestClientConfiguration.BasicAuthorization,
         RestClientConfiguration.ApiKeyAuthorization,
         RestClientConfiguration.BearerTokenAuthorization,
@@ -60,6 +64,10 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // --- REST OAuth2JwtBearerAuthorization ---
     private GuardedString restOAuth2PrivateKey;
 
+    // --- SCIM BasicAuthorization ---
+    private String scimUsername;
+    private GuardedString scimPassword;
+
     // --- SCIM BearerTokenAuthorization ---
     private GuardedString scimTokenValue;
 
@@ -70,6 +78,21 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private Boolean scimJwtSecretBase64Encoded;
     private String scimJwtPayload;
     private String scimJwtLocalization;
+
+    // --- SCIM ApiKeyAuthorization ---
+    private GuardedString scimApiKey;
+    private String scimApiKeyName;
+    private String scimApiKeyLocation;
+
+    // --- SCIM OAuth2 (shared fields) ---
+    private String scimOAuth2TokenUrl;
+    private String scimOAuth2ClientId;
+
+    // --- SCIM OAuth2ClientCredentialsAuthorization ---
+    private GuardedString scimOAuth2ClientSecret;
+
+    // --- SCIM OAuth2JwtBearerAuthorization ---
+    private GuardedString scimOAuth2PrivateKey;
 
     private String scimBaseUrl;
 
@@ -296,6 +319,30 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     // =========================================================================
+    // SCIM BasicAuthorization
+    // =========================================================================
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "scim.basic.username")
+    public String getScimUsername() {
+        return scimUsername;
+    }
+
+    public void setScimUsername(String scimUsername) {
+        this.scimUsername = scimUsername;
+    }
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "scim.basic.password")
+    public GuardedString getScimPassword() {
+        return scimPassword;
+    }
+
+    public void setScimPassword(GuardedString scimPassword) {
+        this.scimPassword = scimPassword;
+    }
+
+    // =========================================================================
     // SCIM BearerTokenAuthorization
     // =========================================================================
 
@@ -324,7 +371,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.algorithm", order = 20)
+    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.algorithm", order = 20, allowedValues = {"HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
     public String getScimJwtAlgorithm() {
         return scimJwtAlgorithm;
     }
@@ -371,6 +418,92 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
 
     public void setScimJwtLocalization(String scimJwtLocalization) {
         this.scimJwtLocalization = scimJwtLocalization;
+    }
+
+    // =========================================================================
+    // SCIM ApiKeyAuthorization
+    // =========================================================================
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "scim.apikey.value")
+    public GuardedString getScimApiKey() {
+        return scimApiKey;
+    }
+
+    public void setScimApiKey(GuardedString scimApiKey) {
+        this.scimApiKey = scimApiKey;
+    }
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "scim.apikey.name")
+    public String getScimApiKeyName() {
+        return scimApiKeyName;
+    }
+
+    public void setScimApiKeyName(String scimApiKeyName) {
+        this.scimApiKeyName = scimApiKeyName;
+    }
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "scim.apikey.location")
+    public String getScimApiKeyLocation() {
+        return scimApiKeyLocation;
+    }
+
+    public void setScimApiKeyLocation(String scimApiKeyLocation) {
+        this.scimApiKeyLocation = scimApiKeyLocation;
+    }
+
+    // =========================================================================
+    // SCIM OAuth2 — shared
+    // =========================================================================
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.tokenUrl")
+    public String getScimOAuth2TokenUrl() {
+        return scimOAuth2TokenUrl;
+    }
+
+    public void setScimOAuth2TokenUrl(String scimOAuth2TokenUrl) {
+        this.scimOAuth2TokenUrl = scimOAuth2TokenUrl;
+    }
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.clientId")
+    public String getScimOAuth2ClientId() {
+        return scimOAuth2ClientId;
+    }
+
+    public void setScimOAuth2ClientId(String scimOAuth2ClientId) {
+        this.scimOAuth2ClientId = scimOAuth2ClientId;
+    }
+
+    // =========================================================================
+    // SCIM OAuth2ClientCredentialsAuthorization
+    // =========================================================================
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.clientSecret")
+    public GuardedString getScimOAuth2ClientSecret() {
+        return scimOAuth2ClientSecret;
+    }
+
+    public void setScimOAuth2ClientSecret(GuardedString scimOAuth2ClientSecret) {
+        this.scimOAuth2ClientSecret = scimOAuth2ClientSecret;
+    }
+
+    // =========================================================================
+    // SCIM OAuth2JwtBearerAuthorization
+    // =========================================================================
+
+    @Override
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.privateKey")
+    public GuardedString getScimOAuth2PrivateKey() {
+        return scimOAuth2PrivateKey;
+    }
+
+    public void setScimOAuth2PrivateKey(GuardedString scimOAuth2PrivateKey) {
+        this.scimOAuth2PrivateKey = scimOAuth2PrivateKey;
     }
 
     @Override
