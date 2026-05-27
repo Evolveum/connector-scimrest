@@ -10,6 +10,7 @@ import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
 import jakarta.ws.rs.WebApplicationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
@@ -119,10 +120,12 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         // FIXME: But makes sense to do again, if connector is poolable (in future)
         var restClientConfig = getConfiguration().configuration(RestClientConfiguration.class);
         if (restClientConfig != null && restClientConfig.getRestTestEndpoint() != null) {
-            if (context.rest().isPreferenceActive()) {
+            if (context.rest() != null && context.rest().isPreferenceActive()) {
                 context.rest().runProbe();
             } else if (context.isScimEnabled()) {
-                var testUrl = restClientConfig.getBaseAddress() + restClientConfig.getRestTestEndpoint();
+                var scimBase = ((ScimClientConfiguration) getConfiguration()).getScimBaseUrl();
+                var testUrl = scimBase + restClientConfig.getRestTestEndpoint();
+
                 try {
                     context.scim().httpClient().target(testUrl).request().get().close();
                 } catch (WebApplicationException e) {
@@ -137,7 +140,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
                 } catch (Exception e) {
                     throw new ConnectionFailedException(e.getMessage(), e);
                 }
-            } else {
+            } else if (context.rest() != null) {
                 var request = context.rest().newAuthorizedRequest();
                 request.subpath(restClientConfig.getRestTestEndpoint());
                 try {
