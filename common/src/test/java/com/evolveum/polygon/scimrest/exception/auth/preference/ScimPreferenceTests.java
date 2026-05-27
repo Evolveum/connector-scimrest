@@ -59,7 +59,7 @@ public class ScimPreferenceTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        httpBasic {
+                        basic {
                             implementation {
                                 request.header("Authorization", "Basic cHJpbWFyeTpwYXNz")
                             }
@@ -69,7 +69,7 @@ public class ScimPreferenceTests extends WireMockTestSupport {
                                 request.header("Authorization", "Bearer fallback-token")
                             }
                         }
-                        preference httpBasic, bearerToken
+                        preference basic, bearerToken
                     }
                 }
                 """;
@@ -101,7 +101,7 @@ public class ScimPreferenceTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        httpBasic {
+                        basic {
                             implementation {
                                 request.header("Authorization", "Basic cHJpbWFyeTpwYXNz")
                             }
@@ -111,7 +111,7 @@ public class ScimPreferenceTests extends WireMockTestSupport {
                                 request.header("Authorization", "Bearer fallback-token")
                             }
                         }
-                        preference httpBasic, bearerToken
+                        preference basic, bearerToken
                     }
                 }
                 """;
@@ -140,7 +140,7 @@ public class ScimPreferenceTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        httpBasic {
+                        basic {
                             implementation {
                                 request.header("Authorization", "Basic cHJpbWFyeTpwYXNz")
                             }
@@ -181,17 +181,17 @@ public class ScimPreferenceTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        httpBasic {
+                        basic {
                             implementation {
                                 request.header("Authorization", "Basic djEta2V5OnBhc3M=")
                             }
                         }
-                        httpBasic {
+                        basic {
                             implementation {
                                 request.header("Authorization", "Basic djIta2V5OnBhc3M=")
                             }
                         }
-                        preference httpBasic
+                        preference basic
                     }
                 }
                 """;
@@ -226,7 +226,7 @@ public class ScimPreferenceTests extends WireMockTestSupport {
     }
 
     private static class TestConfiguration extends BaseTestConfiguration
-            implements ScimClientConfiguration.HttpBasic,
+            implements ScimClientConfiguration.BasicAuthorization,
             ScimClientConfiguration.BearerTokenAuthorization {
 
         private final int port;

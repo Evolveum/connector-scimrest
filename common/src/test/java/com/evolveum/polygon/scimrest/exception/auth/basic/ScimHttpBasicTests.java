@@ -51,7 +51,7 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        httpBasic {
+                        basic {
                             implementation {
                                 request.header("Authorization", "Basic dXNlcjpwYXNz")
                             }
@@ -78,7 +78,7 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        httpBasic {
+                        basic {
                             implementation {
                                 def creds = configuration.scimUsername + ":" + decrypt(configuration.scimPassword)
                                 request.header("Authorization", "Basic " + creds.bytes.encodeBase64())
@@ -106,7 +106,7 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        httpBasic {
+                        basic {
                             implementation {
                                 if (!ctx["credentials"]) {
                                     def creds = configuration.scimUsername + ":" + decrypt(configuration.scimPassword)
@@ -177,7 +177,7 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
     }
 
     private class ScimHttpBasicRestConfig extends BaseRestGroovyConnectorConfiguration
-            implements ScimClientConfiguration.HttpBasic {
+            implements ScimClientConfiguration.BasicAuthorization {
 
         private final int port;
         private final String username;
@@ -207,7 +207,7 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
     }
 
     private class ScimHttpBasicConfig extends BaseGroovyConnectorConfiguration
-            implements ScimClientConfiguration.HttpBasic {
+            implements ScimClientConfiguration.BasicAuthorization {
 
         private final int port;
         private final String username;

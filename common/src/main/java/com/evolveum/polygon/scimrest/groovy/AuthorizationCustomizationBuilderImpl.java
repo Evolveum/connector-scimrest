@@ -117,8 +117,8 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
                 request.header(apiKeyConf.getScimApiKeyName(), accessor.getClearString());
             }
         });
-        scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.HttpBasic.class, (conf, request) -> {
-            var basic = conf.require(ScimClientConfiguration.HttpBasic.class);
+        scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.BasicAuthorization.class, (conf, request) -> {
+            var basic = conf.require(ScimClientConfiguration.BasicAuthorization.class);
             var accessor = new GuardedStringAccessor();
             basic.getScimPassword().access(accessor);
             String credentials = basic.getScimUsername() + ":" + accessor.getClearString();
