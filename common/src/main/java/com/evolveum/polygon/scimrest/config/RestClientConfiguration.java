@@ -21,13 +21,14 @@ public interface RestClientConfiguration extends ConfigurationMixin {
     }
 
     /**
-     *
      * Represents an HTTP Basic Authorization configuration.
      *
      * This configuration extends {@link RestClientConfiguration} and can be used
      * to provide the necessary credentials for performing HTTP Basic Authentication.
      *
      * Should be used only in connectors to systems which does not support Bearer or Token based authorization.
+     *
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc7617">RFC 7617 — The 'Basic' HTTP Authentication Scheme</a>
      */
     interface BasicAuthorization extends RestClientConfiguration {
 
@@ -41,6 +42,8 @@ public interface RestClientConfiguration extends ConfigurationMixin {
 
     /**
      * Simple Bearer token authorization — sends the token as {@code Authorization: Bearer <value>}.
+     *
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc6750">RFC 6750 — The OAuth 2.0 Authorization Framework: Bearer Token Usage</a>
      */
     interface BearerTokenAuthorization extends RestClientConfiguration {
         GuardedString getRestTokenValue();
@@ -49,6 +52,9 @@ public interface RestClientConfiguration extends ConfigurationMixin {
     /**
      * JWT Bearer token authorization — generates a signed JWT assertion and sends it as a token.
      * The token name and localization control how the JWT is placed in the request.
+     *
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc7519">RFC 7519 — JSON Web Token (JWT)</a>
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc7515">RFC 7515 — JSON Web Signature (JWS)</a>
      */
     interface JwtBearerAuthorization extends RestClientConfiguration {
 
@@ -76,6 +82,7 @@ public interface RestClientConfiguration extends ConfigurationMixin {
      *
      * The API key is sent as a header or query parameter as specified by {@link #getRestApiKeyLocation()}.
      * Use this for systems that authenticate via a static API key rather than user credentials or tokens.
+     * There is no formal standard; this follows common industry convention.
      */
     interface ApiKeyAuthorization extends RestClientConfiguration {
 
@@ -91,6 +98,8 @@ public interface RestClientConfiguration extends ConfigurationMixin {
 
     /**
      * HTTP Digest authorization.
+     *
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc7616">RFC 7616 — HTTP Digest Access Authentication</a>
      */
     interface DigestAuthorization extends RestClientConfiguration {
 
@@ -120,6 +129,8 @@ public interface RestClientConfiguration extends ConfigurationMixin {
      * OAuth 2.0 Client Credentials grant authorization.
      * Authenticates with client ID and secret to obtain an access token.
      * Tokens are cached and refreshed automatically when they expire.
+     *
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc6749#section-4.4">RFC 6749 §4.4 — Client Credentials Grant</a>
      */
     interface OAuth2ClientCredentialsAuthorization extends RestClientConfiguration {
 
@@ -147,6 +158,8 @@ public interface RestClientConfiguration extends ConfigurationMixin {
 
     /**
      * OAuth 2.0 Resource Owner Password Credentials grant authorization.
+     *
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc6749#section-4.3">RFC 6749 §4.3 — Resource Owner Password Credentials Grant</a>
      */
     interface OAuth2PasswordAuthorization extends RestClientConfiguration {
 
@@ -176,9 +189,11 @@ public interface RestClientConfiguration extends ConfigurationMixin {
     }
 
     /**
-     * OAuth 2.0 JWT Bearer grant authorization (RFC 7523).
+     * OAuth 2.0 JWT Bearer grant authorization.
      * Authenticates by signing a JWT assertion with a private key; no client secret needed.
      * Tokens are cached and refreshed automatically when they expire.
+     *
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc7523">RFC 7523 — JWT Profile for OAuth 2.0 Client Authentication and Authorization Grants</a>
      */
     interface OAuth2JwtBearerAuthorization extends RestClientConfiguration {
 
@@ -220,8 +235,10 @@ public interface RestClientConfiguration extends ConfigurationMixin {
     }
 
     /**
-     * OAuth 2.0 SAML Bearer grant authorization (RFC 7522).
+     * OAuth 2.0 SAML Bearer grant authorization.
      * Authenticates using a SAML assertion signed with a private key.
+     *
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc7522">RFC 7522 — SAML Profile for OAuth 2.0 Client Authentication and Authorization Grants</a>
      */
     interface OAuth2SamlAuthorization extends RestClientConfiguration {
 
@@ -252,6 +269,8 @@ public interface RestClientConfiguration extends ConfigurationMixin {
 
     /**
      * Hawk authentication (MAC-based HTTP request signing).
+     *
+     * @see <a href="https://github.com/mozilla/hawk">Hawk — HTTP Holder-Of-Key Authentication Scheme</a>
      */
     interface HawkAuthorization extends RestClientConfiguration {
 
@@ -276,6 +295,9 @@ public interface RestClientConfiguration extends ConfigurationMixin {
 
     /**
      * AWS Signature Version 4 (or 2) request signing.
+     *
+     * @see <a href="https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html">AWS Signature Version 4</a>
+     * @see <a href="https://docs.aws.amazon.com/general/latest/gr/signature-version-2.html">AWS Signature Version 2 (legacy)</a>
      */
     interface AwsSignatureAuthorization extends RestClientConfiguration {
 
@@ -300,6 +322,8 @@ public interface RestClientConfiguration extends ConfigurationMixin {
 
     /**
      * NTLM (Windows) authentication.
+     *
+     * @see <a href="https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-nlmp/">MS-NLMP — NT LAN Manager (NTLM) Authentication Protocol</a>
      */
     interface NtlmAuthorization extends RestClientConfiguration {
 
