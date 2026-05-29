@@ -95,6 +95,46 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
         public GuardedString getScimOAuth2PrivateKey() {
             return privateKey;
         }
+
+        @Override
+        public String getScimOAuth2Issuer() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2KeyId() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2Algorithm() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2Subject() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2Scope() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2Audience() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2TokenName() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2ClientAuthenticationScheme() {
+            return null;
+        }
     }
 
     protected static class ScimJwtBearerTestConnector

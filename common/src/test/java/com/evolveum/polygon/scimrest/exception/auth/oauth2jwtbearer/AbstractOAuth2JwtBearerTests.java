@@ -72,6 +72,46 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
         public GuardedString getRestOAuth2PrivateKey() {
             return privateKey;
         }
+
+        @Override
+        public String getRestOAuth2Issuer() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2KeyId() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2Algorithm() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2Subject() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2Scope() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2Audience() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2TokenName() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2ClientAuthenticationScheme() {
+            return null;
+        }
     }
 
     protected static class OAuth2RestConnector

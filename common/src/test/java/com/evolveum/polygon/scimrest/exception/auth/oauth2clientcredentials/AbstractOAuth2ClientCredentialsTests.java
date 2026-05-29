@@ -111,6 +111,26 @@ abstract class AbstractOAuth2ClientCredentialsTests extends WireMockTestSupport 
         public GuardedString getRestOAuth2ClientSecret() {
             return clientSecret;
         }
+
+        @Override
+        public String getRestOAuth2Scope() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2Audience() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2TokenName() {
+            return null;
+        }
+
+        @Override
+        public String getRestOAuth2ClientAuthenticationScheme() {
+            return null;
+        }
     }
 
     protected static class OAuth2RestConnector

@@ -75,7 +75,7 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCr
         String testEndpoint = "/health";
         stubTokenEndpoint(TOKEN_ENDPOINT, "endpoint-scim-token", 3600);
         stubScimEndpoints("endpoint-scim-token");
-        wireMockServer.stubFor(get(urlEqualTo(testEndpoint))
+        wireMockServer.stubFor(get(urlEqualTo(SCIM_BASE_PATH + testEndpoint))
                 .willReturn(aResponse().withStatus(200)));
 
         var config = new ScimOAuth2RestConfig(wireMockServer.port(), TOKEN_ENDPOINT, "my-client",
@@ -85,7 +85,7 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCr
         connector.init(config);
         connector.test();
 
-        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(testEndpoint))
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(SCIM_BASE_PATH + testEndpoint))
                 .withHeader("Authorization", equalTo("Bearer endpoint-scim-token"))).size(), 1);
         // 1 token fetch + 2 SCIM discovery + 1 test endpoint
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 4);
@@ -142,6 +142,26 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCr
         @Override
         public GuardedString getScimOAuth2ClientSecret() {
             return clientSecret;
+        }
+
+        @Override
+        public String getScimOAuth2Scope() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2Audience() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2TokenName() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2ClientAuthenticationScheme() {
+            return null;
         }
     }
 }

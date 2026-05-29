@@ -1,10 +1,14 @@
 authentication {
     rest {
-        tokenBased {
-            request.header("Authorization", "token " + decrypt(configuration.restTokenValue))
+        bearerToken {
+            implementation {
+                request.header("Authorization", "token " + decrypt(configuration.restTokenValue))
+            }
         }
         apiKey {
-            request.header("Authorization", "token " + decrypt(configuration.restTokenValue))
+            implementation {
+                request.header("Authorization", "token " + decrypt(configuration.restTokenValue))
+            }
         }
     }
 }

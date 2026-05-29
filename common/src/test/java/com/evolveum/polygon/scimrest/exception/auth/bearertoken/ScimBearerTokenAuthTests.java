@@ -197,7 +197,7 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
     public void testBuiltinBearerTokenSentToTestEndpoint() {
         String testEndpoint = "/health";
         stubScimEndpoints("Bearer endpoint-bearer-token");
-        wireMockServer.stubFor(get(urlEqualTo(testEndpoint))
+        wireMockServer.stubFor(get(urlEqualTo(SCIM_BASE_PATH + testEndpoint))
                 .willReturn(aResponse().withStatus(200)));
 
         var config = new ScimBearerRestConfig(wireMockServer.port(), "endpoint-bearer-token");
@@ -206,7 +206,7 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
         connector.init(config);
         connector.test();
 
-        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(testEndpoint))
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(SCIM_BASE_PATH + testEndpoint))
                 .withHeader("Authorization", equalTo("Bearer endpoint-bearer-token"))).size(), 1);
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 3);
     }

@@ -94,6 +94,26 @@ abstract class AbstractScimOAuth2ClientCredentialsTests extends AbstractOAuth2Cl
         public GuardedString getScimOAuth2ClientSecret() {
             return clientSecret;
         }
+
+        @Override
+        public String getScimOAuth2Scope() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2Audience() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2TokenName() {
+            return null;
+        }
+
+        @Override
+        public String getScimOAuth2ClientAuthenticationScheme() {
+            return null;
+        }
     }
 
     protected static class ScimOAuth2TestConnector

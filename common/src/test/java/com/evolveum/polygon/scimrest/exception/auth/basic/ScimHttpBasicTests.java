@@ -138,7 +138,7 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
         String testEndpoint = "/health";
         String expectedHeader = "Basic " + Base64.getEncoder().encodeToString("admin:s3cr3t".getBytes());
         stubScimEndpoints("Authorization", expectedHeader);
-        wireMockServer.stubFor(get(urlEqualTo(testEndpoint))
+        wireMockServer.stubFor(get(urlEqualTo(SCIM_BASE_PATH + testEndpoint))
                 .willReturn(aResponse().withStatus(200)));
 
         var config = new ScimHttpBasicRestConfig(wireMockServer.port(), "admin",
@@ -148,7 +148,7 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
         connector.init(config);
         connector.test();
 
-        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(testEndpoint))
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(SCIM_BASE_PATH + testEndpoint))
                 .withHeader("Authorization", equalTo(expectedHeader))).size(), 1);
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 3);
     }
