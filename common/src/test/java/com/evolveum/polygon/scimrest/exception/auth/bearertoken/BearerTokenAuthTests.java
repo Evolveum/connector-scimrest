@@ -119,7 +119,7 @@ public class BearerTokenAuthTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     rest {
-                        bearerToken {
+                        bearer {
                             implementation {
                                 if (!ctx["token"]) {
                                     def resp = execute(newRequest("%s"))
@@ -157,7 +157,7 @@ public class BearerTokenAuthTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     rest {
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer static-token")
                             }
@@ -191,7 +191,7 @@ public class BearerTokenAuthTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     rest {
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer " + decrypt(configuration.restTokenValue))
                             }
@@ -226,7 +226,7 @@ public class BearerTokenAuthTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     rest {
-                        bearerToken {
+                        bearer {
                             implementation {
                                 if (!ctx["token"]) {
                                     ctx["token"] = "cached-token"

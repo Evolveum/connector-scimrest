@@ -64,12 +64,12 @@ public class ScimPreferenceTests extends WireMockTestSupport {
                                 request.header("Authorization", "Basic cHJpbWFyeTpwYXNz")
                             }
                         }
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer fallback-token")
                             }
                         }
-                        preference basic, bearerToken
+                        preference basic, bearer
                     }
                 }
                 """;
@@ -106,12 +106,12 @@ public class ScimPreferenceTests extends WireMockTestSupport {
                                 request.header("Authorization", "Basic cHJpbWFyeTpwYXNz")
                             }
                         }
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer fallback-token")
                             }
                         }
-                        preference basic, bearerToken
+                        preference basic, bearer
                     }
                 }
                 """;
@@ -145,7 +145,7 @@ public class ScimPreferenceTests extends WireMockTestSupport {
                                 request.header("Authorization", "Basic cHJpbWFyeTpwYXNz")
                             }
                         }
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer fallback-token")
                             }

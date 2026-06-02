@@ -69,7 +69,7 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer static-token")
                             }
@@ -106,7 +106,7 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        bearerToken {
+                        bearer {
                             implementation {
                                 if (!ctx["token"]) {
                                     ctx["token"]  = "tok"
@@ -144,7 +144,7 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        bearerToken {
+                        bearer {
                             implementation {
                                 if (!ctx["token"]) {
                                     def resp = execute(newRequest("%s"))
@@ -174,7 +174,7 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
         var script = """
                 authentication {
                     scim {
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer " + decrypt(configuration.scimTokenValue))
                             }

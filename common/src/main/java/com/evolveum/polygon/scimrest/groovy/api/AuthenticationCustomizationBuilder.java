@@ -24,7 +24,7 @@ public interface AuthenticationCustomizationBuilder {
             withImplementation(RestClientConfiguration.BasicAuthorization.class, o);
         }
 
-        default void bearerToken(
+        default void bearer(
                 @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o) {
             withImplementation(RestClientConfiguration.BearerTokenAuthorization.class, o);
@@ -57,7 +57,7 @@ public interface AuthenticationCustomizationBuilder {
             return RestClientConfiguration.BasicAuthorization.class;
         }
 
-        default Class<? extends RestClientConfiguration> getBearerToken() {
+        default Class<? extends RestClientConfiguration> getBearer() {
             return RestClientConfiguration.BearerTokenAuthorization.class;
         }
 
@@ -84,7 +84,7 @@ public interface AuthenticationCustomizationBuilder {
                 @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o);
 
-        default void bearerToken(
+        default void bearer(
                 @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o) {
             withImplementation(ScimClientConfiguration.BearerTokenAuthorization.class, o);
@@ -119,7 +119,7 @@ public interface AuthenticationCustomizationBuilder {
         @SuppressWarnings("unchecked")
         void preference(Class<? extends ScimClientConfiguration>... types);
 
-        default Class<? extends ScimClientConfiguration> getBearerToken() {
+        default Class<? extends ScimClientConfiguration> getBearer() {
             return ScimClientConfiguration.BearerTokenAuthorization.class;
         }
 

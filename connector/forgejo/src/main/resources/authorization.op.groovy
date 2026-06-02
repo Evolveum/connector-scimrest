@@ -1,6 +1,6 @@
 authentication {
     rest {
-        bearerToken {
+        bearer {
             implementation {
                 request.header("Authorization", "token " + decrypt(configuration.restTokenValue))
             }

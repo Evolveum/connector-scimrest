@@ -36,12 +36,12 @@ public class AuthPreferenceRetryTest extends WireMockTestSupport {
                             request.header("X-Api-Key", "primary-key")
                         }
                     }
-                    bearerToken {
+                    bearer {
                         implementation {
                             request.header("Authorization", "Bearer fallback-token")
                         }
                     }
-                    preference apiKey, bearerToken
+                    preference apiKey, bearer
                 }
             }
             """;

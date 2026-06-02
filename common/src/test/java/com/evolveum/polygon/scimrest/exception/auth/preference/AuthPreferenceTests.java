@@ -53,12 +53,12 @@ public class AuthPreferenceTests extends WireMockTestSupport {
                                 request.header("X-Api-Key", "primary-key")
                             }
                         }
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer fallback-token")
                             }
                         }
-                        preference apiKey, bearerToken
+                        preference apiKey, bearer
                     }
                 }
                 """;
@@ -100,12 +100,12 @@ public class AuthPreferenceTests extends WireMockTestSupport {
                                 request.header("X-Api-Key", "bad-key")
                             }
                         }
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer fallback-token")
                             }
                         }
-                        preference apiKey, bearerToken
+                        preference apiKey, bearer
                     }
                 }
                 """;
@@ -140,12 +140,12 @@ public class AuthPreferenceTests extends WireMockTestSupport {
                                 request.header("X-Api-Key", "primary-key")
                             }
                         }
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer fallback-token")
                             }
                         }
-                        preference apiKey, bearerToken
+                        preference apiKey, bearer
                     }
                 }
                 """;
@@ -177,7 +177,7 @@ public class AuthPreferenceTests extends WireMockTestSupport {
                                 request.header("X-Api-Key", "primary-key")
                             }
                         }
-                        bearerToken {
+                        bearer {
                             implementation {
                                 request.header("Authorization", "Bearer fallback-token")
                             }
