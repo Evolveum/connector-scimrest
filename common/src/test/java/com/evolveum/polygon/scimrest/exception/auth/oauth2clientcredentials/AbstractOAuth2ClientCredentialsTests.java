@@ -19,26 +19,17 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 abstract class AbstractOAuth2ClientCredentialsTests extends WireMockTestSupport {
 
     protected void stubTokenEndpoint(String url, String accessToken, int expiresIn) {
-        stubTokenEndpoint(url, accessToken, expiresIn, null, null);
-    }
-
-    protected void stubTokenEndpoint(String url, String accessToken, int expiresIn,
-                                     String grantType, String refreshToken) {
-        var stub = post(urlEqualTo(url));
-        if (grantType != null) {
-            stub = stub.withRequestBody(containing("grant_type=" + grantType));
-        }
-        String body = "{\"access_token\":\"" + accessToken + "\",\"expires_in\":" + expiresIn
-                + (refreshToken != null ? ",\"refresh_token\":\"" + refreshToken + "\"" : "") + "}";
-        wireMockServer.stubFor(stub.willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody(body)));
+        var body = "{\"access_token\":\"" + accessToken + "\",\"token_type\":\"Bearer\",\"expires_in\":" + expiresIn + "}";
+        wireMockServer.stubFor(post(urlEqualTo(url))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(body)));
     }
 
     protected void stubTokenEndpointWithStatus(String url, int status, String accessToken) {
         String body = status == 200
-                ? "{\"access_token\":\"" + accessToken + "\",\"expires_in\":3600}"
+                ? "{\"access_token\":\"" + accessToken + "\",\"token_type\":\"Bearer\",\"expires_in\":3600}"
                 : "{\"error\":\"invalid_request\"}";
         wireMockServer.stubFor(post(urlEqualTo(url))
                 .willReturn(aResponse()

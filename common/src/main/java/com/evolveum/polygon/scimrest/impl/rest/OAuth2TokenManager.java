@@ -21,8 +21,10 @@ import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,7 +38,9 @@ public class OAuth2TokenManager {
             String clientId,
             GuardedString clientSecret,
             String grantType,
-            GuardedString privateKey
+            GuardedString privateKey,
+            String scope,
+            String clientAuthenticationScheme
     ) {
         public static OAuth2Config from(RestClientConfiguration.OAuth2ClientCredentialsAuthorization conf) {
             return new OAuth2Config(
@@ -44,7 +48,9 @@ public class OAuth2TokenManager {
                     conf.getRestOAuth2ClientId(),
                     conf.getRestOAuth2ClientSecret(),
                     OAuth2GrantType.CLIENT_CREDENTIALS.getName(),
-                    null
+                    null,
+                    conf.getRestOAuth2Scope(),
+                    conf.getRestOAuth2ClientAuthenticationScheme()
             );
         }
 
@@ -54,7 +60,9 @@ public class OAuth2TokenManager {
                     conf.getRestOAuth2ClientId(),
                     null,
                     OAuth2GrantType.JWT_BEARER.getName(),
-                    conf.getRestOAuth2PrivateKey()
+                    conf.getRestOAuth2PrivateKey(),
+                    conf.getRestOAuth2Scope(),
+                    conf.getRestOAuth2ClientAuthenticationScheme()
             );
         }
 
@@ -64,7 +72,9 @@ public class OAuth2TokenManager {
                     conf.getScimOAuth2ClientId(),
                     conf.getScimOAuth2ClientSecret(),
                     OAuth2GrantType.CLIENT_CREDENTIALS.getName(),
-                    null
+                    null,
+                    conf.getScimOAuth2Scope(),
+                    conf.getScimOAuth2ClientAuthenticationScheme()
             );
         }
 
@@ -74,7 +84,9 @@ public class OAuth2TokenManager {
                     conf.getScimOAuth2ClientId(),
                     null,
                     OAuth2GrantType.JWT_BEARER.getName(),
-                    conf.getScimOAuth2PrivateKey()
+                    conf.getScimOAuth2PrivateKey(),
+                    conf.getScimOAuth2Scope(),
+                    conf.getScimOAuth2ClientAuthenticationScheme()
             );
         }
     }
@@ -89,9 +101,9 @@ public class OAuth2TokenManager {
     private static final Log LOG = Log.getLog(OAuth2TokenManager.class);
 
     public static final String ACCESS_TOKEN = "access_token";
+    public static final String TOKEN_TYPE = "token_type";
     public static final String EXPIRES_IN = "expires_in";
     public static final String EXPIRES_AT = "expires_at";
-    public static final String REFRESH_TOKEN = "refresh_token";
     public static final String CLIENT_ID = "client_id";
     public static final String CLIENT_SECRET = "client_secret";
     public static final String GRANT_TYPE = "grant_type";
@@ -183,15 +195,19 @@ public class OAuth2TokenManager {
     }
 
     protected void processTokenResponse(Map<String, Object> response) {
+        Object tokenType = response.get(TOKEN_TYPE);
+        if (tokenType == null) {
+            LOG.warn("OAuth2 token response is missing required ''token_type'' field (RFC 6749 §5.1)");
+        } else if (!"bearer".equalsIgnoreCase(tokenType.toString())) {
+            throw new ConnectorIOException(
+                    "Unsupported OAuth2 token_type: '" + tokenType + "' — only 'bearer' is supported");
+        }
+
         Object accessToken = response.get(ACCESS_TOKEN);
         if (accessToken == null) {
-            throw new ConnectorIOException("OAuth2 token response does not contain 'access_token'");
+            throw new ConnectorIOException("OAuth2 token response does not contain 'access_token' (RFC 6749 §5.1)");
         }
         authContext.set(ACCESS_TOKEN, accessToken.toString());
-        Object refreshToken = response.get(REFRESH_TOKEN);
-        if (refreshToken != null) {
-            authContext.set(REFRESH_TOKEN, refreshToken.toString());
-        }
     }
 
     protected void customizeBuildTokenRequest(HttpRequestSpecification request) {
@@ -208,17 +224,19 @@ public class OAuth2TokenManager {
         config.clientSecret().access(secretAccessor);
         String clientSecret = secretAccessor.getClearString();
 
-        request.formParam(CLIENT_ID, config.clientId())
-                .formParam(CLIENT_SECRET, clientSecret);
-
-        String existingRefreshToken = (String) authContext.get(REFRESH_TOKEN);
-        if (existingRefreshToken != null) {
-            LOG.ok("Using refresh_token grant to obtain new access token");
-            authContext.set(REFRESH_TOKEN, null);
-            request.formParam(GRANT_TYPE, REFRESH_TOKEN);
-            request.formParam(REFRESH_TOKEN, existingRefreshToken);
+        if ("basic".equalsIgnoreCase(config.clientAuthenticationScheme())) {
+            String credentials = config.clientId() + ":" + clientSecret;
+            request.header("Authorization", "Basic " +
+                    Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8)));
         } else {
-            request.formParam(GRANT_TYPE, OAuth2GrantType.CLIENT_CREDENTIALS.getName());
+            request.formParam(CLIENT_ID, config.clientId())
+                    .formParam(CLIENT_SECRET, clientSecret);
+        }
+
+        request.formParam(GRANT_TYPE, OAuth2GrantType.CLIENT_CREDENTIALS.getName());
+
+        if (config.scope() != null && !config.scope().isBlank()) {
+            request.formParam("scope", config.scope());
         }
     }
 

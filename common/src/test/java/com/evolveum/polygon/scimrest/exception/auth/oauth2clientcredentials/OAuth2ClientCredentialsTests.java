@@ -105,51 +105,63 @@ public class OAuth2ClientCredentialsTests extends AbstractOAuth2ClientCredential
     }
 
     @Test
-    public void testRefreshTokenUsedWhenServerProvidesOne() {
-        stubTokenEndpoint(TOKEN_ENDPOINT, "first-token", -1, "client_credentials", "my-refresh-token");
-        stubRestApiEndpoint(API_ENDPOINT, "first-token");
-        stubTokenEndpoint(TOKEN_ENDPOINT, "refreshed-token", 3600, "refresh_token", null);
-        stubRestApiEndpoint(API_ENDPOINT, "refreshed-token");
+    public void testScopeIsSentInTokenRequest() {
+        stubTokenEndpoint(TOKEN_ENDPOINT, "scoped-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "scoped-token");
 
-        var connector = createConnector("client-id", new GuardedString("client-secret".toCharArray()));
-        connector.test();
-        connector.test();
+        createConnectorWithExtras("client-id", new GuardedString("secret".toCharArray()),
+                "read write", null).test();
 
         assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
-                .withRequestBody(containing("grant_type=client_credentials"))), 1);
-        assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
-                .withRequestBody(containing("grant_type=refresh_token"))), 1);
-        assertEquals(requestCount(getRequestedFor(urlEqualTo(API_ENDPOINT))
-                .withHeader("Authorization", equalTo("Bearer refreshed-token"))), 1);
-        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 4);
+                .withRequestBody(containing("scope=read+write"))), 1);
     }
 
     @Test
-    public void testFallsBackToClientCredentialsAfterRefreshTokenFailure() {
-        stubTokenEndpoint(TOKEN_ENDPOINT, "first-token", -1, "client_credentials", "expired-refresh");
-        stubRestApiEndpoint(API_ENDPOINT, "first-token");
-        stubTokenEndpointError(TOKEN_ENDPOINT, 400, "refresh_token");
-
-        var connector = createConnector("client-id", new GuardedString("client-secret".toCharArray()));
-        connector.test();
+    public void testUnsupportedTokenTypeFails() {
+        wireMockServer.stubFor(post(urlEqualTo(TOKEN_ENDPOINT))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"access_token\":\"t\",\"token_type\":\"mac\",\"expires_in\":3600}")));
 
         try {
-            connector.test();
-            fail("Expected ConnectorIOException was not thrown");
+            createConnector("client-id", new GuardedString("secret".toCharArray())).test();
+            fail("Expected ConnectorIOException for unsupported token_type");
         } catch (org.identityconnectors.framework.common.exceptions.ConnectorIOException e) {
-            assertTrue(e.getMessage().contains("400"));
+            assertTrue(e.getMessage().contains("mac"));
         }
+    }
 
-        stubTokenEndpoint(TOKEN_ENDPOINT, "new-token", 3600, "client_credentials", null);
-        stubRestApiEndpoint(API_ENDPOINT, "new-token");
+    @Test
+    public void testClientAuthenticationSchemeBasic() {
+        stubTokenEndpoint(TOKEN_ENDPOINT, "basic-scheme-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "basic-scheme-token");
 
-        connector.test();
+        createConnectorWithExtras("my-client", new GuardedString("my-secret".toCharArray()),
+                null, "basic").test();
+
+        // credentials in Basic header, NOT in body
+        String expectedBasic = java.util.Base64.getEncoder()
+                .encodeToString("my-client:my-secret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
+                .withHeader("Authorization", equalTo("Basic " + expectedBasic))), 1);
+        assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
+                .withRequestBody(containing("client_id="))), 0);
+        assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
+                .withRequestBody(containing("client_secret="))), 0);
+    }
+
+    @Test
+    public void testClientAuthenticationSchemePost() {
+        stubTokenEndpoint(TOKEN_ENDPOINT, "post-scheme-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "post-scheme-token");
+
+        createConnectorWithExtras("my-client", new GuardedString("my-secret".toCharArray()),
+                null, "post").test();
 
         assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
-                .withRequestBody(containing("grant_type=refresh_token"))), 1);
-        assertEquals(requestCount(getRequestedFor(urlEqualTo(API_ENDPOINT))
-                .withHeader("Authorization", equalTo("Bearer new-token"))), 1);
-        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 5);
+                .withRequestBody(containing("client_id=my-client"))
+                .withRequestBody(containing("client_secret=my-secret"))), 1);
     }
 
     // --- helpers ---
@@ -166,5 +178,35 @@ public class OAuth2ClientCredentialsTests extends AbstractOAuth2ClientCredential
         var connector = new OAuth2RestConnector();
         connector.init(config);
         return connector;
+    }
+
+    private OAuth2RestConnector createConnectorWithExtras(String clientId, GuardedString clientSecret,
+            String scope, String authScheme) {
+        var config = new ExtendedClientCredentialsConfig(
+                wireMockServer.port(), API_ENDPOINT,
+                "http://localhost:" + wireMockServer.port() + TOKEN_ENDPOINT,
+                clientId, clientSecret, scope, authScheme);
+        var connector = new OAuth2RestConnector();
+        connector.init(config);
+        return connector;
+    }
+
+    private static class ExtendedClientCredentialsConfig extends BaseClientCredentialsConfig {
+
+        private final String scope;
+        private final String authScheme;
+
+        ExtendedClientCredentialsConfig(int port, String testEndpoint, String tokenUrl,
+                String clientId, GuardedString clientSecret, String scope, String authScheme) {
+            super(port, testEndpoint, tokenUrl, clientId, clientSecret);
+            this.scope = scope;
+            this.authScheme = authScheme;
+        }
+
+        @Override
+        public String getRestOAuth2Scope() { return scope; }
+
+        @Override
+        public String getRestOAuth2ClientAuthenticationScheme() { return authScheme; }
     }
 }

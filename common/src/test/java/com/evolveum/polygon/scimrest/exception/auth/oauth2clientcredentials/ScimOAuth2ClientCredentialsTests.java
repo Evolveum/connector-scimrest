@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.exception.auth.oauth2clientcredentials;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
@@ -104,6 +105,62 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCr
                     "Expected ConnectorException but got: " + e.getClass().getName());
         }
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
+    }
+
+    @Test
+    public void testScopeIsSentInTokenRequest() {
+        stubTokenEndpoint(TOKEN_ENDPOINT, "scoped-scim-token", 3600);
+        stubScimEndpoints("scoped-scim-token");
+
+        createScimConnectorWithExtras(TOKEN_ENDPOINT, "client-id",
+                new GuardedString("secret".toCharArray()), "openid profile", null).schema();
+
+        assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
+                .withRequestBody(containing("scope=openid+profile"))).size(), 1);
+    }
+
+    @Test
+    public void testClientAuthenticationSchemeBasic() {
+        stubTokenEndpoint(TOKEN_ENDPOINT, "basic-scim-token", 3600);
+        stubScimEndpoints("basic-scim-token");
+
+        createScimConnectorWithExtras(TOKEN_ENDPOINT, "scim-client",
+                new GuardedString("scim-secret".toCharArray()), null, "basic").schema();
+
+        String expectedBasic = java.util.Base64.getEncoder()
+                .encodeToString("scim-client:scim-secret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
+                .withHeader("Authorization", equalTo("Basic " + expectedBasic))).size(), 1);
+        assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
+                .withRequestBody(containing("client_id="))).size(), 0);
+    }
+
+    private AbstractGroovyRestConnector<?> createScimConnectorWithExtras(String tokenEndpoint,
+            String clientId, GuardedString clientSecret, String scope, String authScheme) {
+        var config = new ExtendedScimOAuth2TestConfig(wireMockServer.port(), tokenEndpoint,
+                clientId, clientSecret, scope, authScheme);
+        var connector = new ScimOAuth2TestConnector(null);
+        connector.init(config);
+        return connector;
+    }
+
+    private class ExtendedScimOAuth2TestConfig extends ScimOAuth2TestConfig {
+
+        private final String scope;
+        private final String authScheme;
+
+        ExtendedScimOAuth2TestConfig(int port, String tokenEndpoint, String clientId,
+                GuardedString clientSecret, String scope, String authScheme) {
+            super(port, tokenEndpoint, clientId, clientSecret);
+            this.scope = scope;
+            this.authScheme = authScheme;
+        }
+
+        @Override
+        public String getScimOAuth2Scope() { return scope; }
+
+        @Override
+        public String getScimOAuth2ClientAuthenticationScheme() { return authScheme; }
     }
 
     // --- config class for test endpoint tests ---
