@@ -99,16 +99,6 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
         }
 
         @Override
-        public String getRestOAuth2Audience() {
-            return null;
-        }
-
-        @Override
-        public String getRestOAuth2TokenName() {
-            return null;
-        }
-
-        @Override
         public String getRestOAuth2ClientAuthenticationScheme() {
             return null;
         }

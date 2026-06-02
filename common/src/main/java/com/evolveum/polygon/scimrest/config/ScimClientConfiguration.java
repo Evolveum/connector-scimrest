@@ -142,12 +142,6 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
         /** Optional space-separated list of requested scopes. */
         String getScimOAuth2Scope();
 
-        /** Optional audience value sent to the token endpoint. */
-        String getScimOAuth2Audience();
-
-        /** Name of the JSON field in the token response that contains the access token (default: {@code access_token}). */
-        String getScimOAuth2TokenName();
-
         /** How the client credentials are sent: {@code post} (body) or {@code basic} (header). */
         String getScimOAuth2ClientAuthenticationScheme();
     }
@@ -173,12 +167,6 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
 
         /** Optional space-separated list of requested scopes. */
         String getScimOAuth2Scope();
-
-        /** Optional audience value sent to the token endpoint. */
-        String getScimOAuth2Audience();
-
-        /** Name of the JSON field in the token response that contains the access token (default: {@code access_token}). */
-        String getScimOAuth2TokenName();
 
         /** How the client credentials are sent: {@code post} (body) or {@code basic} (header). */
         String getScimOAuth2ClientAuthenticationScheme();
@@ -219,12 +207,6 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
         /** Optional space-separated list of requested scopes. */
         String getScimOAuth2Scope();
 
-        /** Optional audience for both the JWT and the token request. */
-        String getScimOAuth2Audience();
-
-        /** Name of the JSON field in the token response that contains the access token. */
-        String getScimOAuth2TokenName();
-
         /** How the client assertion is sent to the token endpoint. */
         String getScimOAuth2ClientAuthenticationScheme();
     }
@@ -250,12 +232,6 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
 
         /** Optional space-separated list of requested scopes. */
         String getScimOAuth2Scope();
-
-        /** Optional audience ({@code AudienceRestriction}) in the SAML assertion. */
-        String getScimOAuth2Audience();
-
-        /** Name of the JSON field in the token response that contains the access token. */
-        String getScimOAuth2TokenName();
 
         /** How the SAML assertion is sent to the token endpoint. */
         String getScimOAuth2ClientAuthenticationScheme();

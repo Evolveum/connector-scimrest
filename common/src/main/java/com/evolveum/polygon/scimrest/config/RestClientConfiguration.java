@@ -146,12 +146,6 @@ public interface RestClientConfiguration extends ConfigurationMixin {
         /** Optional space-separated list of requested scopes. */
         String getRestOAuth2Scope();
 
-        /** Optional audience value sent to the token endpoint. */
-        String getRestOAuth2Audience();
-
-        /** Name of the JSON field in the token response that contains the access token (default: {@code access_token}). */
-        String getRestOAuth2TokenName();
-
         /** How the client credentials are sent: {@code post} (body) or {@code basic} (header). */
         String getRestOAuth2ClientAuthenticationScheme();
     }
@@ -177,12 +171,6 @@ public interface RestClientConfiguration extends ConfigurationMixin {
 
         /** Optional space-separated list of requested scopes. */
         String getRestOAuth2Scope();
-
-        /** Optional audience value sent to the token endpoint. */
-        String getRestOAuth2Audience();
-
-        /** Name of the JSON field in the token response that contains the access token (default: {@code access_token}). */
-        String getRestOAuth2TokenName();
 
         /** How the client credentials are sent: {@code post} (body) or {@code basic} (header). */
         String getRestOAuth2ClientAuthenticationScheme();
@@ -224,12 +212,6 @@ public interface RestClientConfiguration extends ConfigurationMixin {
         /** Optional space-separated list of requested scopes. */
         String getRestOAuth2Scope();
 
-        /** Optional audience for both the JWT and the token request. */
-        String getRestOAuth2Audience();
-
-        /** Name of the JSON field in the token response that contains the access token. */
-        String getRestOAuth2TokenName();
-
         /** How the client assertion is sent to the token endpoint. */
         String getRestOAuth2ClientAuthenticationScheme();
     }
@@ -256,12 +238,6 @@ public interface RestClientConfiguration extends ConfigurationMixin {
 
         /** Optional space-separated list of requested scopes. */
         String getRestOAuth2Scope();
-
-        /** Optional audience ({@code AudienceRestriction}) in the SAML assertion. */
-        String getRestOAuth2Audience();
-
-        /** Name of the JSON field in the token response that contains the access token. */
-        String getRestOAuth2TokenName();
 
         /** How the SAML assertion is sent to the token endpoint. */
         String getRestOAuth2ClientAuthenticationScheme();

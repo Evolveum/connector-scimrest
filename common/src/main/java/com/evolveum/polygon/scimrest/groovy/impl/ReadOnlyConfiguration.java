@@ -79,8 +79,6 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private String restOAuth2TokenUrl;
     private String restOAuth2ClientId;
     private String restOAuth2Scope;
-    private String restOAuth2Audience;
-    private String restOAuth2TokenName;
     private String restOAuth2ClientAuthenticationScheme;
 
     // --- REST OAuth2ClientCredentialsAuthorization ---
@@ -155,8 +153,6 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private String scimOAuth2TokenUrl;
     private String scimOAuth2ClientId;
     private String scimOAuth2Scope;
-    private String scimOAuth2Audience;
-    private String scimOAuth2TokenName;
     private String scimOAuth2ClientAuthenticationScheme;
 
     // --- SCIM OAuth2ClientCredentialsAuthorization ---
@@ -482,26 +478,6 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
 
     public void setRestOAuth2Scope(String restOAuth2Scope) {
         this.restOAuth2Scope = restOAuth2Scope;
-    }
-
-    @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.audience")
-    public String getRestOAuth2Audience() {
-        return restOAuth2Audience;
-    }
-
-    public void setRestOAuth2Audience(String restOAuth2Audience) {
-        this.restOAuth2Audience = restOAuth2Audience;
-    }
-
-    @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.tokenName")
-    public String getRestOAuth2TokenName() {
-        return restOAuth2TokenName;
-    }
-
-    public void setRestOAuth2TokenName(String restOAuth2TokenName) {
-        this.restOAuth2TokenName = restOAuth2TokenName;
     }
 
     @Override
@@ -1034,26 +1010,6 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
 
     public void setScimOAuth2Scope(String scimOAuth2Scope) {
         this.scimOAuth2Scope = scimOAuth2Scope;
-    }
-
-    @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.audience")
-    public String getScimOAuth2Audience() {
-        return scimOAuth2Audience;
-    }
-
-    public void setScimOAuth2Audience(String scimOAuth2Audience) {
-        this.scimOAuth2Audience = scimOAuth2Audience;
-    }
-
-    @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.tokenName")
-    public String getScimOAuth2TokenName() {
-        return scimOAuth2TokenName;
-    }
-
-    public void setScimOAuth2TokenName(String scimOAuth2TokenName) {
-        this.scimOAuth2TokenName = scimOAuth2TokenName;
     }
 
     @Override

@@ -101,16 +101,6 @@ abstract class AbstractScimOAuth2ClientCredentialsTests extends AbstractOAuth2Cl
         }
 
         @Override
-        public String getScimOAuth2Audience() {
-            return null;
-        }
-
-        @Override
-        public String getScimOAuth2TokenName() {
-            return null;
-        }
-
-        @Override
         public String getScimOAuth2ClientAuthenticationScheme() {
             return null;
         }
