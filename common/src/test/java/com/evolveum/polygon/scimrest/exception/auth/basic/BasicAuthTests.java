@@ -268,6 +268,43 @@ public class BasicAuthTests extends WireMockTestSupport {
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 2);
     }
 
+    /**
+     * Groovy implementation block must override the built-in even when username+password are configured.
+     */
+    @Test
+    public void testGroovyImplementationOverridesBuiltinWhenCredentialsConfigured() {
+        wireMockServer.stubFor(get(urlEqualTo("/api"))
+                .withHeader("Authorization", equalTo("Bearer groovy-override"))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"status\":\"ok\"}")));
+
+        var script = """
+                authentication {
+                    rest {
+                        basic {
+                            implementation {
+                                request.header("Authorization", "Bearer groovy-override")
+                            }
+                        }
+                    }
+                }
+                """;
+
+        var config = new TestConfiguration(wireMockServer.port());
+        config.testEndpoint = "/api";
+        config.username = "user";
+        config.password = new GuardedString("pass".toCharArray());
+        var connector = new ScriptConnector(script);
+        connector.init(config);
+        connector.test();
+
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo("/api"))
+                .withHeader("Authorization", equalTo("Bearer groovy-override"))).size(), 1,
+                "Groovy implementation block should override built-in basic auth");
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
+    }
+
     private static class TestConfiguration extends BaseTestConfiguration
             implements RestClientConfiguration.BasicAuthorization {
 

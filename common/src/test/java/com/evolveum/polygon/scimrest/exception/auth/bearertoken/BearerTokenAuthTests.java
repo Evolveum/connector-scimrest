@@ -250,6 +250,43 @@ public class BearerTokenAuthTests extends WireMockTestSupport {
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 2);
     }
 
+    /**
+     * Groovy implementation block must override the built-in even when restTokenValue is configured.
+     * The Groovy script sets a different header than what the built-in would set.
+     */
+    @Test
+    public void testGroovyImplementationOverridesBuiltinWhenTokenValueConfigured() {
+        wireMockServer.stubFor(get(urlEqualTo(API_ENDPOINT))
+                .withHeader("Authorization", equalTo("Bearer groovy-token"))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"status\":\"ok\"}")));
+
+        var script = """
+                authentication {
+                    rest {
+                        bearer {
+                            implementation {
+                                request.header("Authorization", "Bearer groovy-token")
+                            }
+                        }
+                    }
+                }
+                """;
+
+        var config = new TestConfiguration(wireMockServer.port());
+        config.testEndpoint = API_ENDPOINT;
+        config.tokenValue = new GuardedString("builtin-token".toCharArray());
+        var connector = new ScriptConnector(script);
+        connector.init(config);
+        connector.test();
+
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(API_ENDPOINT))
+                .withHeader("Authorization", equalTo("Bearer groovy-token"))).size(), 1,
+                "Groovy implementation block should override built-in bearer token");
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
+    }
+
     private static class TestConfiguration extends BaseTestConfiguration
             implements RestClientConfiguration.BearerTokenAuthorization {
 

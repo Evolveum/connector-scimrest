@@ -48,7 +48,7 @@ public class DispatchingAuthorizationCustomizer implements AuthorizationCustomiz
     }
 
     public void addCustomizer(Class<? extends RestClientConfiguration> clazz, AuthorizationCustomizer<RestClientConfiguration> customizer) {
-        entries.removeIf(e -> e.type().equals(clazz) && e.skipConfigCheck());
+        entries.removeIf(e -> e.type().equals(clazz));
         entries.add(new Entry(clazz, customizer, true));
     }
 }

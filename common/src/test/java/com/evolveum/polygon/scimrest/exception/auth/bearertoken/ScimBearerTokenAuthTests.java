@@ -211,6 +211,33 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 3);
     }
 
+    /**
+     * Groovy implementation block must override the built-in SCIM bearer even when scimTokenValue is configured.
+     */
+    @Test
+    public void testGroovyImplementationOverridesBuiltinWhenTokenValueConfigured() {
+        stubScimEndpoints("Bearer groovy-scim-token");
+
+        var script = """
+                authentication {
+                    scim {
+                        bearer {
+                            implementation {
+                                request.header("Authorization", "Bearer groovy-scim-token")
+                            }
+                        }
+                    }
+                }
+                """;
+
+        createScimConnectorWithToken(script, new GuardedString("builtin-token".toCharArray())).schema();
+
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(SCHEMAS_ENDPOINT))
+                .withHeader("Authorization", equalTo("Bearer groovy-scim-token"))).size(), 1,
+                "Groovy implementation block should override built-in SCIM bearer auth");
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 2);
+    }
+
     // --- helpers ---
 
     private void stubScimEndpoints(String authorizationHeader) {

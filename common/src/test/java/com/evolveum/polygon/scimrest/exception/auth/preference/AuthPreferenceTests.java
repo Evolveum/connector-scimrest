@@ -245,6 +245,83 @@ public class AuthPreferenceTests extends WireMockTestSupport {
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
     }
 
+    /**
+     * Groovy implementation block must override the built-in even when apiKey is configured.
+     */
+    @Test
+    public void testGroovyImplementationOverridesBuiltinWhenApiKeyConfigured() {
+        wireMockServer.stubFor(get(urlEqualTo(TEST_ENDPOINT))
+                .withHeader("X-Api-Key", equalTo("groovy-key"))
+                .willReturn(aResponse().withStatus(200)));
+
+        var script = """
+                authentication {
+                    rest {
+                        apiKey {
+                            implementation {
+                                request.header("X-Api-Key", "groovy-key")
+                            }
+                        }
+                        preference apiKey
+                    }
+                }
+                """;
+
+        var config = new TestConfiguration(wireMockServer.port());
+        config.testEndpoint = TEST_ENDPOINT;
+        config.apiKey = new GuardedString("builtin-key".toCharArray());
+        config.apiKeyName = "X-Api-Key";
+        config.apiKeyLocation = "header";
+        var connector = new ScriptConnector(script);
+        connector.init(config);
+        connector.test();
+
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(TEST_ENDPOINT))
+                .withHeader("X-Api-Key", equalTo("groovy-key"))).size(), 1,
+                "Groovy implementation block should override built-in apiKey auth");
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
+    }
+
+    /**
+     * When preference lists a method that has no Groovy customizer but is configured,
+     * the built-in implementation is used. Here apiKey is preferred but only bearer
+     * has a Groovy block — so apiKey falls back to built-in.
+     */
+    @Test
+    public void testPreferenceUsesBuiltinForNonCustomizedMethod() {
+        wireMockServer.stubFor(get(urlEqualTo(TEST_ENDPOINT))
+                .withHeader("X-Api-Key", equalTo("builtin-api-key"))
+                .willReturn(aResponse().withStatus(200)));
+
+        var script = """
+                authentication {
+                    rest {
+                        bearer {
+                            implementation {
+                                request.header("Authorization", "Bearer groovy-token")
+                            }
+                        }
+                        preference apiKey, bearer
+                    }
+                }
+                """;
+
+        var config = new TestConfiguration(wireMockServer.port());
+        config.testEndpoint = TEST_ENDPOINT;
+        config.apiKey = new GuardedString("builtin-api-key".toCharArray());
+        config.apiKeyName = "X-Api-Key";
+        config.apiKeyLocation = "header";
+        config.tokenValue = new GuardedString("builtin-bearer-token".toCharArray());
+        var connector = new ScriptConnector(script);
+        connector.init(config);
+        connector.test();
+
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(TEST_ENDPOINT))
+                .withHeader("X-Api-Key", equalTo("builtin-api-key"))).size(), 1,
+                "Built-in apiKey should be used since it is preferred and configured");
+        assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
+    }
+
     private static class TestConfiguration extends BaseTestConfiguration
             implements RestClientConfiguration.ApiKeyAuthorization,
             RestClientConfiguration.BearerTokenAuthorization {

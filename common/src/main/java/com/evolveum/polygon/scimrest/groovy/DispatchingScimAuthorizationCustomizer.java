@@ -48,7 +48,7 @@ public class DispatchingScimAuthorizationCustomizer implements AuthorizationCust
     }
 
     public void addCustomizer(Class<? extends ScimClientConfiguration> clazz, AuthorizationCustomizer<ScimClientConfiguration> customizer) {
-        entries.removeIf(e -> e.type().equals(clazz) && e.skipConfigCheck());
+        entries.removeIf(e -> e.type().equals(clazz));
         entries.add(new Entry(clazz, customizer, true));
     }
 }
