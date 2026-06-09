@@ -330,7 +330,7 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
         if (OAuth2SamlAuthorization.class.isAssignableFrom(type)) {
             return configuration instanceof OAuth2SamlAuthorization o
                     && o.getScimOAuth2TokenUrl() != null && o.getScimOAuth2ClientId() != null
-                    && o.getScimOAuth2PrivateKey() != null && o.getScimOAuth2Issuer() != null;
+                    && o.getScimOAuth2PrivateKey() != null;
         }
         if (OAuth2JwtBearerAuthorization.class.isAssignableFrom(type)) {
             return configuration instanceof OAuth2JwtBearerAuthorization o

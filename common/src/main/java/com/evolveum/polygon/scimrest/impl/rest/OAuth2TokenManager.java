@@ -137,6 +137,36 @@ public class OAuth2TokenManager {
                     null, null, null, null
             );
         }
+
+        public static OAuth2Config from(RestClientConfiguration.OAuth2SamlAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getRestOAuth2TokenUrl(),
+                    conf.getRestOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.SAML_BEARER.getName(),
+                    conf.getRestOAuth2PrivateKey(),
+                    conf.getRestOAuth2Scope(),
+                    conf.getRestOAuth2ClientAuthenticationScheme(),
+                    null, null,
+                    conf.getRestOAuth2Issuer(),
+                    null, null, null
+            );
+        }
+
+        public static OAuth2Config from(ScimClientConfiguration.OAuth2SamlAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getScimOAuth2TokenUrl(),
+                    conf.getScimOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.SAML_BEARER.getName(),
+                    conf.getScimOAuth2PrivateKey(),
+                    conf.getScimOAuth2Scope(),
+                    conf.getScimOAuth2ClientAuthenticationScheme(),
+                    null, null,
+                    conf.getScimOAuth2Issuer(),
+                    null, null, null
+            );
+        }
     }
 
     protected final AuthContext<OAuth2Config> authContext = new AuthContext<>();
@@ -265,6 +295,7 @@ public class OAuth2TokenManager {
             case JWT_BEARER -> buildJwtBearerRequest(request, config);
             case CLIENT_CREDENTIALS -> buildClientCredentialsRequest(request, config);
             case PASSWORD -> buildPasswordRequest(request, config);
+            case SAML_BEARER -> buildSamlBearerRequest(request, config);
         }
     }
 
@@ -334,6 +365,22 @@ public class OAuth2TokenManager {
         String assertion = builder.sign(algorithm, config.privateKey());
 
         request.formParam(GRANT_TYPE, OAuth2GrantType.JWT_BEARER.getName())
+                .formParam("assertion", assertion);
+
+        if (config.scope() != null && !config.scope().isBlank()) {
+            request.formParam("scope", config.scope());
+        }
+
+        if (config.clientId() != null && !"basic".equalsIgnoreCase(config.clientAuthenticationScheme())) {
+            request.formParam(CLIENT_ID, config.clientId());
+        }
+    }
+
+    private void buildSamlBearerRequest(HttpRequestSpecification request, OAuth2Config config) {
+        String issuer = isBlank(config.issuer()) ? config.clientId() : config.issuer();
+        String assertion = SamlAssertionBuilder.build(issuer, config.tokenUrl(), config.privateKey());
+
+        request.formParam(GRANT_TYPE, OAuth2GrantType.SAML_BEARER.getName())
                 .formParam("assertion", assertion);
 
         if (config.scope() != null && !config.scope().isBlank()) {

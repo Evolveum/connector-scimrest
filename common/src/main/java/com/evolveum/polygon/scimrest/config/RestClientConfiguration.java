@@ -337,7 +337,7 @@ public interface RestClientConfiguration extends ConfigurationMixin {
         if (OAuth2SamlAuthorization.class.isAssignableFrom(type)) {
             return configuration instanceof OAuth2SamlAuthorization o
                     && o.getRestOAuth2TokenUrl() != null && o.getRestOAuth2ClientId() != null
-                    && o.getRestOAuth2PrivateKey() != null && o.getRestOAuth2Issuer() != null;
+                    && o.getRestOAuth2PrivateKey() != null;
         }
         if (OAuth2JwtBearerAuthorization.class.isAssignableFrom(type)) {
             return configuration instanceof OAuth2JwtBearerAuthorization o

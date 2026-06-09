@@ -83,6 +83,10 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             var oauth2Conf = conf.require(RestClientConfiguration.OAuth2PasswordAuthorization.class);
             oauth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
+        dispatcher.addBuiltinCustomizer(RestClientConfiguration.OAuth2SamlAuthorization.class, (conf, request) -> {
+            var oauth2Conf = conf.require(RestClientConfiguration.OAuth2SamlAuthorization.class);
+            oauth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+        });
 
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.OAuth2ClientCredentialsAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2ClientCredentialsAuthorization.class);
@@ -94,6 +98,10 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         });
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.OAuth2PasswordAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2PasswordAuthorization.class);
+            scimOAuth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+        });
+        scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.OAuth2SamlAuthorization.class, (conf, request) -> {
+            var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2SamlAuthorization.class);
             scimOAuth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.BearerTokenAuthorization.class, (conf, request) -> {
@@ -205,6 +213,21 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         }
 
         @Override
+        public void oauth2Saml(Closure<?> o) {
+            var builder = new OAuth2BuilderImpl(scimOAuth2TokenManager);
+            Closure<?> copy = (Closure<?>) o.clone();
+            copy.setDelegate(builder);
+            copy.setResolveStrategy(Closure.DELEGATE_FIRST);
+            copy.call(scimOAuth2TokenManager.getAuthContext());
+            if (builder.implementationPrototype != null) {
+                scimDispatcher.addCustomizer(ScimClientConfiguration.OAuth2SamlAuthorization.class,
+                        new GroovyScimImplementationCustomizer(builder.implementationPrototype));
+            } else {
+                builder.apply();
+            }
+        }
+
+        @Override
         @SuppressWarnings("unchecked")
         public void preference(Class<? extends ScimClientConfiguration>... types) {
             scimPreferenceOrder = List.of(types);
@@ -261,6 +284,21 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             copy.call(oauth2TokenManager.getAuthContext());
             if (builder.implementationPrototype != null) {
                 dispatcher.addCustomizer(RestClientConfiguration.OAuth2PasswordAuthorization.class,
+                        new GroovyRestImplementationCustomizer(builder.implementationPrototype));
+            } else {
+                builder.apply();
+            }
+        }
+
+        @Override
+        public void oauth2Saml(Closure<?> o) {
+            var builder = new OAuth2BuilderImpl(oauth2TokenManager);
+            Closure<?> copy = (Closure<?>) o.clone();
+            copy.setDelegate(builder);
+            copy.setResolveStrategy(Closure.DELEGATE_FIRST);
+            copy.call(oauth2TokenManager.getAuthContext());
+            if (builder.implementationPrototype != null) {
+                dispatcher.addCustomizer(RestClientConfiguration.OAuth2SamlAuthorization.class,
                         new GroovyRestImplementationCustomizer(builder.implementationPrototype));
             } else {
                 builder.apply();
