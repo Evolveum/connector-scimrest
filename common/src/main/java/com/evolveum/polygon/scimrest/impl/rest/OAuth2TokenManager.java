@@ -40,7 +40,9 @@ public class OAuth2TokenManager {
             String grantType,
             GuardedString privateKey,
             String scope,
-            String clientAuthenticationScheme
+            String clientAuthenticationScheme,
+            String username,
+            GuardedString password
     ) {
         public static OAuth2Config from(RestClientConfiguration.OAuth2ClientCredentialsAuthorization conf) {
             return new OAuth2Config(
@@ -50,7 +52,9 @@ public class OAuth2TokenManager {
                     OAuth2GrantType.CLIENT_CREDENTIALS.getName(),
                     null,
                     conf.getRestOAuth2Scope(),
-                    conf.getRestOAuth2ClientAuthenticationScheme()
+                    conf.getRestOAuth2ClientAuthenticationScheme(),
+                    null,
+                    null
             );
         }
 
@@ -62,7 +66,23 @@ public class OAuth2TokenManager {
                     OAuth2GrantType.JWT_BEARER.getName(),
                     conf.getRestOAuth2PrivateKey(),
                     conf.getRestOAuth2Scope(),
-                    conf.getRestOAuth2ClientAuthenticationScheme()
+                    conf.getRestOAuth2ClientAuthenticationScheme(),
+                    null,
+                    null
+            );
+        }
+
+        public static OAuth2Config from(RestClientConfiguration.OAuth2PasswordAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getRestOAuth2TokenUrl(),
+                    conf.getRestOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.PASSWORD.getName(),
+                    null,
+                    conf.getRestOAuth2Scope(),
+                    conf.getRestOAuth2ClientAuthenticationScheme(),
+                    conf.getRestOAuth2Username(),
+                    conf.getRestOAuth2Password()
             );
         }
 
@@ -74,7 +94,9 @@ public class OAuth2TokenManager {
                     OAuth2GrantType.CLIENT_CREDENTIALS.getName(),
                     null,
                     conf.getScimOAuth2Scope(),
-                    conf.getScimOAuth2ClientAuthenticationScheme()
+                    conf.getScimOAuth2ClientAuthenticationScheme(),
+                    null,
+                    null
             );
         }
 
@@ -86,7 +108,23 @@ public class OAuth2TokenManager {
                     OAuth2GrantType.JWT_BEARER.getName(),
                     conf.getScimOAuth2PrivateKey(),
                     conf.getScimOAuth2Scope(),
-                    conf.getScimOAuth2ClientAuthenticationScheme()
+                    conf.getScimOAuth2ClientAuthenticationScheme(),
+                    null,
+                    null
+            );
+        }
+
+        public static OAuth2Config from(ScimClientConfiguration.OAuth2PasswordAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getScimOAuth2TokenUrl(),
+                    conf.getScimOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.PASSWORD.getName(),
+                    null,
+                    conf.getScimOAuth2Scope(),
+                    conf.getScimOAuth2ClientAuthenticationScheme(),
+                    conf.getScimOAuth2Username(),
+                    conf.getScimOAuth2Password()
             );
         }
     }
@@ -216,6 +254,7 @@ public class OAuth2TokenManager {
         switch (OAuth2GrantType.parse(config.grantType())) {
             case JWT_BEARER -> buildJwtBearerRequest(request, config);
             case CLIENT_CREDENTIALS -> buildClientCredentialsRequest(request, config);
+            case PASSWORD -> buildPasswordRequest(request, config);
         }
     }
 
@@ -237,6 +276,30 @@ public class OAuth2TokenManager {
 
         if (config.scope() != null && !config.scope().isBlank()) {
             request.formParam("scope", config.scope());
+        }
+    }
+
+    private void buildPasswordRequest(HttpRequestSpecification request, OAuth2Config config) {
+        var passwordAccessor = new GuardedStringAccessor();
+        config.password().access(passwordAccessor);
+        String password = passwordAccessor.getClearString();
+
+        request.formParam(GRANT_TYPE, OAuth2GrantType.PASSWORD.getName())
+                .formParam("username", config.username())
+                .formParam("password", password);
+
+        if (config.scope() != null && !config.scope().isBlank()) {
+            request.formParam("scope", config.scope());
+        }
+
+        if (config.clientId() != null) {
+            if ("basic".equalsIgnoreCase(config.clientAuthenticationScheme())) {
+                String credentials = config.clientId() + ":";
+                request.header("Authorization", "Basic " +
+                        Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8)));
+            } else {
+                request.formParam(CLIENT_ID, config.clientId());
+            }
         }
     }
 

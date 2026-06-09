@@ -50,6 +50,10 @@ public interface AuthenticationCustomizationBuilder {
                 @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o);
 
+        void oauth2Password(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
         @SuppressWarnings("unchecked")
         void preference(Class<? extends RestClientConfiguration>... types);
 
@@ -75,6 +79,10 @@ public interface AuthenticationCustomizationBuilder {
 
         default Class<? extends RestClientConfiguration> getOauth2JwtBearer() {
             return RestClientConfiguration.OAuth2JwtBearerAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getOauth2Password() {
+            return RestClientConfiguration.OAuth2PasswordAuthorization.class;
         }
     }
 
@@ -116,6 +124,10 @@ public interface AuthenticationCustomizationBuilder {
                 @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o);
 
+        void oauth2Password(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
         @SuppressWarnings("unchecked")
         void preference(Class<? extends ScimClientConfiguration>... types);
 
@@ -141,6 +153,10 @@ public interface AuthenticationCustomizationBuilder {
 
         default Class<? extends ScimClientConfiguration> getOauth2JwtBearer() {
             return ScimClientConfiguration.OAuth2JwtBearerAuthorization.class;
+        }
+
+        default Class<? extends ScimClientConfiguration> getOauth2Password() {
+            return ScimClientConfiguration.OAuth2PasswordAuthorization.class;
         }
     }
 
