@@ -48,6 +48,12 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
         private final String tokenUrl;
         private final String clientId;
         private final GuardedString privateKey;
+        private String issuer;
+        private String keyId;
+        private String algorithm;
+        private String subject;
+        private String scope;
+        private String clientAuthenticationScheme;
 
         BaseJwtBearerConfig(int port, String testEndpoint, String tokenUrl,
                             String clientId, GuardedString privateKey) {
@@ -58,50 +64,22 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
             this.privateKey = privateKey;
         }
 
-        @Override
-        public String getRestOAuth2TokenUrl() {
-            return tokenUrl;
-        }
+        @Override public String getRestOAuth2TokenUrl() { return tokenUrl; }
+        @Override public String getRestOAuth2ClientId() { return clientId; }
+        @Override public GuardedString getRestOAuth2PrivateKey() { return privateKey; }
+        @Override public String getRestOAuth2Issuer() { return issuer; }
+        @Override public String getRestOAuth2KeyId() { return keyId; }
+        @Override public String getRestOAuth2Algorithm() { return algorithm; }
+        @Override public String getRestOAuth2Subject() { return subject; }
+        @Override public String getRestOAuth2Scope() { return scope; }
+        @Override public String getRestOAuth2ClientAuthenticationScheme() { return clientAuthenticationScheme; }
 
-        @Override
-        public String getRestOAuth2ClientId() {
-            return clientId;
-        }
-
-        @Override
-        public GuardedString getRestOAuth2PrivateKey() {
-            return privateKey;
-        }
-
-        @Override
-        public String getRestOAuth2Issuer() {
-            return null;
-        }
-
-        @Override
-        public String getRestOAuth2KeyId() {
-            return null;
-        }
-
-        @Override
-        public String getRestOAuth2Algorithm() {
-            return null;
-        }
-
-        @Override
-        public String getRestOAuth2Subject() {
-            return null;
-        }
-
-        @Override
-        public String getRestOAuth2Scope() {
-            return null;
-        }
-
-        @Override
-        public String getRestOAuth2ClientAuthenticationScheme() {
-            return null;
-        }
+        void setIssuer(String issuer) { this.issuer = issuer; }
+        void setKeyId(String keyId) { this.keyId = keyId; }
+        void setAlgorithm(String algorithm) { this.algorithm = algorithm; }
+        void setSubject(String subject) { this.subject = subject; }
+        void setScope(String scope) { this.scope = scope; }
+        void setClientAuthenticationScheme(String s) { this.clientAuthenticationScheme = s; }
     }
 
     protected static class OAuth2RestConnector

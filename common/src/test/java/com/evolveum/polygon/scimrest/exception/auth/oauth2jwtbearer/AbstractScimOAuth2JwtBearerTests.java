@@ -53,9 +53,14 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
 
     protected AbstractGroovyRestConnector<?> createScimConnector(
             PrivateKey privateKey, String tokenEndpoint, String clientId, String groovyScript) {
-        var config = new ScimJwtBearerTestConfig(
-                wireMockServer.port(), tokenEndpoint, clientId,
-                new GuardedString(toPem(privateKey).toCharArray()));
+        return createScimConnector(
+                new ScimJwtBearerTestConfig(wireMockServer.port(), tokenEndpoint, clientId,
+                        new GuardedString(toPem(privateKey).toCharArray())),
+                groovyScript);
+    }
+
+    protected AbstractGroovyRestConnector<?> createScimConnector(
+            ScimJwtBearerTestConfig config, String groovyScript) {
         var connector = new ScimJwtBearerTestConnector(groovyScript);
         connector.init(config);
         return connector;
@@ -68,6 +73,12 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
         private final String tokenEndpoint;
         private final String clientId;
         private final GuardedString privateKey;
+        private String issuer;
+        private String keyId;
+        private String algorithm;
+        private String subject;
+        private String scope;
+        private String clientAuthenticationScheme;
 
         ScimJwtBearerTestConfig(int port, String tokenEndpoint, String clientId, GuardedString privateKey) {
             this.port = port;
@@ -76,55 +87,23 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
             this.privateKey = privateKey;
         }
 
-        @Override
-        public String getScimBaseUrl() {
-            return "http://localhost:" + port + SCIM_BASE_PATH;
-        }
+        @Override public String getScimBaseUrl() { return "http://localhost:" + port + SCIM_BASE_PATH; }
+        @Override public String getScimOAuth2TokenUrl() { return "http://localhost:" + port + tokenEndpoint; }
+        @Override public String getScimOAuth2ClientId() { return clientId; }
+        @Override public GuardedString getScimOAuth2PrivateKey() { return privateKey; }
+        @Override public String getScimOAuth2Issuer() { return issuer; }
+        @Override public String getScimOAuth2KeyId() { return keyId; }
+        @Override public String getScimOAuth2Algorithm() { return algorithm; }
+        @Override public String getScimOAuth2Subject() { return subject; }
+        @Override public String getScimOAuth2Scope() { return scope; }
+        @Override public String getScimOAuth2ClientAuthenticationScheme() { return clientAuthenticationScheme; }
 
-        @Override
-        public String getScimOAuth2TokenUrl() {
-            return "http://localhost:" + port + tokenEndpoint;
-        }
-
-        @Override
-        public String getScimOAuth2ClientId() {
-            return clientId;
-        }
-
-        @Override
-        public GuardedString getScimOAuth2PrivateKey() {
-            return privateKey;
-        }
-
-        @Override
-        public String getScimOAuth2Issuer() {
-            return null;
-        }
-
-        @Override
-        public String getScimOAuth2KeyId() {
-            return null;
-        }
-
-        @Override
-        public String getScimOAuth2Algorithm() {
-            return null;
-        }
-
-        @Override
-        public String getScimOAuth2Subject() {
-            return null;
-        }
-
-        @Override
-        public String getScimOAuth2Scope() {
-            return null;
-        }
-
-        @Override
-        public String getScimOAuth2ClientAuthenticationScheme() {
-            return null;
-        }
+        void setIssuer(String issuer) { this.issuer = issuer; }
+        void setKeyId(String keyId) { this.keyId = keyId; }
+        void setAlgorithm(String algorithm) { this.algorithm = algorithm; }
+        void setSubject(String subject) { this.subject = subject; }
+        void setScope(String scope) { this.scope = scope; }
+        void setClientAuthenticationScheme(String s) { this.clientAuthenticationScheme = s; }
     }
 
     protected static class ScimJwtBearerTestConnector

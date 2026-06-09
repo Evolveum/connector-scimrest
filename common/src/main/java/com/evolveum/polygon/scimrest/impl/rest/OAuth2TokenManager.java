@@ -42,7 +42,11 @@ public class OAuth2TokenManager {
             String scope,
             String clientAuthenticationScheme,
             String username,
-            GuardedString password
+            GuardedString password,
+            String issuer,
+            String keyId,
+            String algorithm,
+            String subject
     ) {
         public static OAuth2Config from(RestClientConfiguration.OAuth2ClientCredentialsAuthorization conf) {
             return new OAuth2Config(
@@ -53,8 +57,7 @@ public class OAuth2TokenManager {
                     null,
                     conf.getRestOAuth2Scope(),
                     conf.getRestOAuth2ClientAuthenticationScheme(),
-                    null,
-                    null
+                    null, null, null, null, null, null
             );
         }
 
@@ -67,8 +70,11 @@ public class OAuth2TokenManager {
                     conf.getRestOAuth2PrivateKey(),
                     conf.getRestOAuth2Scope(),
                     conf.getRestOAuth2ClientAuthenticationScheme(),
-                    null,
-                    null
+                    null, null,
+                    conf.getRestOAuth2Issuer(),
+                    conf.getRestOAuth2KeyId(),
+                    conf.getRestOAuth2Algorithm(),
+                    conf.getRestOAuth2Subject()
             );
         }
 
@@ -82,7 +88,8 @@ public class OAuth2TokenManager {
                     conf.getRestOAuth2Scope(),
                     conf.getRestOAuth2ClientAuthenticationScheme(),
                     conf.getRestOAuth2Username(),
-                    conf.getRestOAuth2Password()
+                    conf.getRestOAuth2Password(),
+                    null, null, null, null
             );
         }
 
@@ -95,8 +102,7 @@ public class OAuth2TokenManager {
                     null,
                     conf.getScimOAuth2Scope(),
                     conf.getScimOAuth2ClientAuthenticationScheme(),
-                    null,
-                    null
+                    null, null, null, null, null, null
             );
         }
 
@@ -109,8 +115,11 @@ public class OAuth2TokenManager {
                     conf.getScimOAuth2PrivateKey(),
                     conf.getScimOAuth2Scope(),
                     conf.getScimOAuth2ClientAuthenticationScheme(),
-                    null,
-                    null
+                    null, null,
+                    conf.getScimOAuth2Issuer(),
+                    conf.getScimOAuth2KeyId(),
+                    conf.getScimOAuth2Algorithm(),
+                    conf.getScimOAuth2Subject()
             );
         }
 
@@ -124,7 +133,8 @@ public class OAuth2TokenManager {
                     conf.getScimOAuth2Scope(),
                     conf.getScimOAuth2ClientAuthenticationScheme(),
                     conf.getScimOAuth2Username(),
-                    conf.getScimOAuth2Password()
+                    conf.getScimOAuth2Password(),
+                    null, null, null, null
             );
         }
     }
@@ -304,20 +314,39 @@ public class OAuth2TokenManager {
     }
 
     private void buildJwtBearerRequest(HttpRequestSpecification request, OAuth2Config config) {
-        LOG.ok("Building JWT Bearer assertion for client {0}", config.clientId());
+        String algorithm = isBlank(config.algorithm()) ? "RS256" : config.algorithm();
+        String issuer    = isBlank(config.issuer())    ? config.clientId() : config.issuer();
+        String subject   = isBlank(config.subject())   ? config.clientId() : config.subject();
+
         long now = Instant.now().getEpochSecond();
-        String assertion = new JwtAssertionBuilder()
-                .claim("iss", config.clientId())
-                .claim("sub", config.clientId())
+        JwtAssertionBuilder builder = new JwtAssertionBuilder()
+                .claim("iss", issuer)
+                .claim("sub", subject)
                 .claim("aud", config.tokenUrl())
                 .claim("iat", now)
                 .claim("exp", now + JWT_ASSERTION_VALIDITY_SECONDS)
-                .claim("jti", UUID.randomUUID().toString())
-                .sign("RS256", config.privateKey());
+                .claim("jti", UUID.randomUUID().toString());
+
+        if (!isBlank(config.keyId())) {
+            builder.header("kid", config.keyId());
+        }
+
+        String assertion = builder.sign(algorithm, config.privateKey());
 
         request.formParam(GRANT_TYPE, OAuth2GrantType.JWT_BEARER.getName())
-                .formParam("client_id", config.clientId())
                 .formParam("assertion", assertion);
+
+        if (config.scope() != null && !config.scope().isBlank()) {
+            request.formParam("scope", config.scope());
+        }
+
+        if (config.clientId() != null && !"basic".equalsIgnoreCase(config.clientAuthenticationScheme())) {
+            request.formParam(CLIENT_ID, config.clientId());
+        }
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 
     public AuthContext<OAuth2Config> getAuthContext() {
