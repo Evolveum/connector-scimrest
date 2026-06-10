@@ -8,6 +8,7 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.AuthImplementationContext;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.JwtAssertionBuilder;
+import com.evolveum.polygon.scimrest.impl.rest.AwsRequestSigner;
 import com.evolveum.polygon.scimrest.impl.rest.JdkHttpRequestConverter;
 import com.evolveum.polygon.scimrest.impl.rest.OAuth2TokenManager;
 import groovy.lang.Closure;
@@ -19,6 +20,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -87,6 +89,13 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             var oauth2Conf = conf.require(RestClientConfiguration.OAuth2SamlAuthorization.class);
             oauth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
+        dispatcher.addBuiltinCustomizer(RestClientConfiguration.AwsSignatureAuthorization.class, (conf, request) -> {
+            var awsConf = conf.require(RestClientConfiguration.AwsSignatureAuthorization.class);
+            AwsRequestSigner.sign(request,
+                    awsConf.getRestAwsAccessKey(), awsConf.getRestAwsSecretKey(),
+                    awsConf.getRestAwsSessionToken(),
+                    awsConf.getRestAwsRegion(), awsConf.getRestAwsService());
+        });
 
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.OAuth2ClientCredentialsAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2ClientCredentialsAuthorization.class);
@@ -103,6 +112,13 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.OAuth2SamlAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2SamlAuthorization.class);
             scimOAuth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+        });
+        scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.AwsSignatureAuthorization.class, (conf, request) -> {
+            var awsConf = conf.require(ScimClientConfiguration.AwsSignatureAuthorization.class);
+            AwsRequestSigner.sign(request,
+                    awsConf.getScimAwsAccessKey(), awsConf.getScimAwsSecretKey(),
+                    awsConf.getScimAwsSessionToken(),
+                    awsConf.getScimAwsRegion(), awsConf.getScimAwsService());
         });
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.BearerTokenAuthorization.class, (conf, request) -> {
             var tokenConf = conf.require(ScimClientConfiguration.BearerTokenAuthorization.class);
@@ -228,6 +244,25 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         }
 
         @Override
+        public void awsSignature(Closure<?> o) {
+            var builder = new AwsSignatureCustomizationBuilderImpl();
+            GroovyClosures.callAndReturnDelegate(o, builder);
+            if (builder.beforeSignPrototype != null) {
+                var proto = builder.beforeSignPrototype;
+                scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.AwsSignatureAuthorization.class,
+                        (conf, request) -> {
+                            var c = conf.require(ScimClientConfiguration.AwsSignatureAuthorization.class);
+                            var ctx = new BeforeSignContext(request);
+                            GroovyClosures.copyAndCall(proto, ctx);
+                            var signer = new AwsRequestSigner(request, c.getScimAwsRegion(), c.getScimAwsService(),
+                                    c.getScimAwsAccessKey(), c.getScimAwsSecretKey(), c.getScimAwsSessionToken());
+                            ctx.extraSignedHeaders.forEach(signer::signHeader);
+                            request.header("Authorization", signer.sign());
+                        });
+            }
+        }
+
+        @Override
         @SuppressWarnings("unchecked")
         public void preference(Class<? extends ScimClientConfiguration>... types) {
             scimPreferenceOrder = List.of(types);
@@ -302,6 +337,25 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
                         new GroovyRestImplementationCustomizer(builder.implementationPrototype));
             } else {
                 builder.apply();
+            }
+        }
+
+        @Override
+        public void awsSignature(Closure<?> o) {
+            var builder = new AwsSignatureCustomizationBuilderImpl();
+            GroovyClosures.callAndReturnDelegate(o, builder);
+            if (builder.beforeSignPrototype != null) {
+                var proto = builder.beforeSignPrototype;
+                dispatcher.addBuiltinCustomizer(RestClientConfiguration.AwsSignatureAuthorization.class,
+                        (conf, request) -> {
+                            var c = conf.require(RestClientConfiguration.AwsSignatureAuthorization.class);
+                            var ctx = new BeforeSignContext(request);
+                            GroovyClosures.copyAndCall(proto, ctx);
+                            var signer = new AwsRequestSigner(request, c.getRestAwsRegion(), c.getRestAwsService(),
+                                    c.getRestAwsAccessKey(), c.getRestAwsSecretKey(), c.getRestAwsSessionToken());
+                            ctx.extraSignedHeaders.forEach(signer::signHeader);
+                            request.header("Authorization", signer.sign());
+                        });
             }
         }
 
@@ -399,6 +453,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             public Object parseJson(String text) {
                 return new groovy.json.JsonSlurper().parseText(text);
             }
+
         }
     }
 
@@ -476,7 +531,30 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             public Object parseJson(String text) {
                 return new groovy.json.JsonSlurper().parseText(text);
             }
+
         }
+    }
+
+    static class AwsSignatureCustomizationBuilderImpl
+            implements AuthenticationCustomizationBuilder.AwsSignatureCustomizationBuilder {
+        Closure<?> beforeSignPrototype;
+
+        @Override
+        public void beforeSign(Closure<?> hook) {
+            this.beforeSignPrototype = hook;
+        }
+    }
+
+    static class BeforeSignContext implements AuthenticationCustomizationBuilder.AwsBeforeSignContext {
+        private final HttpRequestSpecification request;
+        final List<String> extraSignedHeaders = new ArrayList<>();
+
+        BeforeSignContext(HttpRequestSpecification request) {
+            this.request = request;
+        }
+
+        @Override public HttpRequestSpecification getRequest() { return request; }
+        @Override public void signHeader(String name) { extraSignedHeaders.add(name.toLowerCase()); }
     }
 
     static class OAuth2BuilderImpl implements AuthenticationCustomizationBuilder.OAuth2Builder {

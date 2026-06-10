@@ -111,7 +111,6 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private GuardedString restAwsSessionToken;
     private String restAwsRegion;
     private String restAwsService;
-    private String restAwsSignatureVersion;
 
     // --- REST NtlmAuthorization ---
     private String restNtlmUsername;
@@ -185,7 +184,6 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private GuardedString scimAwsSessionToken;
     private String scimAwsRegion;
     private String scimAwsService;
-    private String scimAwsSignatureVersion;
 
     // --- SCIM NtlmAuthorization ---
     private String scimNtlmUsername;
@@ -702,16 +700,6 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
 
     public void setRestAwsService(String restAwsService) {
         this.restAwsService = restAwsService;
-    }
-
-    @Override
-    @ConfigurationProperty(displayMessageKey = "rest.aws.signatureVersion", allowedValues = {"4", "2"})
-    public String getRestAwsSignatureVersion() {
-        return restAwsSignatureVersion;
-    }
-
-    public void setRestAwsSignatureVersion(String restAwsSignatureVersion) {
-        this.restAwsSignatureVersion = restAwsSignatureVersion;
     }
 
     // =========================================================================
@@ -1234,16 +1222,6 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
 
     public void setScimAwsService(String scimAwsService) {
         this.scimAwsService = scimAwsService;
-    }
-
-    @Override
-    @ConfigurationProperty(displayMessageKey = "scim.aws.signatureVersion", allowedValues = {"4", "2"})
-    public String getScimAwsSignatureVersion() {
-        return scimAwsSignatureVersion;
-    }
-
-    public void setScimAwsSignatureVersion(String scimAwsSignatureVersion) {
-        this.scimAwsSignatureVersion = scimAwsSignatureVersion;
     }
 
     // =========================================================================

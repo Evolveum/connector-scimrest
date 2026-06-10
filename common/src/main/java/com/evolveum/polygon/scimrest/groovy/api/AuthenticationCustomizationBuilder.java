@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.Script;
@@ -58,6 +59,10 @@ public interface AuthenticationCustomizationBuilder {
                 @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o);
 
+        void awsSignature(
+                @DelegatesTo(value = AwsSignatureCustomizationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
         @SuppressWarnings("unchecked")
         void preference(Class<? extends RestClientConfiguration>... types);
 
@@ -91,6 +96,10 @@ public interface AuthenticationCustomizationBuilder {
 
         default Class<? extends RestClientConfiguration> getOauth2Saml() {
             return RestClientConfiguration.OAuth2SamlAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getAwsSignature() {
+            return RestClientConfiguration.AwsSignatureAuthorization.class;
         }
     }
 
@@ -140,6 +149,10 @@ public interface AuthenticationCustomizationBuilder {
                 @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o);
 
+        void awsSignature(
+                @DelegatesTo(value = AwsSignatureCustomizationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
         @SuppressWarnings("unchecked")
         void preference(Class<? extends ScimClientConfiguration>... types);
 
@@ -174,6 +187,21 @@ public interface AuthenticationCustomizationBuilder {
         default Class<? extends ScimClientConfiguration> getOauth2Saml() {
             return ScimClientConfiguration.OAuth2SamlAuthorization.class;
         }
+
+        default Class<? extends ScimClientConfiguration> getAwsSignature() {
+            return ScimClientConfiguration.AwsSignatureAuthorization.class;
+        }
+    }
+
+    interface AwsSignatureCustomizationBuilder {
+        void beforeSign(
+                @DelegatesTo(value = AwsBeforeSignContext.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Runtime Closure<?> hook);
+    }
+
+    interface AwsBeforeSignContext {
+        HttpRequestSpecification getRequest();
+        void signHeader(String name);
     }
 
     interface OAuth2Builder {

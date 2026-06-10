@@ -264,10 +264,9 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
     }
 
     /**
-     * AWS Signature Version 4 (or 2) request signing.
+     * AWS Signature Version 4 request signing.
      *
      * @see <a href="https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html">AWS Signature Version 4</a>
-     * @see <a href="https://docs.aws.amazon.com/general/latest/gr/signature-version-2.html">AWS Signature Version 2 (legacy)</a>
      */
     interface AwsSignatureAuthorization extends ScimClientConfiguration {
 
@@ -285,9 +284,6 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
 
         /** Optional temporary session token for STS credentials. */
         GuardedString getScimAwsSessionToken();
-
-        /** Signature version: {@code 4} (default) or {@code 2} (legacy). */
-        String getScimAwsSignatureVersion();
     }
 
     /**

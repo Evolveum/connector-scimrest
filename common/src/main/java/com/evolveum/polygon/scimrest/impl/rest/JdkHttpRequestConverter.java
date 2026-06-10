@@ -93,12 +93,12 @@ public class JdkHttpRequestConverter implements HttpRequestConverter<HttpRequest
         StringBuilder b = new StringBuilder(dto.getBaseUri());
         if (endpoint != null && !endpoint.isEmpty()) {
             if (b.charAt(b.length() - 1) != '/') b.append("/");
-            b.append(endpoint);
+            b.append(UriEncoding.encodePath(endpoint));
         }
         String subpath = dto.getSubpath();
         if (!subpath.isEmpty()) {
             if (b.charAt(b.length() - 1) != '/') b.append("/");
-            b.append(subpath.startsWith("/") ? subpath.substring(1) : subpath);
+            b.append(UriEncoding.encodePath(subpath.startsWith("/") ? subpath.substring(1) : subpath));
         }
         if (!dto.getQueryParameters().isEmpty()) {
             b.append("?");
