@@ -29,9 +29,15 @@ import java.util.Map;
 public class AuthorizationCustomizationBuilderImpl implements AuthenticationCustomizationBuilder {
 
     private final DispatchingAuthorizationCustomizer dispatcher = new DispatchingAuthorizationCustomizer();
-    private final GroovyOAuth2TokenManager oauth2TokenManager = new GroovyOAuth2TokenManager();
+    private final GroovyOAuth2TokenManager restCcManager = new GroovyOAuth2TokenManager();
+    private final GroovyOAuth2TokenManager restJwtBearerManager = new GroovyOAuth2TokenManager();
+    private final GroovyOAuth2TokenManager restPasswordManager = new GroovyOAuth2TokenManager();
+    private final GroovyOAuth2TokenManager restSamlManager = new GroovyOAuth2TokenManager();
     private final DispatchingScimAuthorizationCustomizer scimDispatcher = new DispatchingScimAuthorizationCustomizer();
-    private final GroovyOAuth2TokenManager scimOAuth2TokenManager = new GroovyOAuth2TokenManager();
+    private final GroovyOAuth2TokenManager scimCcManager = new GroovyOAuth2TokenManager();
+    private final GroovyOAuth2TokenManager scimJwtBearerManager = new GroovyOAuth2TokenManager();
+    private final GroovyOAuth2TokenManager scimPasswordManager = new GroovyOAuth2TokenManager();
+    private final GroovyOAuth2TokenManager scimSamlManager = new GroovyOAuth2TokenManager();
 
     private List<Class<? extends RestClientConfiguration>> restPreferenceOrder = List.of();
     private List<Class<? extends ScimClientConfiguration>> scimPreferenceOrder = List.of();
@@ -75,20 +81,24 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         });
         dispatcher.addBuiltinCustomizer(RestClientConfiguration.OAuth2ClientCredentialsAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(RestClientConfiguration.OAuth2ClientCredentialsAuthorization.class);
-            oauth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+            restCcManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
         dispatcher.addBuiltinCustomizer(RestClientConfiguration.OAuth2JwtBearerAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(RestClientConfiguration.OAuth2JwtBearerAuthorization.class);
-            oauth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+            restJwtBearerManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
         dispatcher.addBuiltinCustomizer(RestClientConfiguration.OAuth2PasswordAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(RestClientConfiguration.OAuth2PasswordAuthorization.class);
-            oauth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+            restPasswordManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
         dispatcher.addBuiltinCustomizer(RestClientConfiguration.OAuth2SamlAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(RestClientConfiguration.OAuth2SamlAuthorization.class);
-            oauth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+            restSamlManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
+        dispatcher.addTokenManager(RestClientConfiguration.OAuth2ClientCredentialsAuthorization.class, restCcManager);
+        dispatcher.addTokenManager(RestClientConfiguration.OAuth2JwtBearerAuthorization.class, restJwtBearerManager);
+        dispatcher.addTokenManager(RestClientConfiguration.OAuth2PasswordAuthorization.class, restPasswordManager);
+        dispatcher.addTokenManager(RestClientConfiguration.OAuth2SamlAuthorization.class, restSamlManager);
         dispatcher.addBuiltinCustomizer(RestClientConfiguration.AwsSignatureAuthorization.class, (conf, request) -> {
             var awsConf = conf.require(RestClientConfiguration.AwsSignatureAuthorization.class);
             AwsRequestSigner.sign(request,
@@ -99,19 +109,19 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.OAuth2ClientCredentialsAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2ClientCredentialsAuthorization.class);
-            scimOAuth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+            scimCcManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.OAuth2JwtBearerAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2JwtBearerAuthorization.class);
-            scimOAuth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+            scimJwtBearerManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.OAuth2PasswordAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2PasswordAuthorization.class);
-            scimOAuth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+            scimPasswordManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.OAuth2SamlAuthorization.class, (conf, request) -> {
             var oauth2Conf = conf.require(ScimClientConfiguration.OAuth2SamlAuthorization.class);
-            scimOAuth2TokenManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
+            scimSamlManager.applyToken(OAuth2TokenManager.OAuth2Config.from(oauth2Conf), request);
         });
         scimDispatcher.addBuiltinCustomizer(ScimClientConfiguration.AwsSignatureAuthorization.class, (conf, request) -> {
             var awsConf = conf.require(ScimClientConfiguration.AwsSignatureAuthorization.class);
@@ -185,11 +195,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void oauth2ClientCredentials(Closure<?> o) {
-            var builder = new OAuth2BuilderImpl(scimOAuth2TokenManager);
+            var builder = new OAuth2BuilderImpl(scimCcManager);
             Closure<?> copy = (Closure<?>) o.clone();
             copy.setDelegate(builder);
             copy.setResolveStrategy(Closure.DELEGATE_FIRST);
-            copy.call(scimOAuth2TokenManager.getAuthContext());
+            copy.call(scimCcManager.getAuthContext());
             if (builder.implementationPrototype != null) {
                 scimDispatcher.addCustomizer(ScimClientConfiguration.OAuth2ClientCredentialsAuthorization.class,
                         new GroovyScimImplementationCustomizer(builder.implementationPrototype));
@@ -200,11 +210,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void oauth2JwtBearer(Closure<?> o) {
-            var builder = new OAuth2BuilderImpl(scimOAuth2TokenManager);
+            var builder = new OAuth2BuilderImpl(scimJwtBearerManager);
             Closure<?> copy = (Closure<?>) o.clone();
             copy.setDelegate(builder);
             copy.setResolveStrategy(Closure.DELEGATE_FIRST);
-            copy.call(scimOAuth2TokenManager.getAuthContext());
+            copy.call(scimJwtBearerManager.getAuthContext());
             if (builder.implementationPrototype != null) {
                 scimDispatcher.addCustomizer(ScimClientConfiguration.OAuth2JwtBearerAuthorization.class,
                         new GroovyScimImplementationCustomizer(builder.implementationPrototype));
@@ -215,11 +225,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void oauth2Password(Closure<?> o) {
-            var builder = new OAuth2BuilderImpl(scimOAuth2TokenManager);
+            var builder = new OAuth2BuilderImpl(scimPasswordManager);
             Closure<?> copy = (Closure<?>) o.clone();
             copy.setDelegate(builder);
             copy.setResolveStrategy(Closure.DELEGATE_FIRST);
-            copy.call(scimOAuth2TokenManager.getAuthContext());
+            copy.call(scimPasswordManager.getAuthContext());
             if (builder.implementationPrototype != null) {
                 scimDispatcher.addCustomizer(ScimClientConfiguration.OAuth2PasswordAuthorization.class,
                         new GroovyScimImplementationCustomizer(builder.implementationPrototype));
@@ -230,11 +240,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void oauth2Saml(Closure<?> o) {
-            var builder = new OAuth2BuilderImpl(scimOAuth2TokenManager);
+            var builder = new OAuth2BuilderImpl(scimSamlManager);
             Closure<?> copy = (Closure<?>) o.clone();
             copy.setDelegate(builder);
             copy.setResolveStrategy(Closure.DELEGATE_FIRST);
-            copy.call(scimOAuth2TokenManager.getAuthContext());
+            copy.call(scimSamlManager.getAuthContext());
             if (builder.implementationPrototype != null) {
                 scimDispatcher.addCustomizer(ScimClientConfiguration.OAuth2SamlAuthorization.class,
                         new GroovyScimImplementationCustomizer(builder.implementationPrototype));
@@ -282,11 +292,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void oauth2ClientCredentials(Closure<?> o) {
-            var builder = new OAuth2BuilderImpl(oauth2TokenManager);
+            var builder = new OAuth2BuilderImpl(restCcManager);
             Closure<?> copy = (Closure<?>) o.clone();
             copy.setDelegate(builder);
             copy.setResolveStrategy(Closure.DELEGATE_FIRST);
-            copy.call(oauth2TokenManager.getAuthContext());
+            copy.call(restCcManager.getAuthContext());
             if (builder.implementationPrototype != null) {
                 dispatcher.addCustomizer(RestClientConfiguration.OAuth2ClientCredentialsAuthorization.class,
                         new GroovyRestImplementationCustomizer(builder.implementationPrototype));
@@ -297,11 +307,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void oauth2JwtBearer(Closure<?> o) {
-            var builder = new OAuth2BuilderImpl(oauth2TokenManager);
+            var builder = new OAuth2BuilderImpl(restJwtBearerManager);
             Closure<?> copy = (Closure<?>) o.clone();
             copy.setDelegate(builder);
             copy.setResolveStrategy(Closure.DELEGATE_FIRST);
-            copy.call(oauth2TokenManager.getAuthContext());
+            copy.call(restJwtBearerManager.getAuthContext());
             if (builder.implementationPrototype != null) {
                 dispatcher.addCustomizer(RestClientConfiguration.OAuth2JwtBearerAuthorization.class,
                         new GroovyRestImplementationCustomizer(builder.implementationPrototype));
@@ -312,11 +322,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void oauth2Password(Closure<?> o) {
-            var builder = new OAuth2BuilderImpl(oauth2TokenManager);
+            var builder = new OAuth2BuilderImpl(restPasswordManager);
             Closure<?> copy = (Closure<?>) o.clone();
             copy.setDelegate(builder);
             copy.setResolveStrategy(Closure.DELEGATE_FIRST);
-            copy.call(oauth2TokenManager.getAuthContext());
+            copy.call(restPasswordManager.getAuthContext());
             if (builder.implementationPrototype != null) {
                 dispatcher.addCustomizer(RestClientConfiguration.OAuth2PasswordAuthorization.class,
                         new GroovyRestImplementationCustomizer(builder.implementationPrototype));
@@ -327,11 +337,11 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void oauth2Saml(Closure<?> o) {
-            var builder = new OAuth2BuilderImpl(oauth2TokenManager);
+            var builder = new OAuth2BuilderImpl(restSamlManager);
             Closure<?> copy = (Closure<?>) o.clone();
             copy.setDelegate(builder);
             copy.setResolveStrategy(Closure.DELEGATE_FIRST);
-            copy.call(oauth2TokenManager.getAuthContext());
+            copy.call(restSamlManager.getAuthContext());
             if (builder.implementationPrototype != null) {
                 dispatcher.addCustomizer(RestClientConfiguration.OAuth2SamlAuthorization.class,
                         new GroovyRestImplementationCustomizer(builder.implementationPrototype));
@@ -565,6 +575,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         private Closure<?> parseTokenResponseHook;
         private Closure<?> validateTokenHook;
         private Closure<?> applyTokenHook;
+        private Closure<?> onResponseHook;
         Closure<?> implementationPrototype;
 
         OAuth2BuilderImpl(GroovyOAuth2TokenManager tokenManager) {
@@ -596,6 +607,12 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         }
 
         @Override
+        public AuthenticationCustomizationBuilder.OAuth2Builder onResponse(Closure<?> hook) {
+            this.onResponseHook = hook;
+            return this;
+        }
+
+        @Override
         public AuthenticationCustomizationBuilder.OAuth2Builder implementation(Closure<?> closure) {
             this.implementationPrototype = closure;
             return this;
@@ -606,6 +623,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             if (parseTokenResponseHook != null) tokenManager.setParseTokenResponseHook(parseTokenResponseHook);
             if (validateTokenHook != null) tokenManager.setValidateTokenHook(validateTokenHook);
             if (applyTokenHook != null) tokenManager.setApplyTokenHook(applyTokenHook);
+            if (onResponseHook != null) tokenManager.setOnResponseHook(onResponseHook);
         }
     }
 

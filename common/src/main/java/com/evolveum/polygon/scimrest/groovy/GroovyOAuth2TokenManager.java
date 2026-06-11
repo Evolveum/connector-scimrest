@@ -11,12 +11,13 @@ import com.evolveum.polygon.scimrest.impl.rest.OAuth2TokenManager;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
+import java.net.http.HttpResponse;
 import java.util.Map;
 
 /**
  * Extends {@link OAuth2TokenManager} with Groovy script hook support.
  *
- * <p>Each of the four lifecycle stages can be customized via a Groovy closure
+ * <p>Each of the lifecycle stages can be customized via a Groovy closure
  * captured from the {@code oauth2 { }} initialization block.
  */
 public class GroovyOAuth2TokenManager extends OAuth2TokenManager {
@@ -25,11 +26,13 @@ public class GroovyOAuth2TokenManager extends OAuth2TokenManager {
     private Closure<?> parseTokenResponseHook;
     private Closure<?> validateTokenHook;
     private Closure<?> applyTokenHook;
+    private Closure<?> onResponseHook;
 
     public void setBuildTokenRequestHook(Closure<?> hook)  { this.buildTokenRequestHook = hook; }
     public void setParseTokenResponseHook(Closure<?> hook) { this.parseTokenResponseHook = hook; }
     public void setValidateTokenHook(Closure<?> hook)      { this.validateTokenHook = hook; }
     public void setApplyTokenHook(Closure<?> hook)         { this.applyTokenHook = hook; }
+    public void setOnResponseHook(Closure<?> hook)         { this.onResponseHook = hook; }
 
     @Override
     protected boolean validateToken() {
@@ -66,6 +69,15 @@ public class GroovyOAuth2TokenManager extends OAuth2TokenManager {
             callHook(applyTokenHook, request);
         } else {
             super.applyTokenToRequest(request);
+        }
+    }
+
+    @Override
+    public void handleResponse(HttpResponse<?> response) {
+        if (onResponseHook != null) {
+            callHook(onResponseHook, response);
+        } else {
+            super.handleResponse(response);
         }
     }
 

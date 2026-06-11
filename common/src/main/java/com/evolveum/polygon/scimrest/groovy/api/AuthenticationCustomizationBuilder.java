@@ -209,6 +209,7 @@ public interface AuthenticationCustomizationBuilder {
         OAuth2Builder parseTokenResponse(@Script.Runtime Closure<?> hook);
         OAuth2Builder validateToken(@Script.Runtime Closure<?> hook);
         OAuth2Builder applyToken(@Script.Runtime Closure<?> hook);
+        OAuth2Builder onResponse(@Script.Runtime Closure<?> hook);
 
         OAuth2Builder implementation(
                 @DelegatesTo(value = AuthImplementationContext.class, strategy = Closure.DELEGATE_FIRST)

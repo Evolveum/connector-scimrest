@@ -36,6 +36,7 @@ import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AuthPreferenceManager;
+import com.evolveum.polygon.scimrest.groovy.DispatchingAuthorizationCustomizer;
 
 /**
  * The RestContext class provides a context for executing HTTP requests
@@ -74,11 +75,11 @@ public class RestContext implements RetrievableContext {
 
     /**
      * Creates a new request initialized with the base address and timeout from the configuration.
-     * Authorization is applied later when the request is executed via {@link #executeRequest}.
+     * Authorization is applied when the request is executed via {@link #executeRequest}.
      *
      * @return a new {@code HttpRequestSpecification} with base URI and timeout set.
      */
-    public HttpRequestSpecification newAuthorizedRequest() {
+    public HttpRequestSpecification newRequest() {
         var timeoutSeconds = configuration.getTimeoutSeconds() != null ? configuration.getTimeoutSeconds() : DEFAULT_TIMEOUT_SECONDS;
         var request = new HttpRequestSpecification(configuration.getBaseAddress());
         request.timeout(Duration.of(timeoutSeconds, ChronoUnit.SECONDS));
@@ -109,7 +110,8 @@ public class RestContext implements RetrievableContext {
      * @throws InterruptedException if the operation is interrupted
      */
     public HttpResponse<?> executeRequest(HttpRequestSpecification spec, HttpResponse.BodyHandler<?> jsonBodyHandler) throws IOException, InterruptedException {
-        var preAuthCopy = new HttpRequestSpecification(spec);
+        var preAuthCopy = customizer instanceof AuthPreferenceManager<?>
+                ? new HttpRequestSpecification(spec) : null;
         customizer.customize(configuration, spec);
         var response = doSend(spec, jsonBodyHandler);
 
@@ -120,6 +122,8 @@ public class RestContext implements RetrievableContext {
             customizer.customize(configuration, preAuthCopy);
             LOG.ok("Retrying request after reprobe");
             response = doSend(preAuthCopy, jsonBodyHandler);
+        } else if (customizer instanceof DispatchingAuthorizationCustomizer d) {
+            d.handleResponse(response);
         }
 
         return response;

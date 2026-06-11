@@ -396,6 +396,15 @@ public class OAuth2TokenManager {
         return s == null || s.isBlank();
     }
 
+    public void handleResponse(HttpResponse<?> response) {
+        if (response.statusCode() == 401) {
+            synchronized (this) {
+                authContext.set(ACCESS_TOKEN, null);
+                authContext.set(EXPIRES_AT, null);
+            }
+        }
+    }
+
     public AuthContext<OAuth2Config> getAuthContext() {
         return authContext;
     }
