@@ -8,10 +8,6 @@ package com.evolveum.polygon.scimrest.exception.auth.crud;
 
 import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
-import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import org.identityconnectors.common.security.GuardedString;
 
@@ -23,15 +19,12 @@ public class BearerTokenCrudTest extends AbstractAuthOnCrudTest {
 
     @Override
     protected ClassHandlerConnectorBase createConnector() {
-        var config = new Config(wireMockServer.port());
-        var connector = new Connector();
-        connector.init(config);
+        var connector = new TestConnector();
+        connector.init(new Config(wireMockServer.port()));
         return connector;
     }
 
-    @Override
-    protected void stubAuthPrerequisites() {
-    }
+    @Override protected void stubAuthPrerequisites() { }
 
     @Override
     protected RequestPatternBuilder withExpectedAuth(RequestPatternBuilder pattern) {
@@ -45,11 +38,5 @@ public class BearerTokenCrudTest extends AbstractAuthOnCrudTest {
 
         @Override public String getRestTestEndpoint() { return null; }
         @Override public GuardedString getRestTokenValue() { return new GuardedString(TOKEN.toCharArray()); }
-    }
-
-    private static class Connector extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
-        @Override protected void initializeSchema(GroovySchemaLoader loader) { loader.load(SCHEMA_SCRIPT); }
-        @Override protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) { }
-        @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) { builder.loadFromString(OPERATION_SCRIPT); }
     }
 }

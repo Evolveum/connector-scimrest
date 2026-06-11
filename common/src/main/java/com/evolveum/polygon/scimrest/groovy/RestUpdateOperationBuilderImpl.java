@@ -188,7 +188,7 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
 
         @Override
         public void update(UpdateRequest updateRequest, OperationOptions options) {
-            var request = context.rest().newAuthorizedRequest();
+            var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method);
             // FIXME: Use proper path parameter computation

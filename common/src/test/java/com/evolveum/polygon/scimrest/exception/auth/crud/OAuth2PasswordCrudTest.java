@@ -8,10 +8,6 @@ package com.evolveum.polygon.scimrest.exception.auth.crud;
 
 import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
-import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import org.identityconnectors.common.security.GuardedString;
 
@@ -27,7 +23,7 @@ public class OAuth2PasswordCrudTest extends AbstractAuthOnCrudTest {
         var config = new Config(wireMockServer.port(),
                 "http://localhost:" + wireMockServer.port() + TOKEN_ENDPOINT,
                 "crud-client", "crud-user", new GuardedString("crud-password".toCharArray()));
-        var connector = new Connector();
+        var connector = new TestConnector();
         connector.init(config);
         return connector;
     }
@@ -69,9 +65,4 @@ public class OAuth2PasswordCrudTest extends AbstractAuthOnCrudTest {
         @Override public String getRestOAuth2ClientAuthenticationScheme() { return null; }
     }
 
-    private static class Connector extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
-        @Override protected void initializeSchema(GroovySchemaLoader loader) { loader.load(SCHEMA_SCRIPT); }
-        @Override protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) { }
-        @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) { builder.loadFromString(OPERATION_SCRIPT); }
-    }
 }

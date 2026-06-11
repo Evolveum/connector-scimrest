@@ -155,7 +155,7 @@ public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilde
 
         @Override
         public Result create(Set<Attribute> createAttributes, OperationOptions options) {
-            var request = context.rest().newAuthorizedRequest();
+            var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method);
             if (contentType != null ) {

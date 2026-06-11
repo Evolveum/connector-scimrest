@@ -141,7 +141,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
                     throw new ConnectionFailedException(e.getMessage(), e);
                 }
             } else if (context.rest() != null) {
-                var request = context.rest().newAuthorizedRequest();
+                var request = context.rest().newRequest();
                 request.subpath(restClientConfig.getRestTestEndpoint());
                 try {
                     var response = context.rest().executeRequest(request, HttpResponse.BodyHandlers.discarding());

@@ -8,6 +8,10 @@ package com.evolveum.polygon.scimrest.exception.auth.crud;
 
 import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.exception.WireMockTestSupport;
+import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import org.identityconnectors.framework.common.objects.*;
 import org.testng.annotations.AfterMethod;
@@ -33,11 +37,16 @@ public abstract class AbstractAuthOnCrudTest extends WireMockTestSupport {
     protected static final String ACCOUNTS_PATTERN = "/accounts/.*";
     protected static final String ACCOUNT_BY_ID_PATH = "/accounts/123";
 
-    protected static final String SCHEMA_SCRIPT = """
+    protected static final String NATIVE_SCHEMA_SCRIPT = """
             objectClass("Account") {
                 attribute("id") { jsonType "string" }
-                connIdAttribute("UID", "id")
                 attribute("name") { jsonType "string" }
+            }
+            """;
+
+    protected static final String CONNID_SCHEMA_SCRIPT = """
+            objectClass("Account") {
+                connIdAttribute("UID", "id")
                 connIdAttribute("NAME", "name")
             }
             """;
@@ -72,6 +81,17 @@ public abstract class AbstractAuthOnCrudTest extends WireMockTestSupport {
         @Override
         public String getRestTestEndpoint() {
             return null;
+        }
+    }
+
+    protected static class TestConnector extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
+        @Override protected void initializeSchema(GroovySchemaLoader loader) {
+            loader.load(NATIVE_SCHEMA_SCRIPT);
+            loader.load(CONNID_SCHEMA_SCRIPT);
+        }
+        @Override protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) { }
+        @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+            builder.loadFromString(OPERATION_SCRIPT);
         }
     }
 
