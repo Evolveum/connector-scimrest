@@ -253,6 +253,9 @@ public enum OpenApiValueMapping implements JsonValueMapping {
             if (value instanceof NumericNode numericVal) {
                 return numericVal.longValue();
             }
+            if (value instanceof NullNode) {
+                return null;
+            }
             throw new UnsupportedOperationException();
         }
     },
