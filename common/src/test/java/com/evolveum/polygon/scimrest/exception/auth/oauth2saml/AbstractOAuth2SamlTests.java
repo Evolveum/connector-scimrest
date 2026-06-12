@@ -4,7 +4,7 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.exception.auth.oauth2jwtbearer;
+package com.evolveum.polygon.scimrest.exception.auth.oauth2saml;
 
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.exception.WireMockTestSupport;
@@ -15,12 +15,14 @@ import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
-abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
+abstract class AbstractOAuth2SamlTests extends WireMockTestSupport {
 
     protected void stubTokenEndpointWithStatus(String url, int status, String accessToken) {
         String body = status == 200
@@ -42,21 +44,18 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
                         .withBody("{\"status\":\"ok\"}")));
     }
 
-    protected static class BaseJwtBearerConfig extends BaseTestConfiguration
-            implements RestClientConfiguration.OAuth2JwtBearerAuthorization {
+    protected static class BaseSamlConfig extends BaseTestConfiguration
+            implements RestClientConfiguration.OAuth2SamlAuthorization {
 
         private final String tokenUrl;
         private final String clientId;
         private final GuardedString privateKey;
         private String issuer;
-        private String keyId;
-        private String algorithm;
-        private String subject;
         private String scope;
         private String clientAuthenticationScheme;
 
-        BaseJwtBearerConfig(int port, String testEndpoint, String tokenUrl,
-                            String clientId, GuardedString privateKey) {
+        BaseSamlConfig(int port, String testEndpoint, String tokenUrl,
+                       String clientId, GuardedString privateKey) {
             super(port);
             setRestTestEndpoint(testEndpoint);
             this.tokenUrl = tokenUrl;
@@ -68,31 +67,25 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
         @Override public String getRestOAuth2ClientId() { return clientId; }
         @Override public GuardedString getRestOAuth2PrivateKey() { return privateKey; }
         @Override public String getRestOAuth2Issuer() { return issuer; }
-        @Override public String getRestOAuth2KeyId() { return keyId; }
-        @Override public String getRestOAuth2Algorithm() { return algorithm; }
-        @Override public String getRestOAuth2Subject() { return subject; }
         @Override public String getRestOAuth2Scope() { return scope; }
         @Override public String getRestOAuth2ClientAuthenticationScheme() { return clientAuthenticationScheme; }
 
         void setIssuer(String issuer) { this.issuer = issuer; }
-        void setKeyId(String keyId) { this.keyId = keyId; }
-        void setAlgorithm(String algorithm) { this.algorithm = algorithm; }
-        void setSubject(String subject) { this.subject = subject; }
         void setScope(String scope) { this.scope = scope; }
         void setClientAuthenticationScheme(String s) { this.clientAuthenticationScheme = s; }
     }
 
-    protected static class OAuth2RestConnector
+    protected static class OAuth2SamlRestConnector
             extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
 
         private final String script;
 
-        OAuth2RestConnector() {
+        OAuth2SamlRestConnector() {
             super(false);
             this.script = null;
         }
 
-        OAuth2RestConnector(String script) {
+        OAuth2SamlRestConnector(String script) {
             super(false);
             this.script = script;
         }
@@ -115,5 +108,9 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
         String encoded = Base64.getMimeEncoder(64, "\n".getBytes(StandardCharsets.UTF_8))
                 .encodeToString(key.getEncoded());
         return "-----BEGIN PRIVATE KEY-----\n" + encoded + "\n-----END PRIVATE KEY-----\n";
+    }
+
+    protected static String decodeAssertion(String base64urlAssertion) {
+        return new String(Base64.getUrlDecoder().decode(base64urlAssertion), StandardCharsets.UTF_8);
     }
 }

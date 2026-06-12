@@ -40,7 +40,13 @@ public class OAuth2TokenManager {
             String grantType,
             GuardedString privateKey,
             String scope,
-            String clientAuthenticationScheme
+            String clientAuthenticationScheme,
+            String username,
+            GuardedString password,
+            String issuer,
+            String keyId,
+            String algorithm,
+            String subject
     ) {
         public static OAuth2Config from(RestClientConfiguration.OAuth2ClientCredentialsAuthorization conf) {
             return new OAuth2Config(
@@ -50,7 +56,8 @@ public class OAuth2TokenManager {
                     OAuth2GrantType.CLIENT_CREDENTIALS.getName(),
                     null,
                     conf.getRestOAuth2Scope(),
-                    conf.getRestOAuth2ClientAuthenticationScheme()
+                    conf.getRestOAuth2ClientAuthenticationScheme(),
+                    null, null, null, null, null, null
             );
         }
 
@@ -62,7 +69,27 @@ public class OAuth2TokenManager {
                     OAuth2GrantType.JWT_BEARER.getName(),
                     conf.getRestOAuth2PrivateKey(),
                     conf.getRestOAuth2Scope(),
-                    conf.getRestOAuth2ClientAuthenticationScheme()
+                    conf.getRestOAuth2ClientAuthenticationScheme(),
+                    null, null,
+                    conf.getRestOAuth2Issuer(),
+                    conf.getRestOAuth2KeyId(),
+                    conf.getRestOAuth2Algorithm(),
+                    conf.getRestOAuth2Subject()
+            );
+        }
+
+        public static OAuth2Config from(RestClientConfiguration.OAuth2PasswordAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getRestOAuth2TokenUrl(),
+                    conf.getRestOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.PASSWORD.getName(),
+                    null,
+                    conf.getRestOAuth2Scope(),
+                    conf.getRestOAuth2ClientAuthenticationScheme(),
+                    conf.getRestOAuth2Username(),
+                    conf.getRestOAuth2Password(),
+                    null, null, null, null
             );
         }
 
@@ -74,7 +101,8 @@ public class OAuth2TokenManager {
                     OAuth2GrantType.CLIENT_CREDENTIALS.getName(),
                     null,
                     conf.getScimOAuth2Scope(),
-                    conf.getScimOAuth2ClientAuthenticationScheme()
+                    conf.getScimOAuth2ClientAuthenticationScheme(),
+                    null, null, null, null, null, null
             );
         }
 
@@ -86,7 +114,57 @@ public class OAuth2TokenManager {
                     OAuth2GrantType.JWT_BEARER.getName(),
                     conf.getScimOAuth2PrivateKey(),
                     conf.getScimOAuth2Scope(),
-                    conf.getScimOAuth2ClientAuthenticationScheme()
+                    conf.getScimOAuth2ClientAuthenticationScheme(),
+                    null, null,
+                    conf.getScimOAuth2Issuer(),
+                    conf.getScimOAuth2KeyId(),
+                    conf.getScimOAuth2Algorithm(),
+                    conf.getScimOAuth2Subject()
+            );
+        }
+
+        public static OAuth2Config from(ScimClientConfiguration.OAuth2PasswordAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getScimOAuth2TokenUrl(),
+                    conf.getScimOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.PASSWORD.getName(),
+                    null,
+                    conf.getScimOAuth2Scope(),
+                    conf.getScimOAuth2ClientAuthenticationScheme(),
+                    conf.getScimOAuth2Username(),
+                    conf.getScimOAuth2Password(),
+                    null, null, null, null
+            );
+        }
+
+        public static OAuth2Config from(RestClientConfiguration.OAuth2SamlAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getRestOAuth2TokenUrl(),
+                    conf.getRestOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.SAML_BEARER.getName(),
+                    conf.getRestOAuth2PrivateKey(),
+                    conf.getRestOAuth2Scope(),
+                    conf.getRestOAuth2ClientAuthenticationScheme(),
+                    null, null,
+                    conf.getRestOAuth2Issuer(),
+                    null, null, null
+            );
+        }
+
+        public static OAuth2Config from(ScimClientConfiguration.OAuth2SamlAuthorization conf) {
+            return new OAuth2Config(
+                    conf.getScimOAuth2TokenUrl(),
+                    conf.getScimOAuth2ClientId(),
+                    null,
+                    OAuth2GrantType.SAML_BEARER.getName(),
+                    conf.getScimOAuth2PrivateKey(),
+                    conf.getScimOAuth2Scope(),
+                    conf.getScimOAuth2ClientAuthenticationScheme(),
+                    null, null,
+                    conf.getScimOAuth2Issuer(),
+                    null, null, null
             );
         }
     }
@@ -216,6 +294,8 @@ public class OAuth2TokenManager {
         switch (OAuth2GrantType.parse(config.grantType())) {
             case JWT_BEARER -> buildJwtBearerRequest(request, config);
             case CLIENT_CREDENTIALS -> buildClientCredentialsRequest(request, config);
+            case PASSWORD -> buildPasswordRequest(request, config);
+            case SAML_BEARER -> buildSamlBearerRequest(request, config);
         }
     }
 
@@ -240,21 +320,89 @@ public class OAuth2TokenManager {
         }
     }
 
+    private void buildPasswordRequest(HttpRequestSpecification request, OAuth2Config config) {
+        var passwordAccessor = new GuardedStringAccessor();
+        config.password().access(passwordAccessor);
+        String password = passwordAccessor.getClearString();
+
+        request.formParam(GRANT_TYPE, OAuth2GrantType.PASSWORD.getName())
+                .formParam("username", config.username())
+                .formParam("password", password);
+
+        if (config.scope() != null && !config.scope().isBlank()) {
+            request.formParam("scope", config.scope());
+        }
+
+        if (config.clientId() != null) {
+            if ("basic".equalsIgnoreCase(config.clientAuthenticationScheme())) {
+                String credentials = config.clientId() + ":";
+                request.header("Authorization", "Basic " +
+                        Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8)));
+            } else {
+                request.formParam(CLIENT_ID, config.clientId());
+            }
+        }
+    }
+
     private void buildJwtBearerRequest(HttpRequestSpecification request, OAuth2Config config) {
-        LOG.ok("Building JWT Bearer assertion for client {0}", config.clientId());
+        String algorithm = isBlank(config.algorithm()) ? "RS256" : config.algorithm();
+        String issuer    = isBlank(config.issuer())    ? config.clientId() : config.issuer();
+        String subject   = isBlank(config.subject())   ? config.clientId() : config.subject();
+
         long now = Instant.now().getEpochSecond();
-        String assertion = new JwtAssertionBuilder()
-                .claim("iss", config.clientId())
-                .claim("sub", config.clientId())
+        JwtAssertionBuilder builder = new JwtAssertionBuilder()
+                .claim("iss", issuer)
+                .claim("sub", subject)
                 .claim("aud", config.tokenUrl())
                 .claim("iat", now)
                 .claim("exp", now + JWT_ASSERTION_VALIDITY_SECONDS)
-                .claim("jti", UUID.randomUUID().toString())
-                .sign("RS256", config.privateKey());
+                .claim("jti", UUID.randomUUID().toString());
+
+        if (!isBlank(config.keyId())) {
+            builder.header("kid", config.keyId());
+        }
+
+        String assertion = builder.sign(algorithm, config.privateKey());
 
         request.formParam(GRANT_TYPE, OAuth2GrantType.JWT_BEARER.getName())
-                .formParam("client_id", config.clientId())
                 .formParam("assertion", assertion);
+
+        if (config.scope() != null && !config.scope().isBlank()) {
+            request.formParam("scope", config.scope());
+        }
+
+        if (config.clientId() != null && !"basic".equalsIgnoreCase(config.clientAuthenticationScheme())) {
+            request.formParam(CLIENT_ID, config.clientId());
+        }
+    }
+
+    private void buildSamlBearerRequest(HttpRequestSpecification request, OAuth2Config config) {
+        String issuer = isBlank(config.issuer()) ? config.clientId() : config.issuer();
+        String assertion = SamlAssertionBuilder.build(issuer, config.tokenUrl(), config.privateKey());
+
+        request.formParam(GRANT_TYPE, OAuth2GrantType.SAML_BEARER.getName())
+                .formParam("assertion", assertion);
+
+        if (config.scope() != null && !config.scope().isBlank()) {
+            request.formParam("scope", config.scope());
+        }
+
+        if (config.clientId() != null && !"basic".equalsIgnoreCase(config.clientAuthenticationScheme())) {
+            request.formParam(CLIENT_ID, config.clientId());
+        }
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
+    }
+
+    public void handleResponse(HttpResponse<?> response) {
+        if (response.statusCode() == 401) {
+            synchronized (this) {
+                authContext.set(ACCESS_TOKEN, null);
+                authContext.set(EXPIRES_AT, null);
+            }
+        }
     }
 
     public AuthContext<OAuth2Config> getAuthContext() {

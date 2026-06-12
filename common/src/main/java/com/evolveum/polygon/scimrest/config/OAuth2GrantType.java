@@ -17,7 +17,13 @@ public enum OAuth2GrantType {
     CLIENT_CREDENTIALS("client_credentials"),
 
     /** Also accepted as the short alias {@code jwt_bearer}. */
-    JWT_BEARER("urn:ietf:params:oauth:grant-type:jwt-bearer");
+    JWT_BEARER("urn:ietf:params:oauth:grant-type:jwt-bearer"),
+
+    /** @see <a href="https://www.rfc-editor.org/rfc/rfc6749#section-4.3">RFC 6749 §4.3</a> */
+    PASSWORD("password"),
+
+    /** @see <a href="https://www.rfc-editor.org/rfc/rfc7522">RFC 7522</a> */
+    SAML_BEARER("urn:ietf:params:oauth:grant-type:saml2-bearer");
 
     private final String name;
 

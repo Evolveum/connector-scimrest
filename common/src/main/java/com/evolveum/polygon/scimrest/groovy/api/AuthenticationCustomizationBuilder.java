@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.Script;
@@ -50,6 +51,18 @@ public interface AuthenticationCustomizationBuilder {
                 @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o);
 
+        void oauth2Password(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
+        void oauth2Saml(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
+        void awsSignature(
+                @DelegatesTo(value = AwsSignatureCustomizationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
         @SuppressWarnings("unchecked")
         void preference(Class<? extends RestClientConfiguration>... types);
 
@@ -75,6 +88,18 @@ public interface AuthenticationCustomizationBuilder {
 
         default Class<? extends RestClientConfiguration> getOauth2JwtBearer() {
             return RestClientConfiguration.OAuth2JwtBearerAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getOauth2Password() {
+            return RestClientConfiguration.OAuth2PasswordAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getOauth2Saml() {
+            return RestClientConfiguration.OAuth2SamlAuthorization.class;
+        }
+
+        default Class<? extends RestClientConfiguration> getAwsSignature() {
+            return RestClientConfiguration.AwsSignatureAuthorization.class;
         }
     }
 
@@ -116,6 +141,18 @@ public interface AuthenticationCustomizationBuilder {
                 @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o);
 
+        void oauth2Password(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
+        void oauth2Saml(
+                @DelegatesTo(value = OAuth2Builder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
+        void awsSignature(
+                @DelegatesTo(value = AwsSignatureCustomizationBuilder.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Initialization Closure<?> o);
+
         @SuppressWarnings("unchecked")
         void preference(Class<? extends ScimClientConfiguration>... types);
 
@@ -142,6 +179,29 @@ public interface AuthenticationCustomizationBuilder {
         default Class<? extends ScimClientConfiguration> getOauth2JwtBearer() {
             return ScimClientConfiguration.OAuth2JwtBearerAuthorization.class;
         }
+
+        default Class<? extends ScimClientConfiguration> getOauth2Password() {
+            return ScimClientConfiguration.OAuth2PasswordAuthorization.class;
+        }
+
+        default Class<? extends ScimClientConfiguration> getOauth2Saml() {
+            return ScimClientConfiguration.OAuth2SamlAuthorization.class;
+        }
+
+        default Class<? extends ScimClientConfiguration> getAwsSignature() {
+            return ScimClientConfiguration.AwsSignatureAuthorization.class;
+        }
+    }
+
+    interface AwsSignatureCustomizationBuilder {
+        void beforeSign(
+                @DelegatesTo(value = AwsBeforeSignContext.class, strategy = Closure.DELEGATE_FIRST)
+                @Script.Runtime Closure<?> hook);
+    }
+
+    interface AwsBeforeSignContext {
+        HttpRequestSpecification getRequest();
+        void signHeader(String name);
     }
 
     interface OAuth2Builder {
@@ -149,6 +209,7 @@ public interface AuthenticationCustomizationBuilder {
         OAuth2Builder parseTokenResponse(@Script.Runtime Closure<?> hook);
         OAuth2Builder validateToken(@Script.Runtime Closure<?> hook);
         OAuth2Builder applyToken(@Script.Runtime Closure<?> hook);
+        OAuth2Builder onResponse(@Script.Runtime Closure<?> hook);
 
         OAuth2Builder implementation(
                 @DelegatesTo(value = AuthImplementationContext.class, strategy = Closure.DELEGATE_FIRST)

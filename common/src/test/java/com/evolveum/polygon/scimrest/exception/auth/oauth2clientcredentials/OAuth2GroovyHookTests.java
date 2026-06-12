@@ -275,6 +275,66 @@ public class OAuth2GroovyHookTests extends AbstractOAuth2ClientCredentialsTests 
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 4);
     }
 
+    @Test
+    public void testOnResponseHookCalledForAnyResponse() {
+        stubTokenEndpoint(TOKEN_ENDPOINT, "test-token", 3600);
+        stubRestApiEndpoint(API_ENDPOINT, "test-token");
+
+        // Hook clears token after every 200 → forces re-fetch on next request
+        var script = """
+                authentication {
+                    rest {
+                        oauth2ClientCredentials { oauth2Context ->
+                            onResponse { response ->
+                                if (response.statusCode() == 200) {
+                                    oauth2Context["access_token"] = null
+                                }
+                            }
+                        }
+                    }
+                }
+                """;
+
+        var connector = createConnector(script);
+        connector.test();
+        connector.test();
+
+        assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))).size(), 2,
+                "Token re-fetched on second request — hook cleared it after first 200");
+    }
+
+    @Test
+    public void testOnResponseHookSuppressesBuiltinRetry() {
+        stubTokenEndpoint(TOKEN_ENDPOINT, "any-token", 3600);
+        wireMockServer.stubFor(get(urlEqualTo(API_ENDPOINT))
+                .withHeader("Authorization", equalTo("Bearer any-token"))
+                .willReturn(aResponse().withStatus(401)));
+
+        var script = """
+                authentication {
+                    rest {
+                        oauth2ClientCredentials { oauth2Context ->
+                            onResponse { response ->
+                                // side-effect only — built-in 401 retry does not run
+                            }
+                        }
+                    }
+                }
+                """;
+
+        try {
+            createConnector(script).test();
+            fail("Expected InvalidCredentialException");
+        } catch (org.identityconnectors.framework.common.exceptions.InvalidCredentialException e) {
+            // expected
+        }
+
+        assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))).size(), 1,
+                "Token fetched only once — hook suppressed built-in retry");
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(API_ENDPOINT))).size(), 1,
+                "API called only once — no retry");
+    }
+
     // --- helpers ---
 
     private OAuth2RestConnector createConnector(String groovyScript) {

@@ -11,6 +11,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.*;
 
@@ -162,6 +164,31 @@ public class OAuth2ClientCredentialsTests extends AbstractOAuth2ClientCredential
         assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
                 .withRequestBody(containing("client_id=my-client"))
                 .withRequestBody(containing("client_secret=my-secret"))), 1);
+    }
+
+    @Test
+    public void testTokenClearedOn401FromApi() {
+        stubTokenEndpoint(TOKEN_ENDPOINT, "test-token", 3600);
+        wireMockServer.stubFor(get(urlEqualTo(API_ENDPOINT))
+                .inScenario("api-401")
+                .whenScenarioStateIs(Scenario.STARTED)
+                .withHeader("Authorization", equalTo("Bearer test-token"))
+                .willReturn(aResponse().withStatus(401))
+                .willSetStateTo("after-401"));
+        wireMockServer.stubFor(get(urlEqualTo(API_ENDPOINT))
+                .inScenario("api-401")
+                .whenScenarioStateIs("after-401")
+                .withHeader("Authorization", equalTo("Bearer test-token"))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{}")));
+
+        var connector = createConnector("client-id", new GuardedString("client-secret".toCharArray()));
+        try { connector.test(); } catch (Exception ignored) {}
+        connector.test();
+
+        assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))), 2,
+                "Token re-fetched after 401 cleared it");
     }
 
     // --- helpers ---

@@ -264,10 +264,9 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
     }
 
     /**
-     * AWS Signature Version 4 (or 2) request signing.
+     * AWS Signature Version 4 request signing.
      *
      * @see <a href="https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html">AWS Signature Version 4</a>
-     * @see <a href="https://docs.aws.amazon.com/general/latest/gr/signature-version-2.html">AWS Signature Version 2 (legacy)</a>
      */
     interface AwsSignatureAuthorization extends ScimClientConfiguration {
 
@@ -285,9 +284,6 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
 
         /** Optional temporary session token for STS credentials. */
         GuardedString getScimAwsSessionToken();
-
-        /** Signature version: {@code 4} (default) or {@code 2} (legacy). */
-        String getScimAwsSignatureVersion();
     }
 
     /**
@@ -330,7 +326,7 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
         if (OAuth2SamlAuthorization.class.isAssignableFrom(type)) {
             return configuration instanceof OAuth2SamlAuthorization o
                     && o.getScimOAuth2TokenUrl() != null && o.getScimOAuth2ClientId() != null
-                    && o.getScimOAuth2PrivateKey() != null && o.getScimOAuth2Issuer() != null;
+                    && o.getScimOAuth2PrivateKey() != null;
         }
         if (OAuth2JwtBearerAuthorization.class.isAssignableFrom(type)) {
             return configuration instanceof OAuth2JwtBearerAuthorization o

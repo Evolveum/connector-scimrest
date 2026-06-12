@@ -138,7 +138,9 @@ public class JwtAssertionBuilder {
             }
             sig.initSign(key);
             sig.update(input.getBytes(StandardCharsets.UTF_8));
-            return sig.sign();
+            byte[] raw = sig.sign();
+            // RFC 7518 §3.4: ECDSA signatures must be (r || s) fixed-width, not DER-encoded
+            return alg.keyType == Algorithm.KeyType.EC ? derToJose(raw, alg.coordinateSize) : raw;
         } catch (ConnectorException e) {
             throw e;
         } catch (Exception e) {
@@ -146,30 +148,65 @@ public class JwtAssertionBuilder {
         }
     }
 
+    /**
+     * Converts an ASN.1 DER-encoded ECDSA signature to the fixed-width (r || s) format
+     * required by RFC 7518 §3.4.
+     */
+    private static byte[] derToJose(byte[] der, int coordinateSize) {
+        int pos = 2;
+        if ((der[1] & 0x80) != 0) pos += (der[1] & 0x7f); // long-form length
+
+        pos++; // INTEGER tag for r
+        int rLen = der[pos++] & 0xff;
+        int rOff = pos;
+        pos += rLen;
+
+        pos++; // INTEGER tag for s
+        int sLen = der[pos++] & 0xff;
+        int sOff = pos;
+
+        byte[] out = new byte[2 * coordinateSize];
+        copyCoordinate(der, rOff, rLen, out, 0, coordinateSize);
+        copyCoordinate(der, sOff, sLen, out, coordinateSize, coordinateSize);
+        return out;
+    }
+
+    private static void copyCoordinate(byte[] src, int srcOff, int srcLen, byte[] dst, int dstOff, int size) {
+        // DER may prefix a 0x00 byte to mark the integer as positive; strip it
+        if (srcLen > size && src[srcOff] == 0) {
+            srcOff++;
+            srcLen--;
+        }
+        // right-align in fixed-size field (left-zero-pad if the value is shorter)
+        System.arraycopy(src, srcOff, dst, dstOff + size - srcLen, srcLen);
+    }
+
     private enum Algorithm {
-        HS256("HmacSHA256",   KeyType.HMAC, null),
-        HS384("HmacSHA384",   KeyType.HMAC, null),
-        HS512("HmacSHA512",   KeyType.HMAC, null),
-        RS256("SHA256withRSA", KeyType.RSA, null),
-        RS384("SHA384withRSA", KeyType.RSA, null),
-        RS512("SHA512withRSA", KeyType.RSA, null),
-        PS256("RSASSA-PSS",   KeyType.RSA,  new PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1)),
-        PS384("RSASSA-PSS",   KeyType.RSA,  new PSSParameterSpec("SHA-384", "MGF1", MGF1ParameterSpec.SHA384, 48, 1)),
-        PS512("RSASSA-PSS",   KeyType.RSA,  new PSSParameterSpec("SHA-512", "MGF1", MGF1ParameterSpec.SHA512, 64, 1)),
-        ES256("SHA256withECDSA", KeyType.EC, null),
-        ES384("SHA384withECDSA", KeyType.EC, null),
-        ES512("SHA512withECDSA", KeyType.EC, null);
+        HS256("HmacSHA256",    KeyType.HMAC, null, 0),
+        HS384("HmacSHA384",    KeyType.HMAC, null, 0),
+        HS512("HmacSHA512",    KeyType.HMAC, null, 0),
+        RS256("SHA256withRSA", KeyType.RSA,  null, 0),
+        RS384("SHA384withRSA", KeyType.RSA,  null, 0),
+        RS512("SHA512withRSA", KeyType.RSA,  null, 0),
+        PS256("RSASSA-PSS",    KeyType.RSA,  new PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1), 0),
+        PS384("RSASSA-PSS",    KeyType.RSA,  new PSSParameterSpec("SHA-384", "MGF1", MGF1ParameterSpec.SHA384, 48, 1), 0),
+        PS512("RSASSA-PSS",    KeyType.RSA,  new PSSParameterSpec("SHA-512", "MGF1", MGF1ParameterSpec.SHA512, 64, 1), 0),
+        ES256("SHA256withECDSA", KeyType.EC, null, 32),
+        ES384("SHA384withECDSA", KeyType.EC, null, 48),
+        ES512("SHA512withECDSA", KeyType.EC, null, 66);
 
         enum KeyType { HMAC, RSA, EC }
 
         final String jcaName;
         final KeyType keyType;
         final PSSParameterSpec pssParams;
+        final int coordinateSize;
 
-        Algorithm(String jcaName, KeyType keyType, PSSParameterSpec pssParams) {
+        Algorithm(String jcaName, KeyType keyType, PSSParameterSpec pssParams, int coordinateSize) {
             this.jcaName = jcaName;
             this.keyType = keyType;
             this.pssParams = pssParams;
+            this.coordinateSize = coordinateSize;
         }
 
         static Algorithm from(String name) {

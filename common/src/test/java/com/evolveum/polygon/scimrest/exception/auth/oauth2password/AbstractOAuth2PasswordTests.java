@@ -4,7 +4,7 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.exception.auth.oauth2jwtbearer;
+package com.evolveum.polygon.scimrest.exception.auth.oauth2password;
 
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.exception.WireMockTestSupport;
@@ -14,23 +14,35 @@ import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 
-import java.nio.charset.StandardCharsets;
-import java.security.PrivateKey;
-import java.util.Base64;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
-abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
+abstract class AbstractOAuth2PasswordTests extends WireMockTestSupport {
 
-    protected void stubTokenEndpointWithStatus(String url, int status, String accessToken) {
-        String body = status == 200
-                ? "{\"access_token\":\"" + accessToken + "\",\"expires_in\":3600}"
-                : "{\"error\":\"invalid_request\"}";
+    protected void stubTokenEndpoint(String url, String accessToken, int expiresIn) {
+        var body = "{\"access_token\":\"" + accessToken + "\",\"token_type\":\"Bearer\",\"expires_in\":" + expiresIn + "}";
         wireMockServer.stubFor(post(urlEqualTo(url))
                 .willReturn(aResponse()
-                        .withStatus(status)
+                        .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(body)));
+    }
+
+    protected void stubTokenEndpointMatchingBody(String url, String bodyContains,
+                                                 String accessToken, int expiresIn) {
+        wireMockServer.stubFor(post(urlEqualTo(url))
+                .withRequestBody(containing(bodyContains))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"access_token\":\"" + accessToken + "\",\"token_type\":\"Bearer\",\"expires_in\":" + expiresIn + "}")));
+    }
+
+    protected void stubTokenEndpointError(String url, int errorStatus) {
+        wireMockServer.stubFor(post(urlEqualTo(url))
+                .willReturn(aResponse()
+                        .withStatus(errorStatus)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"error\":\"oauth2_error\"}")));
     }
 
     protected void stubRestApiEndpoint(String url, String expectedToken) {
@@ -42,57 +54,48 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
                         .withBody("{\"status\":\"ok\"}")));
     }
 
-    protected static class BaseJwtBearerConfig extends BaseTestConfiguration
-            implements RestClientConfiguration.OAuth2JwtBearerAuthorization {
+    protected static class BasePasswordConfig extends BaseTestConfiguration
+            implements RestClientConfiguration.OAuth2PasswordAuthorization {
 
         private final String tokenUrl;
         private final String clientId;
-        private final GuardedString privateKey;
-        private String issuer;
-        private String keyId;
-        private String algorithm;
-        private String subject;
+        private final String username;
+        private final GuardedString password;
         private String scope;
-        private String clientAuthenticationScheme;
+        private String authScheme;
 
-        BaseJwtBearerConfig(int port, String testEndpoint, String tokenUrl,
-                            String clientId, GuardedString privateKey) {
+        BasePasswordConfig(int port, String testEndpoint, String tokenUrl,
+                           String clientId, String username, GuardedString password) {
             super(port);
             setRestTestEndpoint(testEndpoint);
             this.tokenUrl = tokenUrl;
             this.clientId = clientId;
-            this.privateKey = privateKey;
+            this.username = username;
+            this.password = password;
         }
 
         @Override public String getRestOAuth2TokenUrl() { return tokenUrl; }
         @Override public String getRestOAuth2ClientId() { return clientId; }
-        @Override public GuardedString getRestOAuth2PrivateKey() { return privateKey; }
-        @Override public String getRestOAuth2Issuer() { return issuer; }
-        @Override public String getRestOAuth2KeyId() { return keyId; }
-        @Override public String getRestOAuth2Algorithm() { return algorithm; }
-        @Override public String getRestOAuth2Subject() { return subject; }
+        @Override public String getRestOAuth2Username() { return username; }
+        @Override public GuardedString getRestOAuth2Password() { return password; }
         @Override public String getRestOAuth2Scope() { return scope; }
-        @Override public String getRestOAuth2ClientAuthenticationScheme() { return clientAuthenticationScheme; }
+        @Override public String getRestOAuth2ClientAuthenticationScheme() { return authScheme; }
 
-        void setIssuer(String issuer) { this.issuer = issuer; }
-        void setKeyId(String keyId) { this.keyId = keyId; }
-        void setAlgorithm(String algorithm) { this.algorithm = algorithm; }
-        void setSubject(String subject) { this.subject = subject; }
         void setScope(String scope) { this.scope = scope; }
-        void setClientAuthenticationScheme(String s) { this.clientAuthenticationScheme = s; }
+        void setAuthScheme(String authScheme) { this.authScheme = authScheme; }
     }
 
-    protected static class OAuth2RestConnector
+    protected static class OAuth2PasswordRestConnector
             extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
 
         private final String script;
 
-        OAuth2RestConnector() {
+        OAuth2PasswordRestConnector() {
             super(false);
             this.script = null;
         }
 
-        OAuth2RestConnector(String script) {
+        OAuth2PasswordRestConnector(String script) {
             super(false);
             this.script = script;
         }
@@ -109,11 +112,5 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
         @Override
         protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
         }
-    }
-
-    protected static String toPem(PrivateKey key) {
-        String encoded = Base64.getMimeEncoder(64, "\n".getBytes(StandardCharsets.UTF_8))
-                .encodeToString(key.getEncoded());
-        return "-----BEGIN PRIVATE KEY-----\n" + encoded + "\n-----END PRIVATE KEY-----\n";
     }
 }

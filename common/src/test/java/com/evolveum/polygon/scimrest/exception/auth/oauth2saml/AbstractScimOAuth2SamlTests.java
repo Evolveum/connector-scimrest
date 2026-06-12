@@ -4,7 +4,7 @@
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.scimrest.exception.auth.oauth2jwtbearer;
+package com.evolveum.polygon.scimrest.exception.auth.oauth2saml;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
@@ -17,7 +17,7 @@ import java.security.PrivateKey;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
-abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerTests {
+abstract class AbstractScimOAuth2SamlTests extends AbstractOAuth2SamlTests {
 
     protected static final String SCIM_BASE_PATH = "/scim";
     protected static final String SCHEMAS_ENDPOINT = SCIM_BASE_PATH + "/Schemas";
@@ -54,33 +54,30 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
     protected AbstractGroovyRestConnector<?> createScimConnector(
             PrivateKey privateKey, String tokenEndpoint, String clientId, String groovyScript) {
         return createScimConnector(
-                new ScimJwtBearerTestConfig(wireMockServer.port(), tokenEndpoint, clientId,
+                new ScimSamlTestConfig(wireMockServer.port(), tokenEndpoint, clientId,
                         new GuardedString(toPem(privateKey).toCharArray())),
                 groovyScript);
     }
 
     protected AbstractGroovyRestConnector<?> createScimConnector(
-            ScimJwtBearerTestConfig config, String groovyScript) {
-        var connector = new ScimJwtBearerTestConnector(groovyScript);
+            ScimSamlTestConfig config, String groovyScript) {
+        var connector = new ScimSamlTestConnector(groovyScript);
         connector.init(config);
         return connector;
     }
 
-    protected class ScimJwtBearerTestConfig extends BaseGroovyConnectorConfiguration
-            implements ScimClientConfiguration.OAuth2JwtBearerAuthorization {
+    protected class ScimSamlTestConfig extends BaseGroovyConnectorConfiguration
+            implements ScimClientConfiguration.OAuth2SamlAuthorization {
 
         private final int port;
         private final String tokenEndpoint;
         private final String clientId;
         private final GuardedString privateKey;
         private String issuer;
-        private String keyId;
-        private String algorithm;
-        private String subject;
         private String scope;
         private String clientAuthenticationScheme;
 
-        ScimJwtBearerTestConfig(int port, String tokenEndpoint, String clientId, GuardedString privateKey) {
+        ScimSamlTestConfig(int port, String tokenEndpoint, String clientId, GuardedString privateKey) {
             this.port = port;
             this.tokenEndpoint = tokenEndpoint;
             this.clientId = clientId;
@@ -92,26 +89,20 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
         @Override public String getScimOAuth2ClientId() { return clientId; }
         @Override public GuardedString getScimOAuth2PrivateKey() { return privateKey; }
         @Override public String getScimOAuth2Issuer() { return issuer; }
-        @Override public String getScimOAuth2KeyId() { return keyId; }
-        @Override public String getScimOAuth2Algorithm() { return algorithm; }
-        @Override public String getScimOAuth2Subject() { return subject; }
         @Override public String getScimOAuth2Scope() { return scope; }
         @Override public String getScimOAuth2ClientAuthenticationScheme() { return clientAuthenticationScheme; }
 
         void setIssuer(String issuer) { this.issuer = issuer; }
-        void setKeyId(String keyId) { this.keyId = keyId; }
-        void setAlgorithm(String algorithm) { this.algorithm = algorithm; }
-        void setSubject(String subject) { this.subject = subject; }
         void setScope(String scope) { this.scope = scope; }
         void setClientAuthenticationScheme(String s) { this.clientAuthenticationScheme = s; }
     }
 
-    protected static class ScimJwtBearerTestConnector
+    protected static class ScimSamlTestConnector
             extends AbstractGroovyRestConnector<BaseGroovyConnectorConfiguration> {
 
         private final String groovyScript;
 
-        ScimJwtBearerTestConnector(String groovyScript) {
+        ScimSamlTestConnector(String groovyScript) {
             super(false);
             this.groovyScript = groovyScript;
         }

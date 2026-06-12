@@ -43,7 +43,7 @@ public class RestPagingAwareObjectRetriever {
         try {
             do {
                 var batchProcessed = 0;
-                HttpRequestSpecification requestBuilder = context.newAuthorizedRequest();
+                HttpRequestSpecification requestBuilder = context.newRequest();
                 specification.addUriAndPaging(requestBuilder, currentPage, pageLimit);
                 var bodyHandler = bodyHandlerFrom(specification);
                 var response = context.executeRequest(requestBuilder, bodyHandler);
