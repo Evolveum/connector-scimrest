@@ -256,7 +256,8 @@ public enum OpenApiValueMapping implements JsonValueMapping {
             if (value instanceof NullNode) {
                 return null;
             }
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("Unsupported JSON value for ConnId conversion from signed int64: "
+                    + value.getNodeType());
         }
     },
     Int8("int8","signed 8-bit integer", java.lang.Byte.class, INTEGER) {
