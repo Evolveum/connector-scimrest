@@ -6,6 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.exception;
 
+import com.evolveum.polygon.scimrest.support.TestRestConnector;
+import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.groovy.*;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
@@ -190,6 +192,5 @@ public class HttpStatus4xxTests extends WireMockTestSupport {
             return "http://localhost:" + port;
         }
     }
-
 
 }

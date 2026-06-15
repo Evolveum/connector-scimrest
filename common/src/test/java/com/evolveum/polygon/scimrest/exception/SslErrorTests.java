@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.exception;
 
+import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.*;
 import org.testng.annotations.AfterMethod;
