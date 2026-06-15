@@ -15,6 +15,7 @@ import static com.evolveum.polygon.scimrest.impl.AttributeAwareOperationHandler.
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class UpdateOperationStrategyHandler implements UpdateOperation {
@@ -35,7 +36,9 @@ public class UpdateOperationStrategyHandler implements UpdateOperation {
         var outstanding = new HashSet<>(modifications);
         var handlersToUse = new ArrayList<Capability<AttributeDelta,UpdateOperationHandler>>();
         for (UpdateOperationHandler handler : handlers) {
-            var support = handler.canHandle(outstanding, options);
+            // Pass a snapshot: a handler without attribute restrictions returns the supplied
+            // collection as-is, and the removeAll below would empty it before update() runs.
+            var support = handler.canHandle(List.copyOf(outstanding), options);
             if (support.isUnsupported()) {
                 continue;
             }
