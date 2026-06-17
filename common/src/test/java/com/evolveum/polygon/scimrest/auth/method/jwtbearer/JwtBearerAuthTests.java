@@ -224,7 +224,7 @@ public class JwtBearerAuthTests extends WireMockTestSupport {
         }
 
         @Override
-        public String getRestJwtLocalization() {
+        public String getRestJwtLocation() {
             return jwtLocalization;
         }
     }

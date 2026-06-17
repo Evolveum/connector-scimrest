@@ -74,7 +74,7 @@ public interface RestClientConfiguration extends ConfigurationMixin {
         String getRestJwtPayload();
 
         /** Where in the request the token is placed: {@code header} (default) or {@code query}. */
-        String getRestJwtLocalization();
+        String getRestJwtLocation();
     }
 
     /**

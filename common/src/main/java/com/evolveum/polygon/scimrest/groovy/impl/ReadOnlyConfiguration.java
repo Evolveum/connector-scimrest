@@ -59,7 +59,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private GuardedString restJwtSecret;
     private Boolean restJwtSecretBase64Encoded;
     private String restJwtPayload;
-    private String restJwtLocalization;
+    private String restJwtLocation;
 
     // --- REST ApiKeyAuthorization ---
     private GuardedString restApiKey;
@@ -132,7 +132,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     private GuardedString scimJwtSecret;
     private Boolean scimJwtSecretBase64Encoded;
     private String scimJwtPayload;
-    private String scimJwtLocalization;
+    private String scimJwtLocation;
 
     // --- SCIM ApiKeyAuthorization ---
     private GuardedString scimApiKey;
@@ -327,13 +327,13 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.localization", order = 60, allowedValues = {"header", "query"})
-    public String getRestJwtLocalization() {
-        return restJwtLocalization;
+    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.location", order = 60, allowedValues = {"header", "query"})
+    public String getRestJwtLocation() {
+        return restJwtLocation;
     }
 
-    public void setRestJwtLocalization(String restJwtLocalization) {
-        this.restJwtLocalization = restJwtLocalization;
+    public void setRestJwtLocation(String restJwtLocation) {
+        this.restJwtLocation = restJwtLocation;
     }
 
     // =========================================================================
@@ -849,13 +849,13 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.localization", order = 60, allowedValues = {"header", "query"})
-    public String getScimJwtLocalization() {
-        return scimJwtLocalization;
+    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.location", order = 60, allowedValues = {"header", "query"})
+    public String getScimJwtLocation() {
+        return scimJwtLocation;
     }
 
-    public void setScimJwtLocalization(String scimJwtLocalization) {
-        this.scimJwtLocalization = scimJwtLocalization;
+    public void setScimJwtLocation(String scimJwtLocation) {
+        this.scimJwtLocation = scimJwtLocation;
     }
 
     // =========================================================================

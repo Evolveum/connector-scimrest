@@ -56,6 +56,6 @@ public class GroovyJwtBearerCrudTest extends AbstractGroovyAuthCrudTest {
         @Override public GuardedString getRestJwtSecret() { return null; }
         @Override public Boolean getRestJwtSecretBase64Encoded() { return false; }
         @Override public String getRestJwtPayload() { return PAYLOAD_VALUE; }
-        @Override public String getRestJwtLocalization() { return "header"; }
+        @Override public String getRestJwtLocation() { return "header"; }
     }
 }

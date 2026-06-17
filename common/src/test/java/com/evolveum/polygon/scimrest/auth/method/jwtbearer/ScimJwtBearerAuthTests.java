@@ -215,7 +215,7 @@ public class ScimJwtBearerAuthTests extends WireMockTestSupport {
         }
 
         @Override
-        public String getScimJwtLocalization() {
+        public String getScimJwtLocation() {
             return jwtLocalization;
         }
     }

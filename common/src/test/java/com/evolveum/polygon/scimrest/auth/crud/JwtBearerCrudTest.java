@@ -40,6 +40,6 @@ public class JwtBearerCrudTest extends AbstractAuthOnCrudTest {
         @Override public GuardedString getRestJwtSecret() { return new GuardedString("crud-jwt-secret".toCharArray()); }
         @Override public Boolean getRestJwtSecretBase64Encoded() { return false; }
         @Override public String getRestJwtPayload() { return "{}"; }
-        @Override public String getRestJwtLocalization() { return "header"; }
+        @Override public String getRestJwtLocation() { return "header"; }
     }
 }

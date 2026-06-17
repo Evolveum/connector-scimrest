@@ -73,7 +73,7 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
         String getScimJwtPayload();
 
         /** Where in the request the token is placed: {@code header} (default) or {@code query}. */
-        String getScimJwtLocalization();
+        String getScimJwtLocation();
     }
 
     /**

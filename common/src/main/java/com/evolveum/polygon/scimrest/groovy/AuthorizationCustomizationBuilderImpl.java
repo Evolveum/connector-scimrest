@@ -63,7 +63,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             String token = new JwtAssertionBuilder()
                     .claimsFromJson(jwtConf.getRestJwtPayload())
                     .sign(jwtConf.getRestJwtAlgorithm(), accessor.getClearString(), jwtConf.getRestJwtSecretBase64Encoded());
-            if ("query".equalsIgnoreCase(jwtConf.getRestJwtLocalization())) {
+            if ("query".equalsIgnoreCase(jwtConf.getRestJwtLocation())) {
                 request.queryParameter(jwtConf.getRestJwtTokenName(), token);
             } else {
                 request.header("Authorization", jwtConf.getRestJwtTokenName() + " " + token);
@@ -143,7 +143,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
             String token = new JwtAssertionBuilder()
                     .claimsFromJson(jwtConf.getScimJwtPayload())
                     .sign(jwtConf.getScimJwtAlgorithm(), accessor.getClearString(), jwtConf.getScimJwtSecretBase64Encoded());
-            if ("query".equalsIgnoreCase(jwtConf.getScimJwtLocalization())) {
+            if ("query".equalsIgnoreCase(jwtConf.getScimJwtLocation())) {
                 request.queryParameter(jwtConf.getScimJwtTokenName(), token);
             } else {
                 request.header("Authorization", jwtConf.getScimJwtTokenName() + " " + token);
