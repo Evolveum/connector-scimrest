@@ -16,13 +16,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.assertEquals;
 
 /**
- * Pins the current state of the REST {@code delete { }} directive: the script loads, but
- * RestDeleteOperationBuilderImpl is a stub (its build() is never registered in
- * BaseOperationSupportBuilder), so the delete operation is reported as unsupported and no
- * HTTP request is made.
- *
- * When delete support is implemented, this test must be replaced with one asserting the
- * DELETE request is sent to the configured endpoint.
+ * Verifies the REST {@code delete { }} directive: a DELETE request is sent to the configured endpoint
+ * with the UID substituted into the {@code {id}} path parameter.
  */
 public class DeleteOperationTest extends AbstractCrudConnectorTest {
 
@@ -37,14 +32,15 @@ public class DeleteOperationTest extends AbstractCrudConnectorTest {
             }
             """;
 
-    @Test(expectedExceptions = UnsupportedOperationException.class)
-    public void deleteIsNotImplementedYet() {
-        try {
-            initConnector(SCRIPT).delete(new ObjectClass("Account"),
-                    new Uid("123"),
-                    new OperationOptionsBuilder().build());
-        } finally {
-            assertEquals(wireMockServer.findAll(deleteRequestedFor(anyUrl())).size(), 0);
-        }
+    @Test
+    public void deleteSendsDeleteRequestToEndpoint() {
+        wireMockServer.stubFor(delete(urlEqualTo(ACCOUNT_BY_ID_PATH))
+                .willReturn(aResponse().withStatus(204)));
+
+        initConnector(SCRIPT).delete(new ObjectClass("Account"),
+                new Uid("123"),
+                new OperationOptionsBuilder().build());
+
+        assertEquals(wireMockServer.findAll(deleteRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH))).size(), 1);
     }
 }

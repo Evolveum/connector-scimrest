@@ -11,6 +11,7 @@ import com.evolveum.polygon.scimrest.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.groovy.api.*;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.CreateOperation;
+import com.evolveum.polygon.scimrest.spi.DeleteOperation;
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
 import com.evolveum.polygon.scimrest.spi.ObjectClassOperation;
 import com.evolveum.polygon.scimrest.spi.UpdateOperation;
@@ -93,7 +94,7 @@ public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilde
         buildOperationIfEmpty(ExecuteQueryProcessor.class, searchOpBuilder);
         buildOperationIfEmpty(CreateOperation.class, createOpBuilder);
         buildOperationIfEmpty(UpdateOperation.class, updateOpBuilder);
-        //buildOperationIfEmpty(RestDeleteOperationBuilder.class, deleteOpBuilder);
+        buildOperationIfEmpty(DeleteOperation.class, deleteOpBuilder);
         return new CompositeObjectClassHandler(objectClass.objectClass(), buildedOperations);
     }
 
