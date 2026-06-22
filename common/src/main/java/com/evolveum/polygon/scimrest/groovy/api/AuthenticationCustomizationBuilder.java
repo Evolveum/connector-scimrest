@@ -13,11 +13,24 @@ public interface AuthenticationCustomizationBuilder {
 
     ScimBuilder scim(@DelegatesTo(ScimBuilder.class) @Script.Initialization Closure<?> closure);
 
+    /** Closure-free accessor for non-Groovy front-ends (e.g. YAML). */
+    RestBuilder rest();
+
+    /** Closure-free accessor for non-Groovy front-ends (e.g. YAML). */
+    ScimBuilder scim();
+
     interface RestBuilder {
 
         void withImplementation(Class<? extends RestClientConfiguration> type,
                 @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o);
+
+        /**
+         * Closure-free counterpart of {@link #withImplementation}: registers the implementation hook
+         * directly, skipping the {@code implementation { }} indirection. The closure's runtime delegate
+         * is still {@link AuthImplementationContext}. Intended for non-Groovy front-ends.
+         */
+        void implementation(Class<? extends RestClientConfiguration> type, Closure<?> implementation);
 
         default void basic(
                 @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
@@ -108,6 +121,12 @@ public interface AuthenticationCustomizationBuilder {
         void withImplementation(Class<? extends ScimClientConfiguration> type,
                 @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)
                 @Script.Initialization Closure<?> o);
+
+        /**
+         * Closure-free counterpart of {@link #withImplementation}: registers the implementation hook
+         * directly. The closure's runtime delegate is still {@link AuthImplementationContext}.
+         */
+        void implementation(Class<? extends ScimClientConfiguration> type, Closure<?> implementation);
 
         default void bearer(
                 @DelegatesTo(value = ImplementationBuilder.class, strategy = Closure.DELEGATE_FIRST)

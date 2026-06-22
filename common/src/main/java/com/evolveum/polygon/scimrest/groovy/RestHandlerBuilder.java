@@ -53,7 +53,12 @@ public class RestHandlerBuilder implements OperationBuilder {
 
     @Override
     public AuthenticationCustomizationBuilder authentication(@Script.Initialization Closure<?> o) {
-        return GroovyClosures.callAndReturnDelegate(o, authorization);
+        return GroovyClosures.callAndReturnDelegate(o, authentication());
+    }
+
+    /** Closure-free entry point for non-Groovy front-ends (e.g. YAML). */
+    public AuthenticationCustomizationBuilder authentication() {
+        return authorization;
     }
 
     public AuthorizationCustomizer<RestClientConfiguration> restCustomizer() {

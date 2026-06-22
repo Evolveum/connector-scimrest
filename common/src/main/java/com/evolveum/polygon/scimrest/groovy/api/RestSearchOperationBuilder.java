@@ -20,12 +20,24 @@ public interface RestSearchOperationBuilder {
     RestSearchEndpointBuilder endpoint(String path,
                                        @DelegatesTo(value = RestSearchEndpointBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> builder);
 
-    AttributeResolverBuilder attributeResolver(
-            @DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition);
+    AttributeResolverBuilder attributeResolver();
 
-    NormalizationBuilder normalize(@DelegatesTo(value = NormalizationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition);
+    default AttributeResolverBuilder attributeResolver(
+            @DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition) {
+        return GroovyClosures.callAndReturnDelegate(definition, attributeResolver());
+    }
 
-    SearchScriptBuilder custom(@DelegatesTo(SearchScriptBuilder.class) Closure<?> definition);
+    NormalizationBuilder normalize();
+
+    default NormalizationBuilder normalize(@DelegatesTo(value = NormalizationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition) {
+        return GroovyClosures.callAndReturnDelegate(definition, normalize());
+    }
+
+    SearchScriptBuilder custom();
+
+    default SearchScriptBuilder custom(@DelegatesTo(SearchScriptBuilder.class) Closure<?> definition) {
+        return GroovyClosures.callAndReturnDelegate(definition, custom());
+    }
 
     ScimSearchBuilder scim();
 

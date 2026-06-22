@@ -50,25 +50,25 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
 
 
     @Override
-    public ScriptedAttributeResolverBuilder attributeResolver(@DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition) {
+    public ScriptedAttributeResolverBuilder attributeResolver() {
         var ret = new ScriptedAttributeResolverBuilder(parent.context, parent.getObjectClass());
         resolvers.add(ret);
-        return GroovyClosures.callAndReturnDelegate(definition, ret);
+        return ret;
     }
 
     @Override
-    public SearchScriptBuilder custom(@DelegatesTo(SearchScriptBuilder.class) Closure<?> definition) {
+    public SearchScriptBuilder custom() {
         var ret = new ScriptedGroovySearchBuilderImpl(parent.context, parent.getObjectClass());
         builders.add(ret);
-        return GroovyClosures.callAndReturnDelegate(definition, ret);
+        return ret;
     }
 
     @Override
-    public NormalizationBuilder normalize(Closure<?> definition) {
+    public NormalizationBuilder normalize() {
         if (normalizationBuilder == null) {
             normalizationBuilder = new NormalizationBuilderImpl();
         }
-        return GroovyClosures.callAndReturnDelegate(definition, normalizationBuilder);
+        return normalizationBuilder;
     }
 
     public ExecuteQueryProcessor build() {

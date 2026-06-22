@@ -178,7 +178,8 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         return GroovyClosures.callAndReturnDelegate(closure, scim());
     }
 
-    ScimBuilder scim() {
+    @Override
+    public ScimBuilder scim() {
         return new ScimBuilderImpl();
     }
 
@@ -188,8 +189,13 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         public void withImplementation(Class<? extends ScimClientConfiguration> type, Closure<?> o) {
             var builder = new ImplementationBuilderImpl();
             GroovyClosures.callAndReturnDelegate(o, builder);
-            if (builder.implementationPrototype != null) {
-                scimDispatcher.addCustomizer(type, new GroovyScimImplementationCustomizer(builder.implementationPrototype));
+            implementation(type, builder.implementationPrototype);
+        }
+
+        @Override
+        public void implementation(Class<? extends ScimClientConfiguration> type, Closure<?> implementation) {
+            if (implementation != null) {
+                scimDispatcher.addCustomizer(type, new GroovyScimImplementationCustomizer(implementation));
             }
         }
 
@@ -285,8 +291,13 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         public void withImplementation(Class<? extends RestClientConfiguration> type, Closure<?> o) {
             var builder = new ImplementationBuilderImpl();
             GroovyClosures.callAndReturnDelegate(o, builder);
-            if (builder.implementationPrototype != null) {
-                dispatcher.addCustomizer(type, new GroovyRestImplementationCustomizer(builder.implementationPrototype));
+            implementation(type, builder.implementationPrototype);
+        }
+
+        @Override
+        public void implementation(Class<? extends RestClientConfiguration> type, Closure<?> implementation) {
+            if (implementation != null) {
+                dispatcher.addCustomizer(type, new GroovyRestImplementationCustomizer(implementation));
             }
         }
 
@@ -376,7 +387,8 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
         }
     }
 
-    RestBuilder rest() {
+    @Override
+    public RestBuilder rest() {
         return new RestBuilderImpl();
     }
 
