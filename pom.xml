@@ -15,7 +15,7 @@
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Polygon SCIM 2 Connector - Root</name>
+    <name>Polygon SCIMREST Connector - Root</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
