@@ -53,7 +53,12 @@ public class ScimSchemaTranslator {
         // We map the object class to this SCIM resource
         objectClass.scim().name(scim.resource().getName());
 
-
+        // Native-side metadata carried by the schema model (single source for the dev-mode export):
+        // where the resource lives and which schema URN it belongs to.
+        objectClass.locator(scim.relativeEndpoint());
+        if (scim.schemaUri() != null) {
+            objectClass.namespace(scim.schemaUri().toString());
+        }
     }
 
     public void populateSchema(ScimResourceContext scim, RestSchemaBuilder schema) {
@@ -87,8 +92,10 @@ public class ScimSchemaTranslator {
     }
 
     private void populateAttribute(MappedAttributeBuilderImpl attribute, AttributeDefinition scimAttr) {
-        attribute.scim().type(scimAttr.getType().getName());
+        attribute.scim().type(jsonType(scimAttr.getType()));
+        attribute.nativeType(scimAttr.getType().getName());
         attribute.description(scimAttr.getDescription());
+        attribute.required(scimAttr.isRequired());
         attribute.multiValued(scimAttr.isMultiValued());
         attribute.returnedByDefault(AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned()));
         switch (scimAttr.getMutability()) {
@@ -144,6 +151,9 @@ public class ScimSchemaTranslator {
                     case "groups" -> {
                         var groupOc = resourceToObjectClass.get("Group");
                         attribute.connId().type(ConnectorObjectReference.class);
+                        if (groupOc != null) {
+                            attribute.objectClass(groupOc);
+                        }
                         attribute.subtype("_User_Group_Membership");
                         attribute.role(AttributeInfo.RoleInReference.SUBJECT);
                         attribute.scim().implementation(new ScimGroupToConnectorObjectReference(new ObjectClass(groupOc)));
@@ -155,7 +165,11 @@ public class ScimSchemaTranslator {
                         attribute.connId().name(Name.NAME);
                     }
                     case "members" -> {
+                        var userOc = resourceToObjectClass.get("User");
                         attribute.connId().type(ConnectorObjectReference.class);
+                        if (userOc != null) {
+                            attribute.objectClass(userOc);
+                        }
                         attribute.role(AttributeInfo.RoleInReference.OBJECT);
                         attribute.subtype("_User_Group_Membership");
                         attribute.scim().implementation(new ScimMemberToConnectorObjectReference(contextLookup));
@@ -169,6 +183,19 @@ public class ScimSchemaTranslator {
 
     private boolean isUserGroupsAttribute(String id, String name) {
         return USER_SCHEMA_URN.equals(id) && USER_GROUPS_ATTR_NAME.equals(name);
+    }
+
+    /**
+     * Maps a SCIM attribute type to the JSON value type the value mappings understand. SCIM-only
+     * types (dateTime, reference, decimal) have no direct JSON mapping — the values travel as their
+     * JSON representation; the original SCIM type is kept as the attribute's native type.
+     */
+    private static String jsonType(AttributeDefinition.Type type) {
+        return switch (type) {
+            case DATETIME, REFERENCE -> "string";
+            case DECIMAL -> "number";
+            default -> type.getName();
+        };
     }
 
     private MappedAttributeBuilderImpl findOrCreateAttribute(AttributeDefinition scimAttr, MappedObjectClassBuilder objectClass, boolean onlyListed) {
