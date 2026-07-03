@@ -13,21 +13,17 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Connector;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.api.SchemaBuilder {
 
     private final Class<? extends Connector> connectorClass;
     private final Map<String, MappedObjectClassBuilder> objectClasses = new HashMap<>();
-    private final List<ObjectClassInfo> additionalObjectClasses = new ArrayList<>();
     private ContextLookup contextLookup;
 
     public RestSchemaBuilder(Class<? extends Connector> connectorClass, ContextLookup context) {
@@ -55,15 +51,6 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
         return GroovyClosures.callAndReturnDelegate(closure, ret);
     }
 
-    /**
-     * Adds a ready-made ConnId object class (e.g. the shared conndev dev object classes defined in
-     * {@code ConnDevSchema}) to the schema, alongside the mapped object classes.
-     */
-    public RestSchemaBuilder defineObjectClass(ObjectClassInfo objectClass) {
-        additionalObjectClasses.add(objectClass);
-        return this;
-    }
-
     public RestSchema build() {
         if (objectClasses.isEmpty()) {
             initializeDummySchema();
@@ -75,12 +62,6 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
             var objectClassDef = ocBuilder.build();
             freshSchemaBuilder.defineObjectClass(objectClassDef.connId());
             objectClassMap.put(objectClassDef.objectClass(), objectClassDef);
-        }
-        for (var info : additionalObjectClasses) {
-            freshSchemaBuilder.defineObjectClass(info);
-            // wrap in a mapping-less MappedObjectClass so the handler framework can dispatch to it
-            var mapped = new MappedObjectClass(info, Map.of(), Map.of());
-            objectClassMap.put(mapped.objectClass(), mapped);
         }
         return new RestSchema(freshSchemaBuilder.build(), objectClassMap);
     }

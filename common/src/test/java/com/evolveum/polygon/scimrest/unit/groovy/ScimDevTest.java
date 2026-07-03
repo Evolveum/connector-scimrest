@@ -83,10 +83,13 @@ public class ScimDevTest {
         var groupOc = schema.findObjectClassInfo("Group");
         assertNotNull(groupOc);
 
-        // structured dev object class replaces the old conndev_ScimSchema/conndev_ScimResource blobs
-        var devOc = schema.findObjectClassInfo("conndev_ObjectClass");
-        assertNotNull(devOc, "dev mode must declare conndev_ObjectClass");
-        assertEquals("conndev_ObjectClass", devOc.getType());
+        var schemaOC = schema.findObjectClassInfo("conndev_ScimSchema");
+        assertNotNull(schemaOC);
+        assertEquals("conndev_ScimSchema", schemaOC.getType());
+        
+        var resourceOC = schema.findObjectClassInfo("conndev_ScimResource");
+        assertNotNull(resourceOC);
+        assertEquals("conndev_ScimResource", resourceOC.getType());
     }
 
     @Test(enabled = false)
@@ -136,23 +139,41 @@ public class ScimDevTest {
     }
 
     @Test
-    public void searchObjectClasses() {
+    public void searchSchemas() {
         var connector = initializedConnector();
-        var objectClasses = new ArrayList<ConnectorObject>();
-        var oc = new ObjectClass("conndev_ObjectClass");
-        connector.executeQuery(oc, null, objectClasses::add, null);
+        var schemas = new ArrayList<ConnectorObject>();
+        var schemaOC = new ObjectClass("conndev_ScimSchema");
+        connector.executeQuery(schemaOC, null, schemas::add, null);
+        
+        assertFalse(schemas.isEmpty(), "Schemas should not be empty");
+        
+        var randomSchema = schemas.get(new Random().nextInt(schemas.size()));
+        assertNotNull(randomSchema);
+        
+        var schemaUid = randomSchema.getUid();
+        var maybeSchema = new ExpectSingle();
+        connector.executeQuery(schemaOC, FilterBuilder.equalTo(schemaUid), maybeSchema, null);
+        assertNotNull(maybeSchema.result);
+        assertEquals(schemaUid, maybeSchema.result.getUid());
+    }
 
-        assertFalse(objectClasses.isEmpty(), "Dev mode should expose discovered object classes");
-
-        // each object carries the structured representation, not a JSON blob
-        var sample = objectClasses.get(0);
-        assertNotNull(sample.getAttributeByName("attributes"), "must carry structured attributes");
-
-        var uid = sample.getUid();
-        var single = new ExpectSingle();
-        connector.executeQuery(oc, FilterBuilder.equalTo(uid), single, null);
-        assertNotNull(single.result);
-        assertEquals(uid, single.result.getUid());
+    @Test
+    public void searchResources() {
+        var connector = initializedConnector();
+        var resources = new ArrayList<ConnectorObject>();
+        var resourceOC = new ObjectClass("conndev_ScimResource");
+        connector.executeQuery(resourceOC, null, resources::add, null);
+        
+        assertFalse(resources.isEmpty(), "Resources should not be empty");
+        
+        var randomResource = resources.get(new Random().nextInt(resources.size()));
+        assertNotNull(randomResource);
+        
+        var resourceUid = randomResource.getUid();
+        var maybeResource = new ExpectSingle();
+        connector.executeQuery(resourceOC, FilterBuilder.equalTo(resourceUid), maybeResource, null);
+        assertNotNull(maybeResource.result);
+        assertEquals(resourceUid, maybeResource.result.getUid());
     }
 
     private Connector initializedConnector() {
