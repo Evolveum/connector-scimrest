@@ -17,6 +17,8 @@ import com.evolveum.polygon.conndev.dev.ConnDevObjectClass;
 import com.evolveum.polygon.conndev.dev.ConnDevSchema;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimObjectClassDevHandler;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import com.unboundid.scim2.client.ScimService;
 import com.unboundid.scim2.common.types.SchemaResource;
 import com.unboundid.scim2.common.types.ServiceProviderConfigResource;
@@ -35,6 +37,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ScimContext implements RetrievableContext {
+
+    // TEMPORARY: legacy dev object-class names used by a midPoint that predates conndev_ObjectClass
+    // support. Exposed empty + no-op below so such a midPoint degrades gracefully instead of erroring.
+    // REMOVE once midPoint's conndev_ObjectClass support is deployed. See .tasks/todo.
+    private static final String LEGACY_SCIM_SCHEMA = "conndev_ScimSchema";
+    private static final String LEGACY_SCIM_RESOURCE = "conndev_ScimResource";
 
     private final ContextLookup contextLookup;
     private final ScimService scimClient;
@@ -178,6 +186,12 @@ public class ScimContext implements RetrievableContext {
             for (var info : ConnDevSchema.objectClassInfos()) {
                 schemaBuilder.defineObjectClass(info);
             }
+            // TEMPORARY shim: also expose the legacy conndev_ScimSchema / conndev_ScimResource object
+            // classes (empty) so a midPoint that still searches them finds the object class and gets
+            // zero shadows (graceful no-op) instead of failing with "object class not found".
+            // REMOVE once midPoint's conndev_ObjectClass support is deployed. See .tasks/todo.
+            schemaBuilder.defineObjectClass(new ObjectClassInfoBuilder().setType(LEGACY_SCIM_SCHEMA).build());
+            schemaBuilder.defineObjectClass(new ObjectClassInfoBuilder().setType(LEGACY_SCIM_RESOURCE).build());
         }
     }
 
@@ -210,6 +224,13 @@ public class ScimContext implements RetrievableContext {
     public void contributeDevHandlers(RestHandlerBuilder handlerBuilder) {
         handlerBuilder.objectClass(ConnDevObjectClass.OBJECT_CLASS_NAME)
                 .search(new ScimObjectClassDevHandler());
+
+        // TEMPORARY shim: no-op search handlers for the legacy dev object classes (see contributeToSchema),
+        // so a pre-conndev_ObjectClass midPoint returns zero shadows instead of erroring.
+        // REMOVE once midPoint's conndev_ObjectClass support is deployed. See .tasks/todo.
+        ExecuteQueryProcessor legacyNoop = (context, filter, resultsHandler, options) -> { };
+        handlerBuilder.objectClass(LEGACY_SCIM_SCHEMA).search(legacyNoop);
+        handlerBuilder.objectClass(LEGACY_SCIM_RESOURCE).search(legacyNoop);
     }
 
     public ScimService scimClient() {
