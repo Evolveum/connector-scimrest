@@ -37,6 +37,10 @@
             <artifactId>connector-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.evolveum.polygon.conndev</groupId>
+            <artifactId>conndev-base</artifactId>
+        </dependency>
+        <dependency>
             <groupId>net.tirasa.connid</groupId>
             <artifactId>connector-framework-contract</artifactId>
             <version>${connId.version}</version>
@@ -73,6 +77,11 @@
             <version>2.10.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.18.3</version>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
