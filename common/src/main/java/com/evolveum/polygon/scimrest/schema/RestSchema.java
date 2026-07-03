@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.schema;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Schema;
 
+import java.util.Collection;
 import java.util.Map;
 
 public class RestSchema {
@@ -27,5 +28,9 @@ public class RestSchema {
 
     public MappedObjectClass objectClass(String name) {
         return objectClasses.get(new ObjectClass(name));
+    }
+
+    public Collection<MappedObjectClass> objectClasses() {
+        return objectClasses.values();
     }
 }

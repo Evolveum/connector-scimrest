@@ -34,6 +34,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
     boolean emulated = false;
 
     String remoteName;
+    String nativeType;
 
 
     private ScimBuilder scim;
@@ -59,6 +60,12 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
     @Override
     public MappedBasicAttributeBuilderImpl remoteName(String remoteName) {
         this.remoteName = remoteName;
+        return this;
+    }
+
+    /** The native protocol type as declared by the remote system (e.g. SCIM {@code dateTime}). */
+    public MappedBasicAttributeBuilderImpl nativeType(String nativeType) {
+        this.nativeType = nativeType;
         return this;
     }
 

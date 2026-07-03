@@ -36,6 +36,8 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     private final RestSchemaBuilder parent;
     Map<String, MappedAttributeBuilderImpl> nativeAttributes = new HashMap<>();
     private String description;
+    private String locator;
+    private String namespace;
     private ScimMapping scim;
 
     public MappedObjectClassBuilder(RestSchemaBuilder restSchemaBuilder, String name) {
@@ -83,6 +85,18 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
         return this;
     }
 
+    /** Where the object class lives in the remote system — for SCIM the resource endpoint. */
+    public MappedObjectClassBuilder locator(String locator) {
+        this.locator = locator;
+        return this;
+    }
+
+    /** Namespace of the object class — for SCIM the schema URN. */
+    public MappedObjectClassBuilder namespace(String namespace) {
+        this.namespace = namespace;
+        return this;
+    }
+
     @Override
     public ScimMapping scim() {
         if (scim == null) {
@@ -126,7 +140,10 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
             nativeAttrs.put(attribute.remoteName(), attribute);
         }
 
-        return new MappedObjectClass(connIdBuilder.build(), nativeAttrs, connIdAttrs);
+        var objectClass = new MappedObjectClass(connIdBuilder.build(), nativeAttrs, connIdAttrs);
+        objectClass.locator(locator);
+        objectClass.namespace(namespace);
+        return objectClass;
     }
 
     public String description() {

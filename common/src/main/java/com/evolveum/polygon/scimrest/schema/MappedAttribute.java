@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.dev.ConnDevAttributeSource;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -16,16 +17,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MappedAttribute {
+public class MappedAttribute implements ConnDevAttributeSource {
 
     private final AttributeInfo info;
     private final String remoteName;
+    private final String nativeType;
     private final Map<Class<? extends AttributeProtocolMapping<?,?>>, AttributeProtocolMapping<?,?>> protocolMappings = new HashMap<>();
     private final boolean emulated;
     private AttributeResolver resolver;
 
     public MappedAttribute(MappedAttributeBuilderImpl mappedBuilder) {
         remoteName = mappedBuilder.remoteName;
+        nativeType = mappedBuilder.nativeType;
         emulated = mappedBuilder.emulated;
 
         Class<?> suggestedConnIdType = null;
@@ -68,8 +71,14 @@ public class MappedAttribute {
 
     }
 
+    @Override
     public String remoteName() {
         return this.remoteName;
+    }
+
+    @Override
+    public String nativeType() {
+        return nativeType;
     }
 
     public Attribute attributeOf(Object connIdValues) {
@@ -79,6 +88,7 @@ public class MappedAttribute {
         return AttributeBuilder.build(info.getName(), connIdValues);
     }
 
+    @Override
     public AttributeInfo connId() {
         return this.info;
     }
