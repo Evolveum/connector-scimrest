@@ -9,14 +9,13 @@ package com.evolveum.polygon.scimrest.impl.scim;
 import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
-import com.evolveum.polygon.scimrest.impl.scim.dev.ScimDevelopmentMode;
-import com.evolveum.polygon.scimrest.impl.scim.dev.ScimResourceDevHandler;
-import com.evolveum.polygon.scimrest.impl.scim.dev.ScimSchemaDevHandler;
+import com.evolveum.polygon.conndev.dev.ConnDevObjectClass;
+import com.evolveum.polygon.conndev.dev.ConnDevSchema;
+import com.evolveum.polygon.scimrest.impl.scim.dev.ScimObjectClassDevHandler;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
 import com.unboundid.scim2.client.ScimService;
 import com.unboundid.scim2.common.types.SchemaResource;
@@ -102,7 +101,9 @@ public class ScimContext implements RetrievableContext {
                         extensions.put(ext.getSchema().toString(), schemas.get(ext.getSchema().toString()));
                     }
                 }
-                resources.put(resource.getId(), new ScimResourceContext(resource, relativeEndpoint, primary, extensions));
+                // SCIM ResourceType.id is optional and Keycloak omits it, so getId() is null for every
+                // resource and collapses them into one map entry. The name is required and unique.
+                resources.put(resource.getName(), new ScimResourceContext(resource, relativeEndpoint, primary, extensions));
             }
 
         } catch (Exception e) {
@@ -172,10 +173,11 @@ public class ScimContext implements RetrievableContext {
             translator.populateSchema(resource, schemaBuilder);
         }
         
-        // Contribute dev schema object classes if developmentMode is enabled
+        // Contribute the shared conndev dev object classes if developmentMode is enabled
         if (developmentMode) {
-            var devTranslator = new ScimDevelopmentMode();
-            devTranslator.contributeSchemaObjects(schemaBuilder);
+            for (var info : ConnDevSchema.objectClassInfos()) {
+                schemaBuilder.defineObjectClass(info);
+            }
         }
     }
 
@@ -206,39 +208,8 @@ public class ScimContext implements RetrievableContext {
     }
 
     public void contributeDevHandlers(RestHandlerBuilder handlerBuilder) {
-        var schemaObjectClass = getSchemaObjectClass();
-        var resourceObjectClass = getResourceObjectClass();
-        
-        if (schemaObjectClass != null) {
-            var schemaHandler = new ScimSchemaDevHandler(this);
-            handlerBuilder.objectClass(schemaObjectClass.name())
-                .search(schemaHandler);
-        }
-        
-        if (resourceObjectClass != null) {
-            var resourceHandler = new ScimResourceDevHandler(this);
-            handlerBuilder.objectClass(resourceObjectClass.name())
-                .search(resourceHandler);
-        }
-    }
-
-    private com.evolveum.polygon.scimrest.schema.MappedObjectClass getSchemaObjectClass() {
-        if (contextLookup instanceof com.evolveum.polygon.scimrest.groovy.ConnectorContext connectorContext) {
-            var schema = connectorContext.schema();
-            if (schema != null) {
-                return schema.objectClass("conndev_ScimSchema");
-            }
-        }
-        return null;
-    }
-
-    private com.evolveum.polygon.scimrest.schema.MappedObjectClass getResourceObjectClass() {
-        var connectorContext = contextLookup.get(ConnectorContext.class);
-        var schema = connectorContext.schema();
-        if (schema != null) {
-            return schema.objectClass("conndev_ScimResource");
-        }
-        return null;
+        handlerBuilder.objectClass(ConnDevObjectClass.OBJECT_CLASS_NAME)
+                .search(new ScimObjectClassDevHandler());
     }
 
     public ScimService scimClient() {
