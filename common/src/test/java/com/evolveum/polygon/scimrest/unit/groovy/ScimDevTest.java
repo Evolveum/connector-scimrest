@@ -83,10 +83,16 @@ public class ScimDevTest {
         var groupOc = schema.findObjectClassInfo("Group");
         assertNotNull(groupOc);
 
-        // structured dev object class replaces the old conndev_ScimSchema/conndev_ScimResource blobs
+        // the structured, model-derived export...
         var devOc = schema.findObjectClassInfo("conndev_ObjectClass");
         assertNotNull(devOc, "dev mode must declare conndev_ObjectClass");
         assertEquals("conndev_ObjectClass", devOc.getType());
+
+        // ... plus the raw SCIM schema export (full /Schemas + /ResourceTypes JSON)
+        assertNotNull(schema.findObjectClassInfo("conndev_ScimSchema"),
+                "dev mode must declare conndev_ScimSchema");
+        assertNotNull(schema.findObjectClassInfo("conndev_ScimResource"),
+                "dev mode must declare conndev_ScimResource");
     }
 
     @Test(enabled = false)

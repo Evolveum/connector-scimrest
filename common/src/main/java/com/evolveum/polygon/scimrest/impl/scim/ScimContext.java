@@ -15,10 +15,11 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
 import com.evolveum.polygon.conndev.dev.ConnDevObjectClass;
 import com.evolveum.polygon.conndev.dev.ConnDevSchema;
+import com.evolveum.polygon.scimrest.impl.scim.dev.ScimDevelopmentMode;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimObjectClassDevHandler;
+import com.evolveum.polygon.scimrest.impl.scim.dev.ScimResourceDevHandler;
+import com.evolveum.polygon.scimrest.impl.scim.dev.ScimSchemaDevHandler;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
-import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 import com.unboundid.scim2.client.ScimService;
 import com.unboundid.scim2.common.types.SchemaResource;
 import com.unboundid.scim2.common.types.ServiceProviderConfigResource;
@@ -37,12 +38,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ScimContext implements RetrievableContext {
-
-    // TEMPORARY: legacy dev object-class names used by a midPoint that predates conndev_ObjectClass
-    // support. Exposed empty + no-op below so such a midPoint degrades gracefully instead of erroring.
-    // REMOVE once midPoint's conndev_ObjectClass support is deployed. See .tasks/todo.
-    private static final String LEGACY_SCIM_SCHEMA = "conndev_ScimSchema";
-    private static final String LEGACY_SCIM_RESOURCE = "conndev_ScimResource";
 
     private final ContextLookup contextLookup;
     private final ScimService scimClient;
@@ -181,17 +176,15 @@ public class ScimContext implements RetrievableContext {
             translator.populateSchema(resource, schemaBuilder);
         }
         
-        // Contribute the shared conndev dev object classes if developmentMode is enabled
+        // Contribute the dev object classes if developmentMode is enabled: the shared
+        // conndev_ObjectClass (precomputed mapping derived from the schema model) and the raw
+        // conndev_ScimSchema/conndev_ScimResource export (full /Schemas + /ResourceTypes JSON, which
+        // still carries details the model does not map yet — complex attributes, extension schemas).
         if (developmentMode) {
             for (var info : ConnDevSchema.objectClassInfos()) {
                 schemaBuilder.defineObjectClass(info);
             }
-            // TEMPORARY shim: also expose the legacy conndev_ScimSchema / conndev_ScimResource object
-            // classes (empty) so a midPoint that still searches them finds the object class and gets
-            // zero shadows (graceful no-op) instead of failing with "object class not found".
-            // REMOVE once midPoint's conndev_ObjectClass support is deployed. See .tasks/todo.
-            schemaBuilder.defineObjectClass(new ObjectClassInfoBuilder().setType(LEGACY_SCIM_SCHEMA).build());
-            schemaBuilder.defineObjectClass(new ObjectClassInfoBuilder().setType(LEGACY_SCIM_RESOURCE).build());
+            new ScimDevelopmentMode().contributeSchemaObjects(schemaBuilder);
         }
     }
 
@@ -224,13 +217,10 @@ public class ScimContext implements RetrievableContext {
     public void contributeDevHandlers(RestHandlerBuilder handlerBuilder) {
         handlerBuilder.objectClass(ConnDevObjectClass.OBJECT_CLASS_NAME)
                 .search(new ScimObjectClassDevHandler());
-
-        // TEMPORARY shim: no-op search handlers for the legacy dev object classes (see contributeToSchema),
-        // so a pre-conndev_ObjectClass midPoint returns zero shadows instead of erroring.
-        // REMOVE once midPoint's conndev_ObjectClass support is deployed. See .tasks/todo.
-        ExecuteQueryProcessor legacyNoop = (context, filter, resultsHandler, options) -> { };
-        handlerBuilder.objectClass(LEGACY_SCIM_SCHEMA).search(legacyNoop);
-        handlerBuilder.objectClass(LEGACY_SCIM_RESOURCE).search(legacyNoop);
+        handlerBuilder.objectClass(ScimDevelopmentMode.SCHEMA_OC_NAME)
+                .search(new ScimSchemaDevHandler(this));
+        handlerBuilder.objectClass(ScimDevelopmentMode.RESOURCE_OC_NAME)
+                .search(new ScimResourceDevHandler(this));
     }
 
     public ScimService scimClient() {
