@@ -73,7 +73,9 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
     private void initialize0() {
         var schemaBuilder = new RestSchemaBuilder(getClass(), context);
-        initializeSchema(new GroovySchemaLoader(context.configuration().groovyContext(), schemaBuilder));
+        var schemaLoader = new SchemaDefinitionLoader(context.configuration().groovyContext(), schemaBuilder);
+        initializeSchema(schemaLoader);
+        context.baseSchema(schemaLoader.baseSchema());
 
         var handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
         initializeAuthorizationHandler(handlersBuilder);

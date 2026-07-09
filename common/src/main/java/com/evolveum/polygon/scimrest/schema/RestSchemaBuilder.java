@@ -35,6 +35,10 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
         this.contextLookup = context;
     }
 
+    public Class<? extends Connector> connectorClass() {
+        return connectorClass;
+    }
+
     @Override
     public MappedObjectClassBuilder objectClass(String name) {
         return objectClasses.computeIfAbsent(name, k -> new MappedObjectClassBuilder(RestSchemaBuilder.this, k));

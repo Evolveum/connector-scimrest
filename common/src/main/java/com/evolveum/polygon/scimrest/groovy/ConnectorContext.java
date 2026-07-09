@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.schema.BaseSchema;
 import com.evolveum.polygon.scimrest.*;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
@@ -23,6 +24,7 @@ public class ConnectorContext implements ContextLookup, RetrievableContext {
     BaseGroovyConnectorConfiguration configuration;
 
     private RestSchema schema;
+    private BaseSchema baseSchema;
     private RestContext rest;
     private ScimContext scim;
 
@@ -57,12 +59,25 @@ public class ConnectorContext implements ContextLookup, RetrievableContext {
         return configuration;
     }
 
-    public GroovyRestHandlerBuilder handlerBuilder(GroovyContext groovy) {
-        return new GroovyRestHandlerBuilder(groovy, this);
+    public HandlerDefinitionBuilder handlerBuilder(GroovyContext groovy) {
+        return new HandlerDefinitionBuilder(groovy, this);
     }
 
     public RestSchema schema() {
         return schema;
+    }
+
+    /**
+     * Schema built from declarative YAML definitions (conndev {@link BaseSchema} model). Inert for
+     * now: nothing is derived from it, the functional schema is {@link #schema()}. Null when the
+     * connector has no YAML definitions.
+     */
+    public BaseSchema baseSchema() {
+        return baseSchema;
+    }
+
+    public void baseSchema(BaseSchema baseSchema) {
+        this.baseSchema = baseSchema;
     }
 
     public RestContext rest() {

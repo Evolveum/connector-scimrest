@@ -1,0 +1,13 @@
+objectClass: TestUser
+locator: /Users
+attributes:
+  id:
+    jsonType: string
+    creatable: false
+    updateable: false
+  login:
+    jsonType: string
+    required: true
+  email:
+    jsonType: string
+    openApiFormat: email

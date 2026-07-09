@@ -1,0 +1,9 @@
+objectClass: Account
+search:
+  endpoints:
+    - path: accounts/search
+      supportedFilters:
+        - spec: |
+            attribute("name").contains().anySingleValue()
+          request: |
+            request.queryParameter("q", value)

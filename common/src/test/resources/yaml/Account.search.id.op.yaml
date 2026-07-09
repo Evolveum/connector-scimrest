@@ -1,0 +1,10 @@
+objectClass: Account
+search:
+  endpoints:
+    - path: accounts/{id}
+      singleResult: true
+      supportedFilters:
+        - spec: |
+            attribute("id").eq().anySingleValue()
+          request: |
+            request.pathParameter("id", value)

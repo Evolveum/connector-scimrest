@@ -1,0 +1,9 @@
+objectClass: Account
+search:
+  endpoints:
+    - path: accounts
+      emptyFilterSupported: true
+      objectExtractor: |
+        response.body().get("_embedded").get("elements")
+  normalize:
+    toSingleValue: roles
