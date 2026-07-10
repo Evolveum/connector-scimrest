@@ -9,13 +9,17 @@ import org.identityconnectors.framework.spi.ConnectorClass;
 @ConnectorClass(displayNameKey = "manifest.connector.display", configurationClass = ReadOnlyConfiguration.class, messageCatalogPaths = "Messages")
 public class ManifestBasedConnector extends AbstractGroovyRestConnector<ReadOnlyConfiguration> {
 
-    private static final String CONNECTOR_MANIFEST = "/connector.manifest.json";
+    private static final String CONNECTOR_MANIFEST = "/connector.manifest";
     private final ConnectorManifest manifest;
 
     public ManifestBasedConnector() {
+        this(CONNECTOR_MANIFEST);
+    }
+
+    /** For connectors (and tests) bundling the manifest under a non-default location. */
+    protected ManifestBasedConnector(String manifestBaseName) {
         super(false);
-        var resource = getClass().getResourceAsStream(CONNECTOR_MANIFEST);
-        this.manifest = new ConnectorManifest(resource);
+        this.manifest = ConnectorManifest.load(getClass(), manifestBaseName);
     }
 
     @Override

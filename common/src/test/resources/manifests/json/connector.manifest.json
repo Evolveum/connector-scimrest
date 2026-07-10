@@ -1,0 +1,17 @@
+{
+  "application": {
+    "name": "Test Application"
+  },
+  "connector": {
+    "schema": [
+      { "script": "/User.native.schema.groovy" },
+      { "script": "/User.connid.schema.groovy" }
+    ],
+    "authorization": [
+      { "script": "/authorization.op.yaml" }
+    ],
+    "operation": [
+      { "script": "/User.search.all.op.yaml" }
+    ]
+  }
+}

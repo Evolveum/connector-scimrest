@@ -1,0 +1,8 @@
+application:
+  name: YAML Manifest Test
+connector:
+  schema:
+    - script: /manifests/e2e/Account.native.schema.groovy
+    - script: /manifests/e2e/Account.connid.schema.groovy
+  operation:
+    - script: /yaml/Account.search.all.op.yaml
