@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.yaml.ScriptResources;
-import com.evolveum.polygon.scimrest.yaml.YamlOperationLoader;
+import com.evolveum.polygon.scimrest.yaml.YamlRestHandlerLoader;
 import com.evolveum.polygon.scimrest.yaml.model.YamlOperationDocument;
 
 import java.io.IOException;
@@ -18,22 +18,18 @@ import java.util.List;
 
 /**
  * Handler definition loader dispatching between the two operation front-ends: Groovy scripts go to
- * {@link GroovyRestHandlerBuilder} (the functional handlers), YAML documents ({@code *.yaml}/
- * {@code *.yml}) go to {@link YamlOperationLoader} and are only parsed into the typed model.
- * A referenced Groovy script missing from the bundle falls back to the YAML document of the same
- * name ({@link ScriptResources}).
- * <p>
- * The YAML documents are inert for now: the connector still runs solely on the Groovy-built
- * handlers. They exist so YAML operation definitions are parsed and validated, and can later be
- * bound onto the same {@code RestHandlerBuilder} the Groovy DSL drives (see
- * {@code .tasks/in-progress/yaml-operations-inert-loading.txt}).
+ * {@link GroovyRestHandlerBuilder}, YAML documents ({@code *.yaml}/{@code *.yml}) go to
+ * {@link YamlRestHandlerLoader} — both drive the same {@code RestHandlerBuilder}, so operations and
+ * authentication may be defined in either format, file by file. A referenced Groovy script missing
+ * from the bundle falls back to the YAML document of the same name ({@link ScriptResources}).
  */
 public class HandlerDefinitionBuilder extends GroovyRestHandlerBuilder {
 
-    private final YamlOperationLoader yamlLoader = new YamlOperationLoader();
+    private final YamlRestHandlerLoader yamlLoader;
 
     public HandlerDefinitionBuilder(GroovyContext context, ConnectorContext schema) {
         super(context, schema);
+        this.yamlLoader = new YamlRestHandlerLoader(this, context);
     }
 
     @Override

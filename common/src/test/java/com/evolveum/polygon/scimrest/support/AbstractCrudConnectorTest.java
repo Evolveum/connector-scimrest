@@ -75,7 +75,7 @@ public abstract class AbstractCrudConnectorTest extends WireMockTestSupport {
             """;
 
     protected static class SimpleConfig extends BaseTestConfiguration {
-        protected SimpleConfig(int port) {
+        public SimpleConfig(int port) {
             super(port);
         }
 
