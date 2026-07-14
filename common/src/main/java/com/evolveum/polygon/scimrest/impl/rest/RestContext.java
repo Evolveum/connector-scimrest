@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.channels.ClosedChannelException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -56,7 +57,16 @@ public class RestContext implements RetrievableContext {
     private final HttpClient client;
 
     public RestContext(RestClientConfiguration configuration, AuthorizationCustomizer<RestClientConfiguration> customizer) {
+        this(configuration, customizer, createClient(configuration));
+    }
+
+    RestContext(RestClientConfiguration configuration, AuthorizationCustomizer<RestClientConfiguration> customizer, HttpClient client) {
         this.configuration = configuration;
+        this.customizer = customizer;
+        this.client = client;
+    }
+
+    private static HttpClient createClient(RestClientConfiguration configuration) {
         var builder = HttpClient.newBuilder();
         if (Boolean.TRUE.equals(configuration.getTrustAllCertificates())) {
             try {
@@ -69,8 +79,7 @@ public class RestContext implements RetrievableContext {
         }
         builder.connectTimeout(Duration.of(configuration.getTimeoutSeconds().longValue(), ChronoUnit.SECONDS));
         builder.followRedirects(HttpClient.Redirect.NORMAL);
-        this.client = builder.build();
-        this.customizer = customizer;
+        return builder.build();
     }
 
     /**
@@ -138,7 +147,31 @@ public class RestContext implements RetrievableContext {
             throw e;
         }
         LOG.ok("Executing request {0}", request);
-        return client.send(request, handler);
+        try {
+            return client.send(request, handler);
+        } catch (IOException e) {
+            if (isStaleConnection(e)) {
+                // Pooled keep-alive connection was already closed by the other side, so the
+                // request was never sent. The pool dropped the dead connection on failure,
+                // therefore a single retry is safe even for non-idempotent requests.
+                LOG.ok("Stale pooled connection detected ({0}), retrying request once", e.toString());
+                return client.send(request, handler);
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * Returns true if the cause chain contains {@link ClosedChannelException}, which signals
+     * that a pooled connection was closed before the request was sent (the server never saw it).
+     */
+    private static boolean isStaleConnection(IOException e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof ClosedChannelException) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
