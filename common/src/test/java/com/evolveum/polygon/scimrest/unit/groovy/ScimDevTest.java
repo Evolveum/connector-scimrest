@@ -88,11 +88,13 @@ public class ScimDevTest {
         assertNotNull(devOc, "dev mode must declare conndev_ObjectClass");
         assertEquals("conndev_ObjectClass", devOc.getType());
 
-        // ... plus the raw SCIM schema export (full /Schemas + /ResourceTypes JSON)
+        // ... plus the raw SCIM schema export (full /Schemas + /ResourceTypes + /ServiceProviderConfig JSON)
         assertNotNull(schema.findObjectClassInfo("conndev_ScimSchema"),
                 "dev mode must declare conndev_ScimSchema");
         assertNotNull(schema.findObjectClassInfo("conndev_ScimResource"),
                 "dev mode must declare conndev_ScimResource");
+        assertNotNull(schema.findObjectClassInfo("conndev_ScimServiceProviderConfig"),
+                "dev mode must declare conndev_ScimServiceProviderConfig");
     }
 
     @Test(enabled = false)
@@ -159,6 +161,23 @@ public class ScimDevTest {
         connector.executeQuery(oc, FilterBuilder.equalTo(uid), single, null);
         assertNotNull(single.result);
         assertEquals(uid, single.result.getUid());
+    }
+
+    @Test
+    public void searchServiceProviderConfig() {
+        var connector = initializedConnector();
+        var configs = new ArrayList<ConnectorObject>();
+        var oc = new ObjectClass("conndev_ScimServiceProviderConfig");
+        connector.executeQuery(oc, null, configs::add, null);
+
+        assertEquals(configs.size(), 1, "Dev mode should expose the service provider config");
+        var config = configs.get(0);
+        assertNotNull(config.getAttributeByName("content"), "must carry the full /ServiceProviderConfig JSON");
+
+        var single = new ExpectSingle();
+        connector.executeQuery(oc, FilterBuilder.equalTo(config.getUid()), single, null);
+        assertNotNull(single.result);
+        assertEquals(config.getUid(), single.result.getUid());
     }
 
     private Connector initializedConnector() {

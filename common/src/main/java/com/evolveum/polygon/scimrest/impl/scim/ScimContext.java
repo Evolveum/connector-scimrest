@@ -19,11 +19,14 @@ import com.evolveum.polygon.scimrest.impl.scim.dev.ScimDevelopmentMode;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimObjectClassDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimResourceDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimSchemaDevHandler;
+import com.evolveum.polygon.scimrest.impl.scim.dev.ScimServiceProviderConfigDevHandler;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.unboundid.scim2.client.ScimService;
 import com.unboundid.scim2.common.types.SchemaResource;
-import com.unboundid.scim2.common.types.ServiceProviderConfigResource;
+import com.unboundid.scim2.common.utils.JsonUtils;
 import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.glassfish.jersey.internal.RuntimeDelegateImpl;
@@ -32,6 +35,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
+import java.io.IOException;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -45,7 +49,7 @@ public class ScimContext implements RetrievableContext {
     private final ScimClientConfiguration configuration;
     private final boolean developmentMode;
 
-    private ServiceProviderConfigResource providerConfig;
+    private JsonNode providerConfig;
 
     private Map<String, ScimResourceContext> resources = new HashMap<>();
 
@@ -87,9 +91,16 @@ public class ScimContext implements RetrievableContext {
     }
 
     public void initialize() {
+        if (developmentMode) {
+            try {
+                // /ServiceProviderConfig is required by RFC 7644, but not every server implements
+                // it; the config feeds only the development export, so a failure must not break init
+                this.providerConfig = fetchServiceProviderConfig();
+            } catch (Exception e) {
+                this.providerConfig = null;
+            }
+        }
         try {
-            //this.providerConfig = scimClient.getServiceProviderConfig();
-
             for (var schema : scimClient.getSchemas()) {
                 schemas.put(schema.getId(), schema);
             }
@@ -114,6 +125,23 @@ public class ScimContext implements RetrievableContext {
             throw new ConnectorException(e);
         }
 
+    }
+
+    /**
+     * Fetches /ServiceProviderConfig as raw JSON, bypassing
+     * {@link ScimService#getServiceProviderConfig()}: servers commonly return it with
+     * {@code Content-Type: application/json}, for which Jersey picks the JSON-B entity provider
+     * instead of the SCIM SDK Jackson one, and JSON-B cannot instantiate
+     * {@code ServiceProviderConfigResource} (no default constructor). The typed resource is also
+     * undesirable here: the SDK rejects non-standard attributes (e.g. cursor {@code pagination}),
+     * while the development export should forward the document verbatim.
+     */
+    private JsonNode fetchServiceProviderConfig() throws IOException {
+        var json = httpClient.target(configuration.getScimBaseUrl())
+                .path("ServiceProviderConfig")
+                .request(ScimService.MEDIA_TYPE_SCIM_TYPE, MediaType.APPLICATION_JSON_TYPE)
+                .get(String.class);
+        return JsonUtils.getObjectReader().readTree(json);
     }
 
     /**
@@ -178,8 +206,9 @@ public class ScimContext implements RetrievableContext {
         
         // Contribute the dev object classes if developmentMode is enabled: the shared
         // conndev_ObjectClass (precomputed mapping derived from the schema model) and the raw
-        // conndev_ScimSchema/conndev_ScimResource export (full /Schemas + /ResourceTypes JSON, which
-        // still carries details the model does not map yet — complex attributes, extension schemas).
+        // conndev_ScimSchema/conndev_ScimResource/conndev_ScimServiceProviderConfig export (full
+        // /Schemas + /ResourceTypes + /ServiceProviderConfig JSON, which still carries details the
+        // model does not map yet — complex attributes, extension schemas, provider capabilities).
         if (developmentMode) {
             for (var info : ConnDevSchema.objectClassInfos()) {
                 schemaBuilder.defineObjectClass(info);
@@ -221,6 +250,8 @@ public class ScimContext implements RetrievableContext {
                 .search(new ScimSchemaDevHandler(this));
         handlerBuilder.objectClass(ScimDevelopmentMode.RESOURCE_OC_NAME)
                 .search(new ScimResourceDevHandler(this));
+        handlerBuilder.objectClass(ScimDevelopmentMode.SERVICE_PROVIDER_CONFIG_OC_NAME)
+                .search(new ScimServiceProviderConfigDevHandler(this));
     }
 
     public ScimService scimClient() {
@@ -248,6 +279,10 @@ public class ScimContext implements RetrievableContext {
 
     public Map<String, SchemaResource> getSchemas() {
         return schemas;
+    }
+
+    public JsonNode getServiceProviderConfig() {
+        return providerConfig;
     }
 
     public Map<String, ScimResourceContext> getResources() {

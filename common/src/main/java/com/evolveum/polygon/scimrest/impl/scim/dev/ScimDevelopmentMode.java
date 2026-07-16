@@ -18,15 +18,17 @@ import org.identityconnectors.framework.common.objects.Uid;
  * Facilitates addition of development-specific SCIM object classes and JSON processing utilities
  * for schema and resource definitions when development mode is enabled.
  * <p>
- * This class defines two object classes: {@value #SCHEMA_OC_NAME} for SCIM schema representations
- * and {@value #RESOURCE_OC_NAME} for SCIM resource representations, including their attributes
- * and constraints required during connector development.
+ * This class defines three object classes: {@value #SCHEMA_OC_NAME} for SCIM schema representations,
+ * {@value #RESOURCE_OC_NAME} for SCIM resource representations and
+ * {@value #SERVICE_PROVIDER_CONFIG_OC_NAME} for the service provider configuration, including their
+ * attributes and constraints required during connector development.
  * </p>
  */
 public class ScimDevelopmentMode {
 
     public static final String SCHEMA_OC_NAME = "conndev_ScimSchema";
     public static final String RESOURCE_OC_NAME = "conndev_ScimResource";
+    public static final String SERVICE_PROVIDER_CONFIG_OC_NAME = "conndev_ScimServiceProviderConfig";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .enable(SerializationFeature.INDENT_OUTPUT);
@@ -38,6 +40,7 @@ public class ScimDevelopmentMode {
     public void contributeSchemaObjects(RestSchemaBuilder schemaBuilder) {
         contributeSchemaObjectClass(schemaBuilder);
         contributeResourceObjectClass(schemaBuilder);
+        contributeServiceProviderConfigObjectClass(schemaBuilder);
     }
 
     /**
@@ -111,6 +114,33 @@ public class ScimDevelopmentMode {
             .multiValued(true)
             .json()
                 .type("array")
+                .implementation(JsonSchemaValueMapping.STRING);
+    }
+
+    /**
+     * Creates conndev_ScimServiceProviderConfig object class with attributes:
+     * - id (Uid): fixed "ServiceProviderConfig"
+     * - name (Name): fixed "ServiceProviderConfig"
+     * - content: Full ServiceProviderConfigResource JSON
+     */
+    private void contributeServiceProviderConfigObjectClass(RestSchemaBuilder schemaBuilder) {
+        var oc = schemaBuilder.objectClass(SERVICE_PROVIDER_CONFIG_OC_NAME);
+
+        oc.attribute("id")
+            .connId()
+                .name(Uid.NAME)
+                .type(String.class);
+
+        oc.attribute("name")
+            .connId()
+                .name(Name.NAME)
+                .type(String.class);
+
+        oc.attribute("content")
+            .creatable(false)
+            .updateable(false)
+            .json()
+                .type("string")
                 .implementation(JsonSchemaValueMapping.STRING);
     }
 
