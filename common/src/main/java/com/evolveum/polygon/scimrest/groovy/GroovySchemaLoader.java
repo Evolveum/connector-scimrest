@@ -30,6 +30,10 @@ public class GroovySchemaLoader {
         shell.evaluate(groovyScript);
     }
 
+    public groovy.lang.Script parse(String groovyScript) {
+        return shell.parse(groovyScript);
+    }
+
     public RestSchema build() {
         return schemaBuilder.build();
     }
