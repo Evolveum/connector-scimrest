@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.build.api.ValueMappingBuilder;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.conndev.schema.BaseValueMappingBuilder;
@@ -35,9 +36,9 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
     Map<Class<? extends AttributeProtocolMapping<?,?>>, AttributeProtocolMappingBuilder> protocolMappings = new HashMap<>();
 
 
-    boolean emulated = false;
+    DefinitionValue<Boolean> emulated = DefinitionValue.DEFAULT_FALSE;
 
-    String remoteName;
+    DefinitionValue<String> remoteName;
     String nativeType;
 
 
@@ -45,10 +46,17 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
     String connIdName;
     Class<?> connIdType;
 
-    private String complexType;
+    private DefinitionValue<Boolean> readable = DefinitionValue.DEFAULT_TRUE;
+    private DefinitionValue<Boolean> required = DefinitionValue.DEFAULT_FALSE;
+    private DefinitionValue<Boolean> updateable = DefinitionValue.DEFAULT_TRUE;
+    private DefinitionValue<Boolean> creatable = DefinitionValue.DEFAULT_TRUE;
+    private DefinitionValue<String> description = DefinitionValue.emptyDefault();
+    private DefinitionValue<Boolean> returnedByDefault = DefinitionValue.DEFAULT_TRUE;
+    private DefinitionValue<Boolean> multiValued = DefinitionValue.DEFAULT_FALSE;
+    private DefinitionValue<String> complexType = DefinitionValue.emptyDefault();
 
     public MappedBasicAttributeBuilderImpl(MappedObjectClassBuilder restObjectClassBuilder, String name) {
-        this.remoteName = name;
+        this.remoteName = DefinitionValue.defaultFrom(name);
         connIdBuilder.setName(name);
         connIdBuilder.setNativeName(name);
         this.objectClass = restObjectClassBuilder;
@@ -56,14 +64,14 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
 
 
     @Override
-    public MappedBasicAttributeBuilderImpl protocolName(String protocolName) {
-        json().name(protocolName);
+    public MappedBasicAttributeBuilderImpl protocolName(DefinitionValue<String> protocolName) {
+        json().name(protocolName.value());
         return this;
     }
 
     @Override
-    public MappedBasicAttributeBuilderImpl remoteName(String remoteName) {
-        this.remoteName = remoteName;
+    public MappedBasicAttributeBuilderImpl remoteName(DefinitionValue<String> remoteName) {
+        this.remoteName = this.remoteName.moreSpecific(remoteName);
         return this;
     }
 
@@ -74,14 +82,16 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
     }
 
     @Override
-    public void emulated(boolean emulated) {
-        this.emulated = emulated;
+    public MappedBasicAttributeBuilderImpl emulated(DefinitionValue<Boolean> emulated) {
+        this.emulated = this.emulated.moreSpecific(emulated);
+        return this;
     }
 
     @Override
-    public MappedBasicAttributeBuilderImpl readable(boolean readable) {
-        connIdBuilder.setReadable(readable);
-        if (!readable) {
+    public MappedBasicAttributeBuilderImpl readable(DefinitionValue<Boolean> readable) {
+        this.readable = this.readable.moreSpecific(readable);
+        connIdBuilder.setReadable(this.readable.value());
+        if (!this.readable.value()) {
             connIdBuilder.setReturnedByDefault(false);
         }
         return this;
@@ -89,37 +99,42 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
 
 
     @Override
-    public MappedBasicAttributeBuilderImpl required(boolean required) {
-        connIdBuilder.setRequired(required);
+    public MappedBasicAttributeBuilderImpl required(DefinitionValue<Boolean> required) {
+        this.required = this.required.moreSpecific(required);
+        connIdBuilder.setRequired(this.required.value());
         return this;
     }
 
     @Override
-    public MappedBasicAttributeBuilderImpl updateable(boolean updatable) {
-        connIdBuilder.setUpdateable(updatable);
+    public MappedBasicAttributeBuilderImpl updateable(DefinitionValue<Boolean> updateable) {
+        this.updateable = this.updateable.moreSpecific(updateable);
+        connIdBuilder.setUpdateable(this.updateable.value());
         return this;
     }
 
     @Override
-    public MappedBasicAttributeBuilderImpl creatable(boolean creatable) {
-        connIdBuilder.setCreateable(creatable);
+    public MappedBasicAttributeBuilderImpl creatable(DefinitionValue<Boolean> creatable) {
+        this.creatable = this.creatable.moreSpecific(creatable);
+        connIdBuilder.setCreateable(this.creatable.value());
         return this;
     }
 
     @Override
-    public MappedBasicAttributeBuilderImpl description(String description) {
-        connIdBuilder.setDescription(description);
+    public MappedBasicAttributeBuilderImpl description(DefinitionValue<String> description) {
+        this.description = this.description.moreSpecific(description);
+        connIdBuilder.setDescription(this.description.value());
         return this;
     }
 
 
     @Override
-    public void complexType(String objectClass) {
-        this.complexType = objectClass;
+    public MappedBasicAttributeBuilderImpl complexType(DefinitionValue<String> objectClass) {
+        this.complexType = this.complexType.moreSpecific(objectClass);
         connId().type(EmbeddedObject.class);
         connIdBuilder.setRoleInReference(AttributeInfo.RoleInReference.SUBJECT.toString());
-        connIdBuilder.setReferencedObjectClassName(objectClass);
-        json().implementation(new EmbeddedObjectJsonMapping(contextLookup(), objectClass));
+        connIdBuilder.setReferencedObjectClassName(this.complexType.value());
+        json().implementation(new EmbeddedObjectJsonMapping(contextLookup(), this.complexType.value()));
+        return this;
     }
 
     protected ContextLookup contextLookup() {
@@ -128,14 +143,16 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
 
 
     @Override
-    public MappedBasicAttributeBuilderImpl returnedByDefault(boolean returnedByDefault) {
-        connIdBuilder.setReturnedByDefault(returnedByDefault);
+    public MappedBasicAttributeBuilderImpl returnedByDefault(DefinitionValue<Boolean> returnedByDefault) {
+        this.returnedByDefault = this.returnedByDefault.moreSpecific(returnedByDefault);
+        connIdBuilder.setReturnedByDefault(this.returnedByDefault.value());
         return this;
     }
 
     @Override
-    public MappedBasicAttributeBuilderImpl multiValued(boolean multiValued) {
-        connIdBuilder.setMultiValued(multiValued);
+    public MappedBasicAttributeBuilderImpl multiValued(DefinitionValue<Boolean> multiValued) {
+        this.multiValued = this.multiValued.moreSpecific(multiValued);
+        connIdBuilder.setMultiValued(this.multiValued.value());
         return this;
     }
 
@@ -190,7 +207,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
 
 
         JsonBuilder() {
-            this.name = remoteName;
+            this.name = remoteName.value();
         }
 
         @Override

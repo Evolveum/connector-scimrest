@@ -8,6 +8,8 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.build.api.ValueMappingBuilder;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
+import com.evolveum.polygon.conndev.concepts.SourceLocation;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,7 +26,11 @@ public interface RestAttributeBuilder {
      * @param readable true if the attribute should be readable, false otherwise
      * @return the current instance of {@code RestAttributeBuilder} for method chaining
      */
-    RestAttributeBuilder readable(boolean readable);
+    RestAttributeBuilder readable(DefinitionValue<Boolean> readable);
+
+    default RestAttributeBuilder readable(boolean readable) {
+        return readable(DefinitionValue.from(readable, SourceLocation.capture()));
+    }
 
     /**
      * Specifies whether the attribute is required.
@@ -34,13 +40,29 @@ public interface RestAttributeBuilder {
      * @param required true if the attribute should be required, false otherwise
      * @return the current instance of {@code RestAttributeBuilder} for method chaining
      */
-    RestAttributeBuilder required(boolean required);
+    RestAttributeBuilder required(DefinitionValue<Boolean> required);
 
-    RestAttributeBuilder description(String description);
+    default RestAttributeBuilder required(boolean required) {
+        return required(DefinitionValue.from(required, SourceLocation.capture()));
+    }
 
-    RestAttributeBuilder returnedByDefault(boolean returnedByDefault);
+    RestAttributeBuilder description(DefinitionValue<String> description);
 
-    RestAttributeBuilder multiValued(boolean multiValued);
+    default RestAttributeBuilder description(String description) {
+        return description(DefinitionValue.from(description, SourceLocation.capture()));
+    }
+
+    RestAttributeBuilder returnedByDefault(DefinitionValue<Boolean> returnedByDefault);
+
+    default RestAttributeBuilder returnedByDefault(boolean returnedByDefault) {
+        return returnedByDefault(DefinitionValue.from(returnedByDefault, SourceLocation.capture()));
+    }
+
+    RestAttributeBuilder multiValued(DefinitionValue<Boolean> multiValued);
+
+    default RestAttributeBuilder multiValued(boolean multiValued) {
+        return multiValued(DefinitionValue.from(multiValued, SourceLocation.capture()));
+    }
 
     /**
      * Specifies whether the attribute is creatable.
@@ -50,15 +72,31 @@ public interface RestAttributeBuilder {
      * @param creatable true if the attribute should be creatable, false otherwise
      * @return the current instance of {@code RestAttributeBuilder} for method chaining
      */
-    RestAttributeBuilder creatable(boolean creatable);
+    RestAttributeBuilder creatable(DefinitionValue<Boolean> creatable);
+
+    default RestAttributeBuilder creatable(boolean creatable) {
+        return creatable(DefinitionValue.from(creatable, SourceLocation.capture()));
+    }
+
+    default RestAttributeBuilder updatable(DefinitionValue<Boolean> updatable) {
+        return updateable(updatable);
+    }
 
     default RestAttributeBuilder updatable(boolean updatable) {
         return updateable(updatable);
     }
 
-    RestAttributeBuilder updateable(boolean updateable);
+    RestAttributeBuilder updateable(DefinitionValue<Boolean> updateable);
 
-    void emulated(boolean emulated);
+    default RestAttributeBuilder updateable(boolean updateable) {
+        return updateable(DefinitionValue.from(updateable, SourceLocation.capture()));
+    }
+
+    RestAttributeBuilder emulated(DefinitionValue<Boolean> emulated);
+
+    default RestAttributeBuilder emulated(boolean emulated) {
+        return emulated(DefinitionValue.from(emulated, SourceLocation.capture()));
+    }
 
 
     // Protocol specific mappings
@@ -84,7 +122,11 @@ public interface RestAttributeBuilder {
      * @param protocolName the protocol name to be set for the attribute
      * @return the current instance of {@code RestAttributeBuilder} for method chaining
      */
-    RestAttributeBuilder protocolName(String protocolName);
+    RestAttributeBuilder protocolName(DefinitionValue<String> protocolName);
+
+    default RestAttributeBuilder protocolName(String protocolName) {
+        return protocolName(DefinitionValue.from(protocolName, SourceLocation.capture()));
+    }
 
     /**
      * Sets the remote name of the attribute.
@@ -95,7 +137,11 @@ public interface RestAttributeBuilder {
      * @param remoteName the name of attribute in remote system
      * @return the current instance of {@code RestAttributeBuilder} for method chaining
      */
-    RestAttributeBuilder remoteName(String remoteName);
+    RestAttributeBuilder remoteName(DefinitionValue<String> remoteName);
+
+    default RestAttributeBuilder remoteName(String remoteName) {
+        return remoteName(DefinitionValue.from(remoteName, SourceLocation.capture()));
+    }
 
     /**
      * Sets the JSON type of the attribute.
@@ -111,7 +157,11 @@ public interface RestAttributeBuilder {
     }
 
 
-    void complexType(String objectClass);
+    RestAttributeBuilder complexType(DefinitionValue<String> objectClass);
+
+    default RestAttributeBuilder complexType(String objectClass) {
+        return complexType(DefinitionValue.from(objectClass, SourceLocation.capture()));
+    }
 
 
     default RestAttributeBuilder openApiFormat(String openapiFormat) {

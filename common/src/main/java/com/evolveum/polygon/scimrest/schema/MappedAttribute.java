@@ -29,9 +29,9 @@ public class MappedAttribute implements ConnDevAttributeSource {
     private AttributeResolver resolver;
 
     public MappedAttribute(MappedAttributeBuilderImpl mappedBuilder) {
-        remoteName = mappedBuilder.remoteName;
+        remoteName = mappedBuilder.remoteName.value();
         nativeType = mappedBuilder.nativeType;
-        emulated = mappedBuilder.emulated;
+        emulated = mappedBuilder.emulated.value();
 
         Class<?> suggestedConnIdType = null;
         for (var proto : mappedBuilder.protocolMappings.entrySet()) {

@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.scimrest.Deferred;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.ScriptedSingleAttributeResolverBuilder;
@@ -75,7 +76,7 @@ public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl 
     }
 
     public AttributeResolverBuilder resolver(Closure<?> closure) {
-        this.emulated = true;
+        this.emulated(DefinitionValue.detected(true));
         this.resolverBuilder = new ScriptedSingleAttributeResolverBuilder(objectClass.name(), deffered);
         GroovyClosures.callAndReturnDelegate(closure, resolverBuilder);
         return resolverBuilder;

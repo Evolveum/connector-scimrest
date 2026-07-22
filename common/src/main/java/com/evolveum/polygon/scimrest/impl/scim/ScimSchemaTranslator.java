@@ -18,6 +18,8 @@ import org.identityconnectors.framework.common.objects.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.evolveum.polygon.conndev.concepts.DefinitionValue.detected;
+
 public class ScimSchemaTranslator {
 
     private static final String USER_SCHEMA_URN = "urn:ietf:params:scim:schemas:core:2.0:User" ;
@@ -94,22 +96,22 @@ public class ScimSchemaTranslator {
     private void populateAttribute(MappedAttributeBuilderImpl attribute, AttributeDefinition scimAttr) {
         attribute.scim().type(jsonType(scimAttr.getType()));
         attribute.nativeType(scimAttr.getType().getName());
-        attribute.description(scimAttr.getDescription());
-        attribute.required(scimAttr.isRequired());
-        attribute.multiValued(scimAttr.isMultiValued());
-        attribute.returnedByDefault(AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned()));
+        attribute.description(detected(scimAttr.getDescription()));
+        attribute.required(detected(scimAttr.isRequired()));
+        attribute.multiValued(detected(scimAttr.isMultiValued()));
+        attribute.returnedByDefault(detected(AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned())));
         switch (scimAttr.getMutability()) {
             case IMMUTABLE -> {
-                attribute.readable(true).creatable(true).updateable(false);
+                attribute.readable(detected(true)).creatable(detected(true)).updateable(detected(false));
             }
             case READ_ONLY -> {
-                attribute.readable(true).creatable(false).updateable(false);
+                attribute.readable(detected(true)).creatable(detected(false)).updateable(detected(false));
             }
             case READ_WRITE -> {
-                attribute.readable(true).creatable(true).updateable(true);
+                attribute.readable(detected(true)).creatable(detected(true)).updateable(detected(true));
             }
             case WRITE_ONLY -> {
-                attribute.readable(false).creatable(true).updateable(true);
+                attribute.readable(detected(false)).creatable(detected(true)).updateable(detected(true));
             }
         }
     }
