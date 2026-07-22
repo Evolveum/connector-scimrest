@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim;
 
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.schema.MappedAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClassBuilder;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;

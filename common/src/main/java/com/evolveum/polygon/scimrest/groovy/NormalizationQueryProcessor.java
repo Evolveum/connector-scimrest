@@ -8,7 +8,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;

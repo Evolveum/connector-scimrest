@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.impl.rest;
 
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;

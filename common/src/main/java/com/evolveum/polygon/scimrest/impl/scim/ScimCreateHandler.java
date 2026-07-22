@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
 import com.evolveum.polygon.scimrest.impl.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;

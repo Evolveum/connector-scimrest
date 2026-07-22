@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.api.ObjectClassSchemaBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;

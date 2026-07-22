@@ -15,7 +15,7 @@ import com.evolveum.polygon.conndev.schema.BaseValueMappingBuilder;
 import com.evolveum.polygon.conndev.schema.ValueTypeOverrideMapping;
 import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -6,11 +6,11 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim;
 
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
-import com.evolveum.polygon.scimrest.RetrievableContext;
+import com.evolveum.polygon.conndev.concepts.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
 import com.evolveum.polygon.conndev.dev.ConnDevObjectClass;
