@@ -6,10 +6,13 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
+import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
+import com.evolveum.polygon.conndev.schema.ValueTypeOverrideMapping;
+import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
+import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.ContextLookup;
-import com.evolveum.polygon.scimrest.OpenApiValueMapping;
-import com.evolveum.polygon.scimrest.ValueMapping;
-import com.evolveum.polygon.scimrest.api.AttributePath;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.ValueMappingBuilder;

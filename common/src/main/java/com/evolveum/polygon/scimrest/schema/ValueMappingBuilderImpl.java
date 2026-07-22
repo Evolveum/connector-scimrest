@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.scimrest.ValueMapping;
+import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.api.ValueMappingBuilder;
 import groovy.lang.Closure;

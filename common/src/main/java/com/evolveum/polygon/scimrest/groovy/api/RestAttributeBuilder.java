@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
-import com.evolveum.polygon.scimrest.ValueMapping;
-import com.evolveum.polygon.scimrest.api.AttributePath;
+import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.fasterxml.jackson.databind.JsonNode;
 import groovy.lang.Closure;

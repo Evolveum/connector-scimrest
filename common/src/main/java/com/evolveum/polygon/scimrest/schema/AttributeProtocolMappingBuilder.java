@@ -6,6 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
+
 public interface AttributeProtocolMappingBuilder {
 
     Class<?> suggestedConnIdType();

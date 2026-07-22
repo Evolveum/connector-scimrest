@@ -7,6 +7,8 @@
 package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.dev.ConnDevAttributeSource;
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
+import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;

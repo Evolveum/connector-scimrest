@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim.dev;
 
+import com.evolveum.polygon.conndev.json.JsonSchemaValueMapping;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
-import com.evolveum.polygon.scimrest.JsonSchemaValueMapping;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;

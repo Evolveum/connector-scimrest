@@ -7,8 +7,9 @@
 
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
+import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.ContextLookup;
-import com.evolveum.polygon.scimrest.ValueMapping;
 import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

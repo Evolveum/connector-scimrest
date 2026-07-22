@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
@@ -8,7 +9,6 @@ import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
 import com.evolveum.polygon.scimrest.impl.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.CreateOperationStrategyHandler;
-import com.evolveum.polygon.scimrest.schema.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.CreateOperation;
