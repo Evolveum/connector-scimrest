@@ -7,15 +7,16 @@
 package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.build.api.ValueMappingBuilder;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
+import com.evolveum.polygon.conndev.schema.BaseValueMappingBuilder;
 import com.evolveum.polygon.conndev.schema.ValueTypeOverrideMapping;
 import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.ValueMappingBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -230,7 +231,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
         @Override
         public JsonMapping implementation(@DelegatesTo(ValueMappingBuilder.class) Closure<?> closure) {
             Class<?> typeClass = connIdType != null ? connIdType : Object.class;
-            var builder = new ValueMappingBuilderImpl<>(typeClass,JsonNode.class);
+            var builder = new BaseValueMappingBuilder<>(typeClass,JsonNode.class);
             GroovyClosures.callAndReturnDelegate(closure, builder);
             this.implementation = (ValueMapping) builder.build();
             return this;
@@ -342,7 +343,7 @@ public abstract class MappedBasicAttributeBuilderImpl implements RestAttributeBu
         @Override
         public ScimMapping implementation(@DelegatesTo(ValueMappingBuilder.class) Closure<?> closure) {
             Class<?> typeClass = connIdType != null ? connIdType : Object.class;
-            var builder = new ValueMappingBuilderImpl<>(typeClass,JsonNode.class);
+            var builder = new BaseValueMappingBuilder<>(typeClass,JsonNode.class);
             GroovyClosures.callAndReturnDelegate(closure, builder);
             this.implementation = builder.build();
             return this;
