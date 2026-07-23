@@ -14,9 +14,9 @@ import groovy.lang.DelegatesTo;
 public interface SchemaBuilder {
 
 
-    ObjectClassSchemaBuilder objectClass(String name);
+    RestObjectClassSchemaBuilder objectClass(String name);
 
-    ObjectClassSchemaBuilder objectClass(String name, @DelegatesTo(ObjectClassSchemaBuilder.class) @Script.Initialization Closure<?> closure);
+    RestObjectClassSchemaBuilder objectClass(String name, @DelegatesTo(RestObjectClassSchemaBuilder.class) @Script.Initialization Closure<?> closure);
 
     RestRelationshipBuilder relationship(String name, @DelegatesTo(RestRelationshipBuilder.class) @Script.Initialization Closure<?> closure);
 

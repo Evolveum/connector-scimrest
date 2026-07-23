@@ -6,48 +6,12 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.conndev.build.api.ObjectClassSchemaBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface ObjectClassSchemaBuilder {
-
-    ObjectClassSchemaBuilder description(String description);
-
-    ObjectClassSchemaBuilder embedded(boolean embedded);
-
-    /**
-     * Creates / gets attribute definition with the specified name.
-     *
-     * @param name the name of the attribute to be configured
-     * @return an instance of {@link RestAttributeBuilder} for further configuration of the attribute
-     */
-    RestAttributeBuilder<?> attribute(String name);
-
-    /**
-     * Creates / gets reference definition with the specified name.
-     *
-     * @param name the name of the reference attribute to be configured
-     * @return an instance of {@link RestReferenceAttributeBuilder} for further configuration of the reference attribute
-     */
-    RestReferenceAttributeBuilder reference(String name);
-
-    /**
-     * Creates or gets an attribute definition with the specified name, applying a closure to further configure it.
-     *
-     * @param name the name of the attribute to be configured
-     * @param closure a closure that configures the {@link RestAttributeBuilder} instance for the specified attribute
-     * @return an instance of {@link RestAttributeBuilder} for further configuration of the attribute
-     */
-    RestAttributeBuilder<?> attribute(String name, @DelegatesTo(value = RestAttributeBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
-
-    /**
-     * Creates / gets reference definition with the specified name, applying a closure to further configure it.
-     *
-     * @param name the name of the reference attribute to be configured
-     * @param closure a closure that configures the {@link RestReferenceAttributeBuilder} instance for the specified reference attribute
-     * @return an instance of {@link RestReferenceAttributeBuilder} for further configuration of the reference attribute
-     */
-    RestReferenceAttributeBuilder reference(String name, @DelegatesTo(RestReferenceAttributeBuilder.class) Closure<?> closure);
+public interface RestObjectClassSchemaBuilder extends ObjectClassSchemaBuilder<
+        RestObjectClassSchemaBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, RestReferenceAttributeBuilder> {
 
     /**
      * Returns the SCIM mapping configuration for this object class.

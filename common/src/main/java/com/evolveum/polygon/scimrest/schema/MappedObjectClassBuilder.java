@@ -7,18 +7,22 @@
 package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
-import com.evolveum.polygon.scimrest.groovy.api.ObjectClassSchemaBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestObjectClassSchemaBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
+public class MappedObjectClassBuilder implements RestObjectClassSchemaBuilder {
 
     private static final Map<String, String> BUILT_IN_ATTRIBUTES;
 
@@ -35,7 +39,8 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     private final ObjectClassInfoBuilder connIdBuilder = new ObjectClassInfoBuilder();
     private final RestSchemaBuilder parent;
     Map<String, MappedAttributeBuilderImpl> nativeAttributes = new HashMap<>();
-    private String description;
+    private DefinitionValue<String> description = DefinitionValue.emptyDefault();
+    private DefinitionValue<Boolean> embedded = DefinitionValue.DEFAULT_FALSE;
     private String locator;
     private String namespace;
     private ScimMapping scim;
@@ -62,8 +67,9 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     }
 
     @Override
-    public ObjectClassSchemaBuilder embedded(boolean embedded) {
-        connIdBuilder.setEmbedded(true);
+    public MappedObjectClassBuilder embedded(DefinitionValue<Boolean> embedded) {
+        this.embedded = this.embedded.moreSpecific(embedded);
+        connIdBuilder.setEmbedded(this.embedded.value());
         return this;
     }
 
@@ -80,8 +86,8 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     }
 
     @Override
-    public MappedObjectClassBuilder description(String description) {
-        this.description = description;
+    public MappedObjectClassBuilder description(DefinitionValue<String> description) {
+        this.description = this.description.moreSpecific(description);
         return this;
     }
 
@@ -109,6 +115,11 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
 
     public String name() {
         return name;
+    }
+
+    @Override
+    public MappedObjectClassBuilder self() {
+        return this;
     }
 
     @Override
@@ -147,16 +158,22 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     }
 
     public String description() {
-        return description;
+        return description.value();
     }
 
     public boolean embedded() {
-        // Embedded means non-manageable object
-        return false;
+        return embedded.value();
     }
 
     public Iterable<MappedAttributeBuilderImpl> allAttributes() {
         return nativeAttributes.values();
+    }
+
+    @Override
+    public List<RestAttributeBuilder<RestReferenceAttributeBuilder>> findAttributes(Predicate<RestAttributeBuilder<RestReferenceAttributeBuilder>> predicate) {
+        return nativeAttributes.values().stream()
+                .filter(predicate)
+                .collect(Collectors.toList());
     }
 
     public boolean connIdAttributeNotDefined(String name) {
