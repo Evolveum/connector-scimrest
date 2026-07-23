@@ -55,7 +55,7 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     public MappedAttributeBuilderImpl reference(String name) {
         var builder = nativeAttributes.computeIfAbsent(name, (k) -> {
             var ret = new MappedAttributeBuilderImpl(MappedObjectClassBuilder.this, k);
-            ret.connIdBuilder.setType(ConnectorObjectReference.class);
+            ret.connId().type(ConnectorObjectReference.class);
             return ret;
         });
         return (MappedAttributeBuilderImpl) builder;
@@ -68,7 +68,7 @@ public class MappedObjectClassBuilder implements ObjectClassSchemaBuilder {
     }
 
     @Override
-    public MappedBasicAttributeBuilderImpl attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
+    public MappedAttributeBuilderImpl attribute(String name, @DelegatesTo(RestAttributeBuilder.class) Closure closure) {
         var attr = attribute(name);
         return GroovyClosures.callAndReturnDelegate(closure, attr);
     }

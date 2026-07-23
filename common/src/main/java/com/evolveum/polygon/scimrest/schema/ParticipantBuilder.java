@@ -34,7 +34,7 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
     public AttributeBuilder attribute(String name) {
         if (attribute == null) {
             attribute = new AttributeBuilder(objectClass.attribute(name));
-            attribute.delegate.connIdBuilder.setType(ConnectorObjectReference.class);
+            attribute.delegate.connId().type(ConnectorObjectReference.class);
             attribute.delegate.subtype(parent.name);
         }
         return attribute;

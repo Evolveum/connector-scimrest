@@ -55,9 +55,9 @@ public class MappedAttribute implements ConnDevAttributeSource {
             if (suggestedConnIdType == null) {
                 throw new IllegalArgumentException("Missing ConnId type definition for attribute " + remoteName);
             }
-            mappedBuilder.connIdBuilder.setType(suggestedConnIdType);
+            mappedBuilder.connId().type(suggestedConnIdType);
         } else {
-            mappedBuilder.connIdBuilder.setType(ConnectorObjectReference.class);
+            mappedBuilder.connId().type(ConnectorObjectReference.class);
         }
         // FIXME: Do the reference attribute mappings
 
