@@ -6,12 +6,12 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
-import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
+import com.evolveum.polygon.conndev.build.api.RelationshipBuilder;
+import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface RestRelationshipBuilder {
-
+public interface RestRelationshipBuilder extends RelationshipBuilder<RestReferenceAttributeBuilder, MappedAttribute> {
 
     /**
      * Declares object class as a subject of this relationship
@@ -20,8 +20,8 @@ public interface RestRelationshipBuilder {
      * @param closure Groovy closure which configures subject-part of relation
      * @return Builder which allows to customize subject part of relationship
      */
+    @Override
     Participant subject(String objectClass, @DelegatesTo(value = Participant.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
-
 
     /**
      * Declares an object class as a participant of this relationship.
@@ -30,30 +30,15 @@ public interface RestRelationshipBuilder {
      * @param closure Groovy closure to configure the participant part of the relationship.
      * @return Builder for customizing the participant part of the relationship.
      */
+    @Override
     Participant object(String objectClass, @DelegatesTo(value = Participant.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
+    interface Participant extends RelationshipBuilder.Participant<RestReferenceAttributeBuilder, MappedAttribute> {
 
+        @Override
+        RestReferenceAttributeBuilder attribute(String name);
 
-    interface Participant {
-
-        Reference attribute(String name);
-
-        Reference attribute(String name, @DelegatesTo(value = Reference.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
-
-    }
-
-    interface Reference extends RestReferenceAttributeBuilder {
-
-        /**
-         * Adds an attribute resolver with custom behavior defined.
-         *
-         * The attribute will be marked as {@link #emulated(boolean)} true.
-         * The values for attribute will be provided by defined attribute resolver.
-         *
-         *
-         * @param closure The closure defining custom behavior for the attribute resolver.
-         * @return A new instance of {@link AttributeResolver} configured according to the closure's specifications.
-         */
-        AttributeResolverBuilder resolver(@DelegatesTo(value = AttributeResolverBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+        @Override
+        RestReferenceAttributeBuilder attribute(String name, @DelegatesTo(value = RestReferenceAttributeBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
     }
 }

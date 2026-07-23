@@ -22,6 +22,8 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
     private final RelationshipBuilderImpl parent;
 
     private AttributeBuilder attribute;
+    /** Unused by scimrest today (no .schema.groovy script calls owner(...)); tracked only to satisfy the interface. */
+    private boolean owner = false;
 
     public ParticipantBuilder(RelationshipBuilderImpl relationshipBuilder, MappedObjectClassBuilder targetClass) {
         this.parent = relationshipBuilder;
@@ -43,15 +45,26 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
     }
 
     @Override
-    public RestRelationshipBuilder.Reference attribute(String name, Closure<?> closure) {
+    public RestReferenceAttributeBuilder attribute(String name, Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, attribute(name));
+    }
+
+    @Override
+    public boolean owner() {
+        return owner;
+    }
+
+    @Override
+    public RestReferenceAttributeBuilder owner(boolean owner) {
+        this.owner = owner;
+        return attribute();
     }
 
     public String objectClass() {
         return objectClass.name();
     }
 
-    static class AttributeBuilder implements RestRelationshipBuilder.Reference,
+    static class AttributeBuilder implements RestReferenceAttributeBuilder,
             ReferenceAttributeBuilder.Delegator<RestReferenceAttributeBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, MappedAttribute> {
 
         private final MappedAttributeBuilderImpl delegate;

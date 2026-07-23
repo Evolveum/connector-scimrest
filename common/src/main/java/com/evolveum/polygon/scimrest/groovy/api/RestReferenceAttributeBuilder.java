@@ -6,9 +6,15 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
-import com.evolveum.polygon.conndev.build.api.ReferenceAttributeBuilder;
+import com.evolveum.polygon.conndev.build.api.RelationshipBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 
+/**
+ * Extends {@code RelationshipBuilder.Reference} (not just plain {@code ReferenceAttributeBuilder}) so
+ * every reference attribute already satisfies conndev's relationship-participant contract
+ * ({@code resolver(Closure)}) — {@code MappedAttributeBuilderImpl} already implements it
+ * unconditionally, so this adds no new burden.
+ */
 public interface RestReferenceAttributeBuilder extends RestAttributeBuilder<RestReferenceAttributeBuilder>,
-        ReferenceAttributeBuilder<RestReferenceAttributeBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, MappedAttribute> {
+        RelationshipBuilder.Reference<RestReferenceAttributeBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, MappedAttribute> {
 }
