@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.*;
 import com.evolveum.polygon.scimrest.impl.AttributeResolvingSearchHandler;
 import com.evolveum.polygon.scimrest.impl.FilterBasedSearchDispatcher;

@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.yaml;
 
+import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
 import com.evolveum.polygon.conndev.yaml.model.YamlNormalize;
-import com.evolveum.polygon.scimrest.groovy.api.NormalizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 
 /** Maps the {@code normalize} section onto {@link NormalizationBuilder}; scripts become closures. */

@@ -7,7 +7,7 @@
 
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.groovy.api.NormalizationBuilder;
+import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
 import groovy.lang.Closure;
 
