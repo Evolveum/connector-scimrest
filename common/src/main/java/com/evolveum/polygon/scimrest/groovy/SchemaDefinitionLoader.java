@@ -11,7 +11,7 @@ import com.evolveum.polygon.conndev.schema.BaseSchema;
 import com.evolveum.polygon.conndev.schema.BaseSchemaBuilder;
 import com.evolveum.polygon.conndev.yaml.ScriptResources;
 import com.evolveum.polygon.conndev.yaml.YamlSchemaLoader;
-import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -35,7 +35,7 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
     private final YamlSchemaLoader yamlLoader;
     private boolean yamlLoaded;
 
-    public SchemaDefinitionLoader(GroovyContext context, RestSchemaBuilder schemaBuilder) {
+    public SchemaDefinitionLoader(GroovyContext context, RestSchemaBuilderImpl schemaBuilder) {
         super(context, schemaBuilder);
         // The declarative YAML schema must be fully literal — its builder deliberately gets no
         // runtime context, so any context-dependent construct fails fast during loading.

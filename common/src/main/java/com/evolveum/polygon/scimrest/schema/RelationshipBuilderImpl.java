@@ -13,13 +13,13 @@ import org.identityconnectors.framework.common.objects.AttributeInfo;
 
 public class RelationshipBuilderImpl implements RestRelationshipBuilder, GroovyClosures.ClosureExecutionAware {
 
-    private final RestSchemaBuilder schemaBuilder;
+    private final RestSchemaBuilderImpl schemaBuilder;
 
     final String name;
     ParticipantBuilder subject;
     ParticipantBuilder object;
 
-    public RelationshipBuilderImpl(String name, RestSchemaBuilder schemaBuilder) {
+    public RelationshipBuilderImpl(String name, RestSchemaBuilderImpl schemaBuilder) {
         this.name = name;
         this.schemaBuilder = schemaBuilder;
     }

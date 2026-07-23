@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
-import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import jakarta.ws.rs.WebApplicationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
@@ -72,7 +72,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     }
 
     private void initialize0() {
-        var schemaBuilder = new RestSchemaBuilder(getClass(), context);
+        var schemaBuilder = new RestSchemaBuilderImpl(getClass(), context);
         var schemaLoader = new SchemaDefinitionLoader(context.configuration().groovyContext(), schemaBuilder);
         initializeSchema(schemaLoader);
         context.baseSchema(schemaLoader.baseSchema());

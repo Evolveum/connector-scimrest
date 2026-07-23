@@ -11,7 +11,7 @@ import com.evolveum.polygon.conndev.dev.ConnDevSchema;
 import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
 import com.evolveum.polygon.scimrest.impl.scim.ScimSchemaTranslator;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
-import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
@@ -156,7 +156,7 @@ public class ScimDevSchemaExportTest {
     }
 
     private static RestSchema translate(ScimResourceContext... resources) {
-        var builder = new RestSchemaBuilder(StubConnector.class, null);
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, null);
         var translator = new ScimSchemaTranslator(null);
         for (var resource : resources) {
             translator.correlateObjectClasses(resource, builder);

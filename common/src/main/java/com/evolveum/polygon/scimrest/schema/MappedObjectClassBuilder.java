@@ -37,7 +37,7 @@ public class MappedObjectClassBuilder implements RestObjectClassSchemaBuilder {
 
     private final String name;
     private final ObjectClassInfoBuilder connIdBuilder = new ObjectClassInfoBuilder();
-    private final RestSchemaBuilder parent;
+    private final RestSchemaBuilderImpl parent;
     Map<String, MappedAttributeBuilderImpl> nativeAttributes = new HashMap<>();
     private DefinitionValue<String> description = DefinitionValue.emptyDefault();
     private DefinitionValue<Boolean> embedded = DefinitionValue.DEFAULT_FALSE;
@@ -45,7 +45,7 @@ public class MappedObjectClassBuilder implements RestObjectClassSchemaBuilder {
     private String namespace;
     private ScimMapping scim;
 
-    public MappedObjectClassBuilder(RestSchemaBuilder restSchemaBuilder, String name) {
+    public MappedObjectClassBuilder(RestSchemaBuilderImpl restSchemaBuilder, String name) {
         this.name = name;
         this.parent = restSchemaBuilder;
         connIdBuilder.setType(name);

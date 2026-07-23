@@ -7,8 +7,11 @@
 package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
+import com.evolveum.polygon.scimrest.groovy.api.RestObjectClassSchemaBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestRelationshipBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestSchemaBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.Name;
@@ -22,15 +25,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
 
-public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.api.SchemaBuilder {
+public class RestSchemaBuilderImpl implements RestSchemaBuilder {
 
     private final Class<? extends Connector> connectorClass;
     private final Map<String, MappedObjectClassBuilder> objectClasses = new HashMap<>();
     private final List<ObjectClassInfo> additionalObjectClasses = new ArrayList<>();
     private ContextLookup contextLookup;
 
-    public RestSchemaBuilder(Class<? extends Connector> connectorClass, ContextLookup context) {
+    public RestSchemaBuilderImpl(Class<? extends Connector> connectorClass, ContextLookup context) {
         this.connectorClass = connectorClass;
         this.contextLookup = context;
     }
@@ -41,7 +46,12 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
 
     @Override
     public MappedObjectClassBuilder objectClass(String name) {
-        return objectClasses.computeIfAbsent(name, k -> new MappedObjectClassBuilder(RestSchemaBuilder.this, k));
+        return objectClasses.computeIfAbsent(name, k -> new MappedObjectClassBuilder(RestSchemaBuilderImpl.this, k));
+    }
+
+    @Override
+    public MappedObjectClassBuilder objectClass(DefinitionValue<String> name) {
+        return objectClass(name.value());
     }
 
     @Override
@@ -54,6 +64,14 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
     }
 
     @Override
+    public Optional<RestObjectClassSchemaBuilder> lookupObjectClass(Predicate<RestObjectClassSchemaBuilder> lookup) {
+        return objectClasses.values().stream()
+                .map(RestObjectClassSchemaBuilder.class::cast)
+                .filter(lookup)
+                .findFirst();
+    }
+
+    @Override
     public RestRelationshipBuilder relationship(String name, @DelegatesTo(RestRelationshipBuilder.class) Closure<?> closure) {
         var ret =  new RelationshipBuilderImpl(name, this);
         return GroovyClosures.callAndReturnDelegate(closure, ret);
@@ -63,7 +81,7 @@ public class RestSchemaBuilder implements com.evolveum.polygon.scimrest.groovy.a
      * Adds a ready-made ConnId object class (e.g. the shared conndev dev object classes defined in
      * {@code ConnDevSchema}) to the schema, alongside the mapped object classes.
      */
-    public RestSchemaBuilder defineObjectClass(ObjectClassInfo objectClass) {
+    public RestSchemaBuilderImpl defineObjectClass(ObjectClassInfo objectClass) {
         additionalObjectClasses.add(objectClass);
         return this;
     }

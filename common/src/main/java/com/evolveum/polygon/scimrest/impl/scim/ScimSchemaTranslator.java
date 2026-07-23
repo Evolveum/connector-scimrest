@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.impl.scim;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.schema.MappedAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClassBuilder;
-import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
@@ -41,7 +41,7 @@ public class ScimSchemaTranslator {
         this.contextLookup = contextLookup;
     }
 
-    public void correlateObjectClasses(ScimResourceContext scim, RestSchemaBuilder schema) {
+    public void correlateObjectClasses(ScimResourceContext scim, RestSchemaBuilderImpl schema) {
 
         // First we try to match object class by SCIM URN
         var objectClass = findOrCreateObjectClass(scim.resource(), schema);
@@ -63,7 +63,7 @@ public class ScimSchemaTranslator {
         }
     }
 
-    public void populateSchema(ScimResourceContext scim, RestSchemaBuilder schema) {
+    public void populateSchema(ScimResourceContext scim, RestSchemaBuilderImpl schema) {
         var objectClassName = resourceToObjectClass.get(scim.resource().getName());
         var objectClass = schema.objectClass(objectClassName);
         populateBuiltInSchema(objectClass, objectClass.scim().isOnlyExplicitlyListed());
@@ -214,7 +214,7 @@ public class ScimSchemaTranslator {
 
     }
 
-    private MappedObjectClassBuilder findOrCreateObjectClass(ResourceTypeResource scim, RestSchemaBuilder schema) {
+    private MappedObjectClassBuilder findOrCreateObjectClass(ResourceTypeResource scim, RestSchemaBuilderImpl schema) {
         for (var objClass : schema.allObjectClasses()) {
             if (objClass.embedded()) {
 

@@ -10,7 +10,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface ConnectorBuilder extends OperationBuilder, SchemaBuilder {
+public interface ConnectorBuilder extends OperationBuilder, RestSchemaBuilder {
 
 
     @Override
