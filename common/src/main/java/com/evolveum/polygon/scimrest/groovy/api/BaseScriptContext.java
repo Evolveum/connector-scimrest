@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.conndev.build.api.FilterBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 
 public interface BaseScriptContext {
