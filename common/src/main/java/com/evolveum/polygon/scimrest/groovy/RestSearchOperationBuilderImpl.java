@@ -6,6 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+
 import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.*;
 import com.evolveum.polygon.scimrest.impl.AttributeResolvingSearchHandler;
@@ -135,7 +137,7 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
         }
         for (var attribute : parent.getObjectClass().attributes()) {
             if (attribute.emulated()) {
-                var resolver = attribute.resolver();
+                var resolver = attribute.attributeResolver();
                 if (resolver == null && !supportedAttributes.contains(attribute)) {
                     throw new IllegalStateException("Attribute: " + attribute.remoteName() + " is emulated, but no resolver exists.");
                 }

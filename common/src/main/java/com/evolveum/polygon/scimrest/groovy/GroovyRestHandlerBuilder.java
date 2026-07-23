@@ -6,6 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;

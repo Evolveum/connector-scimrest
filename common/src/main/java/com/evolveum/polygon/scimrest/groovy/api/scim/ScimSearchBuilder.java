@@ -1,7 +1,7 @@
 package com.evolveum.polygon.scimrest.groovy.api.scim;
 
 
-import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.Script;
 import com.evolveum.polygon.scimrest.groovy.api.SearchHandlerBuilder;
 import groovy.lang.Closure;

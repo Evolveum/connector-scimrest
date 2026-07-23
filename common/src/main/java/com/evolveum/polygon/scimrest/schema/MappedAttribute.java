@@ -111,7 +111,7 @@ public class MappedAttribute implements ConnDevAttributeSource {
         return emulated;
     }
 
-    public AttributeResolver resolver() {
+    public AttributeResolver attributeResolver() {
         return resolver;
     }
 
