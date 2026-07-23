@@ -21,7 +21,7 @@ public interface ObjectClassSchemaBuilder {
      * @param name the name of the attribute to be configured
      * @return an instance of {@link RestAttributeBuilder} for further configuration of the attribute
      */
-    RestAttributeBuilder attribute(String name);
+    RestAttributeBuilder<?> attribute(String name);
 
     /**
      * Creates / gets reference definition with the specified name.
@@ -38,7 +38,7 @@ public interface ObjectClassSchemaBuilder {
      * @param closure a closure that configures the {@link RestAttributeBuilder} instance for the specified attribute
      * @return an instance of {@link RestAttributeBuilder} for further configuration of the attribute
      */
-    RestAttributeBuilder attribute(String name, @DelegatesTo(value = RestAttributeBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+    RestAttributeBuilder<?> attribute(String name, @DelegatesTo(value = RestAttributeBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     /**
      * Creates / gets reference definition with the specified name, applying a closure to further configure it.

@@ -7,9 +7,11 @@
 package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
+import com.evolveum.polygon.conndev.build.api.ReferenceAttributeBuilder;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
+import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeDelegator;
 import com.evolveum.polygon.scimrest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
@@ -49,7 +51,8 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
         return objectClass.name();
     }
 
-    static class AttributeBuilder implements RestRelationshipBuilder.Reference, RestReferenceAttributeDelegator {
+    static class AttributeBuilder implements RestRelationshipBuilder.Reference,
+            ReferenceAttributeBuilder.Delegator<RestReferenceAttributeBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, MappedAttribute> {
 
         private final MappedAttributeBuilderImpl delegate;
 
@@ -60,6 +63,36 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
         @Override
         public RestReferenceAttributeBuilder delegate() {
             return delegate;
+        }
+
+        @Override
+        public RestReferenceAttributeBuilder complexType(DefinitionValue<String> objectClass) {
+            return delegate.complexType(objectClass);
+        }
+
+        @Override
+        public RestReferenceAttributeBuilder emulated(DefinitionValue<Boolean> emulated) {
+            return delegate.emulated(emulated);
+        }
+
+        @Override
+        public RestReferenceAttributeBuilder protocolName(DefinitionValue<String> protocolName) {
+            return delegate.protocolName(protocolName);
+        }
+
+        @Override
+        public RestReferenceAttributeBuilder remoteName(DefinitionValue<String> remoteName) {
+            return delegate.remoteName(remoteName);
+        }
+
+        @Override
+        public ScimMapping scim() {
+            return delegate.scim();
+        }
+
+        @Override
+        public ScimMapping scim(Closure<?> closure) {
+            return delegate.scim(closure);
         }
 
         @Override

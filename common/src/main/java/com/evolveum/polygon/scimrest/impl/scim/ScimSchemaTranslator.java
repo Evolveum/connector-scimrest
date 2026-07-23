@@ -96,22 +96,22 @@ public class ScimSchemaTranslator {
     private void populateAttribute(MappedAttributeBuilderImpl attribute, AttributeDefinition scimAttr) {
         attribute.scim().type(jsonType(scimAttr.getType()));
         attribute.nativeType(scimAttr.getType().getName());
-        attribute.description(detected(scimAttr.getDescription()));
-        attribute.required(detected(scimAttr.isRequired()));
-        attribute.multiValued(detected(scimAttr.isMultiValued()));
-        attribute.returnedByDefault(detected(AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned())));
+        attribute.connId().description(detected(scimAttr.getDescription()));
+        attribute.connId().required(detected(scimAttr.isRequired()));
+        attribute.connId().multiValued(detected(scimAttr.isMultiValued()));
+        attribute.connId().returnedByDefault(detected(AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned())));
         switch (scimAttr.getMutability()) {
             case IMMUTABLE -> {
-                attribute.readable(detected(true)).creatable(detected(true)).updateable(detected(false));
+                attribute.connId().readable(detected(true)).creatable(detected(true)).updatable(detected(false));
             }
             case READ_ONLY -> {
-                attribute.readable(detected(true)).creatable(detected(false)).updateable(detected(false));
+                attribute.connId().readable(detected(true)).creatable(detected(false)).updatable(detected(false));
             }
             case READ_WRITE -> {
-                attribute.readable(detected(true)).creatable(detected(true)).updateable(detected(true));
+                attribute.connId().readable(detected(true)).creatable(detected(true)).updatable(detected(true));
             }
             case WRITE_ONLY -> {
-                attribute.readable(detected(false)).creatable(detected(true)).updateable(detected(true));
+                attribute.connId().readable(detected(false)).creatable(detected(true)).updatable(detected(true));
             }
         }
     }

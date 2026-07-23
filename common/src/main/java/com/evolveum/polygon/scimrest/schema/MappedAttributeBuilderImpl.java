@@ -48,17 +48,12 @@ public class MappedAttributeBuilderImpl implements RestReferenceAttributeBuilder
 
 
     private ScimBuilder scim;
+    /** Mirrors {@link ConnIdBuilder#name}'s resolved value for callers outside the ConnIdMapping (e.g. build()). */
     String connIdName;
+    /** Mirrors {@link ConnIdBuilder#type}'s resolved value for JsonBuilder/ScimBuilder value-mapping resolution. */
     Class<?> connIdType;
 
-    private DefinitionValue<Boolean> readable = DefinitionValue.DEFAULT_TRUE;
-    private DefinitionValue<Boolean> required = DefinitionValue.DEFAULT_FALSE;
-    private DefinitionValue<Boolean> updateable = DefinitionValue.DEFAULT_TRUE;
-    private DefinitionValue<Boolean> creatable = DefinitionValue.DEFAULT_TRUE;
-    private DefinitionValue<String> description = DefinitionValue.emptyDefault();
-    private DefinitionValue<Boolean> returnedByDefault = DefinitionValue.DEFAULT_TRUE;
-    private DefinitionValue<Boolean> multiValued = DefinitionValue.DEFAULT_FALSE;
-    private DefinitionValue<String> complexType = DefinitionValue.emptyDefault();
+    private final ConnIdBuilder connIdMapping = new ConnIdBuilder();
 
     public Deferred.Settable<MappedAttribute> deffered = Deferred.settable();
     private String referencedObjectClass;
@@ -98,74 +93,17 @@ public class MappedAttributeBuilderImpl implements RestReferenceAttributeBuilder
     }
 
     @Override
-    public MappedAttributeBuilderImpl readable(DefinitionValue<Boolean> readable) {
-        this.readable = this.readable.moreSpecific(readable);
-        connIdBuilder.setReadable(this.readable.value());
-        if (!this.readable.value()) {
-            connIdBuilder.setReturnedByDefault(false);
-        }
-        return this;
-    }
-
-
-    @Override
-    public MappedAttributeBuilderImpl required(DefinitionValue<Boolean> required) {
-        this.required = this.required.moreSpecific(required);
-        connIdBuilder.setRequired(this.required.value());
-        return this;
-    }
-
-    @Override
-    public MappedAttributeBuilderImpl updateable(DefinitionValue<Boolean> updateable) {
-        this.updateable = this.updateable.moreSpecific(updateable);
-        connIdBuilder.setUpdateable(this.updateable.value());
-        return this;
-    }
-
-    @Override
-    public MappedAttributeBuilderImpl creatable(DefinitionValue<Boolean> creatable) {
-        this.creatable = this.creatable.moreSpecific(creatable);
-        connIdBuilder.setCreateable(this.creatable.value());
-        return this;
-    }
-
-    @Override
-    public MappedAttributeBuilderImpl description(DefinitionValue<String> description) {
-        this.description = this.description.moreSpecific(description);
-        connIdBuilder.setDescription(this.description.value());
-        return this;
-    }
-
-
-    @Override
     public MappedAttributeBuilderImpl complexType(DefinitionValue<String> objectClass) {
-        this.complexType = this.complexType.moreSpecific(objectClass);
         connId().type(EmbeddedObject.class);
-        connIdBuilder.setRoleInReference(AttributeInfo.RoleInReference.SUBJECT.toString());
-        connIdBuilder.setReferencedObjectClassName(this.complexType.value());
-        json().implementation(new EmbeddedObjectJsonMapping(contextLookup(), this.complexType.value()));
+        connId().roleInReference(DefinitionValue.detected(AttributeInfo.RoleInReference.SUBJECT.toString()));
+        connId().referencedObjectClassName(objectClass);
+        json().implementation(new EmbeddedObjectJsonMapping(contextLookup(), objectClass.value()));
         return this;
     }
 
     protected ContextLookup contextLookup() {
         return objectClass.contextLookup();
     }
-
-
-    @Override
-    public MappedAttributeBuilderImpl returnedByDefault(DefinitionValue<Boolean> returnedByDefault) {
-        this.returnedByDefault = this.returnedByDefault.moreSpecific(returnedByDefault);
-        connIdBuilder.setReturnedByDefault(this.returnedByDefault.value());
-        return this;
-    }
-
-    @Override
-    public MappedAttributeBuilderImpl multiValued(DefinitionValue<Boolean> multiValued) {
-        this.multiValued = this.multiValued.moreSpecific(multiValued);
-        connIdBuilder.setMultiValued(this.multiValued.value());
-        return this;
-    }
-
 
 
     @Override
@@ -180,21 +118,7 @@ public class MappedAttributeBuilderImpl implements RestReferenceAttributeBuilder
 
     @Override
     public ConnIdMapping connId() {
-        return new ConnIdMapping() {
-            @Override
-            public ConnIdMapping name(String name) {
-                MappedAttributeBuilderImpl.this.connIdName = name;
-                MappedAttributeBuilderImpl.this.connIdBuilder.setName(name);
-                return this;
-            }
-
-            @Override
-            public ConnIdMapping type(Class<?> connIdType) {
-                MappedAttributeBuilderImpl.this.connIdType = connIdType;
-                MappedAttributeBuilderImpl.this.connIdBuilder.setType(connIdType);
-                return this;
-            }
-        };
+        return connIdMapping;
     }
 
     @Override
@@ -259,6 +183,130 @@ public class MappedAttributeBuilderImpl implements RestReferenceAttributeBuilder
         this.resolverBuilder = new ScriptedSingleAttributeResolverBuilder(objectClass.name(), deffered);
         GroovyClosures.callAndReturnDelegate(closure, resolverBuilder);
         return resolverBuilder;
+    }
+
+    /**
+     * Backs {@link #connId()} with a persistent instance (not a fresh object per call) so that
+     * {@code DefinitionValue}'s {@code moreSpecific()} merge tracking accumulates correctly across
+     * multiple {@code connId { ... }} invocations, matching conndev's own
+     * {@code AbstractAttributeBuilder.ConnIdBuilder} shape.
+     */
+    class ConnIdBuilder implements ConnIdMapping {
+
+        private DefinitionValue<String> name = DefinitionValue.emptyDefault();
+        private DefinitionValue<String> nativeName = DefinitionValue.emptyDefault();
+        private DefinitionValue<Class<?>> type = DefinitionValue.emptyDefault();
+        private DefinitionValue<Boolean> readable = DefinitionValue.DEFAULT_TRUE;
+        private DefinitionValue<Boolean> required = DefinitionValue.DEFAULT_FALSE;
+        private DefinitionValue<String> description = DefinitionValue.emptyDefault();
+        private DefinitionValue<Boolean> returnedByDefault = DefinitionValue.DEFAULT_TRUE;
+        private DefinitionValue<Boolean> multiValued = DefinitionValue.DEFAULT_FALSE;
+        private DefinitionValue<Boolean> creatable = DefinitionValue.DEFAULT_TRUE;
+        private DefinitionValue<Boolean> updatable = DefinitionValue.DEFAULT_TRUE;
+        private DefinitionValue<String> roleInReference = DefinitionValue.emptyDefault();
+        private DefinitionValue<String> referencedObjectClassName = DefinitionValue.emptyDefault();
+        private DefinitionValue<String> subtype = DefinitionValue.emptyDefault();
+
+        @Override
+        public ConnIdMapping name(DefinitionValue<String> name) {
+            this.name = this.name.moreSpecific(name);
+            connIdName = this.name.value();
+            connIdBuilder.setName(this.name.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping nativeName(DefinitionValue<String> name) {
+            this.nativeName = this.nativeName.moreSpecific(name);
+            connIdBuilder.setNativeName(this.nativeName.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping type(DefinitionValue<Class<?>> connIdType) {
+            this.type = this.type.moreSpecific(connIdType);
+            MappedAttributeBuilderImpl.this.connIdType = this.type.value();
+            connIdBuilder.setType(this.type.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping readable(DefinitionValue<Boolean> readable) {
+            this.readable = this.readable.moreSpecific(readable);
+            connIdBuilder.setReadable(this.readable.value());
+            if (!this.readable.value()) {
+                connIdBuilder.setReturnedByDefault(false);
+            }
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping required(DefinitionValue<Boolean> required) {
+            this.required = this.required.moreSpecific(required);
+            connIdBuilder.setRequired(this.required.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping description(DefinitionValue<String> description) {
+            this.description = this.description.moreSpecific(description);
+            connIdBuilder.setDescription(this.description.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping returnedByDefault(DefinitionValue<Boolean> returnedByDefault) {
+            this.returnedByDefault = this.returnedByDefault.moreSpecific(returnedByDefault);
+            connIdBuilder.setReturnedByDefault(this.returnedByDefault.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping multiValued(DefinitionValue<Boolean> multiValued) {
+            this.multiValued = this.multiValued.moreSpecific(multiValued);
+            connIdBuilder.setMultiValued(this.multiValued.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping creatable(DefinitionValue<Boolean> creatable) {
+            this.creatable = this.creatable.moreSpecific(creatable);
+            connIdBuilder.setCreateable(this.creatable.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping updatable(DefinitionValue<Boolean> updatable) {
+            this.updatable = this.updatable.moreSpecific(updatable);
+            connIdBuilder.setUpdateable(this.updatable.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping roleInReference(DefinitionValue<String> detected) {
+            this.roleInReference = this.roleInReference.moreSpecific(detected);
+            connIdBuilder.setRoleInReference(this.roleInReference.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping referencedObjectClassName(DefinitionValue<String> complexType) {
+            this.referencedObjectClassName = this.referencedObjectClassName.moreSpecific(complexType);
+            connIdBuilder.setReferencedObjectClassName(this.referencedObjectClassName.value());
+            return this;
+        }
+
+        @Override
+        public ConnIdMapping subtype(DefinitionValue<String> from) {
+            this.subtype = this.subtype.moreSpecific(from);
+            connIdBuilder.setSubtype(this.subtype.value());
+            return this;
+        }
+
+        @Override
+        public DefinitionValue<Class<?>> type() {
+            return type;
+        }
     }
 
     class JsonBuilder implements AttributeProtocolMappingBuilder, JsonMapping {
