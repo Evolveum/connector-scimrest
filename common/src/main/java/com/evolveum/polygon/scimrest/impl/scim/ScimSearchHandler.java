@@ -14,7 +14,6 @@ import com.evolveum.polygon.scimrest.groovy.FilterAwareSearchProcessorBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimOperationBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.evolveum.polygon.scimrest.schema.ScimAttributeMapping;
 import com.unboundid.scim2.common.GenericScimResource;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -90,7 +89,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
     private ConnectorObject deserializeFromRemote(GenericScimResource remoteObj) {
         var builder = objectClass.newObjectBuilder();
         for (var attributeDef : objectClass.attributes()) {
-            var mapping = attributeDef.mapping(ScimAttributeMapping.class);
+            var mapping = attributeDef.scim();
             if (mapping != null) {
                 var value = mapping.valuesFromObject(remoteObj.getObjectNode());
                 if (value != null) {

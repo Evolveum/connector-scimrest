@@ -6,82 +6,19 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.conndev.dev.ConnDevObjectClassSource;
-import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
-import org.identityconnectors.framework.common.objects.ObjectClass;
+import com.evolveum.polygon.conndev.schema.BaseObjectClassDefinition;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
-public class MappedObjectClass implements ConnDevObjectClassSource {
-
-    private final Map<String, MappedAttribute> nativeAttributes;
-    private final Map<String, MappedAttribute> connIdAttributes;
-    ObjectClass clazz;
-    ObjectClassInfo connId;
-
-    // Native-side object-class metadata: the SCIM resource endpoint and schema URN.
-    private String locator;
-    private String namespace;
-
-    Map<String, MappedAttribute> attributes = new HashMap<>();
+public class MappedObjectClass extends BaseObjectClassDefinition<MappedAttribute> {
 
     public MappedObjectClass(ObjectClassInfo connId, Map<String, MappedAttribute> nativeAttrs, Map<String, MappedAttribute> connIdAttrs) {
-        this.connId = connId;
-        this.clazz = new ObjectClass(connId.getType());
-        this.nativeAttributes = nativeAttrs;
-        this.connIdAttributes = connIdAttrs;
-    }
-
-    public ConnectorObjectBuilder newObjectBuilder() {
-        ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
-        builder.setObjectClass(clazz);
-        return builder;
+        super(connId, nativeAttrs, connIdAttrs);
     }
 
     @Override
-    public Collection<MappedAttribute> attributes() {
-        return nativeAttributes.values();
-    }
-
-    @Override
-    public ObjectClassInfo connId() {
-        return connId;
-    }
-
-    @Override
-    public String locator() {
-        return locator;
-    }
-
-    void locator(String locator) {
-        this.locator = locator;
-    }
-
-    @Override
-    public String namespace() {
-        return namespace;
-    }
-
-    void namespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    public ObjectClass objectClass() {
-        return clazz;
-    }
-
     public MappedAttribute attributeFromProtocolName(String protocolName) {
-        return nativeAttributes.get(protocolName);
-    }
-
-    public String name() {
-        return objectClass().getObjectClassValue();
-    }
-
-    public MappedAttribute attributeFromConnIdName(String name) {
-        return connIdAttributes.get(name);
+        return (MappedAttribute) super.attributeFromProtocolName(protocolName);
     }
 }
