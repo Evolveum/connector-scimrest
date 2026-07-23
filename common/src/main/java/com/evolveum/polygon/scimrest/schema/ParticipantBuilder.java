@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeDelegator;
 import com.evolveum.polygon.scimrest.groovy.api.RestRelationshipBuilder;

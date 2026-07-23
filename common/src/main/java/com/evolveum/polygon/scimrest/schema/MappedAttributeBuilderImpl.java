@@ -6,11 +6,11 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
 import com.evolveum.polygon.conndev.concepts.DefinitionValue;
-import com.evolveum.polygon.scimrest.Deferred;
+import com.evolveum.polygon.conndev.concepts.Deferred;
 import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.ScriptedSingleAttributeResolverBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
