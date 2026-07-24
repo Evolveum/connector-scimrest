@@ -47,6 +47,14 @@ public interface RestObjectClassSchemaBuilder extends ObjectClassSchemaBuilder<
         String schemaUri();
 
         /**
+         * Sets the URI of the SCIM schema associated with this mapping configuration.
+         *
+         * @param schemaUri The URI identifying the SCIM schema.
+         * @return The current ScimMapping instance for method chaining.
+         */
+        ScimMapping schemaUri(String schemaUri);
+
+        /**
          * Name of SCIM Resource which this object class represents.
          *
          * The name is used to match resource to this object calss.

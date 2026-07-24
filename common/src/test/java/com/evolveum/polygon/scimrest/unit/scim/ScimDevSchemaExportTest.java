@@ -71,8 +71,9 @@ public class ScimDevSchemaExportTest {
         var user = objects.get(0);
         assertEquals(user.getObjectClass().getObjectClassValue(), "conndev_ObjectClass");
         assertEquals(user.getName().getNameValue(), "User");
-        assertEquals(value(user, "locator"), "/Users");
-        assertEquals(value(user, "namespace"), USER_URN);
+        var scim = (EmbeddedObject) user.getAttributeByName("scim").getValue().get(0);
+        assertEquals(string(scim, "name"), "User");
+        assertEquals(string(scim, "schemaUri"), USER_URN);
 
         // the model maps "id" to __UID__, but the export keeps the original framework view
         var attributes = user.getAttributeByName("attributes").getValue();
@@ -80,18 +81,18 @@ public class ScimDevSchemaExportTest {
                 .map(e -> string((EmbeddedObject) e, "name")).collect(Collectors.toSet());
         assertEquals(names, Set.of("id", "userName", "displayName", "lastModified"));
 
-        var userNameAttr = embedded(attributes, "userName");
+        var userNameAttr = protocolBlock(embedded(attributes, "userName"), "connId");
         assertEquals(string(userNameAttr, "type"), "string");
         assertEquals(single(userNameAttr, "required"), Boolean.TRUE);
 
         // mutability came through the model's ConnId flags (sparse emission: only deviations)
-        var displayNameAttr = embedded(attributes, "displayName");
+        var displayNameAttr = protocolBlock(embedded(attributes, "displayName"), "connId");
         assertEquals(single(displayNameAttr, "creatable"), Boolean.FALSE);
         assertEquals(single(displayNameAttr, "updateable"), Boolean.FALSE);
         assertNull(AttributeUtil.find("creatable", userNameAttr.getAttributes()));
 
         // the native SCIM type survives even though ConnId maps dateTime to a plain string
-        assertEquals(string(embedded(attributes, "lastModified"), "type"), "dateTime");
+        assertEquals(string(protocolBlock(embedded(attributes, "lastModified"), "connId"), "type"), "dateTime");
     }
 
     @Test
@@ -118,7 +119,7 @@ public class ScimDevSchemaExportTest {
         var group = objects.stream()
                 .filter(o -> "Group".equals(o.getName().getNameValue()))
                 .findFirst().orElseThrow();
-        var membersAttr = embedded(group.getAttributeByName("attributes").getValue(), "members");
+        var membersAttr = protocolBlock(embedded(group.getAttributeByName("attributes").getValue(), "members"), "connId");
         // the reference is expressed by referencedObjectClass/reference/role; type keeps the native view
         assertEquals(string(membersAttr, "referencedObjectClass"), "User");
         assertEquals(string(membersAttr, "reference"), "_User_Group_Membership");
@@ -174,15 +175,15 @@ public class ScimDevSchemaExportTest {
         return ConnDevObjectClassSerializer.serializeAll(translate(resources).objectClasses());
     }
 
-    private static String value(ConnectorObject object, String name) {
-        var attribute = object.getAttributeByName(name);
-        return attribute == null ? null : AttributeUtil.getStringValue(attribute);
-    }
-
     private static EmbeddedObject embedded(List<Object> values, String name) {
         return values.stream().map(EmbeddedObject.class::cast)
                 .filter(e -> name.equals(string(e, "name")))
                 .findFirst().orElseThrow(() -> new AssertionError("No embedded attribute named " + name));
+    }
+
+    private static EmbeddedObject protocolBlock(EmbeddedObject attribute, String protocolName) {
+        var block = AttributeUtil.find(protocolName, attribute.getAttributes());
+        return (EmbeddedObject) AttributeUtil.getSingleValue(block);
     }
 
     private static String string(EmbeddedObject object, String name) {

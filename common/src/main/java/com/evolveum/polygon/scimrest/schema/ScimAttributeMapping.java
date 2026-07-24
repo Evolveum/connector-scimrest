@@ -26,4 +26,8 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
         return null;
     }
 
+    public AttributePath path() {
+        return path;
+    }
+
 }

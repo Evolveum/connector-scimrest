@@ -6,8 +6,12 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.dev.ConnDevAttribute;
 import com.evolveum.polygon.conndev.schema.BaseAttributeDefinition;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+
+import java.util.List;
 
 public class MappedAttribute extends BaseAttributeDefinition {
 
@@ -40,5 +44,12 @@ public class MappedAttribute extends BaseAttributeDefinition {
 
     public AttributeResolver attributeResolver() {
         return attributeResolver;
+    }
+
+    @Override
+    public void contribute(ConnDevAttribute target) {
+        if (scim != null && scim.path() != null) {
+            target.protocolSpecific("scim", List.of(AttributeBuilder.build("path", scim.path().toString())));
+        }
     }
 }

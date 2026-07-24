@@ -12,7 +12,6 @@ import com.evolveum.polygon.scimrest.groovy.SchemaDefinitionLoader;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import org.testng.annotations.Test;
 
-import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
@@ -44,7 +43,7 @@ public class SchemaDefinitionLoaderTest {
         assertNotNull(baseSchema);
         var objectClass = baseSchema.objectClass("TestUser");
         assertNotNull(objectClass);
-        assertEquals("/Users", objectClass.locator());
+        assertTrue(objectClass.attributeFromProtocolName("login").connId().isRequired());
 
         // the functional schema is untouched by YAML definitions
         assertTrue(loader.build().objectClasses().stream()

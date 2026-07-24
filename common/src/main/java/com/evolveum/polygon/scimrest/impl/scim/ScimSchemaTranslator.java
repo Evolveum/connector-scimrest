@@ -54,12 +54,8 @@ public class ScimSchemaTranslator {
         }
         // We map the object class to this SCIM resource
         objectClass.scim().name(scim.resource().getName());
-
-        // Native-side metadata carried by the schema model (single source for the dev-mode export):
-        // where the resource lives and which schema URN it belongs to.
-        objectClass.locator(scim.relativeEndpoint());
         if (scim.schemaUri() != null) {
-            objectClass.namespace(scim.schemaUri().toString());
+            objectClass.scim().schemaUri(scim.schemaUri().toString());
         }
     }
 

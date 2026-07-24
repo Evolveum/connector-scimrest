@@ -50,7 +50,8 @@ public class MappedObjectClassBuilder extends BaseObjectClassDefinitionBuilder<
 
     @Override
     protected MappedObjectClass buildImpl(ObjectClassInfo connIdInfo, Map<String, MappedAttribute> nativeAttrs, Map<String, MappedAttribute> connIdAttrs) {
-        return new MappedObjectClass(connIdInfo, nativeAttrs, connIdAttrs);
+        var scimMapping = scim != null ? new MappedObjectClass.ObjectClassScimMapping(scim.name(), scim.schemaUri()) : null;
+        return new MappedObjectClass(connIdInfo, nativeAttrs, connIdAttrs, scimMapping);
     }
 
     @Override
@@ -83,6 +84,12 @@ public class MappedObjectClassBuilder extends BaseObjectClassDefinitionBuilder<
         @Override
         public String schemaUri() {
             return schemaUri;
+        }
+
+        @Override
+        public ScimMapping schemaUri(String schemaUri) {
+            this.schemaUri = schemaUri;
+            return this;
         }
 
         @Override
