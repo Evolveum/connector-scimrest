@@ -13,6 +13,7 @@ import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.conndev.concepts.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
+import com.evolveum.polygon.conndev.dev.ConnDevAttribute;
 import com.evolveum.polygon.conndev.dev.ConnDevObjectClass;
 import com.evolveum.polygon.conndev.dev.ConnDevSchema;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimDevelopmentMode;
@@ -31,7 +32,10 @@ import jakarta.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.glassfish.jersey.internal.RuntimeDelegateImpl;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfo;
+import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -39,6 +43,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ScimContext implements RetrievableContext {
@@ -210,11 +215,39 @@ public class ScimContext implements RetrievableContext {
         // /Schemas + /ResourceTypes + /ServiceProviderConfig JSON, which still carries details the
         // model does not map yet — complex attributes, extension schemas, provider capabilities).
         if (developmentMode) {
-            for (var info : ConnDevSchema.objectClassInfos()) {
+            var extraObjectClassFields = List.of(ConnDevSchema.embeddedBlock(SCIM_BLOCK, SCIM_BLOCK_TYPE));
+            var extraAttributeFields = List.of(ConnDevSchema.embeddedBlock(SCIM_BLOCK, SCIM_ATTRIBUTE_BLOCK_TYPE));
+            for (var info : ConnDevSchema.objectClassInfos(extraObjectClassFields, extraAttributeFields)) {
                 schemaBuilder.defineObjectClass(info);
             }
+            schemaBuilder.defineObjectClass(scimObjectClassBlock());
+            schemaBuilder.defineObjectClass(scimAttributeBlock());
             new ScimDevelopmentMode().contributeSchemaObjects(schemaBuilder);
         }
+    }
+
+    private static final String SCIM_BLOCK = "scim";
+    private static final String SCIM_BLOCK_TYPE = ConnDevObjectClass.protocolBlockType(SCIM_BLOCK);
+    private static final String SCIM_ATTRIBUTE_BLOCK_TYPE = ConnDevAttribute.attributeProtocolBlockType(SCIM_BLOCK);
+
+    /** The object-class-level {@code scim} block: SCIM resource name and schema URI. */
+    private static ObjectClassInfo scimObjectClassBlock() {
+        var builder = new ObjectClassInfoBuilder();
+        builder.setType(SCIM_BLOCK_TYPE);
+        builder.setEmbedded(true);
+        builder.addAttributeInfo(AttributeInfoBuilder.build("name", String.class));
+        builder.addAttributeInfo(AttributeInfoBuilder.build("schemaUri", String.class));
+        return builder.build();
+    }
+
+    /** The attribute-level {@code scim} block: the SCIM JSON path. Distinct ConnId type from the
+     *  object-class-level block of the same name - see {@link ConnDevAttribute#attributeProtocolBlockType}. */
+    private static ObjectClassInfo scimAttributeBlock() {
+        var builder = new ObjectClassInfoBuilder();
+        builder.setType(SCIM_ATTRIBUTE_BLOCK_TYPE);
+        builder.setEmbedded(true);
+        builder.addAttributeInfo(AttributeInfoBuilder.build("path", String.class));
+        return builder.build();
     }
 
     public void contributeToHandlers(RestHandlerBuilder handlerBuilder) {
