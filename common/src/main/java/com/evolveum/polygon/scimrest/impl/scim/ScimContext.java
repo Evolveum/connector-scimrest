@@ -22,10 +22,13 @@ import com.evolveum.polygon.scimrest.impl.scim.dev.ScimResourceDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimSchemaDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimServiceProviderConfigDevHandler;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 import com.unboundid.scim2.client.ScimService;
 import com.unboundid.scim2.common.types.SchemaResource;
 import com.unboundid.scim2.common.utils.JsonUtils;
+import com.unboundid.scim2.common.utils.MapperFactory;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.RuntimeDelegate;
@@ -47,6 +50,18 @@ import java.util.List;
 import java.util.Map;
 
 public class ScimContext implements RetrievableContext {
+
+    static {
+        // Real SCIM servers commonly send `null` (or omit) boolean AttributeDefinition fields such
+        // as `caseExact`; the SDK models them as primitive `boolean`, and Jackson 3 (unlike Jackson 2)
+        // defaults to rejecting null-into-primitive instead of coercing it to false.
+        JsonUtils.setCustomMapperFactory(new MapperFactory() {
+            @Override
+            public JsonMapper.Builder createBuilder() {
+                return super.createBuilder().disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES);
+            }
+        });
+    }
 
     private final ContextLookup contextLookup;
     private final ScimService scimClient;
@@ -83,6 +98,7 @@ public class ScimContext implements RetrievableContext {
                 clientBuilder.sslContext(sslContext);
             }
             clientBuilder.register(new ScimHttpErrorFilter());
+            clientBuilder.register(new ScimSchemaDefaultsFilter());
             if (authentication != null) {
                 clientBuilder.register(new JerseyRequestCustomizerFilter(authentication, scimConf));
             }
