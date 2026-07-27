@@ -14,7 +14,8 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.JwtAssertionBuilder;
 import org.identityconnectors.common.security.GuardedString;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
@@ -267,7 +268,7 @@ public class OAuth2TokenManager {
                 Instant expiresAt = Instant.now().plusSeconds(expiresIn);
                 authContext.set(EXPIRES_AT, expiresAt);
             }
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new ConnectorIOException("Failed to parse token response: " + e.getMessage(), e);
         }
     }

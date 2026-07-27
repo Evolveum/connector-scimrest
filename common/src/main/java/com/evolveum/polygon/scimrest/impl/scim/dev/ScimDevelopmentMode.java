@@ -8,8 +8,9 @@ package com.evolveum.polygon.scimrest.impl.scim.dev;
 
 import com.evolveum.polygon.conndev.json.JsonSchemaValueMapping;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -30,8 +31,9 @@ public class ScimDevelopmentMode {
     public static final String RESOURCE_OC_NAME = "conndev_ScimResource";
     public static final String SERVICE_PROVIDER_CONFIG_OC_NAME = "conndev_ScimServiceProviderConfig";
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-            .enable(SerializationFeature.INDENT_OUTPUT);
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .build();
 
     /**
      * Contributes dev schema object classes to the schema builder.

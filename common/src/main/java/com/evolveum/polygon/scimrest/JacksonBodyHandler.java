@@ -6,12 +6,12 @@
  */
 package com.evolveum.polygon.scimrest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.datatype.jsonorg.JsonOrgModule;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -26,8 +26,7 @@ public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpRespon
 
     @Override
     public HttpResponse.BodySubscriber<Object> apply(HttpResponse.ResponseInfo responseInfo) {
-        var mapper = new ObjectMapper();
-        mapper.registerModule(new JsonOrgModule());
+        var mapper = JsonMapper.builder().addModule(new JsonOrgModule()).build();
 
         if (responseInfo.statusCode() >= 200 && responseInfo.statusCode() < 204) {
                 var upstream = HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8);
@@ -35,7 +34,7 @@ public record JacksonBodyHandler<T>(Class<T> responseType) implements HttpRespon
                     try {
                         var treeNode = mapper.readTree(m);
                         return responseType.cast(treeNode);
-                    } catch (IOException e) {
+                    } catch (JacksonException e) {
                         throw new ConnectorException("Failed to parse response body", e);
                     }
                 });

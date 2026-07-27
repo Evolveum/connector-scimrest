@@ -8,7 +8,7 @@ import com.evolveum.polygon.scimrest.impl.DeleteOperationHandler;
 import com.evolveum.polygon.scimrest.impl.DeleteOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimDeleteHandler;
 import com.evolveum.polygon.scimrest.spi.DeleteOperation;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.OperationOptions;

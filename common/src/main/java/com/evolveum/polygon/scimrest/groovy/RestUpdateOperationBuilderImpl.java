@@ -12,8 +12,8 @@ import com.evolveum.polygon.scimrest.impl.scim.ScimUpdateHandler;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.UpdateOperation;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
@@ -230,7 +230,7 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
     private record DefaultSerializationTransformer(MappedObjectClass schema,
                                                    HashMap<String, AttributeSupport> supportedAttrs) implements Function<UpdateRequest, byte[]> {
 
-        public static final JsonNodeFactory FACTORY = new JsonNodeFactory(false);
+        public static final JsonNodeFactory FACTORY = new JsonNodeFactory();
 
         @Override
         public byte[] apply(UpdateRequest request) {

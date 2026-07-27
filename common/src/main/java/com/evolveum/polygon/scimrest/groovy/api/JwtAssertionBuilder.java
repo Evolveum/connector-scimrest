@@ -7,9 +7,9 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
@@ -68,7 +68,7 @@ public class JwtAssertionBuilder {
         try {
             Map<String, Object> parsed = MAPPER.readValue(json, new TypeReference<>() {});
             claims.putAll(parsed);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new ConnectorException("Failed to parse JWT payload JSON: " + e.getMessage(), e);
         }
         return this;
@@ -234,7 +234,7 @@ public class JwtAssertionBuilder {
     private String toJson(Map<String, Object> map) {
         try {
             return MAPPER.writeValueAsString(map);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new ConnectorException("Failed to serialize JWT: " + e.getMessage(), e);
         }
     }
