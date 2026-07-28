@@ -54,6 +54,7 @@ public class MappedAttributeBuilderImpl extends BaseAttributeBuilder<
     public ScimMapping scim() {
         if (scim == null) {
             scim = new ScimBuilder();
+            protocolMappings.put(ScimAttributeMapping.class, scim);
         }
         return scim;
     }
@@ -77,9 +78,9 @@ public class MappedAttributeBuilderImpl extends BaseAttributeBuilder<
     }
 
     /**
-     * SCIM-specific protocol mapping. Not stored via the inherited {@code protocolMappings} map
-     * (package-private on {@code AbstractAttributeBuilder}, unreachable from here) - mirrors
-     * connector-sql's own {@code .sql()} in keeping its own dedicated field instead.
+     * SCIM-specific protocol mapping, registered into the inherited {@code protocolMappings} map
+     * (mirrors connector-sql's own {@code .sql()}) so the attribute definition builder can derive
+     * the ConnId type from {@link ScimAttributeMapping#connIdType()} when none is explicitly declared.
      */
     class ScimBuilder implements AttributeProtocolMappingBuilder, ScimMapping {
         private AttributePath path;
@@ -172,6 +173,12 @@ public class MappedAttributeBuilderImpl extends BaseAttributeBuilder<
 
         @Override
         public Class<?> suggestedConnIdType() {
+            if (implementation != null) {
+                return implementation.connIdType();
+            }
+            if (type != null) {
+                return OpenApiValueMapping.from(type, null).connIdType();
+            }
             return null;
         }
     }

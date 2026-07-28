@@ -22,7 +22,7 @@ public class MappedAttribute extends BaseAttributeDefinition {
     public MappedAttribute(MappedAttributeBuilderImpl builder) {
         super(builder);
         this.nativeType = builder.nativeType;
-        this.scim = builder.scim != null ? (ScimAttributeMapping) builder.scim.build() : null;
+        this.scim = mapping(ScimAttributeMapping.class);
         builder.deffered.set(this);
         this.attributeResolver = builder.resolverBuilder != null ? builder.resolverBuilder.build() : null;
     }
@@ -32,12 +32,6 @@ public class MappedAttribute extends BaseAttributeDefinition {
         return nativeType;
     }
 
-    /**
-     * Not routed through {@link #mapping(Class)} - the backing {@code protocolMappings} map on
-     * {@code AbstractAttributeBuilder} is package-private in conndev.schema and unreachable from
-     * here, so (mirroring connector-sql's own {@code .sql()}) the SCIM mapping is carried as its
-     * own field instead.
-     */
     public ScimAttributeMapping scim() {
         return scim;
     }
