@@ -12,13 +12,13 @@ public interface SearchHandlerBuilder<R extends SearchHandlerBuilder<R>> {
      *
      * @param emptyFilterSupported true if the endpoint should be used for searches without filters.
      */
-    RestSearchEndpointBuilder emptyFilterSupported(boolean emptyFilterSupported);
+    R emptyFilterSupported(boolean emptyFilterSupported);
 
     FilterSpecification.Attribute attribute(String name);
 
-    RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec);
+    R supportedFilter(FilterSpecification filterSpec);
 
-    RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec, @DelegatesTo(value = FilterSupportImplementation.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+    R supportedFilter(FilterSpecification filterSpec, @DelegatesTo(value = FilterSupportImplementation.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     interface FilterSupportImplementation {
 

@@ -15,6 +15,7 @@ import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimOperationBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.unboundid.scim2.common.GenericScimResource;
+import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
@@ -147,6 +148,40 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
             this.objectClass = objectClass;
         }
 
+        /**
+         * Limitations of the SCIM search delegate every setting back onto the enclosing
+         * {@link Builder} - {@code scim { limitations { emptyFilterSupported true } } } and
+         * {@code scim { emptyFilterSupported true } } configure the same state.
+         */
+        private class LimitationsImpl implements Limitations {
+
+            @Override
+            public Limitations emptyFilterSupported(boolean emptyFilterSupported) {
+                Builder.this.emptyFilterSupported(emptyFilterSupported);
+                return this;
+            }
+
+            @Override
+            public FilterSpecification.Attribute attribute(String name) {
+                var connId = objectClass.attributeFromProtocolName(name).connId();
+                if (connId != null) {
+                    return FilterSpecification.attribute(connId.getName());
+                }
+                return FilterSpecification.attribute(name);
+            }
+
+            @Override
+            public Limitations supportedFilter(FilterSpecification filterSpec) {
+                Builder.this.supportedFilters(filterSpec);
+                return this;
+            }
+
+            @Override
+            public Limitations supportedFilter(FilterSpecification filterSpec, Closure<?> closure) {
+                throw new UnsupportedOperationException("Not implemented yet.");
+            }
+        }
+
         public boolean isEnabled() {
             return enabled;
         }
@@ -180,6 +215,9 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
         @Override
         public Limitations limitations() {
+            if (limitations == null) {
+                limitations = new LimitationsImpl();
+            }
             return limitations;
         }
 
