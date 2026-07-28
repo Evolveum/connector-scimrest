@@ -55,10 +55,17 @@ public class ScimContext implements RetrievableContext {
         // Real SCIM servers commonly send `null` (or omit) boolean AttributeDefinition fields such
         // as `caseExact`; the SDK models them as primitive `boolean`, and Jackson 3 (unlike Jackson 2)
         // defaults to rejecting null-into-primitive instead of coercing it to false.
+        //
+        // GenericScimObjectDeserializer also reads each ListResponse.Resources element via
+        // ObjectReader.readValue(JsonParser) on a shared, mid-stream parser; Jackson 3's default
+        // FAIL_ON_TRAILING_TOKENS then misfires whenever more content follows in that stream (e.g.
+        // a second resource in the array), rejecting perfectly valid multi-result responses.
         JsonUtils.setCustomMapperFactory(new MapperFactory() {
             @Override
             public JsonMapper.Builder createBuilder() {
-                return super.createBuilder().disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES);
+                return super.createBuilder()
+                        .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+                        .disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
             }
         });
     }
