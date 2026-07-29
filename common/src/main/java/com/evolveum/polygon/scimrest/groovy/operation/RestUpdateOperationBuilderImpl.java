@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.operation;
 
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.endpoint.DeclarativeResponseBuilder;
 import com.evolveum.polygon.scimrest.groovy.endpoint.DeclarativeRequestBuilder;
 import com.evolveum.polygon.scimrest.groovy.endpoint.AbstractSingleObjectEndpointBuilder;
@@ -17,7 +18,6 @@ import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.api.AttributeSupport;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
-import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateRequest;
 import com.evolveum.polygon.conndev.groovy.AbstractUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
@@ -184,7 +184,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                     supportedAttrs,
                     true,
                     request.queryParameters,
-                    request.headers
+                    request.headers,
+                    pathParameters
             );
         }
     }
@@ -207,9 +208,10 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                            Function<? super UpdateRequest, byte[]> requestBody,
                            RestObjectClassDefinition objectClass,
                            Map<String, AttributeSupport> supportedAttributes,
-                            boolean requiresOriginalState,
-                            Map<String, Object> queryParameters,
-                            Map<String, String> headers) implements UpdateOperationHandler {
+                           boolean requiresOriginalState,
+                           Map<String, Object> queryParameters,
+                           Map<String, String> headers,
+                           Map<String, AbstractSingleObjectEndpointBuilder.PathParameter> pathParameters) implements UpdateOperationHandler {
 
         @Override
         public UpdateOperationHandler.UpdateResponse update(
@@ -217,8 +219,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
             var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method);
-            // FIXME: Use proper path parameter computation
-            request.pathParameter("id", updateRequest.uid().getUidValue());
+            handlePathParameters(request, updateRequest);
             queryParameters.forEach(request::queryParameter);
             headers.forEach(request::header);
 
@@ -261,6 +262,54 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                         "Cannot update object with UID " + uid.getUidValue() + " at endpoint " + path
                                 + ": " + HttpExceptionMapper.causeMessage(e), e);
             }
+        }
+        private void handlePathParameters(HttpRequestSpecification request, UpdateRequest updateRequest) {
+
+            for (Map.Entry<String, AbstractSingleObjectEndpointBuilder.PathParameter> entry : pathParameters.entrySet()) {
+
+                var parameterName = entry.getKey();
+                if (isUidInPath(parameterName)) {
+
+                    request.pathParameter(parameterName, updateRequest.uid().getUidValue());
+                    continue;
+                }
+
+                var pathParameter = entry.getValue();
+                if (pathParameter != null) {
+                    var extractor = pathParameter.getExtractor();
+                    var identity = pathParameter.getIdentity();
+
+                    if (identity != null) {
+
+                        request.pathParameter(entry.getKey(), identity.apply(updateRequest.uid().getUidValue()));
+                        continue;
+                    } else if (extractor != null) {
+
+                        var oldObject = updateRequest.before();
+                        if (oldObject != null) {
+                            request.pathParameter(entry.getKey(), extractor.apply(oldObject));
+                            continue;
+                        } else {
+
+                            throw new ConnectorException("Cannot resolve path parameter '" + entry.getKey() +
+                                    "': connector object is required.");
+                        }
+                    }
+                }
+
+                throw new IllegalStateException("Path parameter definition is missing for '" + entry.getKey() + "'");
+            }
+        }
+
+        private boolean isUidInPath(String parameterName) {
+
+            var attribute = objectClass.attributeFromProtocolName(parameterName);
+
+            if (attribute == null) {
+                return false;
+            }
+
+            return attribute.connId().is(Uid.NAME);
         }
 
         @Override

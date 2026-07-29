@@ -38,6 +38,7 @@ public abstract class AbstractCrudConnectorTest extends WireMockTestSupport {
     protected static final String ACCOUNTS_PATH = "/accounts";
     protected static final String ACCOUNTS_PATTERN = "/accounts/.*";
     protected static final String ACCOUNT_BY_ID_PATH = "/accounts/123";
+    protected static final String ACCOUNT_BY_OLD_NAME_PATH = "/accounts/old-name";
 
     private static final Integer defaultPageSizeValue = 20;
     private static final Integer defaultPageOffset = 1;
