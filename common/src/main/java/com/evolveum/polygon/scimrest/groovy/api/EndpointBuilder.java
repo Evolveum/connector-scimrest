@@ -5,7 +5,6 @@ import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
-
 import java.util.function.Function;
 
 public interface EndpointBuilder extends GroovyHttpOperationMixin {
@@ -18,7 +17,7 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
             return connObj -> {
                 var attr = connObj.getAttributeByName(name);
                 if (attr == null) {
-                    return null;
+                    throw new IllegalArgumentException("Attribute '" + name + "' not found in connector object.");
                 }
                 if (attr.getValue().isEmpty()) {
                     return null;
@@ -29,6 +28,13 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
                 throw new IllegalArgumentException("Multiple values found for attribute " + name);
             };
         }
+
+        default void pathParameter(String pathParameterName, String attributeName) {
+
+            pathParameter(pathParameterName, attribute(attributeName));
+        }
+
+        void pathParameter(String name);
 
         void pathParameter(String name, Function<ConnectorObject, Object> extractor);
 
