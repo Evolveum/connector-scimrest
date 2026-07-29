@@ -1,5 +1,6 @@
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
@@ -8,12 +9,11 @@ import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
 import com.evolveum.polygon.scimrest.impl.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.CreateOperationStrategyHandler;
-import com.evolveum.polygon.scimrest.schema.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.CreateOperation;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.utils.VisitorMap;
 import groovy.lang.Closure;
@@ -189,7 +189,7 @@ public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilde
 
     private record DefaultSerializationTransformer(MappedObjectClass schema, HashMap<String, AttributeSupport> supportedAttrs) implements Function<Set<Attribute>, byte[]> {
 
-        public static final JsonNodeFactory FACTORY = new JsonNodeFactory(false);
+        public static final JsonNodeFactory FACTORY = new JsonNodeFactory();
 
         @Override
         public byte[] apply(Set<Attribute> attributes) {

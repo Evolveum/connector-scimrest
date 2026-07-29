@@ -6,6 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+
 import com.evolveum.polygon.scimrest.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
@@ -22,7 +24,10 @@ import java.util.Map;
 public class RestHandlerBuilder implements OperationBuilder {
 
     private final ConnectorContext context;
-    private final Map<String, BaseOperationSupportBuilder> handlers = new HashMap<>();
+    // Keyed by ObjectClass rather than raw String: ConnId's ObjectClass identity is
+    // case-insensitive (see ObjectClass.is()/equals()), so "User" and "user" must resolve to the
+    // same handler builder instead of silently producing two competing ones.
+    private final Map<ObjectClass, BaseOperationSupportBuilder> handlers = new HashMap<>();
 
     AuthorizationCustomizationBuilderImpl authorization = new AuthorizationCustomizationBuilderImpl();
     TestOperationBuilderImpl testOperation = new TestOperationBuilderImpl();
@@ -32,7 +37,8 @@ public class RestHandlerBuilder implements OperationBuilder {
     }
 
     public BaseOperationSupportBuilder objectClass(String user) {
-        return handlers.computeIfAbsent(user, k ->  new BaseOperationSupportBuilder(context,context.schema().objectClass(user)));
+        return handlers.computeIfAbsent(new ObjectClass(user),
+                k -> new BaseOperationSupportBuilder(context, context.schema().objectClass(user)));
     }
 
     public Map<ObjectClass, ObjectClassHandler> build() {

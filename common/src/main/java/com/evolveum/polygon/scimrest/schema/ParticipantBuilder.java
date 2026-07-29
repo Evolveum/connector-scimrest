@@ -6,10 +6,12 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolverBuilder;
+import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
+import com.evolveum.polygon.conndev.build.api.ReferenceAttributeBuilder;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeDelegator;
 import com.evolveum.polygon.scimrest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
@@ -20,6 +22,8 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
     private final RelationshipBuilderImpl parent;
 
     private AttributeBuilder attribute;
+    /** Unused by scimrest today (no .schema.groovy script calls owner(...)); tracked only to satisfy the interface. */
+    private boolean owner = false;
 
     public ParticipantBuilder(RelationshipBuilderImpl relationshipBuilder, MappedObjectClassBuilder targetClass) {
         this.parent = relationshipBuilder;
@@ -34,22 +38,34 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
     public AttributeBuilder attribute(String name) {
         if (attribute == null) {
             attribute = new AttributeBuilder(objectClass.attribute(name));
-            attribute.delegate.connIdBuilder.setType(ConnectorObjectReference.class);
+            attribute.delegate.connId().type(ConnectorObjectReference.class);
             attribute.delegate.subtype(parent.name);
         }
         return attribute;
     }
 
     @Override
-    public RestRelationshipBuilder.Reference attribute(String name, Closure<?> closure) {
+    public RestReferenceAttributeBuilder attribute(String name, Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, attribute(name));
+    }
+
+    @Override
+    public boolean owner() {
+        return owner;
+    }
+
+    @Override
+    public RestReferenceAttributeBuilder owner(boolean owner) {
+        this.owner = owner;
+        return attribute();
     }
 
     public String objectClass() {
         return objectClass.name();
     }
 
-    static class AttributeBuilder implements RestRelationshipBuilder.Reference, RestReferenceAttributeDelegator {
+    static class AttributeBuilder implements RestReferenceAttributeBuilder,
+            ReferenceAttributeBuilder.Delegator<RestReferenceAttributeBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, MappedAttribute> {
 
         private final MappedAttributeBuilderImpl delegate;
 
@@ -60,6 +76,36 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
         @Override
         public RestReferenceAttributeBuilder delegate() {
             return delegate;
+        }
+
+        @Override
+        public RestReferenceAttributeBuilder complexType(DefinitionValue<String> objectClass) {
+            return delegate.complexType(objectClass);
+        }
+
+        @Override
+        public RestReferenceAttributeBuilder emulated(DefinitionValue<Boolean> emulated) {
+            return delegate.emulated(emulated);
+        }
+
+        @Override
+        public RestReferenceAttributeBuilder protocolName(DefinitionValue<String> protocolName) {
+            return delegate.protocolName(protocolName);
+        }
+
+        @Override
+        public RestReferenceAttributeBuilder remoteName(DefinitionValue<String> remoteName) {
+            return delegate.remoteName(remoteName);
+        }
+
+        @Override
+        public ScimMapping scim() {
+            return delegate.scim();
+        }
+
+        @Override
+        public ScimMapping scim(Closure<?> closure) {
+            return delegate.scim(closure);
         }
 
         @Override

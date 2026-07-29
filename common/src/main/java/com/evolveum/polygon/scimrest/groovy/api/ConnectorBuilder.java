@@ -10,7 +10,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface ConnectorBuilder extends OperationBuilder, SchemaBuilder {
+public interface ConnectorBuilder extends OperationBuilder, RestSchemaBuilder {
 
 
     @Override
@@ -19,7 +19,7 @@ public interface ConnectorBuilder extends OperationBuilder, SchemaBuilder {
     @Override
     ObjectClassBuilder objectClass(String className, @DelegatesTo(value = ObjectClassBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
-    interface ObjectClassBuilder extends  ObjectClassSchemaBuilder, ObjectOperationSupportBuilder {
+    interface ObjectClassBuilder extends  RestObjectClassSchemaBuilder, ObjectOperationSupportBuilder {
 
     }
 }

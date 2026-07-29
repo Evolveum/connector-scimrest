@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl.rest;
 
-import com.evolveum.polygon.scimrest.RetrievableContext;
+import com.evolveum.polygon.conndev.concepts.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.Checks;
 import org.identityconnectors.common.logging.Log;

@@ -6,10 +6,10 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.Deferred;
+import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
+import com.evolveum.polygon.conndev.concepts.Deferred;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolutionContext;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;

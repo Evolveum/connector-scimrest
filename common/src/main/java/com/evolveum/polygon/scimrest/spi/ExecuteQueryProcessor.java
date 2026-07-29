@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.spi;
 
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;

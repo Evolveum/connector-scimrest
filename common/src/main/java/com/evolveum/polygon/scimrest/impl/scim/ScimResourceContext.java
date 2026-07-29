@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim;
 
-import com.evolveum.polygon.scimrest.api.AttributePath;
+import com.evolveum.polygon.conndev.api.AttributePath;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 

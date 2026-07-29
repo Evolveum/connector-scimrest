@@ -6,10 +6,12 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+
+import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolutionContext;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolverBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.ObjectClassScripting;
 import com.evolveum.polygon.scimrest.impl.rest.RestPagingAwareObjectRetriever;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;

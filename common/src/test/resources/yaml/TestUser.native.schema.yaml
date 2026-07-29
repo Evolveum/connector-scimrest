@@ -1,5 +1,4 @@
 objectClass: TestUser
-locator: /Users
 attributes:
   id:
     jsonType: string

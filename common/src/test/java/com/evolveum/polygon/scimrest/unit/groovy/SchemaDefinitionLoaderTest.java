@@ -9,10 +9,9 @@ package com.evolveum.polygon.scimrest.unit.groovy;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.GroovyContext;
 import com.evolveum.polygon.scimrest.groovy.SchemaDefinitionLoader;
-import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import org.testng.annotations.Test;
 
-import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
@@ -21,7 +20,7 @@ public class SchemaDefinitionLoaderTest {
 
     private SchemaDefinitionLoader loader() {
         return new SchemaDefinitionLoader(new GroovyContext(),
-                new RestSchemaBuilder(AbstractGroovyRestConnector.class, null));
+                new RestSchemaBuilderImpl(AbstractGroovyRestConnector.class, null));
     }
 
     /** A Groovy definition missing from the bundle falls back to the YAML document of the same name. */
@@ -44,7 +43,7 @@ public class SchemaDefinitionLoaderTest {
         assertNotNull(baseSchema);
         var objectClass = baseSchema.objectClass("TestUser");
         assertNotNull(objectClass);
-        assertEquals("/Users", objectClass.locator());
+        assertTrue(objectClass.attributeFromProtocolName("login").connId().isRequired());
 
         // the functional schema is untouched by YAML definitions
         assertTrue(loader.build().objectClasses().stream()

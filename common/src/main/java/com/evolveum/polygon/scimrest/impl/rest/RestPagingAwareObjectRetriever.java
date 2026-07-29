@@ -6,14 +6,14 @@
  */
 package com.evolveum.polygon.scimrest.impl.rest;
 
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
-import com.evolveum.polygon.scimrest.schema.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import com.evolveum.polygon.scimrest.groovy.RestSearchOperationHandler;
 import org.identityconnectors.framework.common.objects.OperationOptions;

@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl;
 
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;

@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.schema.RestSchema;
-import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import groovy.lang.GroovyShell;
 import org.codehaus.groovy.runtime.MethodClosure;
 
@@ -16,9 +16,9 @@ import java.io.InputStreamReader;
 public class GroovySchemaLoader {
 
     private GroovyShell shell;
-    RestSchemaBuilder schemaBuilder;
+    RestSchemaBuilderImpl schemaBuilder;
 
-    public GroovySchemaLoader(GroovyContext context, RestSchemaBuilder schemaBuilder) {
+    public GroovySchemaLoader(GroovyContext context, RestSchemaBuilderImpl schemaBuilder) {
         shell = context.createShell();
         this.schemaBuilder = schemaBuilder;
         shell.setVariable("objectClass", new MethodClosure(schemaBuilder, "objectClass"));

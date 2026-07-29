@@ -6,78 +6,180 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.scimrest.Deferred;
-import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
+import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
+import com.evolveum.polygon.conndev.build.api.ValueMappingBuilder;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
+import com.evolveum.polygon.conndev.concepts.Deferred;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
+import com.evolveum.polygon.conndev.schema.AttributeProtocolMappingBuilder;
+import com.evolveum.polygon.conndev.schema.BaseAttributeBuilder;
+import com.evolveum.polygon.conndev.schema.BaseValueMappingBuilder;
+import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
+import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.groovy.ScriptedSingleAttributeResolverBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolverBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
+import tools.jackson.databind.JsonNode;
 import groovy.lang.Closure;
-import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.Name;
-import org.identityconnectors.framework.common.objects.Uid;
+import groovy.lang.DelegatesTo;
 
-public class MappedAttributeBuilderImpl extends MappedBasicAttributeBuilderImpl implements RestReferenceAttributeBuilder {
+public class MappedAttributeBuilderImpl extends BaseAttributeBuilder<
+        MappedAttributeBuilderImpl,
+        RestAttributeBuilder<RestReferenceAttributeBuilder>,
+        RestReferenceAttributeBuilder,
+        MappedAttribute> implements RestReferenceAttributeBuilder {
+
+    private final MappedObjectClassBuilder mappedObjectClass;
+
+    String nativeType;
+    ScimBuilder scim;
 
     public Deferred.Settable<MappedAttribute> deffered = Deferred.settable();
-    private String referencedObjectClass;
-    private boolean isReference = false;
     ScriptedSingleAttributeResolverBuilder resolverBuilder;
 
-    public MappedAttributeBuilderImpl(MappedObjectClassBuilder restObjectClassBuilder, String name) {
-        super(restObjectClassBuilder, name);
+    public MappedAttributeBuilderImpl(MappedObjectClassBuilder parent, DefinitionValue<String> name) {
+        super(parent, name);
+        this.mappedObjectClass = parent;
     }
 
-    @Override
-    public MappedAttributeBuilderImpl objectClass(String objectClass) {
-        isReference = true;
-        this.referencedObjectClass = objectClass;
-        this.connIdBuilder.setReferencedObjectClassName(objectClass);
+    /** The native protocol type as declared by the remote system (e.g. SCIM {@code dateTime}). */
+    public MappedAttributeBuilderImpl nativeType(String nativeType) {
+        this.nativeType = nativeType;
         return this;
     }
 
     @Override
-    public MappedAttributeBuilderImpl subtype(String subtype) {
-        this.connIdBuilder.setSubtype(subtype);
-        return this;
+    public ScimMapping scim() {
+        if (scim == null) {
+            scim = new ScimBuilder();
+            protocolMappings.put(ScimAttributeMapping.class, scim);
+        }
+        return scim;
     }
 
     @Override
-    public MappedAttributeBuilderImpl role(String role) {
-        this.isReference = true;
-        this.connIdBuilder.setRoleInReference(role);
-        return this;
+    public ScimMapping scim(@DelegatesTo(value = ScimMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, scim());
     }
 
     @Override
-    public MappedAttributeBuilderImpl role(AttributeInfo.RoleInReference role) {
-        return role(role.toString());
+    public AttributeResolverBuilder resolver(Closure<?> closure) {
+        this.emulated(DefinitionValue.detected(true));
+        this.resolverBuilder = new ScriptedSingleAttributeResolverBuilder(mappedObjectClass.name(), deffered);
+        GroovyClosures.callAndReturnDelegate(closure, resolverBuilder);
+        return resolverBuilder;
     }
 
-
-    public boolean isReference() {
-        return isReference;
-    }
-
-    /**
-     * Builds and returns a {@code RestAttribute} instance with the specified attributes.
-     *
-     * @return a new {@code RestAttribute} instance configured with the current settings
-     */
+    @Override
     public MappedAttribute build() {
-        // FIXME: Could this be part of ConnID schema contributor?
-        if (Uid.NAME.equals(connIdName)) {
-            connId().type(String.class);
-        }
-        if (Name.NAME.equals(connIdName)) {
-            connId().type(String.class);
-        }
         return new MappedAttribute(this);
     }
 
-    public AttributeResolverBuilder resolver(Closure<?> closure) {
-        this.emulated = true;
-        this.resolverBuilder = new ScriptedSingleAttributeResolverBuilder(objectClass.name(), deffered);
-        GroovyClosures.callAndReturnDelegate(closure, resolverBuilder);
-        return resolverBuilder;
+    /**
+     * SCIM-specific protocol mapping, registered into the inherited {@code protocolMappings} map
+     * (mirrors connector-sql's own {@code .sql()}) so the attribute definition builder can derive
+     * the ConnId type from {@link ScimAttributeMapping#connIdType()} when none is explicitly declared.
+     */
+    class ScimBuilder implements AttributeProtocolMappingBuilder, ScimMapping {
+        private AttributePath path;
+        private String type;
+        private ValueMapping implementation;
+
+        @Override
+        public String name() {
+            if (path != null && path.onlyAttribute() != null) {
+                return path.onlyAttribute().name();
+            }
+
+            return null;
+        }
+
+        @Override
+        public ScimMapping name(String name) {
+            this.path = AttributePath.of(name);
+            return this;
+        }
+
+        @Override
+        public ScimMapping type(String name) {
+            this.type = name;
+            return this;
+        }
+
+
+        @Override
+        public AttributePath path() {
+            return path;
+        }
+
+        @Override
+        public ScimMapping path(String path) {
+            // FIXME: Implement parsing of SCIM paths to AttributePath
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public ScimMapping path(AttributePath path) {
+            this.path = path;
+            return this;
+        }
+
+        @Override
+        public AttributePath extension(String uriOrAlias) {
+            var extensionUri = mappedObjectClass.scim().extensionUriFromAlias(uriOrAlias);
+            return AttributePath.of(new AttributePath.Extension(extensionUri));
+        }
+
+
+        @Override
+        public MappingTableBuilder mappingTable() {
+            // FIXME: Implement later
+            return null;
+        }
+
+        @Override
+        public MappingTableBuilder mappingTable(Closure<?> closure) {
+            // FIXME: Implement later
+            return null;
+        }
+
+        @Override
+        public ScimBuilder implementation(ValueMapping<?,JsonNode> mapping) {
+            this.implementation = mapping;
+            return this;
+        }
+
+        @Override
+        public ScimMapping implementation(@DelegatesTo(ValueMappingBuilder.class) Closure<?> closure) {
+            Class<?> typeClass = connId().type().value() != null ? connId().type().value() : Object.class;
+            var builder = new BaseValueMappingBuilder<>(typeClass, JsonNode.class);
+            GroovyClosures.callAndReturnDelegate(closure, builder);
+            this.implementation = builder.build();
+            return this;
+        }
+
+        @Override
+        public AttributeProtocolMapping<?,?> build() {
+            if (type != null && implementation == null) {
+                implementation =  OpenApiValueMapping.from(type, null);
+            }
+            if (implementation != null) {
+                return new ScimAttributeMapping(path, implementation);
+            }
+            return null;
+        }
+
+        @Override
+        public Class<?> suggestedConnIdType() {
+            if (implementation != null) {
+                return implementation.connIdType();
+            }
+            if (type != null) {
+                return OpenApiValueMapping.from(type, null).connIdType();
+            }
+            return null;
+        }
     }
 }

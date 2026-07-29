@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest;
 
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.spi.CreateOperation;
 import com.evolveum.polygon.scimrest.spi.DeleteOperation;
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;

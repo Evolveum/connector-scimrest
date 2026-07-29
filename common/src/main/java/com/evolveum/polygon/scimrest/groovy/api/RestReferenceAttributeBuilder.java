@@ -6,18 +6,15 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
-import org.identityconnectors.framework.common.objects.AttributeInfo;
+import com.evolveum.polygon.conndev.build.api.RelationshipBuilder;
+import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 
-public interface RestReferenceAttributeBuilder extends RestAttributeBuilder {
-
-    AttributeInfo.RoleInReference SUBJECT = AttributeInfo.RoleInReference.SUBJECT;
-    AttributeInfo.RoleInReference OBJECT = AttributeInfo.RoleInReference.OBJECT;
-
-    RestReferenceAttributeBuilder objectClass(String objectClass);
-
-    RestReferenceAttributeBuilder subtype(String subtype);
-
-    RestReferenceAttributeBuilder role(String role);
-
-    RestReferenceAttributeBuilder role(AttributeInfo.RoleInReference role);
+/**
+ * Extends {@code RelationshipBuilder.Reference} (not just plain {@code ReferenceAttributeBuilder}) so
+ * every reference attribute already satisfies conndev's relationship-participant contract
+ * ({@code resolver(Closure)}) — {@code MappedAttributeBuilderImpl} already implements it
+ * unconditionally, so this adds no new burden.
+ */
+public interface RestReferenceAttributeBuilder extends RestAttributeBuilder<RestReferenceAttributeBuilder>,
+        RelationshipBuilder.Reference<RestReferenceAttributeBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, MappedAttribute> {
 }

@@ -6,10 +6,10 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim;
 
-import com.evolveum.polygon.scimrest.ContextLookup;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.schema.MappedAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClassBuilder;
-import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
@@ -17,6 +17,8 @@ import org.identityconnectors.framework.common.objects.*;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.evolveum.polygon.conndev.concepts.DefinitionValue.detected;
 
 public class ScimSchemaTranslator {
 
@@ -39,7 +41,7 @@ public class ScimSchemaTranslator {
         this.contextLookup = contextLookup;
     }
 
-    public void correlateObjectClasses(ScimResourceContext scim, RestSchemaBuilder schema) {
+    public void correlateObjectClasses(ScimResourceContext scim, RestSchemaBuilderImpl schema) {
 
         // First we try to match object class by SCIM URN
         var objectClass = findOrCreateObjectClass(scim.resource(), schema);
@@ -52,16 +54,12 @@ public class ScimSchemaTranslator {
         }
         // We map the object class to this SCIM resource
         objectClass.scim().name(scim.resource().getName());
-
-        // Native-side metadata carried by the schema model (single source for the dev-mode export):
-        // where the resource lives and which schema URN it belongs to.
-        objectClass.locator(scim.relativeEndpoint());
         if (scim.schemaUri() != null) {
-            objectClass.namespace(scim.schemaUri().toString());
+            objectClass.scim().schemaUri(scim.schemaUri().toString());
         }
     }
 
-    public void populateSchema(ScimResourceContext scim, RestSchemaBuilder schema) {
+    public void populateSchema(ScimResourceContext scim, RestSchemaBuilderImpl schema) {
         var objectClassName = resourceToObjectClass.get(scim.resource().getName());
         var objectClass = schema.objectClass(objectClassName);
         populateBuiltInSchema(objectClass, objectClass.scim().isOnlyExplicitlyListed());
@@ -94,22 +92,22 @@ public class ScimSchemaTranslator {
     private void populateAttribute(MappedAttributeBuilderImpl attribute, AttributeDefinition scimAttr) {
         attribute.scim().type(jsonType(scimAttr.getType()));
         attribute.nativeType(scimAttr.getType().getName());
-        attribute.description(scimAttr.getDescription());
-        attribute.required(scimAttr.isRequired());
-        attribute.multiValued(scimAttr.isMultiValued());
-        attribute.returnedByDefault(AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned()));
+        attribute.connId().description(detected(scimAttr.getDescription()));
+        attribute.connId().required(detected(scimAttr.isRequired()));
+        attribute.connId().multiValued(detected(scimAttr.isMultiValued()));
+        attribute.connId().returnedByDefault(detected(AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned())));
         switch (scimAttr.getMutability()) {
             case IMMUTABLE -> {
-                attribute.readable(true).creatable(true).updateable(false);
+                attribute.connId().readable(detected(true)).creatable(detected(true)).updatable(detected(false));
             }
             case READ_ONLY -> {
-                attribute.readable(true).creatable(false).updateable(false);
+                attribute.connId().readable(detected(true)).creatable(detected(false)).updatable(detected(false));
             }
             case READ_WRITE -> {
-                attribute.readable(true).creatable(true).updateable(true);
+                attribute.connId().readable(detected(true)).creatable(detected(true)).updatable(detected(true));
             }
             case WRITE_ONLY -> {
-                attribute.readable(false).creatable(true).updateable(true);
+                attribute.connId().readable(detected(false)).creatable(detected(true)).updatable(detected(true));
             }
         }
     }
@@ -212,7 +210,7 @@ public class ScimSchemaTranslator {
 
     }
 
-    private MappedObjectClassBuilder findOrCreateObjectClass(ResourceTypeResource scim, RestSchemaBuilder schema) {
+    private MappedObjectClassBuilder findOrCreateObjectClass(ResourceTypeResource scim, RestSchemaBuilderImpl schema) {
         for (var objClass : schema.allObjectClasses()) {
             if (objClass.embedded()) {
 

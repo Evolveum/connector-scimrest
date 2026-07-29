@@ -6,20 +6,20 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 
 public class RelationshipBuilderImpl implements RestRelationshipBuilder, GroovyClosures.ClosureExecutionAware {
 
-    private final RestSchemaBuilder schemaBuilder;
+    private final RestSchemaBuilderImpl schemaBuilder;
 
     final String name;
     ParticipantBuilder subject;
     ParticipantBuilder object;
 
-    public RelationshipBuilderImpl(String name, RestSchemaBuilder schemaBuilder) {
+    public RelationshipBuilderImpl(String name, RestSchemaBuilderImpl schemaBuilder) {
         this.name = name;
         this.schemaBuilder = schemaBuilder;
     }

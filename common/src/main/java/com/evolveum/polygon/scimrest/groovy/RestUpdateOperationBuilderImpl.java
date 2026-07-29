@@ -1,5 +1,8 @@
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.*;
@@ -7,12 +10,11 @@ import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import com.evolveum.polygon.scimrest.impl.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.UpdateOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimUpdateHandler;
-import com.evolveum.polygon.scimrest.schema.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.UpdateOperation;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
@@ -279,7 +281,7 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
     private record DefaultSerializationTransformer(MappedObjectClass schema,
                                                    HashMap<String, AttributeSupport> supportedAttrs) implements Function<UpdateRequest, byte[]> {
 
-        public static final JsonNodeFactory FACTORY = new JsonNodeFactory(false);
+        public static final JsonNodeFactory FACTORY = new JsonNodeFactory();
 
         @Override
         public byte[] apply(UpdateRequest request) {

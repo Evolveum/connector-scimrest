@@ -1,5 +1,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import groovy.lang.Closure;

@@ -1,5 +1,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;

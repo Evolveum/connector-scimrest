@@ -1,6 +1,6 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
-import com.evolveum.polygon.scimrest.groovy.GroovyClosures;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.RestCreateOperationBuilderImpl;
 import com.evolveum.polygon.scimrest.groovy.Script;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;

@@ -6,10 +6,11 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim.dev;
 
-import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
-import com.evolveum.polygon.scimrest.JsonSchemaValueMapping;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.evolveum.polygon.conndev.json.JsonSchemaValueMapping;
+import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -30,14 +31,15 @@ public class ScimDevelopmentMode {
     public static final String RESOURCE_OC_NAME = "conndev_ScimResource";
     public static final String SERVICE_PROVIDER_CONFIG_OC_NAME = "conndev_ScimServiceProviderConfig";
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-            .enable(SerializationFeature.INDENT_OUTPUT);
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .build();
 
     /**
      * Contributes dev schema object classes to the schema builder.
      * Only called when developmentMode is enabled.
      */
-    public void contributeSchemaObjects(RestSchemaBuilder schemaBuilder) {
+    public void contributeSchemaObjects(RestSchemaBuilderImpl schemaBuilder) {
         contributeSchemaObjectClass(schemaBuilder);
         contributeResourceObjectClass(schemaBuilder);
         contributeServiceProviderConfigObjectClass(schemaBuilder);
@@ -49,7 +51,7 @@ public class ScimDevelopmentMode {
      * - name (Name): SCIM schema name
      * - schemaContent: Full SchemaResource JSON
      */
-    private void contributeSchemaObjectClass(RestSchemaBuilder schemaBuilder) {
+    private void contributeSchemaObjectClass(RestSchemaBuilderImpl schemaBuilder) {
         var oc = schemaBuilder.objectClass(SCHEMA_OC_NAME);
 
         oc.attribute("id")
@@ -80,7 +82,7 @@ public class ScimDevelopmentMode {
      * - primarySchema: Primary SchemaResource JSON
      * - schemaExtensions: Array of extension SchemaResource JSON
      */
-    private void contributeResourceObjectClass(RestSchemaBuilder schemaBuilder) {
+    private void contributeResourceObjectClass(RestSchemaBuilderImpl schemaBuilder) {
         var oc = schemaBuilder.objectClass(RESOURCE_OC_NAME);
 
         oc.attribute("id")
@@ -123,7 +125,7 @@ public class ScimDevelopmentMode {
      * - name (Name): fixed "ServiceProviderConfig"
      * - content: Full ServiceProviderConfigResource JSON
      */
-    private void contributeServiceProviderConfigObjectClass(RestSchemaBuilder schemaBuilder) {
+    private void contributeServiceProviderConfigObjectClass(RestSchemaBuilderImpl schemaBuilder) {
         var oc = schemaBuilder.objectClass(SERVICE_PROVIDER_CONFIG_OC_NAME);
 
         oc.attribute("id")

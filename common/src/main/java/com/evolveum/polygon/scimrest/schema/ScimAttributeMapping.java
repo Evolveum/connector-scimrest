@@ -6,10 +6,11 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.scimrest.ValueMapping;
-import com.evolveum.polygon.scimrest.api.AttributePath;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
+import com.evolveum.polygon.conndev.spi.ValueMapping;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 public class ScimAttributeMapping extends JsonAttributeMapping {
 
@@ -23,6 +24,10 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
             return path.resolve(object);
         }
         return null;
+    }
+
+    public AttributePath path() {
+        return path;
     }
 
 }

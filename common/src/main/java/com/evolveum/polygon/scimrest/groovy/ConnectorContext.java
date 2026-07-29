@@ -6,6 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.concepts.RetrievableContext;
 import com.evolveum.polygon.conndev.schema.BaseSchema;
 import com.evolveum.polygon.scimrest.*;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;

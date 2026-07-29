@@ -6,11 +6,11 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim;
 
-import com.evolveum.polygon.scimrest.api.AttributePath;
+import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.impl.UpdateOperationHandler;
-import com.evolveum.polygon.scimrest.schema.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.unboundid.scim2.common.GenericScimResource;

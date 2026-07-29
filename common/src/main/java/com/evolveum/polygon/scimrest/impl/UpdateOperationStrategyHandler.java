@@ -1,7 +1,7 @@
 package com.evolveum.polygon.scimrest.impl;
 
+import com.evolveum.polygon.conndev.build.api.FilterBuilder;
 import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
-import com.evolveum.polygon.scimrest.groovy.api.FilterBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.spi.CreateOperation;
 import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;

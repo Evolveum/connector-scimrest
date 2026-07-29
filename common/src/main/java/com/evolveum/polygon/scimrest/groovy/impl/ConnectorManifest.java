@@ -1,10 +1,11 @@
 package com.evolveum.polygon.scimrest.groovy.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +17,7 @@ import java.util.List;
 public class ConnectorManifest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
+    private static final ObjectMapper YAML = new YAMLMapper();
 
     private final JsonNode json;
 
@@ -27,7 +28,7 @@ public class ConnectorManifest {
             } else {
                 json = JSON.readTree(resource);
             }
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new ConfigurationException("Failed to read connector manifest", e);
         } finally {
             //resource.close();

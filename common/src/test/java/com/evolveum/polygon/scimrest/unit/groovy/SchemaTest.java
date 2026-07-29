@@ -10,7 +10,7 @@ import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.groovy.GroovyContext;
 
-import com.evolveum.polygon.scimrest.schema.RestSchemaBuilder;
+import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import org.testng.annotations.Test;
 
 import static org.testng.AssertJUnit.assertNotNull;
@@ -19,7 +19,7 @@ public class SchemaTest {
     @Test
     public void testSchemaLoading() {
         var context = new GroovyContext();
-        var schema = new RestSchemaBuilder(AbstractGroovyRestConnector.class, null);
+        var schema = new RestSchemaBuilderImpl(AbstractGroovyRestConnector.class, null);
         var loader = new GroovySchemaLoader(context, schema);
         loader.load("""
                objectClass("user") {

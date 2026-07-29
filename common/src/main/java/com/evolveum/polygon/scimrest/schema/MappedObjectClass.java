@@ -6,82 +6,53 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.conndev.dev.ConnDevObjectClassSource;
-import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
-import org.identityconnectors.framework.common.objects.ObjectClass;
+import com.evolveum.polygon.conndev.dev.ConnDevObjectClass;
+import com.evolveum.polygon.conndev.schema.BaseObjectClassDefinition;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-public class MappedObjectClass implements ConnDevObjectClassSource {
+public class MappedObjectClass extends BaseObjectClassDefinition<MappedAttribute> {
 
-    private final Map<String, MappedAttribute> nativeAttributes;
-    private final Map<String, MappedAttribute> connIdAttributes;
-    ObjectClass clazz;
-    ObjectClassInfo connId;
-
-    // Native-side object-class metadata: the SCIM resource endpoint and schema URN.
-    private String locator;
-    private String namespace;
-
-    Map<String, MappedAttribute> attributes = new HashMap<>();
+    private final ObjectClassScimMapping scim;
 
     public MappedObjectClass(ObjectClassInfo connId, Map<String, MappedAttribute> nativeAttrs, Map<String, MappedAttribute> connIdAttrs) {
-        this.connId = connId;
-        this.clazz = new ObjectClass(connId.getType());
-        this.nativeAttributes = nativeAttrs;
-        this.connIdAttributes = connIdAttrs;
+        this(connId, nativeAttrs, connIdAttrs, null);
     }
 
-    public ConnectorObjectBuilder newObjectBuilder() {
-        ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
-        builder.setObjectClass(clazz);
-        return builder;
+    public MappedObjectClass(ObjectClassInfo connId, Map<String, MappedAttribute> nativeAttrs, Map<String, MappedAttribute> connIdAttrs,
+            ObjectClassScimMapping scim) {
+        super(connId, nativeAttrs, connIdAttrs);
+        this.scim = scim;
     }
 
     @Override
-    public Collection<MappedAttribute> attributes() {
-        return nativeAttributes.values();
-    }
-
-    @Override
-    public ObjectClassInfo connId() {
-        return connId;
-    }
-
-    @Override
-    public String locator() {
-        return locator;
-    }
-
-    void locator(String locator) {
-        this.locator = locator;
-    }
-
-    @Override
-    public String namespace() {
-        return namespace;
-    }
-
-    void namespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    public ObjectClass objectClass() {
-        return clazz;
-    }
-
     public MappedAttribute attributeFromProtocolName(String protocolName) {
-        return nativeAttributes.get(protocolName);
+        return (MappedAttribute) super.attributeFromProtocolName(protocolName);
     }
 
-    public String name() {
-        return objectClass().getObjectClassValue();
+    @Override
+    public void contribute(ConnDevObjectClass target) {
+        if (scim != null) {
+            target.protocolSpecific("scim", scim.exportAttributes());
+        }
     }
 
-    public MappedAttribute attributeFromConnIdName(String name) {
-        return connIdAttributes.get(name);
+    public record ObjectClassScimMapping(String name, String schemaUri) {
+
+        List<Attribute> exportAttributes() {
+            var attributes = new ArrayList<Attribute>();
+            if (name != null) {
+                attributes.add(AttributeBuilder.build("name", name));
+            }
+            if (schemaUri != null) {
+                attributes.add(AttributeBuilder.build("schemaUri", schemaUri));
+            }
+            return attributes;
+        }
     }
 }

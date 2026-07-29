@@ -7,8 +7,8 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
