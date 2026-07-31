@@ -10,20 +10,23 @@ import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 
 import org.testng.annotations.Test;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSession;
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.URI;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.channels.ClosedChannelException;
+import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -194,12 +197,12 @@ public class RestContextStaleConnectionTest {
         }
 
         @Override
-        public Optional<java.net.CookieHandler> cookieHandler() {
+        public Optional<CookieHandler> cookieHandler() {
             return Optional.empty();
         }
 
         @Override
-        public Optional<java.time.Duration> connectTimeout() {
+        public Optional<Duration> connectTimeout() {
             return Optional.empty();
         }
 
@@ -209,22 +212,22 @@ public class RestContextStaleConnectionTest {
         }
 
         @Override
-        public Optional<java.net.ProxySelector> proxy() {
+        public Optional<ProxySelector> proxy() {
             return Optional.empty();
         }
 
         @Override
-        public javax.net.ssl.SSLContext sslContext() {
+        public SSLContext sslContext() {
             return null;
         }
 
         @Override
-        public javax.net.ssl.SSLParameters sslParameters() {
+        public SSLParameters sslParameters() {
             return null;
         }
 
         @Override
-        public Optional<java.net.Authenticator> authenticator() {
+        public Optional<Authenticator> authenticator() {
             return Optional.empty();
         }
 
@@ -234,7 +237,7 @@ public class RestContextStaleConnectionTest {
         }
 
         @Override
-        public Optional<java.util.concurrent.Executor> executor() {
+        public Optional<Executor> executor() {
             return Optional.empty();
         }
     }

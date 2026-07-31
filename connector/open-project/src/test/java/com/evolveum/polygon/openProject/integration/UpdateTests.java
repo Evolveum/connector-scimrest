@@ -1,7 +1,15 @@
+/*
+ * Copyright (c) 2026 Evolveum and contributors
+ * 
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ * 
+ */
 package com.evolveum.polygon.openProject.integration;
 
-import com.beust.ah.A;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.AttributeDelta;
+import org.identityconnectors.framework.common.objects.AttributeDeltaBuilder;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.annotations.Test;
 
 import java.util.HashSet;

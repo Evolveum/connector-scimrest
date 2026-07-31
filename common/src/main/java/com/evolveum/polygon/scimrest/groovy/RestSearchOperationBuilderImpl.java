@@ -9,7 +9,9 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 
 import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.*;
+import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
+import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.SearchScriptBuilder;
 import com.evolveum.polygon.scimrest.impl.AttributeResolvingSearchHandler;
 import com.evolveum.polygon.scimrest.impl.FilterBasedSearchDispatcher;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
@@ -19,7 +21,10 @@ import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuilder<ExecuteQueryProcessor>, RestSearchOperationBuilder, RestObjectOperationBuilder<ExecuteQueryProcessor> {
 

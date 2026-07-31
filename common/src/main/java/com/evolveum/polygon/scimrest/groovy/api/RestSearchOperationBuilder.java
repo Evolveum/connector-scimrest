@@ -10,7 +10,6 @@ import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
 import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.Script;
-import com.evolveum.polygon.scimrest.groovy.api.scim.ScimOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimSearchBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;

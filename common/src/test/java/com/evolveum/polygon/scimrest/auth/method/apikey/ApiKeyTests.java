@@ -10,6 +10,7 @@ import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -97,7 +98,7 @@ public class ApiKeyTests extends WireMockTestSupport {
             connector.test();
             fail("Expected InvalidCredentialException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.InvalidCredentialException,
+            assertTrue(e instanceof InvalidCredentialException,
                     "Expected InvalidCredentialException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("403"),
                     "Error message should contain status code 403");

@@ -8,12 +8,15 @@ package com.evolveum.polygon.scimrest.exception;
 
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
-import com.evolveum.polygon.scimrest.groovy.*;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 /**
  * Tests for HTTP 5xx status code error handling
@@ -42,7 +45,7 @@ public class HttpStatus5xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectorException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException,
+            assertTrue(e instanceof ConnectorException,
                 "Expected ConnectorException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("500"),
                 "Error message should contain status code 500");
@@ -66,7 +69,7 @@ public class HttpStatus5xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectionFailedException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("502"),
                 "Error message should contain status code 502");
@@ -90,7 +93,7 @@ public class HttpStatus5xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectionFailedException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("503"),
                 "Error message should contain status code 503");
@@ -114,7 +117,7 @@ public class HttpStatus5xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectionFailedException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("504"),
                 "Error message should contain status code 504");
@@ -141,10 +144,10 @@ public class HttpStatus5xxTests extends WireMockTestSupport {
                 fail("Expected exception for status code " + statusCode);
             } catch (Exception e) {
                 if (statusCode == 500) {
-                    assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException,
+                    assertTrue(e instanceof ConnectorException,
                         "500 should be ConnectorException but got: " + e.getClass().getName());
                 } else {
-                    assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+                    assertTrue(e instanceof ConnectionFailedException,
                         statusCode + " should be ConnectionFailedException but got: " + e.getClass().getName());
                 }
             }
@@ -170,7 +173,7 @@ public class HttpStatus5xxTests extends WireMockTestSupport {
         } catch (Exception e) {
             // The current implementation doesn't include headers in error messages
             // This test documents current behavior
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException);
+            assertTrue(e instanceof ConnectionFailedException);
         }
     }
 

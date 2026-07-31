@@ -1,10 +1,19 @@
+/*
+ * Copyright (c) 2026 Evolveum and contributors
+ * 
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ * 
+ */
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
-import com.evolveum.polygon.scimrest.groovy.api.*;
+import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
+import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
+import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import com.evolveum.polygon.scimrest.impl.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.UpdateOperationStrategyHandler;
@@ -252,7 +261,7 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
                 var updated = delta.applyTo(attr);
                 definition.json().toJsonNode(updated, obj);
             }
-            return obj.toPrettyString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            return obj.toPrettyString().getBytes(StandardCharsets.UTF_8);
         }
     }
 

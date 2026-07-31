@@ -6,14 +6,15 @@
  */
 package com.evolveum.polygon.scimrest.exception;
 
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
-import com.evolveum.polygon.scimrest.groovy.*;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class RestExceptionSimulationTest extends WireMockTestSupport {
 
@@ -90,7 +91,7 @@ public class RestExceptionSimulationTest extends WireMockTestSupport {
     }
 
     // Test configuration
-    private static class TestConfiguration extends com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration {
+    private static class TestConfiguration extends BaseRestGroovyConnectorConfiguration {
         private final int port;
         private String testEndpoint = "/test";
 

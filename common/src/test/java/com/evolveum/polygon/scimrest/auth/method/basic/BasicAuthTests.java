@@ -10,6 +10,8 @@ import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -50,7 +52,7 @@ public class BasicAuthTests extends WireMockTestSupport {
             connector.test();
             fail("Expected InvalidCredentialException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.InvalidCredentialException,
+            assertTrue(e instanceof InvalidCredentialException,
                     "Expected InvalidCredentialException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("401"),
                     "Error message should contain status code 401");
@@ -75,8 +77,8 @@ public class BasicAuthTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException ||
-                    e instanceof org.identityconnectors.framework.common.exceptions.InvalidCredentialException);
+            assertTrue(e instanceof ConnectionFailedException ||
+                    e instanceof InvalidCredentialException);
         }
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
     }
@@ -96,8 +98,8 @@ public class BasicAuthTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException ||
-                    e instanceof org.identityconnectors.framework.common.exceptions.InvalidCredentialException);
+            assertTrue(e instanceof ConnectionFailedException ||
+                    e instanceof InvalidCredentialException);
         }
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
     }
@@ -119,7 +121,7 @@ public class BasicAuthTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.InvalidCredentialException);
+            assertTrue(e instanceof InvalidCredentialException);
             assertFalse(e.getMessage().contains("secret-password"),
                     "Error message should not contain password");
             assertFalse(e.getMessage().contains("testuser"),

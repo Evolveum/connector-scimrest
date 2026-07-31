@@ -35,7 +35,6 @@ import java.time.temporal.ChronoUnit;
 
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
-import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AuthPreferenceManager;
 import com.evolveum.polygon.scimrest.groovy.DispatchingAuthorizationCustomizer;
 
@@ -208,8 +207,8 @@ public class RestContext implements RetrievableContext {
         }
 
         @Override
-        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-            return new java.security.cert.X509Certificate[0];
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
         }
 
         @Override
@@ -218,7 +217,7 @@ public class RestContext implements RetrievableContext {
         }
 
         @Override
-        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
             // empty method
         }
 

@@ -8,12 +8,14 @@ package com.evolveum.polygon.scimrest.exception;
 
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
-import com.evolveum.polygon.scimrest.groovy.*;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 /**
  * Tests for JSON parsing and response handling errors
@@ -45,7 +47,7 @@ public class ResponseParsingErrorTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectionFailedException was not thrown for 500 error");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("500"),
                 "Error message should contain status code 500");
@@ -71,7 +73,7 @@ public class ResponseParsingErrorTests extends WireMockTestSupport {
             fail("Expected exception was not thrown");
         } catch (Exception e) {
             // Empty response with 500 should cause ConnectionFailedException
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
         }
     }
@@ -187,7 +189,7 @@ public class ResponseParsingErrorTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException);
+            assertTrue(e instanceof ConnectionFailedException);
         }
     }
 
@@ -210,7 +212,7 @@ public class ResponseParsingErrorTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException);
+            assertTrue(e instanceof ConnectionFailedException);
         }
     }
 

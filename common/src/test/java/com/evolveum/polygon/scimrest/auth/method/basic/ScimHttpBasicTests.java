@@ -19,7 +19,7 @@ import org.testng.annotations.Test;
 import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class ScimHttpBasicTests extends WireMockTestSupport {
 

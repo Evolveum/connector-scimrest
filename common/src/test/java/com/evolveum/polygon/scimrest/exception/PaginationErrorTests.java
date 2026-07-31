@@ -8,7 +8,10 @@ package com.evolveum.polygon.scimrest.exception;
 
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
-import com.evolveum.polygon.scimrest.groovy.*;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -42,8 +45,8 @@ public class PaginationErrorTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException ||
-                    e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException);
+            assertTrue(e instanceof ConnectionFailedException ||
+                    e instanceof ConnectorException);
             assertTrue(e.getMessage().contains("500"),
                 "Error should mention status code 500");
         }
@@ -66,8 +69,8 @@ public class PaginationErrorTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException ||
-                    e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException);
+            assertTrue(e instanceof ConnectionFailedException ||
+                    e instanceof ConnectorException);
             assertTrue(e.getMessage().contains("503"),
                 "Error should mention status code 503");
         }
@@ -136,7 +139,7 @@ public class PaginationErrorTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.InvalidCredentialException,
+            assertTrue(e instanceof InvalidCredentialException,
                 "Expected InvalidCredentialException for 401");
             assertTrue(e.getMessage().contains("401"),
                 "Error should mention status code 401");
@@ -160,7 +163,7 @@ public class PaginationErrorTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.InvalidCredentialException,
+            assertTrue(e instanceof InvalidCredentialException,
                 "Expected InvalidCredentialException for 403");
             assertTrue(e.getMessage().contains("403"),
                 "Error should mention status code 403");
@@ -206,8 +209,8 @@ public class PaginationErrorTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException ||
-                    e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException);
+            assertTrue(e instanceof ConnectionFailedException ||
+                    e instanceof ConnectorException);
             assertNotNull(e.getStackTrace(),
                 "Exception should have stack trace for debugging");
         }

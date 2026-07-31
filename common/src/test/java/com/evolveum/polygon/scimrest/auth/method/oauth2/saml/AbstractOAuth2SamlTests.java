@@ -15,9 +15,7 @@ import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 
 import java.nio.charset.StandardCharsets;
-import java.security.KeyFactory;
 import java.security.PrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;

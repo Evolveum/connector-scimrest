@@ -7,11 +7,15 @@
 package com.evolveum.polygon.scimrest.auth.method.oauth2.clientcredentials;
 
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.*;
@@ -98,7 +102,7 @@ public class OAuth2ClientCredentialsTests extends AbstractOAuth2ClientCredential
             createConnector("bad-client", new GuardedString("bad-secret".toCharArray())).test();
             fail("Expected ConnectorIOException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorIOException,
+            assertTrue(e instanceof ConnectorIOException,
                     "Expected ConnectorIOException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("401"),
                     "Error message should contain HTTP status code");
@@ -129,7 +133,7 @@ public class OAuth2ClientCredentialsTests extends AbstractOAuth2ClientCredential
         try {
             createConnector("client-id", new GuardedString("secret".toCharArray())).test();
             fail("Expected ConnectorIOException for unsupported token_type");
-        } catch (org.identityconnectors.framework.common.exceptions.ConnectorIOException e) {
+        } catch (ConnectorIOException e) {
             assertTrue(e.getMessage().contains("mac"));
         }
     }
@@ -143,8 +147,8 @@ public class OAuth2ClientCredentialsTests extends AbstractOAuth2ClientCredential
                 null, "basic").test();
 
         // credentials in Basic header, NOT in body
-        String expectedBasic = java.util.Base64.getEncoder()
-                .encodeToString("my-client:my-secret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        String expectedBasic = Base64.getEncoder()
+                .encodeToString("my-client:my-secret".getBytes(StandardCharsets.UTF_8));
         assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
                 .withHeader("Authorization", equalTo("Basic " + expectedBasic))), 1);
         assertEquals(requestCount(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))

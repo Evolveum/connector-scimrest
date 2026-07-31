@@ -17,6 +17,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.*;
@@ -177,7 +178,7 @@ public class OAuth2SamlTests extends AbstractOAuth2SamlTests {
         throw new IllegalStateException("No assertion in request body");
     }
 
-    private OAuth2SamlRestConnector createConnector(java.security.PrivateKey key) {
+    private OAuth2SamlRestConnector createConnector(PrivateKey key) {
         return createConnector(configBuilder(key));
     }
 
@@ -187,7 +188,7 @@ public class OAuth2SamlTests extends AbstractOAuth2SamlTests {
         return connector;
     }
 
-    BaseSamlConfig configBuilder(java.security.PrivateKey key) {
+    BaseSamlConfig configBuilder(PrivateKey key) {
         return new BaseSamlConfig(
                 wireMockServer.port(), API_ENDPOINT,
                 "http://localhost:" + wireMockServer.port() + TOKEN_ENDPOINT,

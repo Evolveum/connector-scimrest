@@ -10,9 +10,13 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.*;
@@ -101,7 +105,7 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCr
                     new GuardedString("bad-secret".toCharArray())).schema();
             fail("Expected ConnectorException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException,
+            assertTrue(e instanceof ConnectorException,
                     "Expected ConnectorException but got: " + e.getClass().getName());
         }
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
@@ -127,8 +131,8 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCr
         createScimConnectorWithExtras(TOKEN_ENDPOINT, "scim-client",
                 new GuardedString("scim-secret".toCharArray()), null, "basic").schema();
 
-        String expectedBasic = java.util.Base64.getEncoder()
-                .encodeToString("scim-client:scim-secret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        String expectedBasic = Base64.getEncoder()
+                .encodeToString("scim-client:scim-secret".getBytes(StandardCharsets.UTF_8));
         assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
                 .withHeader("Authorization", equalTo("Basic " + expectedBasic))).size(), 1);
         assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))

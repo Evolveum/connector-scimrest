@@ -9,8 +9,10 @@ package com.evolveum.polygon.scimrest.exception;
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.*;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -43,7 +45,7 @@ public class NetworkFailureTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectionFailedException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
         }
     }
@@ -62,7 +64,7 @@ public class NetworkFailureTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectionFailedException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
         }
     }
@@ -87,8 +89,8 @@ public class NetworkFailureTests extends WireMockTestSupport {
             fail("Expected timeout exception was not thrown");
         } catch (Exception e) {
             // Timeout exception (ConnectionFailed or ConnectionBroken)
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException ||
-                    e instanceof org.identityconnectors.framework.common.exceptions.ConnectionBrokenException,
+            assertTrue(e instanceof ConnectionFailedException ||
+                    e instanceof ConnectionBrokenException,
                 "Expected timeout exception but got: " + e.getClass().getName());
         }
     }
@@ -109,7 +111,7 @@ public class NetworkFailureTests extends WireMockTestSupport {
                 connector.test();
                 fail("Expected exception for port " + port);
             } catch (Exception e) {
-                assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+                assertTrue(e instanceof ConnectionFailedException,
                     "Port " + port + " should produce ConnectionFailedException but got: " + e.getClass().getName());
             }
         }
@@ -130,7 +132,7 @@ public class NetworkFailureTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectionFailedException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
         }
     }
@@ -153,8 +155,8 @@ public class NetworkFailureTests extends WireMockTestSupport {
             connector.test();
             fail("Expected timeout exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException ||
-                    e instanceof org.identityconnectors.framework.common.exceptions.ConnectionBrokenException);
+            assertTrue(e instanceof ConnectionFailedException ||
+                    e instanceof ConnectionBrokenException);
             // Verify exception has stacktrace
             assertNotNull(e.getStackTrace(),
                 "Exception should have stacktrace for debugging");

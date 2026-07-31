@@ -8,12 +8,14 @@ package com.evolveum.polygon.scimrest.exception;
 
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
-import com.evolveum.polygon.scimrest.groovy.*;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 /**
  * Tests for HTTP 429 (Rate Limit) status code error handling
@@ -44,7 +46,7 @@ public class HttpRateLimitTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectionFailedException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("429"),
                 "Error message should contain status code 429");
@@ -69,7 +71,7 @@ public class HttpRateLimitTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException);
+            assertTrue(e instanceof ConnectionFailedException);
             // Current implementation doesn't include Retry-After in error message
             // This test documents current behavior
         }
@@ -93,7 +95,7 @@ public class HttpRateLimitTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException);
+            assertTrue(e instanceof ConnectionFailedException);
         }
     }
 
@@ -115,7 +117,7 @@ public class HttpRateLimitTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException);
+            assertTrue(e instanceof ConnectionFailedException);
             // Current implementation doesn't include body in error messages
             // This test documents current behavior
         }
@@ -139,7 +141,7 @@ public class HttpRateLimitTests extends WireMockTestSupport {
             connector.test();
             fail("Expected exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException);
+            assertTrue(e instanceof ConnectionFailedException);
         }
 
         // Verify the 429 was actually called

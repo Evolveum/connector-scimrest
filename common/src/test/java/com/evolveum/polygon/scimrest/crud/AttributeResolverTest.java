@@ -9,6 +9,8 @@ package com.evolveum.polygon.scimrest.crud;
 import com.evolveum.polygon.scimrest.support.AbstractCrudConnectorTest;
 import org.testng.annotations.Test;
 
+import java.util.List;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.assertEquals;
 
@@ -52,7 +54,7 @@ public class AttributeResolverTest extends AbstractCrudConnectorTest {
 
         assertEquals(results.size(), 2);
         for (var obj : results) {
-            assertEquals(obj.getAttributeByName("description").getValue(), java.util.List.of("resolved"));
+            assertEquals(obj.getAttributeByName("description").getValue(), List.of("resolved"));
         }
     }
 }

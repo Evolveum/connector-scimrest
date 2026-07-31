@@ -7,7 +7,6 @@
 package com.evolveum.polygon.scimrest.support;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -18,7 +17,7 @@ import java.net.http.HttpResponse;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 /**
  * Simple test to verify WireMock is working

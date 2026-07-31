@@ -11,6 +11,7 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import javax.xml.crypto.dsig.*;
 import javax.xml.crypto.dsig.dom.DOMSignContext;
@@ -99,7 +100,7 @@ class SamlAssertionBuilder {
     }
 
     private static void signAssertion(Document doc, Element assertion, String id,
-            PrivateKey key, org.w3c.dom.Node insertBefore) throws Exception {
+            PrivateKey key, Node insertBefore) throws Exception {
         XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
 
         List<Transform> transforms = List.of(

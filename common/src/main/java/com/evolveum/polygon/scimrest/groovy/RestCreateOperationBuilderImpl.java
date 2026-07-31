@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Evolveum and contributors
+ * 
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ * 
+ */
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
@@ -14,8 +20,6 @@ import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.spi.CreateOperation;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
-import com.github.javaparser.ast.Node;
-import com.github.javaparser.utils.VisitorMap;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;

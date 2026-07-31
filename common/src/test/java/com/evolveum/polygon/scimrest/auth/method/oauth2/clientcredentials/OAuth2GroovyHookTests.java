@@ -7,12 +7,14 @@
 package com.evolveum.polygon.scimrest.auth.method.oauth2.clientcredentials;
 
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 public class OAuth2GroovyHookTests extends AbstractOAuth2ClientCredentialsTests {
 
@@ -325,7 +327,7 @@ public class OAuth2GroovyHookTests extends AbstractOAuth2ClientCredentialsTests 
         try {
             createConnector(script).test();
             fail("Expected InvalidCredentialException");
-        } catch (org.identityconnectors.framework.common.exceptions.InvalidCredentialException e) {
+        } catch (InvalidCredentialException e) {
             // expected
         }
 

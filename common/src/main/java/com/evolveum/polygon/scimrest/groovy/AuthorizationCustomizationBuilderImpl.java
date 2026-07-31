@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Evolveum and contributors
+ * 
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ * 
+ */
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
@@ -13,6 +19,7 @@ import com.evolveum.polygon.scimrest.groovy.api.JwtAssertionBuilder;
 import com.evolveum.polygon.scimrest.impl.rest.AwsRequestSigner;
 import com.evolveum.polygon.scimrest.impl.rest.JdkHttpRequestConverter;
 import com.evolveum.polygon.scimrest.impl.rest.OAuth2TokenManager;
+import groovy.json.JsonSlurper;
 import groovy.lang.Closure;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -475,7 +482,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
             @Override
             public Object parseJson(String text) {
-                return new groovy.json.JsonSlurper().parseText(text);
+                return new JsonSlurper().parseText(text);
             }
 
         }
@@ -553,7 +560,7 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
             @Override
             public Object parseJson(String text) {
-                return new groovy.json.JsonSlurper().parseText(text);
+                return new JsonSlurper().parseText(text);
             }
 
         }

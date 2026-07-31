@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Evolveum and contributors
+ * 
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ * 
+ */
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
@@ -15,7 +21,6 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class RestDeleteOperationBuilderImpl implements RestObjectOperationBuilder<DeleteOperation>, RestDeleteOperationBuilder {

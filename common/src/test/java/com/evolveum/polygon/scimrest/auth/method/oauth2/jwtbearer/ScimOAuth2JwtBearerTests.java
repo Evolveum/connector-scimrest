@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.auth.method.oauth2.jwtbearer;
 
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -132,7 +133,7 @@ public class ScimOAuth2JwtBearerTests extends AbstractScimOAuth2JwtBearerTests {
             createScimConnector(keyPair.getPrivate(), TOKEN_ENDPOINT, CLIENT_ID).schema();
             fail("Expected ConnectorException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException,
+            assertTrue(e instanceof ConnectorException,
                     "Expected ConnectorException but got: " + e.getClass().getName());
         }
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);

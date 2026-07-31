@@ -8,12 +8,16 @@ package com.evolveum.polygon.scimrest.exception;
 
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
-import com.evolveum.polygon.scimrest.groovy.*;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 /**
  * Tests for HTTP 4xx status code error handling
@@ -42,7 +46,7 @@ public class HttpStatus4xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectionFailedException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectionFailedException,
+            assertTrue(e instanceof ConnectionFailedException,
                 "Expected ConnectionFailedException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("400"),
                 "Error message should contain status code 400");
@@ -66,7 +70,7 @@ public class HttpStatus4xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected InvalidCredentialException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.InvalidCredentialException,
+            assertTrue(e instanceof InvalidCredentialException,
                 "Expected InvalidCredentialException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("401"),
                 "Error message should contain status code 401");
@@ -90,7 +94,7 @@ public class HttpStatus4xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected InvalidCredentialException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.InvalidCredentialException,
+            assertTrue(e instanceof InvalidCredentialException,
                 "Expected InvalidCredentialException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("403"),
                 "Error message should contain status code 403");
@@ -114,7 +118,7 @@ public class HttpStatus4xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectorException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException,
+            assertTrue(e instanceof ConnectorException,
                 "Expected ConnectorException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("404"),
                 "Error message should contain status code 404");
@@ -138,7 +142,7 @@ public class HttpStatus4xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectorException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException,
+            assertTrue(e instanceof ConnectorException,
                 "Expected ConnectorException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("409"),
                 "Error message should contain status code 409");
@@ -162,7 +166,7 @@ public class HttpStatus4xxTests extends WireMockTestSupport {
             connector.test();
             fail("Expected ConnectorException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorException,
+            assertTrue(e instanceof ConnectorException,
                 "Expected ConnectorException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("422"),
                 "Error message should contain status code 422");

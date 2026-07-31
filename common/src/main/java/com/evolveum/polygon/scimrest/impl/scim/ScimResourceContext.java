@@ -9,14 +9,15 @@ package com.evolveum.polygon.scimrest.impl.scim;
 import com.evolveum.polygon.conndev.api.AttributePath;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
+import com.unboundid.scim2.common.types.SchemaResource;
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public record ScimResourceContext(ResourceTypeResource resource, String relativeEndpoint, com.unboundid.scim2.common.types.SchemaResource primarySchema,
-                                  HashMap<String, com.unboundid.scim2.common.types.SchemaResource> extensions)  {
+public record ScimResourceContext(ResourceTypeResource resource, String relativeEndpoint, SchemaResource primarySchema,
+                                  HashMap<String, SchemaResource> extensions)  {
 
     public URI schemaUri() {
         return resource.getSchema();

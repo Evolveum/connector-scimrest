@@ -1,7 +1,12 @@
+/*
+ * Copyright (c) 2026 Evolveum and contributors
+ * 
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ * 
+ */
 package com.evolveum.polygon.scimrest.support;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -12,7 +17,7 @@ import java.net.http.HttpResponse;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class WireMockPortTest {
 

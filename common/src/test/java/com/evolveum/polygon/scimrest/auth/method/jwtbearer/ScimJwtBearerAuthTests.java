@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.auth.method.jwtbearer;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
+import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
@@ -18,7 +19,8 @@ import org.testng.annotations.Test;
 import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class ScimJwtBearerAuthTests extends WireMockTestSupport {
 
@@ -149,7 +151,7 @@ public class ScimJwtBearerAuthTests extends WireMockTestSupport {
     // --- helpers ---
 
     private void stubScimEndpoints(String headerName,
-                                   com.github.tomakehurst.wiremock.matching.StringValuePattern headerPattern) {
+                                   StringValuePattern headerPattern) {
         wireMockServer.stubFor(get(urlPathEqualTo(SCHEMAS_ENDPOINT))
                 .withHeader(headerName, headerPattern)
                 .willReturn(aResponse().withStatus(200)

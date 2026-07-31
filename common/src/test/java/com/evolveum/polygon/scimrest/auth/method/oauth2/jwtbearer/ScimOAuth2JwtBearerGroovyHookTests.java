@@ -14,7 +14,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class ScimOAuth2JwtBearerGroovyHookTests extends AbstractScimOAuth2JwtBearerTests {
 

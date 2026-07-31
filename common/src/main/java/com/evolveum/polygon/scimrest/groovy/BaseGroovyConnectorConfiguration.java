@@ -10,7 +10,6 @@ import com.evolveum.polygon.scimrest.config.GroovyConfiguration;
 import org.identityconnectors.framework.common.objects.ConnectorMessages;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
-import org.identityconnectors.framework.spi.StatefulConfiguration;
 
 public abstract class BaseGroovyConnectorConfiguration implements Configuration, GroovyConfiguration {
 

@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest;
 
 import com.evolveum.polygon.scimrest.spi.ObjectClassOperation;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 
 /**
  * Defines a contract for handling operations and object classes in the context of a specific object type.
