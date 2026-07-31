@@ -1,0 +1,10 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.evolveum.rewrite.AddLicenseHeaderEUPL
+displayName: Add EUPL1.2 license header
+recipeList:
+  - org.openrewrite.java.AddLicenseHeader:
+      licenseText: |
+        Copyright (c) ${CURRENT_YEAR} Evolveum and contributors
+
+        This work is licensed under European Union Public License v1.2. See LICENSE file for details.

@@ -199,6 +199,39 @@
                         <apiKey>${env.DTRACK_TOKEN}</apiKey>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <!-- Static analysis rewrite tool ideal for upgrades and mass-cleanup, conversion to our code style -->
+                    <groupId>org.openrewrite.maven</groupId>
+                    <artifactId>rewrite-maven-plugin</artifactId>
+                    <version>6.42.0</version>
+                    <configuration>
+                        <exportDatatables>true</exportDatatables>
+                        <activeRecipes>
+                            <!--
+                            <recipe>org.openrewrite.java.OrderImports</recipe>
+                            -->
+                            <recipe>org.openrewrite.java.RemoveUnusedImports</recipe>
+                            <!-- automatically upgrades coding patterns to use Java 21, first run should not be automated -->
+                            <!-- 
+                               <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
+                            -->
+                            <recipe>com.evolveum.rewrite.AddLicenseHeaderEUPL</recipe>
+                            <recipe>org.openrewrite.xml.RemoveTrailingWhitespace</recipe>
+                            <recipe>org.openrewrite.java.ShortenFullyQualifiedTypeReferences</recipe>
+                        </activeRecipes>
+                        <exclusions>
+                            <exclusion>**/*.groovy</exclusion>
+                        </exclusions>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.openrewrite.recipe</groupId>
+                            <artifactId>rewrite-migrate-java</artifactId>
+                            <version>3.38.0</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                
             </plugins>
         </pluginManagement>
     </build>
