@@ -45,25 +45,48 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
         }
     }
 
-    interface RequestBuilder<I> extends GroovyContentTypeMixin {
+    interface QueryEndpoint<I> extends EndpointBuilder {
 
-        static final Function<Object, byte[]> EMPTY = (i) -> null;
+        QueryRequestBuilder<I> request();
 
-        /**
-         * Set's the content type using request
-         *
-         * @param contentType Request Body Content Type
-         * @return
-         */
-        RequestBuilder<I> contentType(String contentType);
+        default QueryRequestBuilder<I> request(@DelegatesTo(value = QueryRequestBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+            return GroovyClosures.callAndReturnDelegate(closure, request());
+        }
 
+    }
+
+    interface RequestBuilder<I>
+            extends RequestHeadersBuilder<I>, RequestEntityBuilder<I> {
+
+        @Override
         RequestBuilder<I> accept(String... contentType);
 
+        @Override
+        RequestBuilder<I> contentType(String contentType);
 
+        @Override
         RequestBuilder<I> body(Function<? super I, byte[]> bodyTransformer);
 
+        @Override
         RequestBuilder<I> body(Closure<byte[]> bodyTransformer);
+    }
 
+    interface QueryRequestBuilder<I> extends RequestHeadersBuilder<I>{
+
+        @Override
+        QueryRequestBuilder<I> accept(String... contentType);
+    }
+
+    interface RequestHeadersBuilder<I> extends GroovyContentTypeMixin {
+        RequestHeadersBuilder<I> accept(String... contentType);
+    }
+
+    interface RequestEntityBuilder<I> extends GroovyContentTypeMixin {
+        Function<Object, byte[]> EMPTY = i -> null;
+
+        RequestEntityBuilder<I> contentType(String contentType);
+        RequestEntityBuilder<I> body(Function<? super I, byte[]> bodyTransformer);
+        RequestEntityBuilder<I> body(Closure<byte[]> bodyTransformer);
     }
 
     interface ResponseBuilder<O> extends GroovyContentTypeMixin {
