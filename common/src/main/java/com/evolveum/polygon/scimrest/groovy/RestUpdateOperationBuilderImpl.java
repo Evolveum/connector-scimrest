@@ -4,6 +4,7 @@ import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.*;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import com.evolveum.polygon.scimrest.impl.UpdateOperationHandler;
@@ -19,7 +20,6 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
@@ -163,7 +163,8 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
                     request.bodyTransformer,
                     responseHandler,
                     supportedAttrs,
-                    true
+                    true,
+                    pathParameters
             );
         }
     }
@@ -185,7 +186,9 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
                            Function<? super UpdateRequest, byte[]> requestBody,
                            Function<HttpResponse<?>, ConnectorObject> responseHandler,
                            Map<String, AttributeSupport> supportedAttributes,
-                           boolean requiresOriginalState) implements UpdateOperationHandler {
+                           boolean requiresOriginalState,
+                           Map<String, AbstractSingleObjectEndpointBuilder.PathParameter> pathParameters)
+            implements UpdateOperationHandler {
 
 
         @Override
@@ -193,9 +196,8 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
             var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method);
-            // FIXME: Use proper path parameter computation
-            request.pathParameter("id", updateRequest.uid().getUidValue());
 
+            handlePathParameters(request, updateRequest);
             if (contentType != null) {
                 request.header("Content-Type", contentType);
                 request.body(requestBody.apply(updateRequest));
@@ -209,6 +211,55 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
             } catch (Exception e) {
                 throw new ConnectorException("Cannot create request object", e);
             }
+        }
+
+        private void handlePathParameters(HttpRequestSpecification request, UpdateRequest updateRequest) {
+
+            for (Map.Entry<String, AbstractSingleObjectEndpointBuilder.PathParameter> entry : pathParameters.entrySet()) {
+
+                var parameterName = entry.getKey();
+                if (isUidInPath(parameterName, updateRequest.clazz())) {
+
+                    request.pathParameter(parameterName, updateRequest.uid().getUidValue());
+                    continue;
+                }
+
+                var pathParameter = entry.getValue();
+                if (pathParameter != null) {
+                    var extractor = pathParameter.getExtractor();
+                    var identity = pathParameter.getIdentity();
+
+                    if (identity != null) {
+
+                        request.pathParameter(entry.getKey(), identity.apply(updateRequest.uid().getUidValue()));
+                        continue;
+                    } else if (extractor != null) {
+
+                        var oldObject = updateRequest.before();
+                        if (oldObject != null) {
+                            request.pathParameter(entry.getKey(), extractor.apply(oldObject));
+                            continue;
+                        } else {
+
+                            throw new ConnectorException("Cannot resolve path parameter '" + entry.getKey() +
+                                    "': connector object is required.");
+                        }
+                    }
+                }
+
+                throw new IllegalStateException("Path parameter definition is missing for '" + entry.getKey() + "'");
+            }
+        }
+
+        private boolean isUidInPath(String parameterName, ObjectClass clazz) {
+
+            var attribute = context.schema().objectClass(clazz.getObjectClassValue()).attributeFromProtocolName(parameterName);
+
+            if (attribute == null) {
+               return false;
+            }
+
+            return attribute.connId().is(Uid.NAME);
         }
 
         @Override

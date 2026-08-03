@@ -26,37 +26,81 @@ import static org.testng.Assert.assertEquals;
  */
 public class PatchUpdateTest extends AbstractCrudConnectorTest {
 
+    private static final String SCRIPT_TEMPLATE = """
+        objectClass("Account") {
+            search {
+                endpoint("accounts/{id}") {
+                    singleResult()
+                    supportedFilter(attribute("id").eq().anySingleValue()) {
+                        request.pathParameter("id", value)
+                    }
+                }
+            }
+            update {
+                %s
+            }
+        }
+        """;
+
     private static final String SCRIPT = """
-            objectClass("Account") {
-                search {
-                    endpoint("accounts/{id}") {
-                        singleResult()
-                        supportedFilter(attribute("id").eq().anySingleValue()) {
-                            request.pathParameter("id", value)
-                        }
-                    }
-                }
-                update {
-                    endpoint(PATCH, "accounts/{id}") {
-                        request { contentType APPLICATION_JSON }
-                    }
-                }
+            endpoint(PATCH, "accounts/{id}") {
+                request { contentType APPLICATION_JSON }
+            }
+            """;;
+
+    private static final String SCRIPT_UPDATE_W_PATH_PARAM_IDENTITY = """
+            endpoint(PATCH, "accounts/{attribute}") {
+                pathParameter("attribute")
+                request { contentType APPLICATION_JSON }
+            }
+            """;
+    private static final String SCRIPT_UPDATE_W_PATH_PARAM_EXTRACTOR = """
+            endpoint(PATCH, "accounts/{attribute}") {
+                pathParameter("attribute", "__NAME__")
+                request { contentType APPLICATION_JSON }
+            }
+            """;
+    private static final String SCRIPT_UPDATE_W_PATH_PARAM_INCORRECT = """
+            endpoint(PATCH, "accounts/{attribute}") {
+                pathParameter("attribute", "abc")
+                request { contentType APPLICATION_JSON }
             }
             """;
 
     @Test
     public void updateIsSentAsPatchWithJsonBody() {
+        updateAsPatchWithJsonBody(SCRIPT_TEMPLATE.formatted(SCRIPT), ACCOUNT_BY_ID_PATH);
+    }
+
+    @Test
+    public void updateIsSentAsPatchWithJsonBodyPathParameterImplicitIdentity() {
+        updateAsPatchWithJsonBody(SCRIPT_TEMPLATE.formatted(SCRIPT_UPDATE_W_PATH_PARAM_IDENTITY), ACCOUNT_BY_ID_PATH);
+    }
+
+    @Test
+    public void updateIsSentAsPatchWithJsonBodyPathParameterAttributeExtractor() {
+        updateAsPatchWithJsonBody(SCRIPT_TEMPLATE.formatted(SCRIPT_UPDATE_W_PATH_PARAM_EXTRACTOR), ACCOUNT_BY_OLD_NAME_PATH);
+    }
+
+    @Test (expectedExceptions = IllegalArgumentException.class)
+    public void updateIsSentAsPatchWithJsonBodyPathParameterIncorrectAttribute() {
+        updateAsPatchWithJsonBody(SCRIPT_TEMPLATE.formatted(SCRIPT_UPDATE_W_PATH_PARAM_INCORRECT), ACCOUNT_BY_ID_PATH);
+    }
+
+    public void updateAsPatchWithJsonBody(String script, String path){
+        wireMockServer.stubFor(get(urlEqualTo(path))
+                .willReturn(okJson("{\"id\":\"123\",\"name\":\"old-name\"}")));
         wireMockServer.stubFor(get(urlEqualTo(ACCOUNT_BY_ID_PATH))
                 .willReturn(okJson("{\"id\":\"123\",\"name\":\"old-name\"}")));
         wireMockServer.stubFor(patch(urlPathMatching(ACCOUNTS_PATTERN))
                 .willReturn(okJson("{\"id\":\"123\",\"name\":\"new-name\"}")));
 
-        initConnector(SCRIPT).updateDelta(new ObjectClass("Account"),
+        initConnector(script).updateDelta(new ObjectClass("Account"),
                 new Uid("123"),
                 Set.of(AttributeDeltaBuilder.build(Name.NAME, List.of("new-name"))),
                 new OperationOptionsBuilder().build());
 
-        assertEquals(wireMockServer.findAll(patchRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH))
+        assertEquals(wireMockServer.findAll(patchRequestedFor(urlEqualTo(path))
                 .withHeader("Content-Type", equalTo("application/json"))
                 .withRequestBody(matchingJsonPath("$.name", equalTo("new-name")))).size(), 1);
     }
