@@ -42,6 +42,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     Set<FilterToRequestMapper> filterMappers = new HashSet<>();
     Class<?> responseFormat = JSON_OBJECT;
     TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
+    QueryRequestBuilderImpl queryRequest = new QueryRequestBuilderImpl();
 
     public EndpointBasedSearchBuilder(String path, MappedObjectClass objectClass) {
         this.path = path;
@@ -114,6 +115,11 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
             emptyFilterSupported = false;
         }
         return this;
+    }
+
+    @Override
+    public QueryRequestBuilderImpl request() {
+        return queryRequest;
     }
 
     public record GroovyObjectExtractor<BF, OF>(Closure<?> prototype) implements ResponseObjectExtractor<BF, OF> {
