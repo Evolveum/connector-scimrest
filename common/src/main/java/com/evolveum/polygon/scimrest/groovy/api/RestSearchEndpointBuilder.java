@@ -16,7 +16,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.util.List;
 
-public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandlerBuilder<RestSearchEndpointBuilder> {
+public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandlerBuilder<RestSearchEndpointBuilder>, EndpointBuilder.QueryEndpoint {
 
     Class<ArrayNode> JSON_ARRAY = ArrayNode.class;
     Class<ObjectNode> JSON_OBJECT = ObjectNode.class;

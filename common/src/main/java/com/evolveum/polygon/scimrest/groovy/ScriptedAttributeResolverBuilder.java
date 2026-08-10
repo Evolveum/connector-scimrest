@@ -26,6 +26,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ScriptedAttributeResolverBuilder implements AttributeResolverBuilder {
@@ -188,6 +189,7 @@ public class ScriptedAttributeResolverBuilder implements AttributeResolverBuilde
         private final Set<FilterToRequestMapper> filterMappers;
         private final Class<?> responseFormat;
         private final TotalCountExtractor<BF> totalCountExtractor;
+        private final QueryRequestBuilderImpl queryRequestBuilder;
 
         public EndpointBasedSearchHandler(EndpointBasedSearchBuilder<BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
             this.objectClass = builder.objectClass;
@@ -197,6 +199,7 @@ public class ScriptedAttributeResolverBuilder implements AttributeResolverBuilde
             this.filterMappers = new HashSet<>(filterMappers);
             this.responseFormat = builder.responseFormat;
             this.totalCountExtractor = builder.totalCountExtractor;
+            this.queryRequestBuilder = builder.queryRequest;
         }
 
 
@@ -208,6 +211,7 @@ public class ScriptedAttributeResolverBuilder implements AttributeResolverBuilde
         @Override
         public RestSearchOperationHandler process(Filter filter) {
             var maybeMapper = filterMappers.stream().filter(m -> m.canHandle(filter)).findFirst();
+            List<String> acceptContentTypes = queryRequestBuilder.acceptContentTypes;
             if  (maybeMapper.isEmpty()) {
                 return null;
             }
@@ -215,6 +219,7 @@ public class ScriptedAttributeResolverBuilder implements AttributeResolverBuilde
             return RestSearchOperationHandler.<BF,OF>builder()
                     .addRequestUri((request, paging) -> {
                         request.apiEndpoint(apiEndpoint);
+                        acceptContentTypes.forEach(x->request.header("Accept", x));
                         mapper.mapToRequest(request, filter);
                         if (pagingSupport != null) {
                             pagingSupport.handlePaging(request, paging);
