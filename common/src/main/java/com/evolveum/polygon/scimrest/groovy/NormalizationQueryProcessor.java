@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
@@ -21,21 +21,21 @@ import java.util.HashSet;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 
-public class NormalizationQueryProcessor implements ExecuteQueryProcessor {
+public class NormalizationQueryProcessor implements ObjectSearchOperation {
 
     private final String propertyToNormalize;
-    private final ExecuteQueryProcessor delegate;
+    private final ObjectSearchOperation delegate;
     private final BiFunction<String, Object, String> nameTransformer;
     private final BiFunction<String, Object, String> uidTransformer;
     private final UnaryOperator<String> nameRestorer;
     private final UnaryOperator<String> uidRestorer;
 
-    public NormalizationQueryProcessor(String propertyToNormalize, ExecuteQueryProcessor executeQueryProcessor, BiFunction<String, Object, String> nameTransformer, BiFunction<String, Object, String> uidTransformer) {
+    public NormalizationQueryProcessor(String propertyToNormalize, ObjectSearchOperation executeQueryProcessor, BiFunction<String, Object, String> nameTransformer, BiFunction<String, Object, String> uidTransformer) {
 
         this(propertyToNormalize, executeQueryProcessor, nameTransformer, uidTransformer, null, null);
     }
 
-    public NormalizationQueryProcessor(String propertyToNormalize, ExecuteQueryProcessor executeQueryProcessor,
+    public NormalizationQueryProcessor(String propertyToNormalize, ObjectSearchOperation executeQueryProcessor,
                                        BiFunction<String, Object, String> nameTransformer,
                                        BiFunction<String, Object, String> uidTransformer,
                                        UnaryOperator<String> nameRestorer,

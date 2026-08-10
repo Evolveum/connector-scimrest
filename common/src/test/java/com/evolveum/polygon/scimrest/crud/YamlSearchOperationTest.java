@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.crud;
 
-import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
+import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.support.AbstractCrudConnectorTest;
 import com.evolveum.polygon.scimrest.support.YamlOperationsConnector;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;

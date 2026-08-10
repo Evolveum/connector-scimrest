@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl;
 
+import com.evolveum.polygon.conndev.spi.AttributeAwareOperationHandler;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
 import org.identityconnectors.framework.common.objects.OperationOptions;

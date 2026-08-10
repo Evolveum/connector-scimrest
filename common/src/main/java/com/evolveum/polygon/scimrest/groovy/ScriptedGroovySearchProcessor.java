@@ -11,7 +11,7 @@ import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;

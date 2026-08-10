@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.impl.scim.dev;
 import com.evolveum.polygon.conndev.dev.ConnDevObjectClassSerializer;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
@@ -25,7 +25,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
  * shared {@link ConnDevObjectClassSerializer}, so the export is derived from the same single model as
  * the ConnId schema. Supports equals filters on {@code __UID__} / {@code __NAME__}.
  */
-public class ScimObjectClassDevHandler implements ExecuteQueryProcessor {
+public class ScimObjectClassDevHandler implements ObjectSearchOperation {
 
     @Override
     public void executeQuery(ContextLookup contextLookup, Filter filter, ResultsHandler resultsHandler,

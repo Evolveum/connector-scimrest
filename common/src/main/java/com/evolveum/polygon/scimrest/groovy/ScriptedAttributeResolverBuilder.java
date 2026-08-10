@@ -16,7 +16,7 @@ import com.evolveum.polygon.scimrest.groovy.api.ObjectClassScripting;
 import com.evolveum.polygon.scimrest.impl.rest.RestPagingAwareObjectRetriever;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
 import com.evolveum.polygon.scimrest.spi.SearchEndpointHandler;
 import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
 import groovy.lang.Closure;

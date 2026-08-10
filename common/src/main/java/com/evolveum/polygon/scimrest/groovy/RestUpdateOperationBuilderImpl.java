@@ -20,7 +20,7 @@ import com.evolveum.polygon.scimrest.impl.UpdateOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimUpdateHandler;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.evolveum.polygon.scimrest.spi.UpdateOperation;
+import com.evolveum.polygon.conndev.spi.ObjectUpdateOperation;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
-public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilder, RestObjectOperationBuilder<UpdateOperation> {
+public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilder, RestObjectOperationBuilder<ObjectUpdateOperation> {
 
     private final BaseOperationSupportBuilder parent;
     private final List<EndpointImpl> endpoints = new ArrayList<>();
@@ -64,7 +64,7 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
     }
 
     @Override
-    public UpdateOperation build() {
+    public ObjectUpdateOperation build() {
         if (endpoints.isEmpty() && scimNotUsed()) {
             return null;
         }

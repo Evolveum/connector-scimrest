@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.impl.scim;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimSearchBuilder;
 import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
-import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
 import com.evolveum.polygon.scimrest.groovy.FilterAwareSearchProcessorBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;

@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim;
 
-import com.evolveum.polygon.scimrest.impl.DeleteOperationHandler;
+import com.evolveum.polygon.conndev.spi.DeleteOperationHandler;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.ObjectClass;

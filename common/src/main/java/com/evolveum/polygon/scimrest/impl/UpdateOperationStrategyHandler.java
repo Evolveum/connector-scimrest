@@ -6,15 +6,15 @@
  */
 package com.evolveum.polygon.scimrest.impl;
 
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
+import com.evolveum.polygon.conndev.spi.ObjectUpdateOperation;
 import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
-import com.evolveum.polygon.scimrest.spi.UpdateOperation;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 
-import static com.evolveum.polygon.scimrest.impl.AttributeAwareOperationHandler.Capability;
+import static com.evolveum.polygon.conndev.spi.AttributeAwareOperationHandler.Capability;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class UpdateOperationStrategyHandler implements UpdateOperation {
+public class UpdateOperationStrategyHandler implements ObjectUpdateOperation {
 
     private final ConnectorContext context;
     private final ObjectClass objectClass;
@@ -43,7 +43,8 @@ public class UpdateOperationStrategyHandler implements UpdateOperation {
             // Pass a snapshot: a handler without attribute restrictions returns the supplied
             // collection as-is, and the removeAll below would empty it before update() runs.
             var support = handler.canHandle(List.copyOf(outstanding), options);
-            if (support.isUnsupported()) {
+            // Capability.isUnsupported() is package-private in conndev.spi, not accessible from here
+            if (support.supported() == null || support.supported().isEmpty()) {
                 continue;
             }
             // Update information if we need previous state
@@ -76,7 +77,7 @@ public class UpdateOperationStrategyHandler implements UpdateOperation {
 
     private ConnectorObject readObject(Uid uid) {
         var result = new ArrayList<ConnectorObject>();
-        context.handlerFor(objectClass).checkSupported(ExecuteQueryProcessor.class)
+        context.handlerFor(objectClass).checkSupported(ObjectSearchOperation.class)
                 .executeQuery(context, new EqualsFilter(uid), result::add, null);
         return result.stream().findFirst().orElseThrow(
                 () -> new ConnectorException("Can not update object: " + uid + ". Unable to read previous state"));

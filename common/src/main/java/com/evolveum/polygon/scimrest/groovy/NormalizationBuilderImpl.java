@@ -10,7 +10,7 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 
 import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import groovy.lang.Closure;
 
 import java.util.function.BiFunction;
@@ -56,7 +56,7 @@ public class NormalizationBuilderImpl implements NormalizationBuilder {
         return this;
     }
 
-    ExecuteQueryProcessor build(ExecuteQueryProcessor executeQueryProcessor) {
+    ObjectSearchOperation build(ObjectSearchOperation executeQueryProcessor) {
 
 //        return new NormalizationQueryProcessor(attributeToNormalize, executeQueryProcessor, nameTransformer, uidTransformer);
         return new NormalizationQueryProcessor(attributeToNormalize, executeQueryProcessor,

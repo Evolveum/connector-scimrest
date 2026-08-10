@@ -18,7 +18,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 
 /**
  * Search handler for conndev_ScimServiceProviderConfig object class.
@@ -26,7 +26,7 @@ import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
  * or nothing when the service provider does not implement the endpoint.
  * Only supports id and name filters (equals).
  */
-public class ScimServiceProviderConfigDevHandler implements ExecuteQueryProcessor {
+public class ScimServiceProviderConfigDevHandler implements ObjectSearchOperation {
 
     static final String OBJECT_NAME = "ServiceProviderConfig";
 

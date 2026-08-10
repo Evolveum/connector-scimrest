@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.impl;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.OperationOptions;
@@ -23,15 +23,15 @@ import java.util.Set;
 
 import static com.evolveum.polygon.scimrest.groovy.api.AttributeResolver.SKIP_ATTRIBUTE_RESOLUTION_OPTION;
 
-public class AttributeResolvingSearchHandler implements ExecuteQueryProcessor {
+public class AttributeResolvingSearchHandler implements ObjectSearchOperation {
 
-    private final ExecuteQueryProcessor delegate;
+    private final ObjectSearchOperation delegate;
     private final Set<AttributeResolver> perObject;
     private final Set<AttributeResolver> batched;
 
     private Set<AttributeResolver> attributeResolvers;
 
-    public AttributeResolvingSearchHandler(ExecuteQueryProcessor delegate, Set<AttributeResolver> perObjectResolvers, Set<AttributeResolver> batchedResolvers) {
+    public AttributeResolvingSearchHandler(ObjectSearchOperation delegate, Set<AttributeResolver> perObjectResolvers, Set<AttributeResolver> batchedResolvers) {
         this.delegate = delegate;
         this.perObject = perObjectResolvers;
         this.batched = batchedResolvers;

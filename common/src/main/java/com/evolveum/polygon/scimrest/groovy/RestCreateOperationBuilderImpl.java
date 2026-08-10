@@ -13,11 +13,11 @@ import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
-import com.evolveum.polygon.scimrest.impl.CreateOperationHandler;
-import com.evolveum.polygon.scimrest.impl.CreateOperationStrategyHandler;
+import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
+import com.evolveum.polygon.conndev.spi.CreateOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.evolveum.polygon.scimrest.spi.CreateOperation;
+import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -31,7 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
-public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilder<CreateOperation>, RestCreateOperationBuilder {
+public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilder<ObjectCreateOperation>, RestCreateOperationBuilder {
 
 
     private final List<EndpointImpl> endpoints = new ArrayList<>();
@@ -63,7 +63,7 @@ public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilde
     }
 
     @Override
-    public CreateOperation build() {
+    public ObjectCreateOperation build() {
         if (endpoints.isEmpty()) {
             return null;
         }

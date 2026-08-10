@@ -11,8 +11,8 @@ import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
-import com.evolveum.polygon.scimrest.spi.CreateOperation;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.testng.annotations.Test;
 
@@ -69,7 +69,7 @@ public class ObjectClassCaseMergeTest {
         // Today exactly one of these throws UnsupportedOperationException: the "Account" and
         // "account" scripts build two separate handlers that both claim the ObjectClass("Account")
         // key, and whichever is inserted last into the final HashMap silently wins.
-        handler.checkSupported(CreateOperation.class);
-        handler.checkSupported(ExecuteQueryProcessor.class);
+        handler.checkSupported(ObjectCreateOperation.class);
+        handler.checkSupported(ObjectSearchOperation.class);
     }
 }

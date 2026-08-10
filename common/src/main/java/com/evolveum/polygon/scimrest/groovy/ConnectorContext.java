@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.concepts.RetrievableContext;
 import com.evolveum.polygon.conndev.schema.BaseSchema;
-import com.evolveum.polygon.scimrest.ObjectClassHandler;
+import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
@@ -20,7 +20,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import java.util.Map;
 
-public class ConnectorContext implements ContextLookup, RetrievableContext {
+public class ConnectorContext implements ContextLookup, RetrievableContext, com.evolveum.polygon.conndev.groovy.ConnectorContext {
 
     Map<ObjectClass, ObjectClassHandler> handlers;
     BaseGroovyConnectorConfiguration configuration;
@@ -93,13 +93,14 @@ public class ConnectorContext implements ContextLookup, RetrievableContext {
     public void initializeScim(AuthorizationCustomizer<ScimClientConfiguration> authentication) {
         if (configuration instanceof ScimClientConfiguration scimConf) {
             if (scimConf.getScimBaseUrl() != null) {
-                scim = new ScimContext(this, scimConf, Boolean.TRUE.equals(getDevelopmentMode()), authentication);
+                scim = new ScimContext(this, scimConf, getDevelopmentMode(), authentication);
             }
         }
     }
 
-    private Boolean getDevelopmentMode() {
-        return configuration.getDevelopmentMode();
+    @Override
+    public boolean getDevelopmentMode() {
+        return Boolean.TRUE.equals(configuration.getDevelopmentMode());
     }
 
     public void initializeRest(AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer) {
@@ -119,7 +120,8 @@ public class ConnectorContext implements ContextLookup, RetrievableContext {
         return ret;
     }
 
-    private <T extends RetrievableContext> T getUnchecked(Class<T> contextType) {
+    @Override
+    public <T extends RetrievableContext> T getUnchecked(Class<T> contextType) {
         if (ConnectorContext.class.equals(contextType)) {
             return contextType.cast(this);
         }

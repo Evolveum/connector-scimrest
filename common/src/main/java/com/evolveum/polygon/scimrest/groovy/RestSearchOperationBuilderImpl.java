@@ -13,11 +13,11 @@ import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.SearchScriptBuilder;
 import com.evolveum.polygon.scimrest.impl.AttributeResolvingSearchHandler;
-import com.evolveum.polygon.scimrest.impl.FilterBasedSearchDispatcher;
+import com.evolveum.polygon.conndev.spi.FilterBasedSearchDispatcher;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.impl.scim.ScimSearchHandler;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
-import com.evolveum.polygon.scimrest.spi.FilterAwareExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
+import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuilder<ExecuteQueryProcessor>, RestSearchOperationBuilder, RestObjectOperationBuilder<ExecuteQueryProcessor> {
+public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuilder<ObjectSearchOperation>, RestSearchOperationBuilder, RestObjectOperationBuilder<ObjectSearchOperation> {
 
     private final BaseOperationSupportBuilder parent;
     Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
@@ -79,7 +79,7 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
         return normalizationBuilder;
     }
 
-    public ExecuteQueryProcessor build() {
+    public ObjectSearchOperation build() {
         if (builders.isEmpty() && scim == null) {
             // We don't have any endpoints, so we don't need to build anything, this results in search operation
             // being unsupported.
@@ -89,17 +89,17 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
         return buildAttributeResolver(buildNormalizationHandler(buildFilterDispatcher()));
     }
 
-    private ExecuteQueryProcessor buildNormalizationHandler(ExecuteQueryProcessor executeQueryProcessor) {
+    private ObjectSearchOperation buildNormalizationHandler(ObjectSearchOperation executeQueryProcessor) {
         if (normalizationBuilder == null) {
             return executeQueryProcessor;
         }
         return normalizationBuilder.build(executeQueryProcessor);
     }
 
-    private ExecuteQueryProcessor buildFilterDispatcher() {
+    private ObjectSearchOperation buildFilterDispatcher() {
         var handlers = new HashSet<FilterAwareExecuteQueryProcessor>();
-        ExecuteQueryProcessor emptyFilterHandler = null;
-        ExecuteQueryProcessor anyFilterHandler = null;
+        ObjectSearchOperation emptyFilterHandler = null;
+        ObjectSearchOperation anyFilterHandler = null;
         for (var builder : builders) {
             if (builder.isEnabled()) {
                 var handler = builder.build();
@@ -127,7 +127,7 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
         return new FilterBasedSearchDispatcher<>(emptyFilterHandler, anyFilterHandler,  handlers);
     }
 
-    private ExecuteQueryProcessor buildAttributeResolver(ExecuteQueryProcessor dispatcher) {
+    private ObjectSearchOperation buildAttributeResolver(ObjectSearchOperation dispatcher) {
         Set<AttributeResolver> perObjectResolvers = new HashSet<>();
         Set<AttributeResolver> batchedResolvers = new HashSet<>();
         Set<MappedAttribute> supportedAttributes = new HashSet<>();

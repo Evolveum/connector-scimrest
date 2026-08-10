@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
 import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -33,7 +33,7 @@ import java.util.Map;
  * Returns all discovered SCIM resource definitions with their schema details.
  * Only supports id, name, and schema filters (equals).
  */
-public class ScimResourceDevHandler implements ExecuteQueryProcessor {
+public class ScimResourceDevHandler implements ObjectSearchOperation {
 
     private final ScimContext context;
 

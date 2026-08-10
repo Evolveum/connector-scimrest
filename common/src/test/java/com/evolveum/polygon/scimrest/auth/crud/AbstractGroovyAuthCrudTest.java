@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.auth.crud;
 
-import com.evolveum.polygon.scimrest.ClassHandlerConnectorBase;
+import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;

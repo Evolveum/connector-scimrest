@@ -10,10 +10,10 @@ import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestDeleteOperationBuilder;
-import com.evolveum.polygon.scimrest.impl.DeleteOperationHandler;
-import com.evolveum.polygon.scimrest.impl.DeleteOperationStrategyHandler;
+import com.evolveum.polygon.conndev.spi.DeleteOperationHandler;
+import com.evolveum.polygon.conndev.spi.DeleteOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimDeleteHandler;
-import com.evolveum.polygon.scimrest.spi.DeleteOperation;
+import com.evolveum.polygon.conndev.spi.ObjectDeleteOperation;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -23,7 +23,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RestDeleteOperationBuilderImpl implements RestObjectOperationBuilder<DeleteOperation>, RestDeleteOperationBuilder {
+public class RestDeleteOperationBuilderImpl implements RestObjectOperationBuilder<ObjectDeleteOperation>, RestDeleteOperationBuilder {
 
     private final BaseOperationSupportBuilder parent;
     private final List<EndpointImpl> endpoints = new ArrayList<>();
@@ -55,7 +55,7 @@ public class RestDeleteOperationBuilderImpl implements RestObjectOperationBuilde
     }
 
     @Override
-    public DeleteOperation build() {
+    public ObjectDeleteOperation build() {
         var handlers = new ArrayList<DeleteOperationHandler>();
         if (scim != null && scim.isEnabled()) {
             handlers.add(new ScimDeleteHandler(parent.getObjectClass().objectClass(), parent.context.scim()));

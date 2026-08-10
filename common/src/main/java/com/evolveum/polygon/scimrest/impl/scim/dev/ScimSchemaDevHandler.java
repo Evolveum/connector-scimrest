@@ -10,7 +10,7 @@ import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
 import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.unboundid.scim2.common.types.SchemaResource;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -29,7 +29,7 @@ import java.util.Map;
  * Returns all discovered SCIM schemas with their full JSON content.
  * Only supports id and name filters (equals).
  */
-public class ScimSchemaDevHandler implements ExecuteQueryProcessor {
+public class ScimSchemaDevHandler implements ObjectSearchOperation {
 
 
     private final ScimContext context;

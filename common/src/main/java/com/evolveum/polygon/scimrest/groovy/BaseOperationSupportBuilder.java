@@ -6,15 +6,15 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.scimrest.CompositeObjectClassHandler;
-import com.evolveum.polygon.scimrest.ObjectClassHandler;
+import com.evolveum.polygon.conndev.spi.CompositeObjectClassHandler;
+import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.groovy.api.*;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.evolveum.polygon.scimrest.spi.CreateOperation;
-import com.evolveum.polygon.scimrest.spi.DeleteOperation;
-import com.evolveum.polygon.scimrest.spi.ExecuteQueryProcessor;
-import com.evolveum.polygon.scimrest.spi.ObjectClassOperation;
-import com.evolveum.polygon.scimrest.spi.UpdateOperation;
+import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
+import com.evolveum.polygon.conndev.spi.ObjectDeleteOperation;
+import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
+import com.evolveum.polygon.conndev.spi.ObjectClassOperation;
+import com.evolveum.polygon.conndev.spi.ObjectUpdateOperation;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -81,8 +81,8 @@ public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilde
     }
 
 
-    public BaseOperationSupportBuilder search(ExecuteQueryProcessor processor) {
-        buildedOperations.put(ExecuteQueryProcessor.class, processor);
+    public BaseOperationSupportBuilder search(ObjectSearchOperation processor) {
+        buildedOperations.put(ObjectSearchOperation.class, processor);
         return this;
     }
 
@@ -91,10 +91,10 @@ public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilde
     }
 
     public ObjectClassHandler build() {
-        buildOperationIfEmpty(ExecuteQueryProcessor.class, searchOpBuilder);
-        buildOperationIfEmpty(CreateOperation.class, createOpBuilder);
-        buildOperationIfEmpty(UpdateOperation.class, updateOpBuilder);
-        buildOperationIfEmpty(DeleteOperation.class, deleteOpBuilder);
+        buildOperationIfEmpty(ObjectSearchOperation.class, searchOpBuilder);
+        buildOperationIfEmpty(ObjectCreateOperation.class, createOpBuilder);
+        buildOperationIfEmpty(ObjectUpdateOperation.class, updateOpBuilder);
+        buildOperationIfEmpty(ObjectDeleteOperation.class, deleteOpBuilder);
         return new CompositeObjectClassHandler(objectClass.objectClass(), buildedOperations);
     }
 
