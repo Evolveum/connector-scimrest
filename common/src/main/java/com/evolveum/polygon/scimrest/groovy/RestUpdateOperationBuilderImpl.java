@@ -8,6 +8,10 @@ package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateRequest;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
+import com.evolveum.polygon.conndev.groovy.AbstractUpdateOperationBuilder;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
@@ -32,14 +36,27 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
-public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilder, RestObjectOperationBuilder<ObjectUpdateOperation> {
+public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuilder
+        implements RestUpdateOperationBuilder, RestObjectOperationBuilder<ObjectUpdateOperation> {
 
     private final BaseOperationSupportBuilder parent;
     private final List<EndpointImpl> endpoints = new ArrayList<>();
     private ScimUpdateBuilderImpl scim;
+    private DefinitionValue<Boolean> enabled = DefinitionValue.DEFAULT_TRUE;
 
     public RestUpdateOperationBuilderImpl(BaseOperationSupportBuilder parent) {
         this.parent = parent;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled.value();
+    }
+
+    @Override
+    public UpdateOperationBuilder enabled(DefinitionValue<Boolean> value) {
+        enabled = enabled.moreSpecific(value);
+        return this;
     }
 
     @Override
@@ -113,12 +130,12 @@ public class RestUpdateOperationBuilderImpl implements RestUpdateOperationBuilde
         }
 
         @Override
-        public AttributeValueFilter supportedAttribute(String attributeName) {
+        public RestUpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName) {
             return supportedAttributes.supportedAttribute(attributeName);
         }
 
         @Override
-        public AttributeValueFilter supportedAttribute(String attributeName, Closure<?> closure) {
+        public RestUpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName, Closure<?> closure) {
             var attr = supportedAttribute(attributeName);
             return GroovyClosures.callAndReturnDelegate(closure, attr);
         }

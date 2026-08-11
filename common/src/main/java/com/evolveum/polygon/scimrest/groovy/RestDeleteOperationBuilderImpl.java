@@ -6,6 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.build.api.DeleteOperationBuilder;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
+import com.evolveum.polygon.conndev.groovy.AbstractDeleteOperationBuilder;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
@@ -23,14 +26,27 @@ import org.identityconnectors.framework.common.objects.Uid;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RestDeleteOperationBuilderImpl implements RestObjectOperationBuilder<ObjectDeleteOperation>, RestDeleteOperationBuilder {
+public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuilder
+        implements RestObjectOperationBuilder<ObjectDeleteOperation>, RestDeleteOperationBuilder {
 
     private final BaseOperationSupportBuilder parent;
     private final List<EndpointImpl> endpoints = new ArrayList<>();
     private ScimImpl scim;
+    private DefinitionValue<Boolean> enabled = DefinitionValue.DEFAULT_TRUE;
 
     public RestDeleteOperationBuilderImpl(BaseOperationSupportBuilder parent) {
         this.parent = parent;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled.value();
+    }
+
+    @Override
+    public DeleteOperationBuilder enabled(DefinitionValue<Boolean> value) {
+        enabled = enabled.moreSpecific(value);
+        return this;
     }
 
     @Override

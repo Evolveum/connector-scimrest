@@ -6,6 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.build.api.CreateOperationBuilder;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
+import com.evolveum.polygon.conndev.groovy.AbstractCreateOperationBuilder;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
@@ -31,16 +34,30 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
-public class RestCreateOperationBuilderImpl implements RestObjectOperationBuilder<ObjectCreateOperation>, RestCreateOperationBuilder {
+public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuilder
+        implements RestObjectOperationBuilder<ObjectCreateOperation>, RestCreateOperationBuilder {
 
 
     private final List<EndpointImpl> endpoints = new ArrayList<>();
     private final BaseOperationSupportBuilder parent;
     private ScimCreateBuilder scim;
+    private DefinitionValue<Boolean> enabled = DefinitionValue.DEFAULT_TRUE;
 
     public RestCreateOperationBuilderImpl(BaseOperationSupportBuilder parent) {
         this.parent = parent;
     }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled.value();
+    }
+
+    @Override
+    public CreateOperationBuilder enabled(DefinitionValue<Boolean> value) {
+        enabled = enabled.moreSpecific(value);
+        return this;
+    }
+
     @Override
     public Endpoint endpoint(HttpMethod method, String path) {
         for (EndpointImpl endpoint : endpoints) {

@@ -6,10 +6,10 @@
  */
 package com.evolveum.polygon.scimrest.impl;
 
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateRequest;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.evolveum.polygon.conndev.spi.ObjectUpdateOperation;
 import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
-import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
@@ -68,7 +68,7 @@ public class UpdateOperationStrategyHandler implements ObjectUpdateOperation {
         for (var capability : handlersToUse) {
             var deltasToApply = capability.supported();
             // FIXME: After state should be computed for absolute here? or in handler?
-            var request = new RestUpdateOperationBuilder.UpdateRequest(objectClass, uid, capability.supported(), originalState);
+            var request = new UpdateRequest(objectClass, uid, capability.supported(), originalState);
             capability.handler().update(request, options);
 
         }

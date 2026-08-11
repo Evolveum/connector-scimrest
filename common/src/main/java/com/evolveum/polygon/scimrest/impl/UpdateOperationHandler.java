@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.impl;
 
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateRequest;
 import com.evolveum.polygon.conndev.spi.AttributeAwareOperationHandler;
-import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 
@@ -22,5 +22,5 @@ public interface UpdateOperationHandler extends AttributeAwareOperationHandler<A
     boolean requiresOriginalState();
 
 
-    void update(RestUpdateOperationBuilder.UpdateRequest request, OperationOptions options);
+    void update(UpdateRequest request, OperationOptions options);
 }

@@ -6,17 +6,14 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.Script;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.Uid;
 
-import java.util.Collection;
 import java.util.Set;
 
 public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<RestUpdateOperationBuilder.Endpoint> {
@@ -75,7 +72,8 @@ public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<R
 
     }
 
-    interface Endpoint extends AttributeSpecific<AttributeValueFilter, Endpoint>, EndpointBuilder.SingleObject<UpdateRequest, Set<AttributeDelta>> {
+    interface Endpoint extends AttributeSpecific<AttributeValueFilter, Endpoint>,
+            EndpointBuilder.SingleObject<UpdateOperationBuilder.UpdateRequest, Set<AttributeDelta>> {
 
 
     }
@@ -89,12 +87,5 @@ public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<R
         AttributeValueFilter value(Object value);
 
         AttributeValueFilter transition(Object oldValue, Object newValue);
-    }
-
-    record UpdateRequest(ObjectClass clazz, Uid uid, Collection<AttributeDelta> attributeDeltaSet, ConnectorObject before) {
-    }
-
-    record UpdateResponse(Uid uid, Set<AttributeDelta> changesApplied) {
-
     }
 }
