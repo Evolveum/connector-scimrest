@@ -100,7 +100,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
         }
 
         @Override
-        protected EndpointImpl self() {
+        public EndpointImpl self() {
             return this;
         }
 

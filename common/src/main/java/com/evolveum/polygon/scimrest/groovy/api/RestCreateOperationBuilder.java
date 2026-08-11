@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.Script;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
@@ -44,12 +45,12 @@ public interface RestCreateOperationBuilder extends RestOperationBuilder<RestCre
         return GroovyClosures.callAndReturnDelegate(value, scim());
     }
 
-    interface Endpoint extends EndpointBuilder.SingleObject<Set<Attribute>, ConnectorObject>, RestUpdateOperationBuilder.AttributeSpecific<RestUpdateOperationBuilder.AttributeValueFilter, Endpoint> {
+    interface Endpoint extends EndpointBuilder.SingleObject<Set<Attribute>, ConnectorObject>, UpdateOperationBuilder.AttributeSpecific<UpdateOperationBuilder.AttributeValueFilter, Endpoint> {
 
 
         @Override
-        default RestUpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName,
-                                                            @DelegatesTo(value = RestUpdateOperationBuilder.AttributeValueFilter.class, strategy = Closure.DELEGATE_ONLY)
+        default UpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName,
+                                                            @DelegatesTo(value = UpdateOperationBuilder.AttributeValueFilter.class, strategy = Closure.DELEGATE_ONLY)
                                                             @Script.Initialization
                                                             Closure<?> closure) {
             return GroovyClosures.callAndReturnDelegate(closure, supportedAttribute(attributeName));

@@ -6,9 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api.scim;
 
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.Script;
-import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -39,7 +39,7 @@ public interface ScimOperationBuilder<L, B extends ScimOperationBuilder<L,B>> {
     }
 
 
-    interface AttributeSpecific<A extends AttributeValueFilter<?>, T extends AttributeSpecific<A,T>> extends RestUpdateOperationBuilder.AttributeSpecific<A, T> {
+    interface AttributeSpecific<A extends AttributeValueFilter<?>, T extends AttributeSpecific<A,T>> extends UpdateOperationBuilder.AttributeSpecific<A, T> {
 
 
         @Override
@@ -52,7 +52,7 @@ public interface ScimOperationBuilder<L, B extends ScimOperationBuilder<L,B>> {
 
     }
 
-    interface AttributeValueFilter<T extends AttributeLimitations> extends RestUpdateOperationBuilder.AttributeValueFilter {
+    interface AttributeValueFilter<T extends AttributeLimitations> extends UpdateOperationBuilder.AttributeValueFilter {
 
         T limitations();
 

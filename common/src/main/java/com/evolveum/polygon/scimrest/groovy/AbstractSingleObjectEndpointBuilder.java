@@ -38,7 +38,7 @@ public abstract class AbstractSingleObjectEndpointBuilder<I, O, E extends Abstra
 
     }
 
-    abstract protected E self();
+    public abstract E self();
 
 
     private static Map<String,PathParameter> pathParametersFrom(String path) {

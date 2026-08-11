@@ -7,15 +7,15 @@
 package com.evolveum.polygon.scimrest.groovy.api.scim;
 
 
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.scimrest.groovy.Script;
-import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
 public interface ScimCreateBuilder extends
         ScimOperationBuilder<ScimOperationBuilder.Limitations, ScimCreateBuilder>,
-        RestUpdateOperationBuilder.AttributeSpecific<ScimOperationBuilder.AttributeValueFilter<ScimOperationBuilder.AttributeLimitations>, ScimCreateBuilder> {
+        UpdateOperationBuilder.AttributeSpecific<ScimOperationBuilder.AttributeValueFilter<ScimOperationBuilder.AttributeLimitations>, ScimCreateBuilder> {
 
     @Override
     default AttributeValueFilter<AttributeLimitations> supportedAttribute(String attributeName,

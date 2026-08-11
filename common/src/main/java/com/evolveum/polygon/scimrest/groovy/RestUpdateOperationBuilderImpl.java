@@ -19,8 +19,8 @@ import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
-import com.evolveum.polygon.scimrest.impl.UpdateOperationHandler;
-import com.evolveum.polygon.scimrest.impl.UpdateOperationStrategyHandler;
+import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
+import com.evolveum.polygon.conndev.spi.UpdateOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimUpdateHandler;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
@@ -125,17 +125,17 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
         }
 
         @Override
-        protected EndpointImpl self() {
+        public EndpointImpl self() {
             return this;
         }
 
         @Override
-        public RestUpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName) {
+        public UpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName) {
             return supportedAttributes.supportedAttribute(attributeName);
         }
 
         @Override
-        public RestUpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName, Closure<?> closure) {
+        public UpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName, Closure<?> closure) {
             var attr = supportedAttribute(attributeName);
             return GroovyClosures.callAndReturnDelegate(closure, attr);
         }

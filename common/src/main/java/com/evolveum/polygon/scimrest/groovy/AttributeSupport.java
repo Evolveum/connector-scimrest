@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 
-import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.schema.MappedAttribute;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -65,7 +65,7 @@ public record AttributeSupport(MappedAttribute attributeInfo, Collection<Object>
     }
 
 
-    public static class SupportBuilder<T extends RestUpdateOperationBuilder.AttributeSpecific<RestUpdateOperationBuilder.AttributeValueFilter, T>> implements RestUpdateOperationBuilder.AttributeSpecific<RestUpdateOperationBuilder.AttributeValueFilter,T> {
+    public static class SupportBuilder<T extends UpdateOperationBuilder.AttributeSpecific<UpdateOperationBuilder.AttributeValueFilter, T>> implements UpdateOperationBuilder.AttributeSpecific<UpdateOperationBuilder.AttributeValueFilter,T> {
 
         private final T parent;
         protected final Map<String, Builder> supportedAttributes = new HashMap<>();
@@ -97,14 +97,14 @@ public record AttributeSupport(MappedAttribute attributeInfo, Collection<Object>
         }
     }
 
-    public static class Builder implements RestUpdateOperationBuilder.AttributeValueFilter {
+    public static class Builder implements UpdateOperationBuilder.AttributeValueFilter {
 
         private Collection<Object> values;
         private Collection<Transition> transitions;
 
 
         @Override
-        public RestUpdateOperationBuilder.AttributeValueFilter value(Object value) {
+        public UpdateOperationBuilder.AttributeValueFilter value(Object value) {
             if (values == null) {
                 values = new ArrayList<>();
             }
@@ -113,7 +113,7 @@ public record AttributeSupport(MappedAttribute attributeInfo, Collection<Object>
         }
 
         @Override
-        public RestUpdateOperationBuilder.AttributeValueFilter transition(Object oldValue, Object newValue) {
+        public UpdateOperationBuilder.AttributeValueFilter transition(Object oldValue, Object newValue) {
             if (transitions == null) {
                 transitions = new ArrayList<>();
             }

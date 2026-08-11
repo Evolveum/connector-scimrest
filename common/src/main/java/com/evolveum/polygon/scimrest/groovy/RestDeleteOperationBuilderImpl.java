@@ -104,7 +104,7 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
         }
 
         @Override
-        protected EndpointImpl self() {
+        public EndpointImpl self() {
             return this;
         }
 

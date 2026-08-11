@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.yaml;
 
+import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
@@ -50,7 +51,7 @@ final class YamlEndpoints {
     }
 
     static void configureSupportedAttributes(
-            RestUpdateOperationBuilder.AttributeSpecific<RestUpdateOperationBuilder.AttributeValueFilter, ?> ep,
+            UpdateOperationBuilder.AttributeSpecific<UpdateOperationBuilder.AttributeValueFilter, ?> ep,
             List<YamlSupportedAttribute> supportedAttributes) {
         if (supportedAttributes == null) {
             return;

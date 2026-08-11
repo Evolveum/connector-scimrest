@@ -52,40 +52,9 @@ public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<R
         return GroovyClosures.callAndReturnDelegate(value, endpoint);
     }
 
-    interface AttributeSpecific<A extends AttributeValueFilter, T extends AttributeSpecific<A,T>> {
-
-        A supportedAttribute(String attributeName);
-
-        A supportedAttribute(String attributeName,
-                             @DelegatesTo(value = AttributeValueFilter.class, strategy = Closure.DELEGATE_ONLY)
-                             @Script.Initialization
-                             Closure<?> closure);
-
-        default T supportedAttributes(String... attributes) {
-            for (var attribute : attributes) {
-                supportedAttribute(attribute);
-            }
-
-            //noinspection unchecked
-            return (T) this;
-        }
-
-    }
-
-    interface Endpoint extends AttributeSpecific<AttributeValueFilter, Endpoint>,
+    interface Endpoint extends UpdateOperationBuilder.AttributeSpecific<UpdateOperationBuilder.AttributeValueFilter, Endpoint>,
             EndpointBuilder.SingleObject<UpdateOperationBuilder.UpdateRequest, Set<AttributeDelta>> {
 
 
-    }
-
-
-    interface AttributeValueFilter {
-
-        /**
-         * Value, which should be accepted and processed
-         **/
-        AttributeValueFilter value(Object value);
-
-        AttributeValueFilter transition(Object oldValue, Object newValue);
     }
 }
