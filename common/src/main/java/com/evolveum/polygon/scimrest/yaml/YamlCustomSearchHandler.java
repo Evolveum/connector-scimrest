@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.yaml;
 
+import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
 import com.evolveum.polygon.conndev.yaml.model.YamlCustom;
 import com.evolveum.polygon.conndev.yaml.model.YamlSupportedFilter;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;

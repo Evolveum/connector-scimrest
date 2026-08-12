@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.yaml;
 
+import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;

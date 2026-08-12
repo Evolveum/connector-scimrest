@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.yaml;
 
 import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
+import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
 import com.evolveum.polygon.conndev.yaml.model.YamlAttributeResolver;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 
