@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.api;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.api.ParsingException;
 
 public class PathItemNotFoundException extends ParsingException {
 
