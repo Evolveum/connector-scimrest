@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.impl;
 
+import com.evolveum.polygon.conndev.spi.ConnectorManifest;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;

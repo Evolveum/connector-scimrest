@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.unit.groovy;
 
-import com.evolveum.polygon.scimrest.groovy.impl.ConnectorManifest;
+import com.evolveum.polygon.conndev.spi.ConnectorManifest;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.testng.annotations.Test;
 
