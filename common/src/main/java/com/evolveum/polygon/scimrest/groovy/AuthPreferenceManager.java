@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
-import com.evolveum.polygon.scimrest.config.ConfigurationMixin;
+import com.evolveum.polygon.conndev.config.ConfigurationMixin;
 import com.evolveum.polygon.scimrest.impl.rest.JdkHttpRequestConverter;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import org.identityconnectors.common.logging.Log;

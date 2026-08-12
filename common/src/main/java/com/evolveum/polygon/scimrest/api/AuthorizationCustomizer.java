@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.api;
 
-import com.evolveum.polygon.scimrest.config.ConfigurationMixin;
+import com.evolveum.polygon.conndev.config.ConfigurationMixin;
 
 /**
  * Defines a mechanism for customizing the authorization of HTTP requests.

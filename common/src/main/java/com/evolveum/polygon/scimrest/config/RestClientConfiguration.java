@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.config;
 
+import com.evolveum.polygon.conndev.config.ConfigurationMixin;
 import org.identityconnectors.common.security.GuardedString;
 
 public interface RestClientConfiguration extends ConfigurationMixin {
