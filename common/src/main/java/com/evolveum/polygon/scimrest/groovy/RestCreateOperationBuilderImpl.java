@@ -167,7 +167,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
         return parent.getObjectClass().attributeFromProtocolName(key);
     }
 
-    record EndpointHandler(ConnectorContext context, String path, String contentType,
+    record EndpointHandler(RestConnectorContext context, String path, String contentType,
                            HttpMethod method,
                            Function<? super Set<Attribute>, byte[]> requestBody,
                            Function<HttpResponse<?>, ConnectorObject> responseHandler,

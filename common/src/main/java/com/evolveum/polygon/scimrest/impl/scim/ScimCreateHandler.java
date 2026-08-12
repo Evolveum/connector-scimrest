@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
-import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
+import com.evolveum.polygon.scimrest.groovy.RestConnectorContext;
 import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.unboundid.scim2.common.GenericScimResource;
@@ -34,7 +34,7 @@ public class ScimCreateHandler implements CreateOperationHandler {
             throw new IllegalStateException("No SCIM resource mapping for object class: " + objectClass.getObjectClassValue());
         }
 
-        var connectorContext = context.contextLookup().get(ConnectorContext.class);
+        var connectorContext = context.contextLookup().get(RestConnectorContext.class);
         var schema = connectorContext.schema();
         var objectClassDef = schema.objectClass(objectClass.getObjectClassValue());
         

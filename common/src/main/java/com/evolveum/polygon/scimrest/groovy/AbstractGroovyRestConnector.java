@@ -44,7 +44,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
 
     private boolean coreInitialized;
     private boolean handlersInitialized;
-    private ConnectorContext context;
+    private RestConnectorContext context;
     private GroovyRestHandlerBuilder handlersBuilder;
 
     @Deprecated
@@ -76,7 +76,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     @Override
     public void init(Configuration cfg) {
         if (cfg instanceof BaseGroovyConnectorConfiguration groovyConf) {
-            context = new ConnectorContext(groovyConf);
+            context = new RestConnectorContext(groovyConf);
         } else {
             throw new IllegalArgumentException("Configuration must be an instance of AbstractGroovyConnectorConfiguration");
         }

@@ -22,7 +22,7 @@ import java.util.Map;
 public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilder {
 
     private final MappedObjectClass objectClass;
-    final ConnectorContext context;
+    final RestConnectorContext context;
 
     ObjectClassHandler product;
 
@@ -34,7 +34,7 @@ public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilde
     private final RestUpdateOperationBuilderImpl updateOpBuilder;
     private final RestDeleteOperationBuilderImpl deleteOpBuilder;
 
-    public BaseOperationSupportBuilder(ConnectorContext context, MappedObjectClass restObjectClass) {
+    public BaseOperationSupportBuilder(RestConnectorContext context, MappedObjectClass restObjectClass) {
         this.objectClass = restObjectClass;
         this.context = context;
 

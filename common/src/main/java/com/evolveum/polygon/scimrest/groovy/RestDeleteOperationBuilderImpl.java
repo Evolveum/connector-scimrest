@@ -133,7 +133,7 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
     private static class ResponseBuilderImpl extends DeclarativeResponseBuilder<Void> implements EndpointBuilder.ResponseBuilder<Void> {
     }
 
-    record EndpointHandler(ConnectorContext context, String path, HttpMethod method) implements DeleteOperationHandler {
+    record EndpointHandler(RestConnectorContext context, String path, HttpMethod method) implements DeleteOperationHandler {
         @Override
         public void delete(Uid uid, OperationOptions options) {
             var request = context.rest().newRequest();

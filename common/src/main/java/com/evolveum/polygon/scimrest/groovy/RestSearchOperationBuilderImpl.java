@@ -8,14 +8,15 @@ package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
+import com.evolveum.polygon.conndev.groovy.ScriptedAttributeResolverBuilder;
 
 import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
+import com.evolveum.polygon.conndev.spi.AttributeResolver;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.SearchScriptBuilder;
 import com.evolveum.polygon.scimrest.impl.AttributeResolvingSearchHandler;
 import com.evolveum.polygon.conndev.spi.FilterBasedSearchDispatcher;
-import com.evolveum.polygon.scimrest.schema.MappedAttribute;
+import com.evolveum.polygon.conndev.schema.BaseAttributeDefinition;
 import com.evolveum.polygon.scimrest.impl.scim.ScimSearchHandler;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
@@ -131,7 +132,7 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
     private ObjectSearchOperation buildAttributeResolver(ObjectSearchOperation dispatcher) {
         Set<AttributeResolver> perObjectResolvers = new HashSet<>();
         Set<AttributeResolver> batchedResolvers = new HashSet<>();
-        Set<MappedAttribute> supportedAttributes = new HashSet<>();
+        Set<BaseAttributeDefinition> supportedAttributes = new HashSet<>();
         for (var builder : resolvers) {
             var resolver = builder.build();
             supportedAttributes.addAll(resolver.getSupportedAttributes());

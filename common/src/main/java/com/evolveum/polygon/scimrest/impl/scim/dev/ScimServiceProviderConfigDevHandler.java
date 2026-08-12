@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.impl.scim.dev;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
-import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
+import com.evolveum.polygon.scimrest.groovy.RestConnectorContext;
 import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
@@ -42,7 +42,7 @@ public class ScimServiceProviderConfigDevHandler implements ObjectSearchOperatio
         if (providerConfig == null || !matchesFilter(filter)) {
             return;
         }
-        var connectorContext = contextLookup.get(ConnectorContext.class);
+        var connectorContext = contextLookup.get(RestConnectorContext.class);
         var objectClass = connectorContext.schema().objectClass(ScimDevelopmentMode.SERVICE_PROVIDER_CONFIG_OC_NAME);
 
         ConnectorObjectBuilder builder = objectClass.newObjectBuilder();

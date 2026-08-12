@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class RestHandlerBuilder implements OperationBuilder {
 
-    private final ConnectorContext context;
+    private final RestConnectorContext context;
     // Keyed by ObjectClass rather than raw String: ConnId's ObjectClass identity is
     // case-insensitive (see ObjectClass.is()/equals()), so "User" and "user" must resolve to the
     // same handler builder instead of silently producing two competing ones.
@@ -32,7 +32,7 @@ public class RestHandlerBuilder implements OperationBuilder {
     AuthorizationCustomizationBuilderImpl authorization = new AuthorizationCustomizationBuilderImpl();
     TestOperationBuilderImpl testOperation = new TestOperationBuilderImpl();
 
-    public RestHandlerBuilder(ConnectorContext context) {
+    public RestHandlerBuilder(RestConnectorContext context) {
         this.context = context;
     }
 

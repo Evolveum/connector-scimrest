@@ -26,7 +26,7 @@ public class ScriptedGroovySearchProcessor implements FilterAwareExecuteQueryPro
     private final MappedObjectClass objectClass;
     private final Closure<?> implementation;
     private final Set<FilterSpecification> supportedFilters;
-    private final ConnectorContext context;
+    private final RestConnectorContext context;
 
     public ScriptedGroovySearchProcessor(ScriptedGroovySearchBuilderImpl builder) {
         this.context = builder.context;

@@ -18,7 +18,7 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 
 public record ObjectClassScriptingFacade(ContextLookup rest, MappedObjectClass schema, ObjectClassHandler handler) implements ObjectClassScripting {
 
-    static ObjectClassScriptingFacade from(ConnectorContext context, String objectClass) {
+    static ObjectClassScriptingFacade from(RestConnectorContext context, String objectClass) {
         var schema = context.schema().objectClass(objectClass);
         if (schema == null) {
             throw new IllegalArgumentException("No such object class: " + objectClass);

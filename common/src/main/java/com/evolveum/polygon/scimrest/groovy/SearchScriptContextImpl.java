@@ -13,7 +13,7 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
-public record SearchScriptContextImpl(ConnectorContext context, MappedObjectClass definition, Filter filter,
+public record SearchScriptContextImpl(RestConnectorContext context, MappedObjectClass definition, Filter filter,
                                       ResultsHandler resultHandler, OperationOptions operationOptions) implements SearchScriptContext {
 
     @Override

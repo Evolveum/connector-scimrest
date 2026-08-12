@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.impl.scim.dev;
 
 import com.evolveum.polygon.conndev.dev.ConnDevObjectClassSerializer;
 import com.evolveum.polygon.conndev.api.ContextLookup;
-import com.evolveum.polygon.scimrest.groovy.ConnectorContext;
+import com.evolveum.polygon.scimrest.groovy.RestConnectorContext;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -30,7 +30,7 @@ public class ScimObjectClassDevHandler implements ObjectSearchOperation {
     @Override
     public void executeQuery(ContextLookup contextLookup, Filter filter, ResultsHandler resultsHandler,
             OperationOptions operationOptions) {
-        var schema = contextLookup.get(ConnectorContext.class).schema();
+        var schema = contextLookup.get(RestConnectorContext.class).schema();
         if (schema == null) {
             return;
         }

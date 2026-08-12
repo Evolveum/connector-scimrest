@@ -27,7 +27,7 @@ public class HandlerDefinitionBuilder extends GroovyRestHandlerBuilder {
 
     private final YamlRestHandlerLoader yamlLoader;
 
-    public HandlerDefinitionBuilder(GroovyContext context, ConnectorContext schema) {
+    public HandlerDefinitionBuilder(GroovyContext context, RestConnectorContext schema) {
         super(context, schema);
         this.yamlLoader = new YamlRestHandlerLoader(this, context);
     }

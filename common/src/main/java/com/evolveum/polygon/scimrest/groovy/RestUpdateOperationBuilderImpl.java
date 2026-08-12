@@ -206,7 +206,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
 
     }
 
-    record EndpointHandler(ConnectorContext context, String path, String contentType,
+    record EndpointHandler(RestConnectorContext context, String path, String contentType,
                            HttpMethod method,
                            Function<? super UpdateRequest, byte[]> requestBody,
                            Function<HttpResponse<?>, ConnectorObject> responseHandler,
@@ -315,9 +315,9 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
         public ScimPutBuilder put;
         public ScimPatchBuilder patch;
         private boolean enabled = true;
-        private final ConnectorContext context;
+        private final RestConnectorContext context;
 
-        public ScimUpdateBuilderImpl(ConnectorContext context) {
+        public ScimUpdateBuilderImpl(RestConnectorContext context) {
             this.context = context;
         }
 

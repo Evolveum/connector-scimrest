@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.dev.ConnDevAttribute;
 import com.evolveum.polygon.conndev.schema.BaseAttributeDefinition;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
+import com.evolveum.polygon.conndev.spi.AttributeResolver;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 
 import java.util.List;

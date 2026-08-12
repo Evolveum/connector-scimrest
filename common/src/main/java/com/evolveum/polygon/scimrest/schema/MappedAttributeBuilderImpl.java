@@ -15,10 +15,11 @@ import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.conndev.schema.AttributeProtocolMappingBuilder;
 import com.evolveum.polygon.conndev.schema.BaseAttributeBuilder;
+import com.evolveum.polygon.conndev.schema.BaseAttributeDefinition;
 import com.evolveum.polygon.conndev.schema.BaseValueMappingBuilder;
 import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
-import com.evolveum.polygon.scimrest.groovy.ScriptedSingleAttributeResolverBuilder;
+import com.evolveum.polygon.conndev.groovy.ScriptedSingleAttributeResolverBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import tools.jackson.databind.JsonNode;
@@ -67,7 +68,8 @@ public class MappedAttributeBuilderImpl extends BaseAttributeBuilder<
     @Override
     public AttributeResolverBuilder resolver(Closure<?> closure) {
         this.emulated(DefinitionValue.detected(true));
-        this.resolverBuilder = new ScriptedSingleAttributeResolverBuilder(mappedObjectClass.name(), deffered);
+        this.resolverBuilder = new ScriptedSingleAttributeResolverBuilder(
+                mappedObjectClass.name(), Deferred.<BaseAttributeDefinition>searchable(deffered::get));
         GroovyClosures.callAndReturnDelegate(closure, resolverBuilder);
         return resolverBuilder;
     }

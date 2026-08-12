@@ -161,7 +161,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         return true;
     }
 
-    public ScriptedAttributeResolverBuilder.EndpointBasedSearchHandler<BF, OF> build() {
+    public EndpointBasedSearchHandler<BF, OF> build() {
         if (emptyFilterSupported == null && filterMappers.isEmpty()) {
             // No specific filter mappers were specified and empty filter support was not specified explicitly
             // so we assume that empty filter is supported
@@ -170,6 +170,6 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         if (Boolean.TRUE.equals(emptyFilterSupported)) {
             filterMappers.add(FilterToRequestMapper.from(Objects::isNull, (r, f) -> {}));
         }
-        return new ScriptedAttributeResolverBuilder.EndpointBasedSearchHandler<>(this, filterMappers);
+        return new EndpointBasedSearchHandler<>(this, filterMappers);
     }
 }

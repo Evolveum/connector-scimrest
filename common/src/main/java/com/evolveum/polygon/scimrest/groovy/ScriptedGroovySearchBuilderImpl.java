@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class ScriptedGroovySearchBuilderImpl implements SearchScriptBuilder, FilterAwareSearchProcessorBuilder {
 
-    final ConnectorContext context;
+    final RestConnectorContext context;
     public MappedObjectClass objectClass;
     public Set<FilterSpecification> supportedFilters = new HashSet<>();
     private Boolean emptyFilterSupported;
@@ -26,7 +26,7 @@ public class ScriptedGroovySearchBuilderImpl implements SearchScriptBuilder, Fil
     Closure<?> implementationPrototype;
     private boolean enabled = true;
 
-    public ScriptedGroovySearchBuilderImpl(ConnectorContext context, MappedObjectClass objectClass) {
+    public ScriptedGroovySearchBuilderImpl(RestConnectorContext context, MappedObjectClass objectClass) {
         this.context = context;
         this.objectClass = objectClass;
     }

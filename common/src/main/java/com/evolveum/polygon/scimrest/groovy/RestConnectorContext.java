@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.concepts.RetrievableContext;
+import com.evolveum.polygon.conndev.groovy.ConnectorContext;
 import com.evolveum.polygon.conndev.schema.BaseSchema;
 import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
@@ -20,7 +20,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import java.util.Map;
 
-public class ConnectorContext implements ContextLookup, RetrievableContext, com.evolveum.polygon.conndev.groovy.ConnectorContext {
+public class RestConnectorContext implements ConnectorContext {
 
     Map<ObjectClass, ObjectClassHandler> handlers;
     BaseGroovyConnectorConfiguration configuration;
@@ -30,7 +30,7 @@ public class ConnectorContext implements ContextLookup, RetrievableContext, com.
     private RestContext rest;
     private ScimContext scim;
 
-    public ConnectorContext(BaseGroovyConnectorConfiguration groovyConf) {
+    public RestConnectorContext(BaseGroovyConnectorConfiguration groovyConf) {
         this.configuration = groovyConf;
     }
 
@@ -112,17 +112,8 @@ public class ConnectorContext implements ContextLookup, RetrievableContext, com.
     }
 
     @Override
-    public <T extends RetrievableContext> T get(Class<T> contextType) throws IllegalStateException {
-        var ret = getUnchecked(contextType);
-        if (ret == null) {
-            throw new IllegalStateException(String.format("No context found for type %s", contextType.getName()));
-        }
-        return ret;
-    }
-
-    @Override
     public <T extends RetrievableContext> T getUnchecked(Class<T> contextType) {
-        if (ConnectorContext.class.equals(contextType)) {
+        if (contextType.isInstance(this)) {
             return contextType.cast(this);
         }
         if (ScimContext.class.equals(contextType)) {

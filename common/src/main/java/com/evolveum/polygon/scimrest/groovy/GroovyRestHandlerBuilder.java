@@ -21,7 +21,7 @@ public class GroovyRestHandlerBuilder extends RestHandlerBuilder {
 
     private final GroovyShell shell;
 
-    public GroovyRestHandlerBuilder(GroovyContext context, ConnectorContext schema) {
+    public GroovyRestHandlerBuilder(GroovyContext context, RestConnectorContext schema) {
         super(schema);
         this.shell = context.createShell();
         shell.setVariable("objectClass", new MethodClosure(this, "objectClass"));

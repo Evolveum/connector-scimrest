@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.impl;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
-import com.evolveum.polygon.scimrest.groovy.api.AttributeResolver;
+import com.evolveum.polygon.conndev.spi.AttributeResolver;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static com.evolveum.polygon.scimrest.groovy.api.AttributeResolver.SKIP_ATTRIBUTE_RESOLUTION_OPTION;
+import static com.evolveum.polygon.conndev.spi.AttributeResolver.SKIP_ATTRIBUTE_RESOLUTION_OPTION;
 
 public class AttributeResolvingSearchHandler implements ObjectSearchOperation {
 
