@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.concepts.RetrievableContext;
+import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.conndev.groovy.ConnectorContext;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.conndev.schema.BaseSchema;

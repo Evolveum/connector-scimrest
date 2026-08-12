@@ -10,7 +10,7 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

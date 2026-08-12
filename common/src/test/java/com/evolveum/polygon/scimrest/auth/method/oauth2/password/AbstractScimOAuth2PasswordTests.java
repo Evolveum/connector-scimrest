@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.auth.method.oauth2.password;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;

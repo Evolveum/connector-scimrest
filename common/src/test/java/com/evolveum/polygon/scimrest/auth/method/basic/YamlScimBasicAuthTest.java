@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.auth.method.basic;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.groovy.impl.ManifestBasedConnector;

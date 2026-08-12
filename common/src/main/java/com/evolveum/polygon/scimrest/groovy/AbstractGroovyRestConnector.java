@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;

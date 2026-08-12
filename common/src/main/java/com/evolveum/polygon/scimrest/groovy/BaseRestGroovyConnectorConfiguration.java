@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
