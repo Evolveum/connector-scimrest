@@ -14,7 +14,7 @@ import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
 import com.evolveum.polygon.conndev.spi.AttributeResolver;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.SearchScriptBuilder;
-import com.evolveum.polygon.scimrest.impl.AttributeResolvingSearchHandler;
+import com.evolveum.polygon.conndev.spi.AttributeResolvingSearchHandler;
 import com.evolveum.polygon.conndev.spi.FilterBasedSearchDispatcher;
 import com.evolveum.polygon.conndev.schema.BaseAttributeDefinition;
 import com.evolveum.polygon.scimrest.impl.scim.ScimSearchHandler;
