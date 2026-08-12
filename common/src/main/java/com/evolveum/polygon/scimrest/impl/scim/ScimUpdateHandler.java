@@ -11,7 +11,7 @@ import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateReque
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.groovy.RestConnectorContext;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
-import com.evolveum.polygon.scimrest.schema.MappedAttribute;
+import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.unboundid.scim2.common.GenericScimResource;
 import org.identityconnectors.framework.common.objects.*;
@@ -82,7 +82,7 @@ public class ScimUpdateHandler implements UpdateOperationHandler {
         
         for (AttributeDelta delta : deltas) {
             AttributePath path = AttributePath.of(delta.getName());
-            MappedAttribute definition = objectClass.attributeFromConnIdName(delta.getName());
+            RestAttributeDefinition definition = objectClass.attributeFromConnIdName(delta.getName());
             if (definition != null) {
                 JsonAttributeMapping jsonMapping = definition.mapping(JsonAttributeMapping.class);
                 if (jsonMapping != null) {

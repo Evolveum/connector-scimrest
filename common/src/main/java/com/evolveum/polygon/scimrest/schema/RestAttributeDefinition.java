@@ -8,23 +8,17 @@ package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.dev.ConnDevAttribute;
 import com.evolveum.polygon.conndev.schema.BaseAttributeDefinition;
-import com.evolveum.polygon.conndev.spi.AttributeResolver;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 
 import java.util.List;
 
-public class MappedAttribute extends BaseAttributeDefinition {
+public class RestAttributeDefinition extends BaseAttributeDefinition {
 
     private final String nativeType;
-    private final AttributeResolver attributeResolver;
-    private final ScimAttributeMapping scim;
 
-    public MappedAttribute(MappedAttributeBuilderImpl builder) {
+    public RestAttributeDefinition(RestAttributeBuilderImpl builder) {
         super(builder);
         this.nativeType = builder.nativeType;
-        this.scim = mapping(ScimAttributeMapping.class);
-        builder.deffered.set(this);
-        this.attributeResolver = builder.resolverBuilder != null ? builder.resolverBuilder.build() : null;
     }
 
     @Override
@@ -33,15 +27,12 @@ public class MappedAttribute extends BaseAttributeDefinition {
     }
 
     public ScimAttributeMapping scim() {
-        return scim;
-    }
-
-    public AttributeResolver attributeResolver() {
-        return attributeResolver;
+        return mapping(ScimAttributeMapping.class);
     }
 
     @Override
     public void contribute(ConnDevAttribute target) {
+        var scim = scim();
         if (scim != null && scim.path() != null) {
             target.protocolSpecific("scim", List.of(AttributeBuilder.build("path", scim.path().toString())));
         }

@@ -16,23 +16,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class MappedObjectClass extends BaseObjectClassDefinition<MappedAttribute> {
+public class MappedObjectClass extends BaseObjectClassDefinition<RestAttributeDefinition> {
 
     private final ObjectClassScimMapping scim;
 
-    public MappedObjectClass(ObjectClassInfo connId, Map<String, MappedAttribute> nativeAttrs, Map<String, MappedAttribute> connIdAttrs) {
+    public MappedObjectClass(ObjectClassInfo connId, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs) {
         this(connId, nativeAttrs, connIdAttrs, null);
     }
 
-    public MappedObjectClass(ObjectClassInfo connId, Map<String, MappedAttribute> nativeAttrs, Map<String, MappedAttribute> connIdAttrs,
+    public MappedObjectClass(ObjectClassInfo connId, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs,
             ObjectClassScimMapping scim) {
         super(connId, nativeAttrs, connIdAttrs);
         this.scim = scim;
     }
 
     @Override
-    public MappedAttribute attributeFromProtocolName(String protocolName) {
-        return (MappedAttribute) super.attributeFromProtocolName(protocolName);
+    public RestAttributeDefinition attributeFromProtocolName(String protocolName) {
+        return (RestAttributeDefinition) super.attributeFromProtocolName(protocolName);
     }
 
     @Override

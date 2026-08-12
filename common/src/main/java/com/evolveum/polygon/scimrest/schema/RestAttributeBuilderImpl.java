@@ -7,46 +7,39 @@
 package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
-import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
 import com.evolveum.polygon.conndev.build.api.ValueMappingBuilder;
 import com.evolveum.polygon.conndev.concepts.DefinitionValue;
-import com.evolveum.polygon.conndev.concepts.Deferred;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.conndev.schema.AttributeProtocolMappingBuilder;
 import com.evolveum.polygon.conndev.schema.BaseAttributeBuilder;
-import com.evolveum.polygon.conndev.schema.BaseAttributeDefinition;
 import com.evolveum.polygon.conndev.schema.BaseValueMappingBuilder;
 import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
-import com.evolveum.polygon.conndev.groovy.ScriptedSingleAttributeResolverBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import tools.jackson.databind.JsonNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public class MappedAttributeBuilderImpl extends BaseAttributeBuilder<
-        MappedAttributeBuilderImpl,
+public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
+        RestAttributeBuilderImpl,
         RestAttributeBuilder<RestReferenceAttributeBuilder>,
         RestReferenceAttributeBuilder,
-        MappedAttribute> implements RestReferenceAttributeBuilder {
+        RestAttributeDefinition> implements RestReferenceAttributeBuilder {
 
     private final MappedObjectClassBuilder mappedObjectClass;
 
     String nativeType;
     ScimBuilder scim;
 
-    public Deferred.Settable<MappedAttribute> deffered = Deferred.settable();
-    ScriptedSingleAttributeResolverBuilder resolverBuilder;
-
-    public MappedAttributeBuilderImpl(MappedObjectClassBuilder parent, DefinitionValue<String> name) {
+    public RestAttributeBuilderImpl(MappedObjectClassBuilder parent, DefinitionValue<String> name) {
         super(parent, name);
         this.mappedObjectClass = parent;
     }
 
     /** The native protocol type as declared by the remote system (e.g. SCIM {@code dateTime}). */
-    public MappedAttributeBuilderImpl nativeType(String nativeType) {
+    public RestAttributeBuilderImpl nativeType(String nativeType) {
         this.nativeType = nativeType;
         return this;
     }
@@ -66,17 +59,8 @@ public class MappedAttributeBuilderImpl extends BaseAttributeBuilder<
     }
 
     @Override
-    public AttributeResolverBuilder resolver(Closure<?> closure) {
-        this.emulated(DefinitionValue.detected(true));
-        this.resolverBuilder = new ScriptedSingleAttributeResolverBuilder(
-                mappedObjectClass.name(), Deferred.<BaseAttributeDefinition>searchable(deffered::get));
-        GroovyClosures.callAndReturnDelegate(closure, resolverBuilder);
-        return resolverBuilder;
-    }
-
-    @Override
-    public MappedAttribute build() {
-        return new MappedAttribute(this);
+    public RestAttributeDefinition build() {
+        return new RestAttributeDefinition(this);
     }
 
     /**

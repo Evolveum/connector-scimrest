@@ -22,7 +22,7 @@ import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
 import com.evolveum.polygon.conndev.spi.UpdateOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimUpdateHandler;
-import com.evolveum.polygon.scimrest.schema.MappedAttribute;
+import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.conndev.spi.ObjectUpdateOperation;
 import tools.jackson.databind.node.JsonNodeFactory;
@@ -109,7 +109,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
         return !(scim.put != null && scim.put.enabled) && !(scim.patch != null && scim.patch.enabled);
     }
 
-    private MappedAttribute resolveAttribute(String key) {
+    private RestAttributeDefinition resolveAttribute(String key) {
         // FIXME: Perform checks and throw error if incorrect
         return parent.getObjectClass().attributeFromProtocolName(key);
     }

@@ -24,8 +24,8 @@ public class MappedObjectClassBuilder extends BaseObjectClassDefinitionBuilder<
         MappedObjectClass,
         RestAttributeBuilder<RestReferenceAttributeBuilder>,
         RestReferenceAttributeBuilder,
-        MappedAttributeBuilderImpl,
-        MappedAttribute> implements RestObjectClassSchemaBuilder {
+        RestAttributeBuilderImpl,
+        RestAttributeDefinition> implements RestObjectClassSchemaBuilder {
 
     private ScimMapping scim;
 
@@ -34,22 +34,22 @@ public class MappedObjectClassBuilder extends BaseObjectClassDefinitionBuilder<
     }
 
     @Override
-    protected MappedAttributeBuilderImpl newAttribute(DefinitionValue<String> def) {
-        return new MappedAttributeBuilderImpl(this, def);
+    protected RestAttributeBuilderImpl newAttribute(DefinitionValue<String> def) {
+        return new RestAttributeBuilderImpl(this, def);
     }
 
     @Override
-    public MappedAttributeBuilderImpl attribute(String name) {
-        return (MappedAttributeBuilderImpl) super.attribute(name);
+    public RestAttributeBuilderImpl attribute(String name) {
+        return (RestAttributeBuilderImpl) super.attribute(name);
     }
 
     @Override
-    public MappedAttributeBuilderImpl reference(String name) {
-        return (MappedAttributeBuilderImpl) super.reference(name);
+    public RestAttributeBuilderImpl reference(String name) {
+        return (RestAttributeBuilderImpl) super.reference(name);
     }
 
     @Override
-    protected MappedObjectClass buildImpl(ObjectClassInfo connIdInfo, Map<String, MappedAttribute> nativeAttrs, Map<String, MappedAttribute> connIdAttrs) {
+    protected MappedObjectClass buildImpl(ObjectClassInfo connIdInfo, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs) {
         var scimMapping = scim != null ? new MappedObjectClass.ObjectClassScimMapping(scim.name(), scim.schemaUri()) : null;
         return new MappedObjectClass(connIdInfo, nativeAttrs, connIdAttrs, scimMapping);
     }

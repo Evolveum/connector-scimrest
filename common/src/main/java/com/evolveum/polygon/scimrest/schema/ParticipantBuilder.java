@@ -65,11 +65,11 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
     }
 
     static class AttributeBuilder implements RestReferenceAttributeBuilder,
-            ReferenceAttributeBuilder.Delegator<RestReferenceAttributeBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, MappedAttribute> {
+            ReferenceAttributeBuilder.Delegator<RestReferenceAttributeBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, RestAttributeDefinition> {
 
-        private final MappedAttributeBuilderImpl delegate;
+        private final RestAttributeBuilderImpl delegate;
 
-        public AttributeBuilder(MappedAttributeBuilderImpl delegate) {
+        public AttributeBuilder(RestAttributeBuilderImpl delegate) {
             this.delegate = delegate;
         }
 

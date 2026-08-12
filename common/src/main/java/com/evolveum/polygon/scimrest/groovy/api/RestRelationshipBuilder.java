@@ -7,11 +7,11 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.conndev.build.api.RelationshipBuilder;
-import com.evolveum.polygon.scimrest.schema.MappedAttribute;
+import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface RestRelationshipBuilder extends RelationshipBuilder<RestReferenceAttributeBuilder, MappedAttribute> {
+public interface RestRelationshipBuilder extends RelationshipBuilder<RestReferenceAttributeBuilder, RestAttributeDefinition> {
 
     /**
      * Declares object class as a subject of this relationship
@@ -33,7 +33,7 @@ public interface RestRelationshipBuilder extends RelationshipBuilder<RestReferen
     @Override
     Participant object(String objectClass, @DelegatesTo(value = Participant.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
-    interface Participant extends RelationshipBuilder.Participant<RestReferenceAttributeBuilder, MappedAttribute> {
+    interface Participant extends RelationshipBuilder.Participant<RestReferenceAttributeBuilder, RestAttributeDefinition> {
 
         @Override
         RestReferenceAttributeBuilder attribute(String name);

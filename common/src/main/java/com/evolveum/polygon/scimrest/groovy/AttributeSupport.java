@@ -9,14 +9,14 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
-import com.evolveum.polygon.scimrest.schema.MappedAttribute;
+import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
 
 import java.util.*;
 
-public record AttributeSupport(MappedAttribute attributeInfo, Collection<Object> values, Collection<Transition> transitions) {
+public record AttributeSupport(RestAttributeDefinition attributeInfo, Collection<Object> values, Collection<Transition> transitions) {
 
 
     record Transition(Object from, Object to) {
@@ -121,7 +121,7 @@ public record AttributeSupport(MappedAttribute attributeInfo, Collection<Object>
             return this;
         }
 
-        public AttributeSupport build(MappedAttribute attribute) {
+        public AttributeSupport build(RestAttributeDefinition attribute) {
             return new AttributeSupport(attribute, values == null ? null : Set.copyOf(values),
                     transitions == null ? null : Set.copyOf(transitions));
         }

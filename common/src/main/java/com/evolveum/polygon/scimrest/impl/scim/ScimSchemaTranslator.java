@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
-import com.evolveum.polygon.scimrest.schema.MappedAttributeBuilderImpl;
+import com.evolveum.polygon.scimrest.schema.RestAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClassBuilder;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import com.unboundid.scim2.common.types.AttributeDefinition;
@@ -89,7 +89,7 @@ public class ScimSchemaTranslator {
 
     }
 
-    private void populateAttribute(MappedAttributeBuilderImpl attribute, AttributeDefinition scimAttr) {
+    private void populateAttribute(RestAttributeBuilderImpl attribute, AttributeDefinition scimAttr) {
         attribute.scim().type(jsonType(scimAttr.getType()));
         attribute.nativeType(scimAttr.getType().getName());
         attribute.connId().description(detected(scimAttr.getDescription()));
@@ -196,7 +196,7 @@ public class ScimSchemaTranslator {
         };
     }
 
-    private MappedAttributeBuilderImpl findOrCreateAttribute(AttributeDefinition scimAttr, MappedObjectClassBuilder objectClass, boolean onlyListed) {
+    private RestAttributeBuilderImpl findOrCreateAttribute(AttributeDefinition scimAttr, MappedObjectClassBuilder objectClass, boolean onlyListed) {
         for (var attr : objectClass.allAttributes()) {
             if (scimAttr.getName().equals(attr.scim().name())) {
                 return attr;

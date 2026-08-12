@@ -8,11 +8,11 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.build.api.AttributeBuilder;
-import com.evolveum.polygon.scimrest.schema.MappedAttribute;
+import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends AttributeBuilder<F, MappedAttribute> {
+public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends AttributeBuilder<F, RestAttributeDefinition> {
 
     // Protocol specific mappings
 

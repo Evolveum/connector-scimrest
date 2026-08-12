@@ -18,7 +18,7 @@ import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
 import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
 import com.evolveum.polygon.conndev.spi.CreateOperationStrategyHandler;
-import com.evolveum.polygon.scimrest.schema.MappedAttribute;
+import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
 import tools.jackson.databind.node.JsonNodeFactory;
@@ -162,7 +162,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
 
     }
 
-    private MappedAttribute resolveAttribute(String key) {
+    private RestAttributeDefinition resolveAttribute(String key) {
         // FIXME: Perform checks and throw error if incorrect
         return parent.getObjectClass().attributeFromProtocolName(key);
     }

@@ -144,7 +144,7 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
         }
         for (var attribute : parent.getObjectClass().attributes()) {
             if (attribute.emulated()) {
-                var resolver = attribute.attributeResolver();
+                var resolver = attribute.resolver();
                 if (resolver == null && !supportedAttributes.contains(attribute)) {
                     throw new IllegalStateException("Attribute: " + attribute.remoteName() + " is emulated, but no resolver exists.");
                 }
