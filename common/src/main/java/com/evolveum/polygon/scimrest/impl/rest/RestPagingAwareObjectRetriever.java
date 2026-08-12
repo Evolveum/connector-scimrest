@@ -10,7 +10,7 @@ import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
-import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
+import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;

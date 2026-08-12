@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.impl;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
-import com.evolveum.polygon.scimrest.spi.BatchAwareResultHandler;
+import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.conndev.spi.AttributeResolver;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
