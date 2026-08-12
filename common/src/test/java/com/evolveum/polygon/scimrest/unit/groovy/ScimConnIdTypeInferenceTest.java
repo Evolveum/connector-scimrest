@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.unit.groovy;
 
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.GroovyContext;
+import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import org.testng.annotations.Test;

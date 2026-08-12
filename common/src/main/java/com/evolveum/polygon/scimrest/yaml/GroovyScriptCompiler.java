@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.yaml;
 
-import com.evolveum.polygon.scimrest.groovy.GroovyContext;
+import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import groovy.lang.Closure;
 
 /**
