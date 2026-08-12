@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.Script;
+import com.evolveum.polygon.conndev.annotations.Script;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 

@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.SearchScriptBuilder;

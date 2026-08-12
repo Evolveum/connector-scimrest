@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
-import com.evolveum.polygon.scimrest.groovy.Script;
+import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
