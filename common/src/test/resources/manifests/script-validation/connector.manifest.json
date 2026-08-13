@@ -1,0 +1,11 @@
+{
+  "connector": {
+    "schema": [
+      { "script": "/manifests/script-validation/Account.schema.groovy" },
+      { "script": "/manifests/script-validation/Group.schema.groovy" }
+    ],
+    "operation": [
+      { "script": "/manifests/script-validation/Account.op.groovy" }
+    ]
+  }
+}

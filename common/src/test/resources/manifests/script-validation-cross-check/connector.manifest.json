@@ -1,0 +1,10 @@
+{
+  "connector": {
+    "schema": [
+      { "script": "/manifests/script-validation-cross-check/Account.schema.groovy" }
+    ],
+    "operation": [
+      { "script": "/manifests/script-validation-cross-check/Account.op.groovy" }
+    ]
+  }
+}

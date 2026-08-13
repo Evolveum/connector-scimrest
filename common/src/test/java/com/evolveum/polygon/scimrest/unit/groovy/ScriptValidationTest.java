@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.unit.groovy;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
 
@@ -18,12 +19,15 @@ import org.testng.annotations.Test;
 import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 /**
- * Tests for the script validation via {@link AbstractGroovyRestConnector#runScriptOnResource}.
+ * Connector-specific script validation behavior via {@link AbstractGroovyRestConnector
+ * #runScriptOnResource}: isolation from live handler registration. The underlying validation
+ * algorithm itself (compile/evaluate/build phases, error formatting, the development-mode gate)
+ * is tested once, connector-independently, in conndev's {@code GroovyScriptValidatorTest} and
+ * {@code ClassHandlerConnectorBaseScriptValidationTest}.
  */
 public class ScriptValidationTest {
 
@@ -32,12 +36,6 @@ public class ScriptValidationTest {
 
     private static final String VALID_OPERATION_SCRIPT =
             "objectClass('User') { search { endpoint('/users') { emptyFilterSupported true } } }";
-
-    private static final String WRONG_DSL_LEVEL_SCRIPT =
-            "objectClass('User') { endpoint('/users') { emptyFilterSupported true } }";
-
-    private static final String SYNTAX_ERROR_SCRIPT =
-            "objectClass('User') {\n  search {\n";
 
     public static class TestConfiguration extends BaseGroovyConnectorConfiguration implements RestClientConfiguration {
         @Override public String getBaseAddress()      { return "http://localhost"; }
@@ -82,100 +80,10 @@ public class ScriptValidationTest {
     }
 
     @Test
-    public void syntaxErrorIsReportedAsCompilationErrorWithLine() {
-        var result = validate(connector(true), SYNTAX_ERROR_SCRIPT);
-
-        assertEquals(result.get("status"), "error");
-        assertEquals(result.get("phase"), "compile");
-        assertNotNull(result.get("message"));
-        assertNotNull(result.get("line"), "Compilation error should report the line number");
-        assertNotNull(result.get("column"), "Compilation error should report the column number");
-    }
-
-    @Test
-    public void wrongDslLevelIsReportedAsEvaluationError() {
-        var result = validate(connector(true), WRONG_DSL_LEVEL_SCRIPT);
-
-        assertEquals(result.get("status"), "error");
-        assertEquals(result.get("phase"), "evaluate");
-        assertTrue(((String) result.get("message")).contains("endpoint"),
-                "Message should mention the failing method: " + result.get("message"));
-        assertEquals(result.get("line"), 1, "Evaluation error should report the script line number");
-    }
-
-    @Test
-    public void compileOnlyValidationDoesNotRunScriptBody() {
-        // WRONG_DSL_LEVEL_SCRIPT fails at evaluate time (full validation) but is syntactically valid,
-        // so compile-only validation must report it as ok: the script body never runs.
-        var result = compile(connector(true), WRONG_DSL_LEVEL_SCRIPT);
-
-        assertEquals(result.get("status"), "ok", "Unexpected result: " + result);
-    }
-
-    @Test
-    public void compileOnlySyntaxErrorIsStillReportedWithLine() {
-        var result = compile(connector(true), SYNTAX_ERROR_SCRIPT);
-
-        assertEquals(result.get("status"), "error");
-        assertEquals(result.get("phase"), "compile");
-        assertNotNull(result.get("line"), "Compilation error should report the line number");
-    }
-
-    @Test
-    public void compileOnlySchemaScriptDoesNotRunScriptBody() {
-        var result = compile(connector(true), "objectClass('User') { nonexistentDslMethod() }", "schema");
-
-        assertEquals(result.get("status"), "ok", "Unexpected result: " + result);
-    }
-
-    @Test
-    public void brokenDeployedScriptDoesNotBreakValidation() {
-        var connector = connector(true, WRONG_DSL_LEVEL_SCRIPT);
-
-        connector.test();
-        var result = validate(connector, VALID_OPERATION_SCRIPT);
-
-        assertEquals(result.get("status"), "ok", "Unexpected result: " + result);
-    }
-
-    @Test
-    public void validationIsRejectedWithoutDevelopmentMode() {
-        try {
-            validate(connector(false), VALID_OPERATION_SCRIPT);
-            fail("Expected UnsupportedOperationException was not thrown");
-        } catch (UnsupportedOperationException e) {
-            assertTrue(e.getMessage().contains("development mode"));
-        }
-    }
-
-    @Test
     public void validSchemaScriptPassesValidation() {
         var result = validate(connector(true), SCHEMA_SCRIPT, "schema");
 
         assertEquals(result.get("status"), "ok", "Unexpected result: " + result);
-    }
-
-    @Test
-    public void invalidSchemaDslIsRejectedAsEvaluationError() {
-        var result = validate(connector(true),
-                "objectClass('User') { nonexistentDslMethod() }", "schema");
-
-        assertEquals(result.get("status"), "error");
-        assertEquals(result.get("phase"), "evaluate");
-        assertTrue(((String) result.get("message")).contains("nonexistentDslMethod"),
-                "Message should mention the failing method: " + result.get("message"));
-    }
-
-    @Test
-    public void brokenDeployedSchemaScriptIsReportedAsInitializationError() {
-        var connector = connector(true, "objectClass('User') { nonexistentDslMethod() }", null);
-
-        var result = validate(connector, VALID_OPERATION_SCRIPT);
-
-        assertEquals(result.get("status"), "error");
-        assertEquals(result.get("phase"), "initialization");
-        assertTrue(((String) result.get("message")).contains("nonexistentDslMethod"),
-                "Message should mention the failing method: " + result.get("message"));
     }
 
     @Test
@@ -196,10 +104,6 @@ public class ScriptValidationTest {
         return connector(developmentMode, SCHEMA_SCRIPT, null);
     }
 
-    private static TestConnector connector(boolean developmentMode, String operationScript) {
-        return connector(developmentMode, SCHEMA_SCRIPT, operationScript);
-    }
-
     private static TestConnector connector(boolean developmentMode, String schemaScript, String operationScript) {
         var configuration = new TestConfiguration();
         configuration.setDevelopmentMode(developmentMode);
@@ -212,23 +116,11 @@ public class ScriptValidationTest {
         return validate(connector, script, "operation");
     }
 
-    private static Map<String, Object> validate(TestConnector connector, String script, String artifactKind) {
-        return runScriptOnResource(connector, script, artifactKind, AbstractGroovyRestConnector.SCRIPT_OPERATION_BUILD);
-    }
-
-    private static Map<String, Object> compile(TestConnector connector, String script) {
-        return compile(connector, script, "operation");
-    }
-
-    private static Map<String, Object> compile(TestConnector connector, String script, String artifactKind) {
-        return runScriptOnResource(connector, script, artifactKind, AbstractGroovyRestConnector.SCRIPT_OPERATION_COMPILE);
-    }
-
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> runScriptOnResource(TestConnector connector, String script, String artifactKind, String operation) {
+    private static Map<String, Object> validate(TestConnector connector, String script, String artifactKind) {
         ScriptContext context = new ScriptContext("groovy", script, Map.of(
-                AbstractGroovyRestConnector.SCRIPT_ARGUMENT_OPERATION, operation,
-                AbstractGroovyRestConnector.SCRIPT_ARGUMENT_ARTIFACT_KIND, artifactKind));
+                ScriptValidationRequest.SCRIPT_ARGUMENT_OPERATION, ScriptValidationRequest.SCRIPT_OPERATION_BUILD,
+                ScriptValidationRequest.SCRIPT_ARGUMENT_ARTIFACT_KIND, artifactKind));
         return (Map<String, Object>) connector.runScriptOnResource(context, null);
     }
 }

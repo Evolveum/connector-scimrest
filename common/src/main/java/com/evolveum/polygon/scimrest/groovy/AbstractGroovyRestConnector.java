@@ -8,38 +8,28 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptValidator;
+import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
+import com.evolveum.polygon.conndev.groovy.ScriptValidationResult;
 import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scimrest.schema.RestSchema;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import jakarta.ws.rs.WebApplicationException;
-import org.codehaus.groovy.control.CompilationFailedException;
-import org.codehaus.groovy.control.MultipleCompilationErrorsException;
-import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
-import org.codehaus.groovy.syntax.SyntaxException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.Callable;
 
-public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase implements ScriptOnResourceOp {
-
-    public static final String SCRIPT_ARGUMENT_OPERATION = "operation";
-    public static final String SCRIPT_OPERATION_BUILD = "build";
-    public static final String SCRIPT_OPERATION_COMPILE = "compile";
-    public static final String SCRIPT_ARGUMENT_ARTIFACT_KIND = "artifactKind";
-    public static final String ARTIFACT_KIND_SCHEMA = "schema";
+public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase {
 
     private final boolean reinitializeOnEachCall;
 
@@ -206,137 +196,47 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         return context.schema().connIdSchema();
     }
 
+    /**
+     * Validates the candidate script against a throwaway target seeded with all currently
+     * deployed sibling scripts (via {@link #schemaResources} / {@link #operationResources}, minus
+     * {@code filename} itself), so cross-references to them (e.g. a schema attribute's {@code
+     * referencedObjectClass}) resolve during evaluation and build, and so the candidate replaces
+     * rather than merges with its own old content. For a schema candidate that builds
+     * successfully, also re-checks every deployed operation script against the candidate schema
+     * (not the currently deployed one), since a schema change can break an operation script that
+     * references the changed definitions.
+     */
     @Override
-    public Object runScriptOnResource(ScriptContext request, OperationOptions options) {
-        if (!Boolean.TRUE.equals(getConfiguration().getDevelopmentMode())) {
-            throw new UnsupportedOperationException("Script execution is supported only in development mode");
+    protected ScriptValidationResult validateScript(ScriptValidationRequest request) throws Exception {
+        if (ScriptValidationRequest.ARTIFACT_KIND_SCHEMA.equals(request.artifactKind())) {
+            var builder = new RestSchemaBuilderImpl(getClass(), context);
+            var loader = new SchemaDefinitionLoader(context.configuration().groovyContext(), builder);
+            schemaResources(request.filename()).forEach(loader::loadFromResource);
+            RestSchema[] candidateSchema = new RestSchema[1];
+            var schemaResult = GroovyScriptValidator.validate(
+                    loader::parse, () -> candidateSchema[0] = builder.build(), request.scriptText(), request.operation());
+            if (schemaResult.status() != ScriptValidationResult.Status.OK
+                    || !ScriptValidationRequest.SCRIPT_OPERATION_BUILD.equals(request.operation())) {
+                return schemaResult;
+            }
+            return validateOperationsAgainstCandidateSchema(candidateSchema[0]);
         }
-        if (!"groovy".equalsIgnoreCase(request.getScriptLanguage())) {
-            throw new IllegalArgumentException("Unsupported script language: " + request.getScriptLanguage());
-        }
-        var operation = (String) request.getScriptArguments().get(SCRIPT_ARGUMENT_OPERATION);
-        if (!SCRIPT_OPERATION_BUILD.equals(operation) && !SCRIPT_OPERATION_COMPILE.equals(operation)) {
-            throw new UnsupportedOperationException(
-                    "Unsupported script operation, only '" + SCRIPT_OPERATION_BUILD + "' or '"
-                            + SCRIPT_OPERATION_COMPILE + "' is supported");
-        }
-        try {
-            initializeCore();
-        } catch (Exception e) {
-            return validationError("initialization", e);
-        }
-        return validateScript(request.getScriptText(),
-                (String) request.getScriptArguments().get(SCRIPT_ARGUMENT_ARTIFACT_KIND),
-                SCRIPT_OPERATION_COMPILE.equals(operation));
-    }
-
-    /**
-     * Validates the script without touching the deployed scripts or the target system.
-     * Operation and authorization scripts are compiled, evaluated against a throwaway builder
-     * and built. Schema mapping scripts are compiled and evaluated, but the build phase is
-     * skipped (see {@link #validateSchemaScript(String, boolean)}). When {@code compileOnly} is
-     * true, only compilation runs — the script body is never executed, since it may not have
-     * been reviewed by a user yet.
-     *
-     * @return map with {@code status} ({@code ok}/{@code error}) and for errors also
-     *         {@code phase} ({@code compile}/{@code evaluate}/{@code build}), {@code message}
-     *         and where available also the {@code line}, {@code column} and {@code source}.
-     */
-    private Map<String, Object> validateScript(String scriptText, String artifactKind, boolean compileOnly) {
-        if (ARTIFACT_KIND_SCHEMA.equals(artifactKind)) {
-            return validateSchemaScript(scriptText, compileOnly);
-        }
-
+        initializeCore();
         var builder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), context);
-        groovy.lang.Script script;
-        try {
-            script = builder.parse(scriptText);
-        } catch (CompilationFailedException e) {
-            return validationError("compile", e);
-        }
-        if (compileOnly) {
-            return Map.of("status", "ok");
-        }
-        try {
-            script.run();
-        } catch (Exception e) {
-            return validationError("evaluate", e);
-        }
-        try {
-            builder.build();
-        } catch (Exception e) {
-            return validationError("build", e);
-        }
-        return Map.of("status", "ok");
+        operationResources(request.filename()).forEach(builder::loadFromResource);
+        return GroovyScriptValidator.validate(builder::parse, builder::build, request.scriptText(), request.operation());
     }
 
-    /**
-     * Validates the schema mapping script by compiling and evaluating it against a throwaway
-     * schema builder. The build phase is skipped: the complete schema is assembled from all
-     * schema scripts together, so building just the validated one would fail on definitions
-     * declared by its siblings.
-     */
-    private Map<String, Object> validateSchemaScript(String scriptText, boolean compileOnly) {
-        var loader = new SchemaDefinitionLoader(
-                context.configuration().groovyContext(), new RestSchemaBuilderImpl(getClass(), context));
-        groovy.lang.Script script;
-        try {
-            script = loader.parse(scriptText);
-        } catch (CompilationFailedException e) {
-            return validationError("compile", e);
-        }
-        if (compileOnly) {
-            return Map.of("status", "ok");
-        }
-        try {
-            script.run();
-        } catch (Exception e) {
-            return validationError("evaluate", e);
-        }
-        return Map.of("status", "ok");
-    }
-
-    private static Map<String, Object> validationError(String phase, Exception e) {
-        var ret = new HashMap<String, Object>();
-        ret.put("status", "error");
-        ret.put("phase", phase);
-        String message = e.getMessage() != null ? e.getMessage() : e.toString();
-        var syntaxError = firstSyntaxError(e);
-        if (syntaxError != null) {
-            ret.put("line", syntaxError.getLine());
-            ret.put("column", syntaxError.getStartColumn());
-        } else {
-            var frame = scriptFrame(e);
-            if (frame != null) {
-                ret.put("line", frame.getLineNumber());
-                if (!frame.getFileName().matches("Script\\d+\\.groovy")) {
-                    ret.put("source", frame.getFileName());
-                    message = frame.getFileName() + ": " + message;
-                }
-            }
-        }
-        ret.put("message", message);
-        return ret;
-    }
-
-    private static SyntaxException firstSyntaxError(Exception e) {
-        if (e instanceof MultipleCompilationErrorsException compilationErrors
-                && compilationErrors.getErrorCollector().getErrorCount() > 0
-                && compilationErrors.getErrorCollector().getError(0) instanceof SyntaxErrorMessage syntaxError) {
-            return syntaxError.getCause();
-        }
-        return null;
-    }
-
-    private static StackTraceElement scriptFrame(Throwable e) {
-        for (Throwable cause = e; cause != null; cause = cause.getCause()) {
-            for (StackTraceElement element : cause.getStackTrace()) {
-                if (element.getFileName() != null && element.getFileName().endsWith(".groovy")) {
-                    return element;
-                }
-            }
-        }
-        return null;
+    private ScriptValidationResult validateOperationsAgainstCandidateSchema(RestSchema candidateSchema) {
+        var candidateContext = new RestConnectorContext(context.configuration());
+        candidateContext.schema(candidateSchema);
+        var checks = operationResources(null).stream()
+                .<Callable<ScriptValidationResult>>map(resource -> () -> {
+                    var handlerBuilder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), candidateContext);
+                    return GroovyScriptValidator.validateResource(() -> handlerBuilder.loadFromResource(resource), handlerBuilder::build);
+                })
+                .toList();
+        return GroovyScriptValidator.combine(checks);
     }
 
     @Override
