@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.groovy.api.scim.ScimSearchBuilder;
 import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
 import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
+import com.evolveum.polygon.conndev.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.unboundid.scim2.common.GenericScimResource;
 import groovy.lang.Closure;

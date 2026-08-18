@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.yaml;
 
 import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
-import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
+import com.evolveum.polygon.conndev.api.FilterSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 import com.evolveum.polygon.scimrest.yaml.model.YamlEndpointFilter;

@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
-import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification;
+import com.evolveum.polygon.conndev.api.FilterSpecification;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 import java.util.function.BiConsumer;
