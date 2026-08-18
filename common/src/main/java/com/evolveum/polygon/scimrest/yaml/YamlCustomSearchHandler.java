@@ -10,8 +10,8 @@ import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
 import com.evolveum.polygon.conndev.yaml.model.YamlCustom;
 import com.evolveum.polygon.conndev.yaml.model.YamlSupportedFilter;
 import com.evolveum.polygon.conndev.api.FilterSpecification;
+import com.evolveum.polygon.conndev.build.api.SearchScriptBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.SearchScriptBuilder;
 
 /** Maps the fully scripted {@code custom} search section onto {@link SearchScriptBuilder}. */
 final class YamlCustomSearchHandler {
