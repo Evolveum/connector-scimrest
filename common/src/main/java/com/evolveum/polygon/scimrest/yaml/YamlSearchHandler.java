@@ -7,6 +7,9 @@
 package com.evolveum.polygon.scimrest.yaml;
 
 import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
+import com.evolveum.polygon.conndev.yaml.YamlAttributeResolverHandler;
+import com.evolveum.polygon.conndev.yaml.YamlCustomSearchHandler;
+import com.evolveum.polygon.conndev.yaml.YamlNormalizeHandler;
 import com.evolveum.polygon.scimrest.groovy.BaseOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 import com.evolveum.polygon.scimrest.yaml.model.YamlSearch;
