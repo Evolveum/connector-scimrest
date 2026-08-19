@@ -9,6 +9,7 @@ import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.conndev.groovy.GroovyScriptValidator;
+import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationResult;
 import com.evolveum.polygon.conndev.spi.ObjectClassHandler;

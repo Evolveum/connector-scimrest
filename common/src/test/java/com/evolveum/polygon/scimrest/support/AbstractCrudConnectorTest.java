@@ -10,7 +10,7 @@ import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.testng.annotations.AfterMethod;

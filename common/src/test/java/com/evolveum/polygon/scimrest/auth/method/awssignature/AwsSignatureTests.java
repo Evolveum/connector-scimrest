@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

@@ -10,7 +10,7 @@ import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
 /**
  * Base for CRUD auth tests where authorization is implemented via a Groovy script

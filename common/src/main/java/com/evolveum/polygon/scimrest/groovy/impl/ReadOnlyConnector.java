@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.groovy.impl;
 
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
 @ConnectorClass(displayNameKey = "readonly.connector.display", configurationClass = ReadOnlyConfiguration.class)

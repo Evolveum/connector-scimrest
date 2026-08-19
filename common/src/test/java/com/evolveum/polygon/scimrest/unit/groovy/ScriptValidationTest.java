@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
 import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.testng.annotations.Test;

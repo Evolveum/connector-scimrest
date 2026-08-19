@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.unit.groovy;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import org.identityconnectors.framework.common.objects.ObjectClass;

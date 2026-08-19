@@ -10,7 +10,7 @@ import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.spi.ConnectorClass;

@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.support;
 import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
-import com.evolveum.polygon.scimrest.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.yaml.YamlRestHandlerLoader;
 
 import java.util.ArrayList;
