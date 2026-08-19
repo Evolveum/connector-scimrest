@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.groovy.api.scim;
 
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Script;
-import com.evolveum.polygon.scimrest.groovy.api.SearchHandlerBuilder;
+import com.evolveum.polygon.conndev.build.api.SearchHandlerBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
