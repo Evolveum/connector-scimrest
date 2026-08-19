@@ -6,6 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.conndev.build.api.ListOperationBuilder;
+import com.evolveum.polygon.conndev.build.api.ReadOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Script;
 import groovy.lang.Closure;
@@ -15,7 +17,7 @@ public interface ObjectOperationSupportBuilder {
 
     RestSearchOperationBuilder search();
 
-    RestListOperationBuilder list();
+    ListOperationBuilder list();
 
     ReadOperationBuilder read();
 
@@ -29,7 +31,7 @@ public interface ObjectOperationSupportBuilder {
         return GroovyClosures.callAndReturnDelegate(closure, search());
     }
 
-    default RestListOperationBuilder list(@DelegatesTo(value = RestListOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> closure) {
+    default ListOperationBuilder list(@DelegatesTo(value = ListOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, list());
     };
 

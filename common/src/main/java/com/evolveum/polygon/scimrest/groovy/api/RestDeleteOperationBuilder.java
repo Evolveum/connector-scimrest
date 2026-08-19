@@ -6,12 +6,13 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.conndev.build.api.DeleteOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.Uid;
 
-public interface RestDeleteOperationBuilder extends RestObjectOperationBuilder<RestDeleteOperationBuilder.Endpoint> {
+public interface RestDeleteOperationBuilder extends RestObjectOperationBuilder<RestDeleteOperationBuilder.Endpoint>, DeleteOperationBuilder {
 
     @Override
     Endpoint endpoint(HttpMethod method, String path);

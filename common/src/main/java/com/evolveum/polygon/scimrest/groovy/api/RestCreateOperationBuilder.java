@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.conndev.build.api.CreateOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Script;
@@ -17,7 +18,7 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 
 import java.util.Set;
 
-public interface RestCreateOperationBuilder extends RestOperationBuilder<RestCreateOperationBuilder.Endpoint> {
+public interface RestCreateOperationBuilder extends RestOperationBuilder<RestCreateOperationBuilder.Endpoint>, CreateOperationBuilder {
 
     Endpoint endpoint(HttpMethod method, String path);
 

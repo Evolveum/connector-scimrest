@@ -6,11 +6,12 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
-import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
-import com.evolveum.polygon.conndev.groovy.ScriptedAttributeResolverBuilder;
+import com.evolveum.polygon.conndev.groovy.AbstractSearchOperationBuilder;
 
 import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
+import com.evolveum.polygon.conndev.build.api.SearchOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.SearchScriptBuilder;
 import com.evolveum.polygon.conndev.spi.AttributeResolver;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
@@ -28,17 +29,28 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuilder<ObjectSearchOperation>, RestSearchOperationBuilder, RestObjectOperationBuilder<ObjectSearchOperation> {
+public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuilder implements RestSearchOperationBuilder, RestObjectOperationBuilder<ObjectSearchOperation> {
 
-    private final BaseOperationSupportBuilder parent;
+    private final BaseOperationSupportBuilder restParent;
     Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
-    Set<FilterAwareSearchProcessorBuilder> builders = new HashSet<>();
-    Set<ScriptedAttributeResolverBuilder> resolvers = new HashSet<>();
     private NormalizationBuilderImpl normalizationBuilder;
     private ScimSearchHandler.Builder scim;
+    private DefinitionValue<Boolean> enabled = DefinitionValue.DEFAULT_TRUE;
 
     public RestSearchOperationBuilderImpl(BaseOperationSupportBuilder parent) {
-        this.parent = parent;
+        super(parent);
+        this.restParent = parent;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled.value();
+    }
+
+    @Override
+    public SearchOperationBuilder enabled(DefinitionValue<Boolean> value) {
+        enabled = enabled.moreSpecific(value);
+        return this;
     }
 
     @Override
@@ -47,7 +59,7 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
         if (builder != null) {
             return builder;
         }
-        builder = new EndpointBasedSearchBuilder<>(path, parent.getObjectClass());
+        builder = new EndpointBasedSearchBuilder<>(path, restParent.getObjectClass());
         endpointBuilder.put(path, builder);
         builders.add(builder);
         return builder;
@@ -58,17 +70,9 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
         return GroovyClosures.callAndReturnDelegate(builder, endpoint(path));
     }
 
-
-    @Override
-    public ScriptedAttributeResolverBuilder attributeResolver() {
-        var ret = new ScriptedAttributeResolverBuilder(parent.context, parent.getObjectClass());
-        resolvers.add(ret);
-        return ret;
-    }
-
     @Override
     public SearchScriptBuilder custom() {
-        var ret = new ScriptedGroovySearchBuilderImpl(parent.context, parent.getObjectClass());
+        var ret = new ScriptedGroovySearchBuilderImpl(restParent.context, restParent.getObjectClass());
         builders.add(ret);
         return ret;
     }
@@ -81,6 +85,7 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
         return normalizationBuilder;
     }
 
+    @Override
     public ObjectSearchOperation build() {
         if (builders.isEmpty() && scim == null) {
             // We don't have any endpoints, so we don't need to build anything, this results in search operation
@@ -142,7 +147,7 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
                 default -> throw new IllegalStateException("Unknown resolver type: " + builder.resolutionType());
             }
         }
-        for (var attribute : parent.getObjectClass().attributes()) {
+        for (var attribute : restParent.getObjectClass().attributes()) {
             if (attribute.emulated()) {
                 var resolver = attribute.resolver();
                 if (resolver == null && !supportedAttributes.contains(attribute)) {
@@ -166,7 +171,7 @@ public class RestSearchOperationBuilderImpl implements ObjectClassOperationBuild
     @Override
     public ScimSearchHandler.Builder scim() {
         if (this.scim == null) {
-            this.scim = new ScimSearchHandler.Builder(parent.getObjectClass());
+            this.scim = new ScimSearchHandler.Builder(restParent.getObjectClass());
         };
         return scim;
     }

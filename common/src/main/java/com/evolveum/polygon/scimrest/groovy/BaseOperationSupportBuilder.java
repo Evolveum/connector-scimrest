@@ -6,27 +6,20 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.conndev.spi.CompositeObjectClassHandler;
-import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
+import com.evolveum.polygon.conndev.build.api.ListOperationBuilder;
+import com.evolveum.polygon.conndev.build.api.ReadOperationBuilder;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import com.evolveum.polygon.conndev.groovy.BaseObjectOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.*;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
-import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
-import com.evolveum.polygon.conndev.spi.ObjectDeleteOperation;
-import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
-import com.evolveum.polygon.conndev.spi.ObjectClassOperation;
-import com.evolveum.polygon.conndev.spi.ObjectUpdateOperation;
+import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 
-import java.util.HashMap;
-import java.util.Map;
+public class BaseOperationSupportBuilder
+        extends BaseObjectOperationSupportBuilder<RestSearchOperationBuilderImpl, RestCreateOperationBuilderImpl, RestUpdateOperationBuilderImpl, RestDeleteOperationBuilderImpl>
+        implements ObjectOperationSupportBuilder {
 
-public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilder {
-
-    private final MappedObjectClass objectClass;
     final RestConnectorContext context;
-
-    ObjectClassHandler product;
-
-    Map<Class<? extends ObjectClassOperation>, ObjectClassOperation> buildedOperations = new HashMap<>();
 
     RestSearchOperationBuilderImpl searchOpBuilder;
 
@@ -35,7 +28,7 @@ public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilde
     private final RestDeleteOperationBuilderImpl deleteOpBuilder;
 
     public BaseOperationSupportBuilder(RestConnectorContext context, MappedObjectClass restObjectClass) {
-        this.objectClass = restObjectClass;
+        super(context, restObjectClass);
         this.context = context;
 
         searchOpBuilder = new RestSearchOperationBuilderImpl(this);
@@ -45,7 +38,7 @@ public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilde
     }
 
     @Override
-    public RestListOperationBuilder list() {
+    public ListOperationBuilder list() {
         // FIXME: Implement
         throw new UnsupportedOperationException("Not implemented yet.");
     }
@@ -57,57 +50,68 @@ public class BaseOperationSupportBuilder implements ObjectOperationSupportBuilde
     }
 
     @Override
-    public RestSearchOperationBuilder search() {
+    public RestSearchOperationBuilderImpl search() {
         return searchOpBuilder;
     }
 
     @Override
-    public RestCreateOperationBuilder create() {
+    public RestCreateOperationBuilderImpl create() {
         return createOpBuilder;
     }
 
     @Override
-    public RestUpdateOperationBuilder update() {
+    public RestUpdateOperationBuilderImpl update() {
         return updateOpBuilder;
     }
 
     @Override
-    public RestDeleteOperationBuilder delete() {
+    public RestDeleteOperationBuilderImpl delete() {
         return deleteOpBuilder;
     }
 
+    @Override
     public MappedObjectClass getObjectClass() {
-        return objectClass;
-    }
-
-
-    public BaseOperationSupportBuilder search(ObjectSearchOperation processor) {
-        buildedOperations.put(ObjectSearchOperation.class, processor);
-        return this;
-    }
-
-    public <T extends ObjectClassOperation> void registerOperation(Class<T> operationType, T operation) {
-        buildedOperations.put(operationType, operation);
-    }
-
-    public ObjectClassHandler build() {
-        buildOperationIfEmpty(ObjectSearchOperation.class, searchOpBuilder);
-        buildOperationIfEmpty(ObjectCreateOperation.class, createOpBuilder);
-        buildOperationIfEmpty(ObjectUpdateOperation.class, updateOpBuilder);
-        buildOperationIfEmpty(ObjectDeleteOperation.class, deleteOpBuilder);
-        return new CompositeObjectClassHandler(objectClass.objectClass(), buildedOperations);
-    }
-
-    private  <T extends ObjectClassOperation> void buildOperationIfEmpty(Class<T> type, RestObjectOperationBuilder<T> builder) {
-        if (builder == null || buildedOperations.containsKey(type)) {
-            // Skip building for now
-            return;
-
-        }
-        buildedOperations.put(type, builder.build());
+        return (MappedObjectClass) super.getObjectClass();
     }
 
     public RestSearchOperationBuilderImpl searchBuilder() {
         return searchOpBuilder;
+    }
+
+    // scimrest's own ObjectOperationSupportBuilder stays independent of conndev's (extending it hits
+    // a hard Java limitation elsewhere - see ConnectorBuilder.ObjectClassBuilder, which combines this
+    // with the schema builder and cannot inherit Fluent<F> with two different F). Because this class
+    // extends BaseObjectOperationSupportBuilder (which itself implements conndev's ObjectOperationSupportBuilder),
+    // it still ends up with two unrelated sources for these six Closure-based methods, so Java requires
+    // an explicit override to resolve the ambiguity.
+
+    @Override
+    public RestSearchOperationBuilder search(@DelegatesTo(value = RestSearchOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, search());
+    }
+
+    @Override
+    public ListOperationBuilder list(@DelegatesTo(value = ListOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, list());
+    }
+
+    @Override
+    public ReadOperationBuilder read(@DelegatesTo(value = ReadOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, read());
+    }
+
+    @Override
+    public RestCreateOperationBuilder create(@DelegatesTo(value = RestCreateOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, create());
+    }
+
+    @Override
+    public RestUpdateOperationBuilder update(@DelegatesTo(value = RestUpdateOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, update());
+    }
+
+    @Override
+    public RestDeleteOperationBuilder delete(@DelegatesTo(value = RestDeleteOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, delete());
     }
 }

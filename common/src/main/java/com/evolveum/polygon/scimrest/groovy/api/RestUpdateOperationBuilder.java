@@ -16,7 +16,7 @@ import org.identityconnectors.framework.common.objects.AttributeDelta;
 
 import java.util.Set;
 
-public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<RestUpdateOperationBuilder.Endpoint> {
+public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<RestUpdateOperationBuilder.Endpoint>, UpdateOperationBuilder {
 
     ScimUpdateBuilder scim();
 

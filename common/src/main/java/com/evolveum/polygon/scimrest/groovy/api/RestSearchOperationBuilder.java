@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
 import com.evolveum.polygon.conndev.build.api.NormalizationBuilder;
+import com.evolveum.polygon.conndev.build.api.SearchOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.SearchScriptBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Script;
@@ -15,7 +16,7 @@ import com.evolveum.polygon.scimrest.groovy.api.scim.ScimSearchBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface RestSearchOperationBuilder {
+public interface RestSearchOperationBuilder extends SearchOperationBuilder {
 
     RestSearchEndpointBuilder endpoint(String path);
 
