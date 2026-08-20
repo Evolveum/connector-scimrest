@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.evolveum.polygon.conndev.concepts.DefinitionValue.detected;
+import static com.evolveum.polygon.conndev.concepts.DefinitionValue.emptyDefault;
 
 public class ScimSchemaTranslator {
 
@@ -261,7 +262,7 @@ public class ScimSchemaTranslator {
             }
             var attribute = findOrCreateAttribute(subAttr, embeddedBuilder, onlyListed);
             if (attribute != null) {
-                attribute.scim().name(scimAttr.getName());
+                attribute.scim().name(subAttr.getName());
                 populateAttribute(attribute, subAttr);
             }
         }
@@ -271,8 +272,10 @@ public class ScimSchemaTranslator {
                 .implementation(new ScimEmbeddedObjectValueMapping(contextLookup, embeddedClassName));
         complexAttr.connId()
                 .type(EmbeddedObject.class)
+                .referencedObjectClassName(detected(embeddedClassName))
                 .multiValued(detected(scimAttr.isMultiValued()))
                 .required(detected(scimAttr.isRequired()))
+                .roleInReference(detected(AttributeInfo.RoleInReference.SUBJECT.toString()))
                 .returnedByDefault(detected(
                         AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned())));
     }

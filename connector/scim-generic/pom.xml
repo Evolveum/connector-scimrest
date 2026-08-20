@@ -16,10 +16,10 @@
         <version>0.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>connector-scimrest-generic</artifactId>
+    <artifactId>connector-scim-generic</artifactId>
     <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>Polygon SCIMREST Connector Template</name>
+    <name>Polygon SCIM2 Generic Connector</name>
 
     <properties>
         <connectorPackage>com.evolveum.polygon.scimrest.groovy.impl</connectorPackage>
