@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.groovy;
 import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.AbstractSearchOperationBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovySearchScriptBuilder;
 
 import com.evolveum.polygon.conndev.build.api.SearchOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.SearchScriptBuilder;
@@ -66,7 +67,7 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
 
     @Override
     public SearchScriptBuilder custom() {
-        var ret = new ScriptedGroovySearchBuilderImpl(restParent.context, restParent.getObjectClass());
+        var ret = new GroovySearchScriptBuilder(restParent.context, restParent.getObjectClass());
         builders.add(ret);
         return ret;
     }
