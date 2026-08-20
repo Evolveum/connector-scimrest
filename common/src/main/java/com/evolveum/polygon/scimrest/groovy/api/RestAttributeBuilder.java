@@ -15,6 +15,7 @@ import groovy.lang.DelegatesTo;
 public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends AttributeBuilder<F, RestAttributeDefinition> {
 
     // Protocol specific mappings
+    String name();
 
     ScimMapping scim();
 
@@ -61,6 +62,7 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
         AttributePath extension(String uriOrAlias);
 
         AttributePath path();
+
     }
 
 }

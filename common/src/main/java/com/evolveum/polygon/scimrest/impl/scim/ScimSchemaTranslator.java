@@ -7,15 +7,25 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.scimrest.schema.RestAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClassBuilder;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
+import org.identityconnectors.framework.common.objects.EmbeddedObject;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Uid;
 
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.evolveum.polygon.conndev.concepts.DefinitionValue.detected;
@@ -63,13 +73,10 @@ public class ScimSchemaTranslator {
         var objectClassName = resourceToObjectClass.get(scim.resource().getName());
         var objectClass = schema.objectClass(objectClassName);
         populateBuiltInSchema(objectClass, objectClass.scim().isOnlyExplicitlyListed());
-        populatePrimarySchema(scim.primarySchema(), objectClass, objectClass.scim().isOnlyExplicitlyListed());
+        populatePrimarySchema(scim.primarySchema(), schema, objectClass, objectClassName,
+                              objectClass.scim().isOnlyExplicitlyListed());
 
-        populatePathBasedSchema(scim,objectClass);
-        // FIXME populate deep schema
-        // eg. resolving things like familyName = name.familyName
-        // practically values remapped from deep containers
-
+        populatePathBasedSchema(scim, objectClass);
     }
 
     private void populatePathBasedSchema(ScimResourceContext scim, MappedObjectClassBuilder objectClass) {
@@ -90,7 +97,26 @@ public class ScimSchemaTranslator {
     }
 
     private void populateAttribute(RestAttributeBuilderImpl attribute, AttributeDefinition scimAttr) {
-        attribute.scim().type(jsonType(scimAttr.getType()));
+
+        switch (scimAttr.getType()) {
+            case DATETIME -> {
+                attribute.scim().type("string");
+                attribute.scim().implementation(OpenApiValueMapping.DateTime);
+            }
+            case DECIMAL -> {
+                attribute.scim().type("number");
+                attribute.scim().implementation(OpenApiValueMapping.Decimal);
+            }
+            case REFERENCE -> attribute.scim().type("string");
+            default -> attribute.scim().type(jsonType(scimAttr.getType()));
+        }
+
+
+
+
+        populateAttributeMetadata(attribute, scimAttr);
+    }
+    private void populateAttributeMetadata(RestAttributeBuilderImpl attribute, AttributeDefinition scimAttr) {
         attribute.nativeType(scimAttr.getType().getName());
         attribute.connId().description(detected(scimAttr.getDescription()));
         attribute.connId().required(detected(scimAttr.isRequired()));
@@ -125,12 +151,17 @@ public class ScimSchemaTranslator {
         }
     }
 
-    private void populatePrimarySchema(SchemaResource schemaResource, MappedObjectClassBuilder objectClass, boolean onlyListed) {
+    private void populatePrimarySchema(SchemaResource schemaResource,
+                                       RestSchemaBuilderImpl schema,
+                                       MappedObjectClassBuilder objectClass,
+                                       String objectClassName,
+                                       boolean onlyListed) {
         for (var scimAttr : schemaResource.getAttributes()) {
-            // We should determine if attribute is excluded by name or being structured
             if (AttributeDefinition.Type.COMPLEX.equals(scimAttr.getType())) {
-                // skip for now
-                continue;
+                if (!isMembershipReference(schemaResource.getId(), scimAttr.getName())) {
+                    populateComplexAttribute(scimAttr, schema, objectClass, objectClassName, onlyListed);
+                    continue;
+                }
             }
 
             // Lookup as SCIM attribute first
@@ -147,14 +178,7 @@ public class ScimSchemaTranslator {
                         }
                     }
                     case "groups" -> {
-                        var groupOc = resourceToObjectClass.get("Group");
-                        attribute.connId().type(ConnectorObjectReference.class);
-                        if (groupOc != null) {
-                            attribute.objectClass(groupOc);
-                        }
-                        attribute.subtype("_User_Group_Membership");
-                        attribute.role(AttributeInfo.RoleInReference.SUBJECT);
-                        attribute.scim().implementation(new ScimGroupToConnectorObjectReference(new ObjectClass(groupOc)));
+                        handleUserGroupsAttribute(attribute, objectClass);
                     }
                 }
             } else if (GROUP_SCHEMA_URN.equals(schemaResource.getId())) {
@@ -163,15 +187,7 @@ public class ScimSchemaTranslator {
                         attribute.connId().name(Name.NAME);
                     }
                     case "members" -> {
-                        var userOc = resourceToObjectClass.get("User");
-                        attribute.connId().type(ConnectorObjectReference.class);
-                        if (userOc != null) {
-                            attribute.objectClass(userOc);
-                        }
-                        attribute.role(AttributeInfo.RoleInReference.OBJECT);
-                        attribute.subtype("_User_Group_Membership");
-                        attribute.scim().implementation(new ScimMemberToConnectorObjectReference(contextLookup));
-
+                        handleGroupMembersAttribute(attribute, objectClass);
                     }
                 }
             }
@@ -179,8 +195,86 @@ public class ScimSchemaTranslator {
         }
     }
 
+    private boolean isMembershipReference(String schemaId, String attrName) {
+        return (USER_SCHEMA_URN.equals(schemaId) && "groups".equals(attrName)) ||
+               (GROUP_SCHEMA_URN.equals(schemaId) && "members".equals(attrName));
+    }
+
+    private void handleUserGroupsAttribute(RestAttributeBuilderImpl attribute, MappedObjectClassBuilder objectClass) {
+        var groupOc = resourceToObjectClass.get("Group");
+        if (attribute != null) {
+            attribute.connId().type(ConnectorObjectReference.class);
+        }
+        if (groupOc != null) {
+            attribute.objectClass(groupOc);
+        }
+        attribute.subtype("_User_Group_Membership");
+        attribute.role(AttributeInfo.RoleInReference.SUBJECT);
+        attribute.scim().implementation(new ScimGroupToConnectorObjectReference(new ObjectClass(groupOc)));
+    }
+
+    private void handleGroupMembersAttribute(RestAttributeBuilderImpl attribute, MappedObjectClassBuilder objectClass) {
+        var userOc = resourceToObjectClass.get("User");
+        if (attribute != null) {
+            attribute.connId().type(ConnectorObjectReference.class);
+        }
+        if (userOc != null) {
+            attribute.objectClass(userOc);
+        }
+        attribute.role(AttributeInfo.RoleInReference.OBJECT);
+        attribute.subtype("_User_Group_Membership");
+        attribute.scim().implementation(new ScimMemberToConnectorObjectReference(contextLookup));
+    }
+
     private boolean isUserGroupsAttribute(String id, String name) {
         return USER_SCHEMA_URN.equals(id) && USER_GROUPS_ATTR_NAME.equals(name);
+    }
+
+    private void populateComplexAttribute(AttributeDefinition scimAttr,
+                                          RestSchemaBuilderImpl schema,
+                                          MappedObjectClassBuilder parentOc,
+                                                String parentOcName,
+                                          boolean onlyListed) {
+        // Only process if we're not in "only explicitly listed" mode
+        if (onlyListed) {
+            return;
+        }
+
+        if (!parentOc.findAttributes(p -> scimAttr.getName().equals(p.scim().name())).isEmpty()) {
+            return;
+        }
+        if (!parentOc.findAttributes(c -> scimAttr.getName().equals(c.name())).isEmpty()) {
+            // Attribute already existed (was defined by groovy script), skip
+            return;
+        }
+        String attrName = scimAttr.getName();
+        var complexAttr = parentOc.attribute(attrName);
+
+        String embeddedClassName = parentOcName + "__" + scimAttr.getName();
+        // FIXME: This should be lookuped up using scim / path
+        var embeddedBuilder = schema.objectClass(embeddedClassName);
+        embeddedBuilder.embedded(true);
+
+        for (AttributeDefinition subAttr : scimAttr.getSubAttributes()) {
+            if (AttributeDefinition.Type.COMPLEX.equals(subAttr.getType())) {
+                continue;
+            }
+            var attribute = findOrCreateAttribute(subAttr, embeddedBuilder, onlyListed);
+            if (attribute != null) {
+                attribute.scim().name(scimAttr.getName());
+                populateAttribute(attribute, subAttr);
+            }
+        }
+
+        complexAttr.scim()
+                .name(scimAttr.getName())
+                .implementation(new ScimEmbeddedObjectValueMapping(contextLookup, embeddedClassName));
+        complexAttr.connId()
+                .type(EmbeddedObject.class)
+                .multiValued(detected(scimAttr.isMultiValued()))
+                .required(detected(scimAttr.isRequired()))
+                .returnedByDefault(detected(
+                        AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned())));
     }
 
     /**

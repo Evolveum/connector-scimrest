@@ -30,6 +30,11 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
 
     private final MappedObjectClassBuilder mappedObjectClass;
 
+    @Override
+    public String name() {
+        return name.value();
+    }
+
     String nativeType;
     ScimBuilder scim;
 

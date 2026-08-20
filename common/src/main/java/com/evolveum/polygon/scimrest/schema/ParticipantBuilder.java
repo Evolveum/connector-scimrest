@@ -79,6 +79,11 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
         }
 
         @Override
+        public String name() {
+            return delegate.name();
+        }
+
+        @Override
         public RestReferenceAttributeBuilder complexType(DefinitionValue<String> objectClass) {
             return delegate.complexType(objectClass);
         }
