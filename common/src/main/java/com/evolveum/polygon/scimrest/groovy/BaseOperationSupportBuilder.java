@@ -79,11 +79,11 @@ public class BaseOperationSupportBuilder
     }
 
     // scimrest's own ObjectOperationSupportBuilder stays independent of conndev's (extending it hits
-    // a hard Java limitation elsewhere - see ConnectorBuilder.ObjectClassBuilder, which combines this
-    // with the schema builder and cannot inherit Fluent<F> with two different F). Because this class
-    // extends BaseObjectOperationSupportBuilder (which itself implements conndev's ObjectOperationSupportBuilder),
-    // it still ends up with two unrelated sources for these six Closure-based methods, so Java requires
-    // an explicit override to resolve the ambiguity.
+    // a hard Java limitation elsewhere - a type combining this with a schema builder cannot inherit
+    // Fluent<F> with two different F). Because this class extends BaseObjectOperationSupportBuilder
+    // (which itself implements conndev's ObjectOperationSupportBuilder), it still ends up with two
+    // unrelated sources for these six Closure-based methods, so Java requires an explicit override
+    // to resolve the ambiguity.
 
     @Override
     public RestSearchOperationBuilder search(@DelegatesTo(value = RestSearchOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
