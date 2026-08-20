@@ -16,8 +16,7 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
 public class BaseOperationSupportBuilder
-        extends BaseObjectOperationSupportBuilder<RestSearchOperationBuilderImpl, RestCreateOperationBuilderImpl, RestUpdateOperationBuilderImpl, RestDeleteOperationBuilderImpl>
-        implements ObjectOperationSupportBuilder {
+        extends BaseObjectOperationSupportBuilder<RestSearchOperationBuilderImpl, RestCreateOperationBuilderImpl, RestUpdateOperationBuilderImpl, RestDeleteOperationBuilderImpl> {
 
     final RestConnectorContext context;
 
@@ -78,12 +77,9 @@ public class BaseOperationSupportBuilder
         return searchOpBuilder;
     }
 
-    // scimrest's own ObjectOperationSupportBuilder stays independent of conndev's (extending it hits
-    // a hard Java limitation elsewhere - a type combining this with a schema builder cannot inherit
-    // Fluent<F> with two different F). Because this class extends BaseObjectOperationSupportBuilder
-    // (which itself implements conndev's ObjectOperationSupportBuilder), it still ends up with two
-    // unrelated sources for these six Closure-based methods, so Java requires an explicit override
-    // to resolve the ambiguity.
+    // Narrows the inherited closure-based default methods (conndev's ObjectOperationSupportBuilder,
+    // implemented by BaseObjectOperationSupportBuilder) to REST-specific return types, matching the
+    // no-arg overrides above.
 
     @Override
     public RestSearchOperationBuilder search(@DelegatesTo(value = RestSearchOperationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
