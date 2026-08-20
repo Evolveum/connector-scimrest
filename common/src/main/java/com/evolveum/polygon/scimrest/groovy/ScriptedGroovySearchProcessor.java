@@ -10,6 +10,7 @@ import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.api.FilterSpecification;
+import com.evolveum.polygon.conndev.groovy.api.SearchScriptContext;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
 import groovy.lang.Closure;
@@ -37,7 +38,7 @@ public class ScriptedGroovySearchProcessor implements FilterAwareExecuteQueryPro
 
     @Override
     public void executeQuery(ContextLookup context, Filter filter, ResultsHandler resultsHandler, OperationOptions operationOptions) {
-        var scriptContext = new SearchScriptContextImpl(this.context, objectClass,filter, resultsHandler, operationOptions);
+        var scriptContext = new SearchScriptContext.Default(this.context, objectClass, filter, resultsHandler, operationOptions);
         GroovyClosures.copyAndCall(implementation, scriptContext);
     }
 
