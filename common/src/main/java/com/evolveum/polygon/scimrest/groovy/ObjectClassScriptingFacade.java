@@ -7,8 +7,8 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.groovy.api.ObjectClassScripting;
 import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
-import com.evolveum.polygon.scimrest.groovy.api.ObjectClassScripting;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import org.identityconnectors.framework.common.objects.OperationOptions;
