@@ -7,6 +7,8 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.json.JsonSchemaValueMapping;
+import com.evolveum.polygon.conndev.json.JsonValueMapping;
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.scimrest.schema.RestAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClassBuilder;
@@ -107,6 +109,10 @@ public class ScimSchemaTranslator {
             case DECIMAL -> {
                 attribute.scim().type("number");
                 attribute.scim().implementation(OpenApiValueMapping.Decimal);
+            }
+            case BINARY -> {
+                attribute.scim().type("binary");
+                attribute.scim().implementation(OpenApiValueMapping.Binary);
             }
             case REFERENCE -> attribute.scim().type("string");
             default -> attribute.scim().type(jsonType(scimAttr.getType()));
