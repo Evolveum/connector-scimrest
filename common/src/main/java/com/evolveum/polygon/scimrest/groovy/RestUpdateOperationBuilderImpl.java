@@ -11,7 +11,6 @@ import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.api.AttributeSupport;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateRequest;
-import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.groovy.AbstractUpdateOperationBuilder;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
@@ -37,27 +36,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
-public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuilder
+public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuilder<MappedObjectClass>
         implements RestUpdateOperationBuilder, RestObjectOperationBuilder<ObjectUpdateOperation> {
 
-    private final BaseOperationSupportBuilder parent;
     private final List<EndpointImpl> endpoints = new ArrayList<>();
     private ScimUpdateBuilderImpl scim;
-    private DefinitionValue<Boolean> enabled = DefinitionValue.DEFAULT_TRUE;
 
     public RestUpdateOperationBuilderImpl(BaseOperationSupportBuilder parent) {
-        this.parent = parent;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled.value();
-    }
-
-    @Override
-    public UpdateOperationBuilder enabled(DefinitionValue<Boolean> value) {
-        enabled = enabled.moreSpecific(value);
-        return this;
+        super(parent);
     }
 
     @Override
@@ -76,19 +62,21 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
     @Override
     public ScimUpdateBuilder scim() {
         if (this.scim == null) {
-            this.scim = new ScimUpdateBuilderImpl(parent.context);
+            this.scim = new ScimUpdateBuilderImpl((RestConnectorContext) parent.context);
         }
         return scim;
     }
 
     @Override
-    public ObjectUpdateOperation build() {
-        if (endpoints.isEmpty() && scimNotUsed()) {
-            return null;
-        }
+    protected boolean isEmpty() {
+        return endpoints.isEmpty() && scimNotUsed();
+    }
+
+    @Override
+    protected Collection<UpdateOperationHandler> collectHandlers() {
         var handlers = new ArrayList<UpdateOperationHandler>();
         handlers.addAll(endpoints.stream().map(EndpointImpl::build).toList());
-        
+
         // Add SCIM handler if configured
         if (scim != null && scim.isEnabled()) {
             var scimHandler = scim.build();
@@ -96,8 +84,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 handlers.add(scimHandler);
             }
         }
-        
-        return new UpdateOperationStrategyHandler(parent.context, parent.getObjectClass().objectClass(), handlers);
+
+        return handlers;
     }
 
     private boolean scimNotUsed() {
@@ -183,7 +171,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
 
             var responseHandler = new DefaultResponseHandler(parent.getObjectClass());
 
-            return new EndpointHandler(parent.context,
+            return new EndpointHandler((RestConnectorContext) parent.context,
                     path,
                     request.contentType,
                     httpMethod,
@@ -357,7 +345,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
             if (!enabled) {
                 return null;
             }
-            return new ScimUpdateHandler(parent.getObjectClass().objectClass(), parent.context.scim());
+            return new ScimUpdateHandler(parent.getObjectClass().objectClass(), ((RestConnectorContext) parent.context).scim());
         }
 
     }

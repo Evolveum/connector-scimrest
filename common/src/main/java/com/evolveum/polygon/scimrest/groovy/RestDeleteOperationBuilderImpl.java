@@ -6,16 +6,14 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.conndev.build.api.DeleteOperationBuilder;
-import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.groovy.AbstractDeleteOperationBuilder;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestDeleteOperationBuilder;
 import com.evolveum.polygon.conndev.spi.DeleteOperationHandler;
-import com.evolveum.polygon.conndev.spi.DeleteOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimDeleteHandler;
+import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.conndev.spi.ObjectDeleteOperation;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -24,29 +22,17 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuilder
+public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuilder<MappedObjectClass>
         implements RestObjectOperationBuilder<ObjectDeleteOperation>, RestDeleteOperationBuilder {
 
-    private final BaseOperationSupportBuilder parent;
     private final List<EndpointImpl> endpoints = new ArrayList<>();
     private ScimImpl scim;
-    private DefinitionValue<Boolean> enabled = DefinitionValue.DEFAULT_TRUE;
 
     public RestDeleteOperationBuilderImpl(BaseOperationSupportBuilder parent) {
-        this.parent = parent;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled.value();
-    }
-
-    @Override
-    public DeleteOperationBuilder enabled(DefinitionValue<Boolean> value) {
-        enabled = enabled.moreSpecific(value);
-        return this;
+        super(parent);
     }
 
     @Override
@@ -71,19 +57,15 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
     }
 
     @Override
-    public ObjectDeleteOperation build() {
+    protected Collection<DeleteOperationHandler> collectHandlers() {
         var handlers = new ArrayList<DeleteOperationHandler>();
         if (scim != null && scim.isEnabled()) {
-            handlers.add(new ScimDeleteHandler(parent.getObjectClass().objectClass(), parent.context.scim()));
+            handlers.add(new ScimDeleteHandler(parent.getObjectClass().objectClass(), ((RestConnectorContext) parent.context).scim()));
         }
         for (EndpointImpl endpoint : endpoints) {
             handlers.add(endpoint.build());
         }
-
-        if (handlers.isEmpty()) {
-            return null;
-        }
-        return new DeleteOperationStrategyHandler(handlers);
+        return handlers;
     }
 
     private class ScimImpl implements Scim {
@@ -119,7 +101,7 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
         }
 
         DeleteOperationHandler build() {
-            return new EndpointHandler(parent.context, path, httpMethod);
+            return new EndpointHandler((RestConnectorContext) parent.context, path, httpMethod);
         }
     }
 

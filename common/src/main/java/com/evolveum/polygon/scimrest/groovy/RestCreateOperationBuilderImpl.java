@@ -7,8 +7,6 @@
 package com.evolveum.polygon.scimrest.groovy;
 
 import com.evolveum.polygon.conndev.api.AttributeSupport;
-import com.evolveum.polygon.conndev.build.api.CreateOperationBuilder;
-import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.groovy.AbstractCreateOperationBuilder;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
@@ -18,7 +16,6 @@ import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
 import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
-import com.evolveum.polygon.conndev.spi.CreateOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
@@ -35,28 +32,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
-public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuilder
+public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuilder<MappedObjectClass>
         implements RestObjectOperationBuilder<ObjectCreateOperation>, RestCreateOperationBuilder {
 
 
     private final List<EndpointImpl> endpoints = new ArrayList<>();
-    private final BaseOperationSupportBuilder parent;
     private ScimCreateBuilder scim;
-    private DefinitionValue<Boolean> enabled = DefinitionValue.DEFAULT_TRUE;
 
     public RestCreateOperationBuilderImpl(BaseOperationSupportBuilder parent) {
-        this.parent = parent;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled.value();
-    }
-
-    @Override
-    public CreateOperationBuilder enabled(DefinitionValue<Boolean> value) {
-        enabled = enabled.moreSpecific(value);
-        return this;
+        super(parent);
     }
 
     @Override
@@ -81,13 +65,8 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
     }
 
     @Override
-    public ObjectCreateOperation build() {
-        if (endpoints.isEmpty()) {
-            return null;
-        }
-        var handlers = endpoints.stream().map(EndpointImpl::build).toList();
-
-        return new CreateOperationStrategyHandler(parent.context, parent.getObjectClass().objectClass(), handlers);
+    protected Collection<CreateOperationHandler> collectHandlers() {
+        return endpoints.stream().map(EndpointImpl::build).toList();
     }
 
     private class EndpointImpl extends AbstractSingleObjectEndpointBuilder<Set<Attribute>, ConnectorObject, EndpointImpl> implements Endpoint {
@@ -130,7 +109,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
 
             var responseHandler = new DefaultResponseHandler(parent.getObjectClass());
 
-            return new EndpointHandler(parent.context,
+            return new EndpointHandler((RestConnectorContext) parent.context,
                     path,
                     request.contentType,
                     httpMethod,

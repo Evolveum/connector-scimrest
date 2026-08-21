@@ -6,18 +6,17 @@
  */
 package com.evolveum.polygon.scimrest.groovy;
 
-import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.AbstractSearchOperationBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovySearchScriptBuilder;
 
-import com.evolveum.polygon.conndev.build.api.SearchOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.SearchScriptBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 import com.evolveum.polygon.conndev.spi.FilterBasedSearchDispatcher;
 import com.evolveum.polygon.scimrest.impl.scim.ScimSearchHandler;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
+import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -25,27 +24,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuilder implements RestSearchOperationBuilder, RestObjectOperationBuilder<ObjectSearchOperation> {
+public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuilder<MappedObjectClass> implements RestSearchOperationBuilder, RestObjectOperationBuilder<ObjectSearchOperation> {
 
-    private final BaseOperationSupportBuilder restParent;
     Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
     private ScimSearchHandler.Builder scim;
-    private DefinitionValue<Boolean> enabled = DefinitionValue.DEFAULT_TRUE;
 
     public RestSearchOperationBuilderImpl(BaseOperationSupportBuilder parent) {
         super(parent);
-        this.restParent = parent;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled.value();
-    }
-
-    @Override
-    public SearchOperationBuilder enabled(DefinitionValue<Boolean> value) {
-        enabled = enabled.moreSpecific(value);
-        return this;
     }
 
     @Override
@@ -54,7 +39,7 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
         if (builder != null) {
             return builder;
         }
-        builder = new EndpointBasedSearchBuilder<>(path, restParent.getObjectClass());
+        builder = new EndpointBasedSearchBuilder<>(path, parent.getObjectClass());
         endpointBuilder.put(path, builder);
         builders.add(builder);
         return builder;
@@ -67,7 +52,7 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
 
     @Override
     public SearchScriptBuilder custom() {
-        var ret = new GroovySearchScriptBuilder(restParent.context, restParent.getObjectClass());
+        var ret = new GroovySearchScriptBuilder(parent.context, parent.getObjectClass());
         builders.add(ret);
         return ret;
     }
@@ -112,7 +97,7 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
     @Override
     public ScimSearchHandler.Builder scim() {
         if (this.scim == null) {
-            this.scim = new ScimSearchHandler.Builder(restParent.getObjectClass());
+            this.scim = new ScimSearchHandler.Builder(parent.getObjectClass());
         };
         return scim;
     }

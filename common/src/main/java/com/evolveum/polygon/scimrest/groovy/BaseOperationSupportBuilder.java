@@ -16,7 +16,7 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
 public class BaseOperationSupportBuilder
-        extends BaseObjectOperationSupportBuilder<RestSearchOperationBuilderImpl, RestCreateOperationBuilderImpl, RestUpdateOperationBuilderImpl, RestDeleteOperationBuilderImpl> {
+        extends BaseObjectOperationSupportBuilder<RestSearchOperationBuilderImpl, RestCreateOperationBuilderImpl, RestUpdateOperationBuilderImpl, RestDeleteOperationBuilderImpl, MappedObjectClass> {
 
     final RestConnectorContext context;
 
@@ -66,11 +66,6 @@ public class BaseOperationSupportBuilder
     @Override
     public RestDeleteOperationBuilderImpl delete() {
         return deleteOpBuilder;
-    }
-
-    @Override
-    public MappedObjectClass getObjectClass() {
-        return (MappedObjectClass) super.getObjectClass();
     }
 
     public RestSearchOperationBuilderImpl searchBuilder() {
