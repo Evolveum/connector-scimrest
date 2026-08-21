@@ -20,7 +20,6 @@ import com.evolveum.polygon.scimrest.groovy.api.RestDeleteOperationBuilder;
 import com.evolveum.polygon.conndev.spi.DeleteOperationHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimDeleteHandler;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
-import com.evolveum.polygon.conndev.spi.ObjectDeleteOperation;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -32,7 +31,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuilder<RestObjectClassDefinition>
-        implements RestObjectOperationBuilder<ObjectDeleteOperation>, RestDeleteOperationBuilder {
+        implements RestDeleteOperationBuilder {
 
     private final List<EndpointImpl> endpoints = new ArrayList<>();
     private ScimImpl scim;

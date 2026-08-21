@@ -30,7 +30,6 @@ import com.evolveum.polygon.conndev.spi.UpdateOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimUpdateHandler;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
-import com.evolveum.polygon.conndev.spi.ObjectUpdateOperation;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -43,7 +42,7 @@ import java.util.*;
 import java.util.function.Function;
 
 public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuilder<RestObjectClassDefinition>
-        implements RestUpdateOperationBuilder, RestObjectOperationBuilder<ObjectUpdateOperation> {
+        implements RestUpdateOperationBuilder {
 
     private final List<EndpointImpl> endpoints = new ArrayList<>();
     private ScimUpdateBuilderImpl scim;

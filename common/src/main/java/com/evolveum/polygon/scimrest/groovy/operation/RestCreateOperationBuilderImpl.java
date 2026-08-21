@@ -24,7 +24,6 @@ import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
 import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
-import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -39,7 +38,7 @@ import java.util.*;
 import java.util.function.Function;
 
 public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuilder<RestObjectClassDefinition>
-        implements RestObjectOperationBuilder<ObjectCreateOperation>, RestCreateOperationBuilder {
+        implements RestCreateOperationBuilder {
 
     private final List<EndpointImpl> endpoints = new ArrayList<>();
     private ScimCreateBuilder scim;

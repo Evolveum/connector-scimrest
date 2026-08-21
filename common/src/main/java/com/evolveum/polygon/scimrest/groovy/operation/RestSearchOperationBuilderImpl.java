@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuilder<RestObjectClassDefinition> implements RestSearchOperationBuilder, RestObjectOperationBuilder<ObjectSearchOperation> {
+public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuilder<RestObjectClassDefinition> implements RestSearchOperationBuilder {
 
     Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
     private ScimSearchHandler.Builder scim;
