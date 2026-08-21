@@ -7,8 +7,8 @@
 package com.evolveum.polygon.scimrest.yaml;
 
 import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
-import com.evolveum.polygon.scimrest.groovy.BaseOperationSupportBuilder;
-import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
+import com.evolveum.polygon.scimrest.groovy.handler.RestHandlerBuilder;
 import com.evolveum.polygon.scimrest.yaml.model.YamlOperationDocument;
 
 /**

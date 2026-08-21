@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
-import com.evolveum.polygon.scimrest.groovy.RestConnectorContext;
+import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.unboundid.scim2.common.GenericScimResource;

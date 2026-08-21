@@ -15,7 +15,7 @@ import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
-import com.evolveum.polygon.scimrest.groovy.RestSearchOperationHandler;
+import com.evolveum.polygon.scimrest.groovy.search.RestSearchOperationHandler;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;

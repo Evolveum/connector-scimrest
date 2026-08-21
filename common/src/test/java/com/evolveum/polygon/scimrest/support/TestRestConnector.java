@@ -6,9 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.support;
 
-import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
-import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
+import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
 public class TestRestConnector extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {

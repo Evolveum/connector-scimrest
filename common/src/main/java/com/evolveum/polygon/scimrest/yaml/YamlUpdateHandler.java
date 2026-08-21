@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.yaml;
 
-import com.evolveum.polygon.scimrest.groovy.BaseOperationSupportBuilder;
+import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.yaml.model.YamlOperation;
 import com.evolveum.polygon.scimrest.yaml.model.YamlWriteEndpoint;

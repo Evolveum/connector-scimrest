@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.impl.scim.dev;
 
 import com.evolveum.polygon.conndev.dev.ConnDevObjectClassSerializer;
 import com.evolveum.polygon.conndev.api.ContextLookup;
-import com.evolveum.polygon.scimrest.groovy.RestConnectorContext;
+import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;

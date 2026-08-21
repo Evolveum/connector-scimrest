@@ -8,7 +8,7 @@ package com.evolveum.polygon.scimrest.auth.method.basic;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
-import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.groovy.impl.ManifestBasedConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;

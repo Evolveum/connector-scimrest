@@ -1,0 +1,266 @@
+/*
+ * Copyright (c) 2026 Evolveum and contributors
+ * 
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ * 
+ */
+package com.evolveum.polygon.scimrest.groovy.operation;
+
+import com.evolveum.polygon.scimrest.groovy.endpoint.DeclarativeResponseBuilder;
+import com.evolveum.polygon.scimrest.groovy.endpoint.DeclarativeRequestBuilder;
+import com.evolveum.polygon.scimrest.groovy.endpoint.AbstractSingleObjectEndpointBuilder;
+import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
+import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
+
+import com.evolveum.polygon.conndev.api.AttributeSupport;
+import com.evolveum.polygon.conndev.groovy.AbstractCreateOperationBuilder;
+import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
+import com.evolveum.polygon.scimrest.JacksonBodyHandler;
+import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
+import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
+import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
+import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
+import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
+import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
+import groovy.lang.Closure;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.function.Function;
+
+public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuilder<RestObjectClassDefinition>
+        implements RestObjectOperationBuilder<ObjectCreateOperation>, RestCreateOperationBuilder {
+
+    private final List<EndpointImpl> endpoints = new ArrayList<>();
+    private ScimCreateBuilder scim;
+
+    public RestCreateOperationBuilderImpl(BaseOperationSupportBuilder parent) {
+        super(parent);
+    }
+
+    @Override
+    public Endpoint endpoint(HttpMethod method, String path) {
+        for (EndpointImpl endpoint : endpoints) {
+            if (endpoint.matches(method, path)) {
+                return endpoint;
+            }
+        }
+        var endpoint = new EndpointImpl(path);
+        endpoint.httpOperation(method);
+        endpoints.add(endpoint);
+        return endpoint;
+    }
+
+    @Override
+    public ScimCreateBuilder scim() {
+        if (scim == null) {
+            scim = new ScimCreateBuilderImpl();
+        }
+        return scim;
+    }
+
+    @Override
+    protected Collection<CreateOperationHandler> collectHandlers() {
+        return endpoints.stream().map(EndpointImpl::build).toList();
+    }
+
+    private class EndpointImpl extends AbstractSingleObjectEndpointBuilder<Set<Attribute>, ConnectorObject, EndpointImpl> implements Endpoint {
+
+        private RequestBuilderImpl request = new RequestBuilderImpl();
+        private ResponseBuilderImpl response = new ResponseBuilderImpl();
+        private AttributeSupport.SupportBuilder<Endpoint> supportedAttributes = new AttributeSupport.SupportBuilder<Endpoint>(this);
+
+        EndpointImpl(String path) {
+            super(path);
+        }
+
+        @Override
+        public EndpointImpl self() {
+            return this;
+        }
+
+        @Override
+        public AttributeSupport.Builder supportedAttribute(String attributeName) {
+            return supportedAttributes.supportedAttribute(attributeName);
+        }
+
+        CreateOperationHandler build() {
+            var supportedAttrs = new HashMap<String, AttributeSupport>();
+
+            for (var supported : supportedAttributes.entries()) {
+                var attr = resolveAttribute(supported.getKey());
+                supportedAttrs.put(attr.connId().getName(), supported.getValue().build(attr));
+            }
+
+            // FIXME: Add support for headers
+
+            if (GroovyContentTypeMixin.APPLICATION_JSON.equals(request.contentType) && request.bodyTransformer == null) {
+                request.bodyTransformer = new DefaultSerializationTransformer(parent.getObjectClass(), supportedAttrs);
+            }
+
+            if (request.contentType != null && request.bodyTransformer == null) {
+                throw new ConnectorException("Content type was specified, but missing implementation of body method");
+            }
+
+            var responseHandler = new DefaultResponseHandler(parent.getObjectClass());
+
+            return new EndpointHandler((RestConnectorContext) parent.context,
+                    path,
+                    request.contentType,
+                    httpMethod,
+                    request.bodyTransformer,
+                    responseHandler,
+                    supportedAttrs
+            );
+        }
+
+        @Override
+        public RequestBuilderImpl request() {
+            return request;
+        }
+
+        @Override
+        public ResponseBuilderImpl response() {
+            return response;
+        }
+    }
+
+    private static class RequestBuilderImpl extends DeclarativeRequestBuilder<Set<Attribute>> implements EndpointBuilder.RequestBuilder<Set<Attribute>> {
+
+        @Override
+        public EndpointBuilder.RequestBuilder<Set<Attribute>> body(Closure<byte[]> bodyTransformer) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private static class ResponseBuilderImpl extends DeclarativeResponseBuilder<ConnectorObject> implements EndpointBuilder.ResponseBuilder<ConnectorObject> {
+
+    }
+
+    private RestAttributeDefinition resolveAttribute(String key) {
+        // FIXME: Perform checks and throw error if incorrect
+        return parent.getObjectClass().attributeFromProtocolName(key);
+    }
+
+    record EndpointHandler(RestConnectorContext context, String path, String contentType,
+                           HttpMethod method,
+                           Function<? super Set<Attribute>, byte[]> requestBody,
+                           Function<HttpResponse<?>, ConnectorObject> responseHandler,
+                           Map<String, AttributeSupport> supportedAttributes) implements CreateOperationHandler {
+
+        @Override
+        public Result create(Set<Attribute> createAttributes, OperationOptions options) {
+            var request = context.rest().newRequest();
+            request.apiEndpoint(path);
+            request.httpMethod(method);
+            if (contentType != null ) {
+                request.header("Content-Type", contentType);
+                request.body(requestBody.apply(createAttributes));
+            }
+            try {
+                var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class));
+                var result = responseHandler.apply(response);
+                return new Result(result.getObjectClass(), result.getUid(), result);
+            } catch (Exception e) {
+                throw new ConnectorException("Cannot create request object", e);
+            }
+        }
+
+        @Override
+        public Capability<Attribute, CreateOperationHandler> canHandle(Collection<Attribute> request, OperationOptions options) {
+            if (supportedAttributes.isEmpty()) {
+                return new Capability<>(this, request);
+            }
+            var handled = new ArrayList<Attribute>();
+            for (var attr : request) {
+                var support = supportedAttributes.get(attr.getName());
+                if (support != null && support.isSupported(attr)) {
+                    handled.add(attr);
+                }
+            }
+            return new Capability<>(this, handled);
+        }
+    }
+
+    private record DefaultSerializationTransformer(RestObjectClassDefinition schema, HashMap<String, AttributeSupport> supportedAttrs) implements Function<Set<Attribute>, byte[]> {
+
+        public static final JsonNodeFactory FACTORY = new JsonNodeFactory();
+
+        @Override
+        public byte[] apply(Set<Attribute> attributes) {
+            var obj = FACTORY.objectNode();
+            for (Attribute attr : attributes) {
+                var definition = schema.attributeFromConnIdName(attr.getName());
+                if (definition == null) {
+                    throw new IllegalArgumentException("Unknown attribute: " + attr.getName());
+                }
+
+                definition.json().toJsonNode(attr, obj);
+            }
+            return obj.toPrettyString().getBytes(StandardCharsets.UTF_8);
+        }
+    }
+
+    private record DefaultResponseHandler(RestObjectClassDefinition objectClass) implements Function<HttpResponse<?>, ConnectorObject> {
+
+        @Override
+        public ConnectorObject apply(HttpResponse<?> httpResponse) {
+            if (httpResponse.statusCode() == 200 || httpResponse.statusCode() == 201) {
+                var obj = httpResponse.body();
+                if (obj instanceof ObjectNode remoteObj) {
+                    if (remoteObj.isEmpty()) {
+                        return null;
+                    }
+                    var builder = objectClass.newObjectBuilder();
+                    for (var attributeDef : objectClass.attributes()) {
+                        var valueMapping = attributeDef.mapping(JsonAttributeMapping.class);
+                        if (valueMapping != null) {
+                            Object connIdValues = valueMapping.valuesFromObject(remoteObj);
+                            if (connIdValues != null) {
+                                builder.addAttribute(attributeDef.attributeOf(connIdValues));
+                            }
+                        }
+                    }
+                    return builder.build();
+                }
+            }
+            throw new ConnectorException("Cannot create object. HTTP status code: " + httpResponse.statusCode());
+        }
+    }
+
+    private class ScimCreateBuilderImpl implements ScimCreateBuilder {
+
+        boolean enabled = true;
+
+        @Override
+        public AttributeValueFilter<AttributeLimitations> supportedAttribute(String attributeName) {
+            return null;
+        }
+
+        @Override
+        public ScimCreateBuilder enabled(boolean value) {
+            this.enabled = value;
+            return this;
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        @Override
+        public Limitations limitations() {
+            return null;
+        }
+    }
+}

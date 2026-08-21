@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.yaml;
 import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.handler.RestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder.OAuth2Builder;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder.RestBuilder;

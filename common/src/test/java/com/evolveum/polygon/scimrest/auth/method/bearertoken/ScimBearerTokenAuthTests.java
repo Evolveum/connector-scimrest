@@ -8,9 +8,9 @@ package com.evolveum.polygon.scimrest.auth.method.bearertoken;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
-import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
+import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
-import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

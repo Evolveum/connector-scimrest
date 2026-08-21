@@ -12,7 +12,7 @@ import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.conndev.concepts.RetrievableContext;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.RestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.handler.RestHandlerBuilder;
 import com.evolveum.polygon.conndev.dev.ConnDevAttribute;
 import com.evolveum.polygon.conndev.dev.ConnDevObjectClass;
 import com.evolveum.polygon.conndev.dev.ConnDevSchema;

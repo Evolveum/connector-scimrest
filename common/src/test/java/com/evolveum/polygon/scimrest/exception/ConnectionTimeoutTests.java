@@ -12,7 +12,7 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 

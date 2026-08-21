@@ -35,8 +35,8 @@ import java.time.temporal.ChronoUnit;
 
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
-import com.evolveum.polygon.scimrest.groovy.AuthPreferenceManager;
-import com.evolveum.polygon.scimrest.groovy.DispatchingAuthorizationCustomizer;
+import com.evolveum.polygon.scimrest.groovy.auth.AuthPreferenceManager;
+import com.evolveum.polygon.scimrest.groovy.auth.DispatchingAuthorizationCustomizer;
 
 /**
  * The RestContext class provides a context for executing HTTP requests

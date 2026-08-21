@@ -1,0 +1,128 @@
+/*
+ * Copyright (c) 2025 Evolveum and contributors
+ *
+ * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+ *
+ */
+package com.evolveum.polygon.scimrest.groovy.connector;
+
+import com.evolveum.polygon.scimrest.groovy.handler.HandlerDefinitionBuilder;
+
+import com.evolveum.polygon.conndev.concepts.RetrievableContext;
+import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.conndev.groovy.ConnectorContext;
+import com.evolveum.polygon.conndev.groovy.GroovyContext;
+import com.evolveum.polygon.conndev.schema.BaseSchema;
+import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
+import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
+import com.evolveum.polygon.scimrest.impl.rest.RestContext;
+import com.evolveum.polygon.scimrest.schema.RestSchema;
+import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+
+import java.util.Map;
+
+public class RestConnectorContext implements ConnectorContext {
+
+    Map<ObjectClass, ObjectClassHandler> handlers;
+    BaseGroovyConnectorConfiguration configuration;
+
+    private RestSchema schema;
+    private BaseSchema baseSchema;
+    private RestContext rest;
+    private ScimContext scim;
+
+    public RestConnectorContext(BaseGroovyConnectorConfiguration groovyConf) {
+        this.configuration = groovyConf;
+    }
+
+    boolean isScimEnabled() {
+        return scim != null;
+    }
+
+    public void schema(RestSchema build) {
+        this.schema = build;
+    }
+
+    public void handlers(Map<ObjectClass, ObjectClassHandler> build) {
+        this.handlers = build;
+    }
+
+    public ObjectClassHandler handlerFor(ObjectClass objectClass) {
+        return this.handlers.get(objectClass);
+    }
+
+    public void rest(RestContext restContext) {
+        this.rest = restContext;
+    }
+
+    public BaseGroovyConnectorConfiguration configuration() {
+        return configuration;
+    }
+
+    public HandlerDefinitionBuilder handlerBuilder(GroovyContext groovy) {
+        return new HandlerDefinitionBuilder(groovy, this);
+    }
+
+    public RestSchema schema() {
+        return schema;
+    }
+
+    /**
+     * Schema built from declarative YAML definitions (conndev {@link BaseSchema} model). Inert for
+     * now: nothing is derived from it, the functional schema is {@link #schema()}. Null when the
+     * connector has no YAML definitions.
+     */
+    public BaseSchema baseSchema() {
+        return baseSchema;
+    }
+
+    public void baseSchema(BaseSchema baseSchema) {
+        this.baseSchema = baseSchema;
+    }
+
+    public RestContext rest() {
+        return rest;
+    }
+
+    public ScimContext scim() {
+        return scim;
+    }
+
+    public void initializeScim(AuthorizationCustomizer<ScimClientConfiguration> authentication) {
+        if (configuration instanceof ScimClientConfiguration scimConf) {
+            if (scimConf.getScimBaseUrl() != null) {
+                scim = new ScimContext(this, scimConf, getDevelopmentMode(), authentication);
+            }
+        }
+    }
+
+    @Override
+    public boolean getDevelopmentMode() {
+        return Boolean.TRUE.equals(configuration.getDevelopmentMode());
+    }
+
+    public void initializeRest(AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer) {
+        if (configuration instanceof RestClientConfiguration restCfg) {
+            if (restCfg.getBaseAddress() != null) {
+                rest = new RestContext(restCfg, authorizationCustomizer);
+            }
+        }
+    }
+
+    @Override
+    public <T extends RetrievableContext> T getUnchecked(Class<T> contextType) {
+        if (contextType.isInstance(this)) {
+            return contextType.cast(this);
+        }
+        if (ScimContext.class.equals(contextType)) {
+            return contextType.cast(scim);
+        }
+        if (RestContext.class.equals(contextType)) {
+            return contextType.cast(rest);
+        }
+        return null;
+    }
+}

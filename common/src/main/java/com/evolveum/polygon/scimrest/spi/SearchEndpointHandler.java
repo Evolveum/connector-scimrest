@@ -6,7 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.spi;
 
-import com.evolveum.polygon.scimrest.groovy.RestSearchOperationHandler;
+import com.evolveum.polygon.scimrest.groovy.search.RestSearchOperationHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
 public interface SearchEndpointHandler<BF, OF> {

@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.exception;
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
-import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 

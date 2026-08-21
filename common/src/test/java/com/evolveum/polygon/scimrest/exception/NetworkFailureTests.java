@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.exception;
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;

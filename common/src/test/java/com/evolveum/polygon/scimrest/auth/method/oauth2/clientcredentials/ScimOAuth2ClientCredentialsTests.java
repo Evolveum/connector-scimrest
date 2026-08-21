@@ -7,8 +7,8 @@
 package com.evolveum.polygon.scimrest.auth.method.oauth2.clientcredentials;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
+import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.testng.annotations.AfterMethod;

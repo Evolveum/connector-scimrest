@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
-import com.evolveum.polygon.scimrest.groovy.BaseRestGroovyConnectorConfiguration;
+import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 

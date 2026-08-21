@@ -7,9 +7,9 @@
 package com.evolveum.polygon.scimrest.crud;
 
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
-import com.evolveum.polygon.scimrest.groovy.AbstractGroovyRestConnector;
+import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
-import com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import org.testng.annotations.AfterMethod;
