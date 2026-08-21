@@ -17,21 +17,18 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
-import org.identityconnectors.framework.common.objects.SchemaBuilder;
+import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.spi.Connector;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class RestSchemaBuilderImpl extends BaseSchemaBuilder<
         RestSchemaBuilderImpl,
         RestObjectClassDefinitionBuilder,
         RestSchemaBuilder,
-        RestObjectClassSchemaBuilder> implements RestSchemaBuilder {
-
-    private final List<ObjectClassInfo> additionalObjectClasses = new ArrayList<>();
+        RestObjectClassSchemaBuilder,
+        RestObjectClassDefinition,
+        RestSchema> implements RestSchemaBuilder {
 
     public RestSchemaBuilderImpl(Class<? extends Connector> connectorClass, ContextLookup context) {
         super(connectorClass, context);
@@ -66,34 +63,15 @@ public class RestSchemaBuilderImpl extends BaseSchemaBuilder<
         return GroovyClosures.callAndReturnDelegate(closure, ret);
     }
 
-    /**
-     * Adds a ready-made ConnId object class (e.g. the shared conndev dev object classes defined in
-     * {@code ConnDevSchema}) to the schema, alongside the mapped object classes.
-     */
-    public RestSchemaBuilderImpl defineObjectClass(ObjectClassInfo objectClass) {
-        additionalObjectClasses.add(objectClass);
-        return this;
+    @Override
+    protected RestSchema newSchema(Schema connIdSchema, Map<ObjectClass, RestObjectClassDefinition> objectClassMap) {
+        return new RestSchema(connIdSchema, objectClassMap);
     }
 
     @Override
-    public RestSchema build() {
-        if (objectClasses.isEmpty()) {
-            initializeDummySchema();
-        }
-
-        var freshSchemaBuilder = new SchemaBuilder(connectorClass);
-        Map<ObjectClass, RestObjectClassDefinition> objectClassMap = new HashMap<>();
-        for (var ocBuilder : objectClasses.values()) {
-            var objectClassDef = ocBuilder.build();
-            freshSchemaBuilder.defineObjectClass(objectClassDef.connId());
-            objectClassMap.put(objectClassDef.objectClass(), objectClassDef);
-        }
-        for (var info : additionalObjectClasses) {
-            freshSchemaBuilder.defineObjectClass(info);
-            // wrap in a mapping-less RestObjectClassDefinition so the handler framework can dispatch to it
-            var mapped = new RestObjectClassDefinition(info, Map.of(), Map.of());
-            objectClassMap.put(mapped.objectClass(), mapped);
-        }
-        return new RestSchema(freshSchemaBuilder.build(), objectClassMap);
+    protected void contributeAdditionalObjectClass(ObjectClassInfo info, Map<ObjectClass, RestObjectClassDefinition> objectClassMap) {
+        // wrap in a mapping-less RestObjectClassDefinition so the handler framework can dispatch to it
+        var mapped = new RestObjectClassDefinition(info, Map.of(), Map.of());
+        objectClassMap.put(mapped.objectClass(), mapped);
     }
 }
