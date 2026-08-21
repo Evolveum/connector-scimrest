@@ -31,11 +31,6 @@ public class MappedObjectClass extends BaseObjectClassDefinition<RestAttributeDe
     }
 
     @Override
-    public RestAttributeDefinition attributeFromProtocolName(String protocolName) {
-        return (RestAttributeDefinition) super.attributeFromProtocolName(protocolName);
-    }
-
-    @Override
     public void contribute(ConnDevObjectClass target) {
         if (scim != null) {
             target.protocolSpecific("scim", scim.exportAttributes());
