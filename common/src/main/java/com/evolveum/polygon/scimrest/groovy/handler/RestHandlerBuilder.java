@@ -6,7 +6,6 @@
  */
 package com.evolveum.polygon.scimrest.groovy.handler;
 
-import com.evolveum.polygon.scimrest.groovy.operation.TestOperationBuilderImpl;
 import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.groovy.auth.AuthorizationCustomizationBuilderImpl;
 import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
@@ -20,7 +19,6 @@ import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.OperationBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.TestOperationBuilder;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
@@ -36,7 +34,6 @@ public class RestHandlerBuilder implements OperationBuilder {
     private final Map<ObjectClass, BaseOperationSupportBuilder> handlers = new HashMap<>();
 
     AuthorizationCustomizationBuilderImpl authorization = new AuthorizationCustomizationBuilderImpl();
-    TestOperationBuilderImpl testOperation = new TestOperationBuilderImpl();
 
     public RestHandlerBuilder(RestConnectorContext context) {
         this.context = context;
@@ -56,11 +53,6 @@ public class RestHandlerBuilder implements OperationBuilder {
             }
         }
         return ret;
-    }
-
-    @Override
-    public TestOperationBuilder test(@Script.Initialization Closure<?> o) {
-        return GroovyClosures.callAndReturnDelegate(o, testOperation);
     }
 
     @Override

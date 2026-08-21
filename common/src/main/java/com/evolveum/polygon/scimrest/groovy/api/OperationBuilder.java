@@ -19,8 +19,6 @@ public interface OperationBuilder {
         return GroovyClosures.callAndReturnDelegate(closure, objectClass(className));
     }
 
-    TestOperationBuilder test(@DelegatesTo(TestOperationBuilder.class) Closure<?> o);
-
     AuthenticationCustomizationBuilder authentication(@DelegatesTo(AuthenticationCustomizationBuilder.class) Closure<?> o);
 
 }
