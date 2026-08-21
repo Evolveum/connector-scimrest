@@ -19,9 +19,9 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MappedObjectClassBuilder extends BaseObjectClassDefinitionBuilder<
+public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionBuilder<
         RestObjectClassSchemaBuilder,
-        MappedObjectClass,
+        RestObjectClassDefinition,
         RestAttributeBuilder<RestReferenceAttributeBuilder>,
         RestReferenceAttributeBuilder,
         RestAttributeBuilderImpl,
@@ -29,7 +29,7 @@ public class MappedObjectClassBuilder extends BaseObjectClassDefinitionBuilder<
 
     private ScimMapping scim;
 
-    public MappedObjectClassBuilder(RestSchemaBuilderImpl restSchemaBuilder, DefinitionValue<String> name) {
+    public RestObjectClassDefinitionBuilder(RestSchemaBuilderImpl restSchemaBuilder, DefinitionValue<String> name) {
         super(restSchemaBuilder, name);
     }
 
@@ -49,9 +49,9 @@ public class MappedObjectClassBuilder extends BaseObjectClassDefinitionBuilder<
     }
 
     @Override
-    protected MappedObjectClass buildImpl(ObjectClassInfo connIdInfo, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs) {
-        var scimMapping = scim != null ? new MappedObjectClass.ObjectClassScimMapping(scim.name(), scim.schemaUri()) : null;
-        return new MappedObjectClass(connIdInfo, nativeAttrs, connIdAttrs, scimMapping);
+    protected RestObjectClassDefinition buildImpl(ObjectClassInfo connIdInfo, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs) {
+        var scimMapping = scim != null ? new RestObjectClassDefinition.ObjectClassScimMapping(scim.name(), scim.schemaUri()) : null;
+        return new RestObjectClassDefinition(connIdInfo, nativeAttrs, connIdAttrs, scimMapping);
     }
 
     @Override

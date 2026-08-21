@@ -27,7 +27,7 @@ import java.util.Map;
 
 public class RestSchemaBuilderImpl extends BaseSchemaBuilder<
         RestSchemaBuilderImpl,
-        MappedObjectClassBuilder,
+        RestObjectClassDefinitionBuilder,
         RestSchemaBuilder,
         RestObjectClassSchemaBuilder> implements RestSchemaBuilder {
 
@@ -38,8 +38,8 @@ public class RestSchemaBuilderImpl extends BaseSchemaBuilder<
     }
 
     @Override
-    protected MappedObjectClassBuilder newObjectClass(DefinitionValue<String> name) {
-        return new MappedObjectClassBuilder(this, name);
+    protected RestObjectClassDefinitionBuilder newObjectClass(DefinitionValue<String> name) {
+        return new RestObjectClassDefinitionBuilder(this, name);
     }
 
     public Class<? extends Connector> connectorClass() {
@@ -47,12 +47,12 @@ public class RestSchemaBuilderImpl extends BaseSchemaBuilder<
     }
 
     @Override
-    public MappedObjectClassBuilder objectClass(String name) {
-        return (MappedObjectClassBuilder) super.objectClass(name);
+    public RestObjectClassDefinitionBuilder objectClass(String name) {
+        return (RestObjectClassDefinitionBuilder) super.objectClass(name);
     }
 
     @Override
-    public MappedObjectClassBuilder objectClass(String name, @DelegatesTo(MappedObjectClassBuilder.class) Closure<?> closure) {
+    public RestObjectClassDefinitionBuilder objectClass(String name, @DelegatesTo(RestObjectClassDefinitionBuilder.class) Closure<?> closure) {
         var objectClass = objectClass(name);
         closure.setDelegate(objectClass);
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
@@ -82,7 +82,7 @@ public class RestSchemaBuilderImpl extends BaseSchemaBuilder<
         }
 
         var freshSchemaBuilder = new SchemaBuilder(connectorClass);
-        Map<ObjectClass, MappedObjectClass> objectClassMap = new HashMap<>();
+        Map<ObjectClass, RestObjectClassDefinition> objectClassMap = new HashMap<>();
         for (var ocBuilder : objectClasses.values()) {
             var objectClassDef = ocBuilder.build();
             freshSchemaBuilder.defineObjectClass(objectClassDef.connId());
@@ -90,8 +90,8 @@ public class RestSchemaBuilderImpl extends BaseSchemaBuilder<
         }
         for (var info : additionalObjectClasses) {
             freshSchemaBuilder.defineObjectClass(info);
-            // wrap in a mapping-less MappedObjectClass so the handler framework can dispatch to it
-            var mapped = new MappedObjectClass(info, Map.of(), Map.of());
+            // wrap in a mapping-less RestObjectClassDefinition so the handler framework can dispatch to it
+            var mapped = new RestObjectClassDefinition(info, Map.of(), Map.of());
             objectClassMap.put(mapped.objectClass(), mapped);
         }
         return new RestSchema(freshSchemaBuilder.build(), objectClassMap);

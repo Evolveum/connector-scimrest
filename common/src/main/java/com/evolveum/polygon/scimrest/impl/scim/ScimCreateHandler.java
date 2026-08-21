@@ -10,7 +10,7 @@ import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.groovy.RestConnectorContext;
 import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.unboundid.scim2.common.GenericScimResource;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -70,7 +70,7 @@ public class ScimCreateHandler implements CreateOperationHandler {
         return new Capability<>(this, supported);
     }
 
-    private GenericScimResource buildScimResource(Set<Attribute> attributes, MappedObjectClass objectClass) {
+    private GenericScimResource buildScimResource(Set<Attribute> attributes, RestObjectClassDefinition objectClass) {
         var scimResource = new GenericScimResource();
         
         for (var attribute : attributes) {
@@ -86,7 +86,7 @@ public class ScimCreateHandler implements CreateOperationHandler {
         return scimResource;
     }
 
-    private ConnectorObject deserializeToObject(GenericScimResource scimResource, MappedObjectClass objectClass) {
+    private ConnectorObject deserializeToObject(GenericScimResource scimResource, RestObjectClassDefinition objectClass) {
         var builder = objectClass.newObjectBuilder();
         for (var attributeDef : objectClass.attributes()) {
             var mapping = attributeDef.mapping(JsonAttributeMapping.class);

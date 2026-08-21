@@ -11,12 +11,12 @@ import com.evolveum.polygon.conndev.build.api.ReadOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.BaseObjectOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.*;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
 public class BaseOperationSupportBuilder
-        extends BaseObjectOperationSupportBuilder<RestSearchOperationBuilderImpl, RestCreateOperationBuilderImpl, RestUpdateOperationBuilderImpl, RestDeleteOperationBuilderImpl, MappedObjectClass> {
+        extends BaseObjectOperationSupportBuilder<RestSearchOperationBuilderImpl, RestCreateOperationBuilderImpl, RestUpdateOperationBuilderImpl, RestDeleteOperationBuilderImpl, RestObjectClassDefinition> {
 
     final RestConnectorContext context;
 
@@ -26,7 +26,7 @@ public class BaseOperationSupportBuilder
     private final RestUpdateOperationBuilderImpl updateOpBuilder;
     private final RestDeleteOperationBuilderImpl deleteOpBuilder;
 
-    public BaseOperationSupportBuilder(RestConnectorContext context, MappedObjectClass restObjectClass) {
+    public BaseOperationSupportBuilder(RestConnectorContext context, RestObjectClassDefinition restObjectClass) {
         super(context, restObjectClass);
         this.context = context;
 

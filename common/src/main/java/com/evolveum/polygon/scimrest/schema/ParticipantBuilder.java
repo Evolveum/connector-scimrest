@@ -18,14 +18,14 @@ import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
 
 public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
 
-    private final MappedObjectClassBuilder objectClass;
+    private final RestObjectClassDefinitionBuilder objectClass;
     private final RelationshipBuilderImpl parent;
 
     private AttributeBuilder attribute;
     /** Unused by scimrest today (no .schema.groovy script calls owner(...)); tracked only to satisfy the interface. */
     private boolean owner = false;
 
-    public ParticipantBuilder(RelationshipBuilderImpl relationshipBuilder, MappedObjectClassBuilder targetClass) {
+    public ParticipantBuilder(RelationshipBuilderImpl relationshipBuilder, RestObjectClassDefinitionBuilder targetClass) {
         this.parent = relationshipBuilder;
         this.objectClass = targetClass;
     }

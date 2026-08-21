@@ -16,7 +16,7 @@ import com.evolveum.polygon.conndev.spi.FilterBasedSearchDispatcher;
 import com.evolveum.polygon.scimrest.impl.scim.ScimSearchHandler;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuilder<MappedObjectClass> implements RestSearchOperationBuilder, RestObjectOperationBuilder<ObjectSearchOperation> {
+public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuilder<RestObjectClassDefinition> implements RestSearchOperationBuilder, RestObjectOperationBuilder<ObjectSearchOperation> {
 
     Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
     private ScimSearchHandler.Builder scim;

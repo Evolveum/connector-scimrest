@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.impl.scim.dev;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.RestConnectorContext;
 import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.unboundid.scim2.common.types.SchemaResource;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -80,7 +80,7 @@ public class ScimSchemaDevHandler implements ObjectSearchOperation {
         return false;
     }
 
-    private ConnectorObject createSchemaObject(MappedObjectClass objectClass, String schemaId, SchemaResource schemaResource) {
+    private ConnectorObject createSchemaObject(RestObjectClassDefinition objectClass, String schemaId, SchemaResource schemaResource) {
         String schemaContent = ScimDevelopmentMode.schemaToJson(schemaResource);
         
         ConnectorObjectBuilder builder = objectClass.newObjectBuilder();

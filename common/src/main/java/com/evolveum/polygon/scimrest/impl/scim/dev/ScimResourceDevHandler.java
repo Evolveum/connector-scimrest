@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.impl.scim.dev;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.RestConnectorContext;
 import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
@@ -88,7 +88,7 @@ public class ScimResourceDevHandler implements ObjectSearchOperation {
         return false;
     }
 
-    private ConnectorObject createResourceObject(MappedObjectClass objectClass, String resourceId, ResourceTypeResource resource, ScimResourceContext resourceContext) {
+    private ConnectorObject createResourceObject(RestObjectClassDefinition objectClass, String resourceId, ResourceTypeResource resource, ScimResourceContext resourceContext) {
         String primarySchemaJson = ScimDevelopmentMode.schemaToJson(resourceContext.primarySchema());
         String schemaExtensionsJson = schemaExtensionsToJson(resourceContext.extensions());
         

@@ -17,7 +17,7 @@ import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
 import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
-public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuilder<MappedObjectClass>
+public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuilder<RestObjectClassDefinition>
         implements RestObjectOperationBuilder<ObjectCreateOperation>, RestCreateOperationBuilder {
 
 
@@ -188,7 +188,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
         }
     }
 
-    private record DefaultSerializationTransformer(MappedObjectClass schema, HashMap<String, AttributeSupport> supportedAttrs) implements Function<Set<Attribute>, byte[]> {
+    private record DefaultSerializationTransformer(RestObjectClassDefinition schema, HashMap<String, AttributeSupport> supportedAttrs) implements Function<Set<Attribute>, byte[]> {
 
         public static final JsonNodeFactory FACTORY = new JsonNodeFactory();
 
@@ -207,7 +207,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
         }
     }
 
-    private record DefaultResponseHandler(MappedObjectClass objectClass) implements Function<HttpResponse<?>, ConnectorObject> {
+    private record DefaultResponseHandler(RestObjectClassDefinition objectClass) implements Function<HttpResponse<?>, ConnectorObject> {
 
         @Override
         public ConnectorObject apply(HttpResponse<?> httpResponse) {

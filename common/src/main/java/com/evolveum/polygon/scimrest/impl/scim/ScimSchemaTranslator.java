@@ -11,7 +11,7 @@ import com.evolveum.polygon.conndev.json.JsonSchemaValueMapping;
 import com.evolveum.polygon.conndev.json.JsonValueMapping;
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.scimrest.schema.RestAttributeBuilderImpl;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClassBuilder;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinitionBuilder;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
@@ -82,7 +82,7 @@ public class ScimSchemaTranslator {
         populatePathBasedSchema(scim, objectClass);
     }
 
-    private void populatePathBasedSchema(ScimResourceContext scim, MappedObjectClassBuilder objectClass) {
+    private void populatePathBasedSchema(ScimResourceContext scim, RestObjectClassDefinitionBuilder objectClass) {
         for (var attr : objectClass.allAttributes()) {
             var path = attr.scim().path();
             if (path == null || path.onlyAttribute() != null) {
@@ -145,7 +145,7 @@ public class ScimSchemaTranslator {
         }
     }
 
-    private void populateBuiltInSchema(MappedObjectClassBuilder objectClass, boolean isOnlyExplicitlyListed) {
+    private void populateBuiltInSchema(RestObjectClassDefinitionBuilder objectClass, boolean isOnlyExplicitlyListed) {
         var idAttribute = findOrCreateAttribute(ID_ATTR, objectClass, isOnlyExplicitlyListed);
         if (idAttribute != null) {
             idAttribute.scim()
@@ -160,7 +160,7 @@ public class ScimSchemaTranslator {
 
     private void populatePrimarySchema(SchemaResource schemaResource,
                                        RestSchemaBuilderImpl schema,
-                                       MappedObjectClassBuilder objectClass,
+                                       RestObjectClassDefinitionBuilder objectClass,
                                        String objectClassName,
                                        boolean onlyListed) {
         for (var scimAttr : schemaResource.getAttributes()) {
@@ -207,7 +207,7 @@ public class ScimSchemaTranslator {
                (GROUP_SCHEMA_URN.equals(schemaId) && "members".equals(attrName));
     }
 
-    private void handleUserGroupsAttribute(RestAttributeBuilderImpl attribute, MappedObjectClassBuilder objectClass) {
+    private void handleUserGroupsAttribute(RestAttributeBuilderImpl attribute, RestObjectClassDefinitionBuilder objectClass) {
         var groupOc = resourceToObjectClass.get("Group");
         if (attribute != null) {
             attribute.connId().type(ConnectorObjectReference.class);
@@ -220,7 +220,7 @@ public class ScimSchemaTranslator {
         attribute.scim().implementation(new ScimGroupToConnectorObjectReference(new ObjectClass(groupOc)));
     }
 
-    private void handleGroupMembersAttribute(RestAttributeBuilderImpl attribute, MappedObjectClassBuilder objectClass) {
+    private void handleGroupMembersAttribute(RestAttributeBuilderImpl attribute, RestObjectClassDefinitionBuilder objectClass) {
         var userOc = resourceToObjectClass.get("User");
         if (attribute != null) {
             attribute.connId().type(ConnectorObjectReference.class);
@@ -239,7 +239,7 @@ public class ScimSchemaTranslator {
 
     private void populateComplexAttribute(AttributeDefinition scimAttr,
                                           RestSchemaBuilderImpl schema,
-                                          MappedObjectClassBuilder parentOc,
+                                          RestObjectClassDefinitionBuilder parentOc,
                                                 String parentOcName,
                                           boolean onlyListed) {
         // Only process if we're not in "only explicitly listed" mode
@@ -299,7 +299,7 @@ public class ScimSchemaTranslator {
         };
     }
 
-    private RestAttributeBuilderImpl findOrCreateAttribute(AttributeDefinition scimAttr, MappedObjectClassBuilder objectClass, boolean onlyListed) {
+    private RestAttributeBuilderImpl findOrCreateAttribute(AttributeDefinition scimAttr, RestObjectClassDefinitionBuilder objectClass, boolean onlyListed) {
         for (var attr : objectClass.allAttributes()) {
             if (scimAttr.getName().equals(attr.scim().name())) {
                 return attr;
@@ -313,7 +313,7 @@ public class ScimSchemaTranslator {
 
     }
 
-    private MappedObjectClassBuilder findOrCreateObjectClass(ResourceTypeResource scim, RestSchemaBuilderImpl schema) {
+    private RestObjectClassDefinitionBuilder findOrCreateObjectClass(ResourceTypeResource scim, RestSchemaBuilderImpl schema) {
         for (var objClass : schema.allObjectClasses()) {
             if (objClass.embedded()) {
 

@@ -16,15 +16,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class MappedObjectClass extends BaseObjectClassDefinition<RestAttributeDefinition> {
+public class RestObjectClassDefinition extends BaseObjectClassDefinition<RestAttributeDefinition> {
 
     private final ObjectClassScimMapping scim;
 
-    public MappedObjectClass(ObjectClassInfo connId, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs) {
+    public RestObjectClassDefinition(ObjectClassInfo connId, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs) {
         this(connId, nativeAttrs, connIdAttrs, null);
     }
 
-    public MappedObjectClass(ObjectClassInfo connId, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs,
+    public RestObjectClassDefinition(ObjectClassInfo connId, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs,
             ObjectClassScimMapping scim) {
         super(connId, nativeAttrs, connIdAttrs);
         this.scim = scim;

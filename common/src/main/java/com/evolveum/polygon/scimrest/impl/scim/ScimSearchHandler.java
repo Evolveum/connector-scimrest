@@ -12,7 +12,7 @@ import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
 import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
 import com.evolveum.polygon.conndev.api.FilterSpecification;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.unboundid.scim2.common.GenericScimResource;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -25,13 +25,13 @@ import java.util.HashSet;
 import java.util.Set;
 public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
-    private final MappedObjectClass objectClass;
+    private final RestObjectClassDefinition objectClass;
     private final Set<FilterSpecification> supportedFilters;
 
     private final boolean supportsEmptyFilter;
     private final boolean supportsAnyFilter;
 
-    public ScimSearchHandler(MappedObjectClass objectClass, boolean emptySupported, boolean anyFilterSupported, Set<FilterSpecification> supportedFilters) {
+    public ScimSearchHandler(RestObjectClassDefinition objectClass, boolean emptySupported, boolean anyFilterSupported, Set<FilterSpecification> supportedFilters) {
         this.objectClass = objectClass;
         this.supportsEmptyFilter = emptySupported;
         this.supportsAnyFilter = anyFilterSupported;
@@ -140,10 +140,10 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
         private boolean emptySupported;
         private boolean anyFilterSupported  = true;
         private final Set<FilterSpecification> supportedFilters = new HashSet<>();
-        private final MappedObjectClass objectClass;
+        private final RestObjectClassDefinition objectClass;
         private Limitations limitations;
 
-        public Builder(MappedObjectClass objectClass) {
+        public Builder(RestObjectClassDefinition objectClass) {
             this.objectClass = objectClass;
         }
 

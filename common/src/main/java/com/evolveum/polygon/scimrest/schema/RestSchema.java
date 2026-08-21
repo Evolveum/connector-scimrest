@@ -12,9 +12,9 @@ import org.identityconnectors.framework.common.objects.Schema;
 
 import java.util.Map;
 
-public class RestSchema extends BaseSchema<MappedObjectClass> {
+public class RestSchema extends BaseSchema<RestObjectClassDefinition> {
 
-    public RestSchema(Schema connIdSchema, Map<ObjectClass, MappedObjectClass> objectClasses) {
+    public RestSchema(Schema connIdSchema, Map<ObjectClass, RestObjectClassDefinition> objectClasses) {
         super(connIdSchema, objectClasses);
     }
 }

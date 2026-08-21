@@ -10,7 +10,7 @@ import com.evolveum.polygon.conndev.dev.ConnDevSchema;
 import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
 import com.evolveum.polygon.scimrest.impl.scim.ScimEmbeddedObjectValueMapping;
 import com.evolveum.polygon.scimrest.impl.scim.ScimSchemaTranslator;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
@@ -279,7 +279,7 @@ public class ScimComplexAttributeReadTest {
                 .build();
     }
 
-    private static RestAttributeDefinition findAttr(MappedObjectClass oc, String name) {
+    private static RestAttributeDefinition findAttr(RestObjectClassDefinition oc, String name) {
         for (var attr : oc.attributes()) {
             if (name.equals(attr.connId().getName())) {
                 return attr;

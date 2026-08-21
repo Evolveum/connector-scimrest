@@ -13,7 +13,7 @@ import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
 
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.*;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -27,7 +27,7 @@ import java.util.*;
 
 public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProcessorBuilder, RestSearchEndpointBuilder {
 
-    final MappedObjectClass objectClass;
+    final RestObjectClassDefinition objectClass;
     ResponseObjectExtractor<BF, OF> objectExtractor = r -> {
         if (r.body() instanceof ArrayNode array) {
             var ret = new ArrayList<OF>();
@@ -47,7 +47,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
     QueryRequestBuilderImpl queryRequest = new QueryRequestBuilderImpl();
 
-    public EndpointBasedSearchBuilder(String path, MappedObjectClass objectClass) {
+    public EndpointBasedSearchBuilder(String path, RestObjectClassDefinition objectClass) {
         this.path = path;
         this.objectClass = objectClass;
     }

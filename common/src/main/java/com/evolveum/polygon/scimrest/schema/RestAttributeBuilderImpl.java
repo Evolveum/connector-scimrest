@@ -28,7 +28,7 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
         RestReferenceAttributeBuilder,
         RestAttributeDefinition> implements RestReferenceAttributeBuilder {
 
-    private final MappedObjectClassBuilder mappedObjectClass;
+    private final RestObjectClassDefinitionBuilder mappedObjectClass;
 
     @Override
     public String name() {
@@ -38,7 +38,7 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
     String nativeType;
     ScimBuilder scim;
 
-    public RestAttributeBuilderImpl(MappedObjectClassBuilder parent, DefinitionValue<String> name) {
+    public RestAttributeBuilderImpl(RestObjectClassDefinitionBuilder parent, DefinitionValue<String> name) {
         super(parent, name);
         this.mappedObjectClass = parent;
     }

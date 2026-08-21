@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
-import com.evolveum.polygon.scimrest.schema.MappedObjectClass;
+import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -27,9 +27,9 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 public class RestPagingAwareObjectRetriever {
 
     private final RestSearchOperationHandler specification;
-    private final MappedObjectClass objectClass;
+    private final RestObjectClassDefinition objectClass;
 
-    public RestPagingAwareObjectRetriever(MappedObjectClass objectClass, RestSearchOperationHandler<?,?> specification) {
+    public RestPagingAwareObjectRetriever(RestObjectClassDefinition objectClass, RestSearchOperationHandler<?,?> specification) {
         this.objectClass = objectClass;
         this.specification = specification;
     }
