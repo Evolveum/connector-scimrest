@@ -21,6 +21,7 @@ import com.evolveum.polygon.scimrest.impl.scim.dev.ScimObjectClassDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimResourceDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimSchemaDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimServiceProviderConfigDevHandler;
+import com.evolveum.polygon.scimrest.impl.scim.flatten.ScimFlattenStrategies;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
@@ -267,7 +268,8 @@ public class ScimContext implements RetrievableContext {
      * @return the translator used, so the caller can apply its rules before {@code build()}
      */
     public ScimSchemaTranslator contributeToSchema(RestSchemaBuilderImpl schemaBuilder) {
-        var translator = new ScimSchemaTranslator(contextLookup);
+        var translator = new ScimSchemaTranslator(contextLookup,
+                ScimFlattenStrategies.forConfiguration(configuration));
         for (var resource : resources.values()) {
             translator.correlateObjectClasses(resource, schemaBuilder);
         }

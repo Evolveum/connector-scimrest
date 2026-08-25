@@ -1,38 +1,34 @@
 /*
- * Copyright (c) 2025 Evolveum and contributors
+ * Copyright (c) 2026 Evolveum and contributors
  *
  * This work is licensed under European Union Public License v1.2. See LICENSE file for details.
  *
  */
-package com.evolveum.polygon.sample.scimdev;
+package com.evolveum.polygon.scimrest.scimgeneric;
 
-import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
-import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
-import org.identityconnectors.common.security.GuardedString;
+import com.evolveum.polygon.scimrest.groovy.impl.ReadOnlyConfiguration;
+import org.identityconnectors.framework.spi.ConfigurationClass;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
-public class ScimDevConfiguration extends BaseGroovyConnectorConfiguration implements ScimClientConfiguration.BearerTokenAuthorization {
+/**
+ * Configuration for the SCIM2 Generic connector.
+ *
+ * <p>Extends the shared read-only manifest configuration and defaults the per-family
+ * {@code SCIM Mapping} flatten flags to {@code true} (still overridable by an explicit value);
+ * the shared {@link ReadOnlyConfiguration} leaves them unset, i.e. {@code false}.
+ */
+@ConfigurationClass(overrideFile = "configurationOverride.properties")
+public class ScimGenericConfiguration extends ReadOnlyConfiguration {
 
-    private GuardedString tokenValue;
     private Boolean flattenNameAttribute;
     private Boolean flattenEmails;
     private Boolean flattenPhoneNumbers;
     private Boolean flattenAddresses;
 
-    public void setScimTokenValue(GuardedString tokenValue) {
-        this.tokenValue = tokenValue;
-    }
-
-    @Override
-    @ConfigurationProperty(groupMessageKey = "scim.auth.bearer", order = 705, required = true)
-    public GuardedString getScimTokenValue() {
-        return tokenValue;
-    }
-
     @Override
     @ConfigurationProperty(groupMessageKey = "scim.mapping", order = 810, required = false)
     public Boolean getScimFlattenNameAttribute() {
-        return flattenNameAttribute == null ? Boolean.FALSE : flattenNameAttribute;
+        return flattenNameAttribute != null ? flattenNameAttribute : Boolean.TRUE;
     }
 
     public void setScimFlattenNameAttribute(Boolean flattenNameAttribute) {
@@ -42,7 +38,7 @@ public class ScimDevConfiguration extends BaseGroovyConnectorConfiguration imple
     @Override
     @ConfigurationProperty(groupMessageKey = "scim.mapping", order = 820, required = false)
     public Boolean getScimFlattenEmails() {
-        return flattenEmails == null ? Boolean.FALSE : flattenEmails;
+        return flattenEmails != null ? flattenEmails : Boolean.TRUE;
     }
 
     public void setScimFlattenEmails(Boolean flattenEmails) {
@@ -52,7 +48,7 @@ public class ScimDevConfiguration extends BaseGroovyConnectorConfiguration imple
     @Override
     @ConfigurationProperty(groupMessageKey = "scim.mapping", order = 830, required = false)
     public Boolean getScimFlattenPhoneNumbers() {
-        return flattenPhoneNumbers == null ? Boolean.FALSE : flattenPhoneNumbers;
+        return flattenPhoneNumbers != null ? flattenPhoneNumbers : Boolean.TRUE;
     }
 
     public void setScimFlattenPhoneNumbers(Boolean flattenPhoneNumbers) {
@@ -62,16 +58,10 @@ public class ScimDevConfiguration extends BaseGroovyConnectorConfiguration imple
     @Override
     @ConfigurationProperty(groupMessageKey = "scim.mapping", order = 840, required = false)
     public Boolean getScimFlattenAddresses() {
-        return flattenAddresses == null ? Boolean.FALSE : flattenAddresses;
+        return flattenAddresses != null ? flattenAddresses : Boolean.TRUE;
     }
 
     public void setScimFlattenAddresses(Boolean flattenAddresses) {
         this.flattenAddresses = flattenAddresses;
-    }
-
-    @Override
-    @ConfigurationProperty(groupMessageKey = "scim.service", order = 205, required = false)
-    public String getScimBaseUrl() {
-        return "https://api.scim.dev/scim/v2";
     }
 }

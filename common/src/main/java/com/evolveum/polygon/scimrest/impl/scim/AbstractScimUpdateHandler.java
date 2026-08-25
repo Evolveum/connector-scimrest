@@ -14,6 +14,7 @@ import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
+import com.unboundid.scim2.common.types.AttributeDefinition;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
@@ -92,9 +93,7 @@ public abstract class AbstractScimUpdateHandler implements UpdateOperationHandle
 
         List<AttributeDelta> supported = new ArrayList<>();
         for (AttributeDelta delta : request) {
-            AttributePath path = AttributePath.of(delta.getName());
-            var definition = resource.findAttributeDefinition(path);
-            if (definition == null) {
+            if (findScimDefinition(resource, delta.getName()) == null) {
                 continue;
             }
             if (supportedAttributes != null && !supportedAttributes.contains(delta.getName())) {
@@ -103,6 +102,31 @@ public abstract class AbstractScimUpdateHandler implements UpdateOperationHandle
             supported.add(delta);
         }
         return new Capability<>(this, supported);
+    }
+
+    /**
+     * Resolve the SCIM attribute definition for a ConnId attribute name. Attributes that
+     * are mapped by a plain SCIM name are found directly; attributes mapped by a deeper SCIM
+     * path (e.g. flattened {@code name_formatted} &rarr; {@code name.formatted}) are resolved
+     * through the object class definition's SCIM mapping path.
+     */
+    private AttributeDefinition findScimDefinition(
+            ScimResourceContext resource, String connIdAttributeName) {
+        var direct = resource.findAttributeDefinition(AttributePath.of(connIdAttributeName));
+        if (direct != null) {
+            return direct;
+        }
+        var connectorContext = context.contextLookup().get(RestConnectorContext.class);
+        var definition = connectorContext.schema().objectClass(objectClass.getObjectClassValue())
+                .attributeFromConnIdName(connIdAttributeName);
+        if (definition == null) {
+            return null;
+        }
+        var scim = definition.scim();
+        if (scim == null || scim.path() == null) {
+            return null;
+        }
+        return resource.findAttributeDefinition(scim.path());
     }
 
     /**

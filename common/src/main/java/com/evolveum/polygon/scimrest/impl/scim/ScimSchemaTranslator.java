@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.scimrest.impl.scim.flatten.ComplexFlattenStrategy;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import com.evolveum.polygon.scimrest.schema.RestAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinitionBuilder;
@@ -52,6 +53,7 @@ public class ScimSchemaTranslator {
     private Map<String, ScimResourceContext> objectClassToResource = new HashMap<>();
 
     private final ContextLookup contextLookup;
+    private final List<ComplexFlattenStrategy> flattenStrategies;
 
     private final List<ScimResourceMappingRule> resourceRules = new ArrayList<>();
     private final List<ScimAttributeMappingRule> attributeRules = new ArrayList<>();
@@ -64,7 +66,16 @@ public class ScimSchemaTranslator {
     private record Correlation(ScimResourceContext resource, boolean onlyListed) {}
 
     public ScimSchemaTranslator(ContextLookup contextLookup) {
+        this(contextLookup, List.of());
+    }
+
+    /**
+     * @param flattenStrategies the SCIM mapping strategies that flatten complex attributes into
+     *        plain attributes instead of embedded object classes (see {@link ComplexFlattenStrategy})
+     */
+    public ScimSchemaTranslator(ContextLookup contextLookup, List<ComplexFlattenStrategy> flattenStrategies) {
         this.contextLookup = contextLookup;
+        this.flattenStrategies = List.copyOf(flattenStrategies);
         registerDefaultRules();
     }
 
@@ -113,7 +124,10 @@ public class ScimSchemaTranslator {
 
         for (var scimAttr : scim.primarySchema().getAttributes()) {
             if (isComplexNotMembership(scimAttr, scim.primarySchema())) {
-                if (!onlyListed && !isAlreadyDefined(scimAttr, objectClass)) {
+                var strategy = findFlattenStrategy(scimAttr);
+                if (strategy != null && !onlyListed && !isAlreadyDefined(scimAttr, objectClass)) {
+                    populateFlattenedComplexAttribute(scimAttr, objectClass, strategy);
+                } else if (!onlyListed && !isAlreadyDefined(scimAttr, objectClass)) {
                     populateComplexAttribute(scim, scimAttr, schema, objectClass);
                 }
                 continue;
@@ -218,6 +232,36 @@ public class ScimSchemaTranslator {
         complexAttr.connId()
                 .roleInReference(detected(
                         AttributeInfo.RoleInReference.SUBJECT.toString()));
+    }
+
+    /**
+     * The first registered strategy that flattens the given complex attribute, or {@code null}
+     * when none applies (the attribute then keeps its embedded object mapping).
+     */
+    private ComplexFlattenStrategy findFlattenStrategy(AttributeDefinition scimAttr) {
+        for (var strategy : flattenStrategies) {
+            if (strategy.supports(scimAttr)) {
+                return strategy;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Flatten a complex attribute into plain attributes of the containing object class using the
+     * given strategy: each {@link ComplexFlattenStrategy.FlattenedAttribute} becomes an attribute
+     * whose SCIM mapping path points into the complex attribute. No embedded object class is
+     * created. Attribute metadata (type, mutability, description, ...) is applied by the
+     * attribute mapping rules via
+     * {@link #populatePathBasedSchema(ScimResourceContext, RestObjectClassDefinitionBuilder)}.
+     */
+    private void populateFlattenedComplexAttribute(AttributeDefinition scimAttr,
+                                                    RestObjectClassDefinitionBuilder parentOc,
+                                                    ComplexFlattenStrategy strategy) {
+        for (var flat : strategy.flatten(scimAttr)) {
+            var subAttribute = parentOc.attribute(flat.name());
+            subAttribute.scim().path(flat.path());
+        }
     }
 
     /**

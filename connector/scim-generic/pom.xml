@@ -22,8 +22,8 @@
     <name>Polygon SCIM2 Generic Connector</name>
 
     <properties>
-        <connectorPackage>com.evolveum.polygon.scimrest.groovy.impl</connectorPackage>
-        <connectorClass>ManifestBasedConnector</connectorClass>
+        <connectorPackage>com.evolveum.polygon.scimrest.scimgeneric</connectorPackage>
+        <connectorClass>ScimGenericConnector</connectorClass>
     </properties>
 
     <build>
@@ -35,7 +35,7 @@
                     <archive>
                         <index>true</index>
                         <manifestEntries>
-                            <ConnectorBundle-ConnectorClass>com.evolveum.polygon.scimrest.groovy.impl.ManifestBasedConnector</ConnectorBundle-ConnectorClass>
+                            <ConnectorBundle-ConnectorClass>com.evolveum.polygon.scimrest.scimgeneric.ScimGenericConnector</ConnectorBundle-ConnectorClass>
                         </manifestEntries>
                     </archive>
                 </configuration>

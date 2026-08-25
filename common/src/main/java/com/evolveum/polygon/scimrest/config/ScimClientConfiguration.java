@@ -14,6 +14,45 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
     String getScimBaseUrl();
 
     /**
+     * Optional SCIM mapping rule (group {@code SCIM Mapping}): when {@code true}, the single-valued
+     * {@code name} complex attribute is flattened into plain attributes of the containing object,
+     * named {@code name_<subAttribute>} (e.g. {@code name/formatted} becomes {@code name_formatted}).
+     */
+    default Boolean getScimFlattenNameAttribute() {
+        return Boolean.FALSE;
+    }
+
+    /**
+     * Optional SCIM mapping rule (group {@code SCIM Mapping}): when {@code true}, the multi-valued
+     * {@code emails} complex attribute is flattened into one plain attribute per entry type
+     * ({@code work_email}, {@code home_email}, {@code other_email}), each mapped to
+     * {@code emails[type eq "<type>"].value}.
+     */
+    default Boolean getScimFlattenEmails() {
+        return Boolean.FALSE;
+    }
+
+    /**
+     * Optional SCIM mapping rule (group {@code SCIM Mapping}): when {@code true}, the multi-valued
+     * {@code phoneNumbers} complex attribute is flattened into one plain attribute per entry type
+     * ({@code work_phone}, {@code home_phone}, {@code other_phone}), each mapped to
+     * {@code phoneNumbers[type eq "<type>"].value}.
+     */
+    default Boolean getScimFlattenPhoneNumbers() {
+        return Boolean.FALSE;
+    }
+
+    /**
+     * Optional SCIM mapping rule (group {@code SCIM Mapping}): when {@code true}, the multi-valued
+     * {@code addresses} complex attribute is flattened into one plain attribute per entry type and
+     * scalar sub-attribute (e.g. {@code work_address_locality}, {@code work_address_postalCode}),
+     * each mapped to {@code addresses[type eq "<type>"].<subAttribute>}.
+     */
+    default Boolean getScimFlattenAddresses() {
+        return Boolean.FALSE;
+    }
+
+    /**
      * HTTP Basic authorization — legacy interface, prefer {@link BasicAuthorization}.
      *
      * @see <a href="https://www.rfc-editor.org/rfc/rfc7617">RFC 7617 — The 'Basic' HTTP Authentication Scheme</a>

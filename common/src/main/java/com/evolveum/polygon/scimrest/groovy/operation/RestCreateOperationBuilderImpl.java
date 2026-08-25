@@ -23,6 +23,7 @@ import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
 import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
+import com.evolveum.polygon.scimrest.impl.scim.ScimCreateHandler;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import tools.jackson.databind.node.JsonNodeFactory;
@@ -75,7 +76,15 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
 
     @Override
     protected Collection<CreateOperationHandler> collectHandlers() {
-        return endpoints.stream().map(EndpointImpl::build).toList();
+        var handlers = new ArrayList<CreateOperationHandler>(endpoints.stream().map(EndpointImpl::build).toList());
+
+        // Add SCIM handler if configured
+        if (scim != null && scim.isEnabled()) {
+            handlers.add(new ScimCreateHandler(parent.getObjectClass().objectClass(),
+                    ((RestConnectorContext) parent.context).scim()));
+        }
+
+        return handlers;
     }
 
     private class EndpointImpl extends AbstractSingleObjectEndpointBuilder<Set<Attribute>, ConnectorObject, EndpointImpl> implements Endpoint {
