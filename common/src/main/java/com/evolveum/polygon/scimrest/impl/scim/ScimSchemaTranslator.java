@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim;
 
+import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.scimrest.schema.RestAttributeBuilderImpl;
@@ -60,12 +61,18 @@ public class ScimSchemaTranslator {
     private Map<String, ScimResourceContext> objectClassToResource = new HashMap<>();
 
     private final ContextLookup contextLookup;
+    private final boolean flattenSingleValueComplex;
 
     private final List<ScimResourceMappingRule> resourceRules = new ArrayList<>();
     private final List<ScimAttributeMappingRule> attributeRules = new ArrayList<>();
 
     public ScimSchemaTranslator(ContextLookup contextLookup) {
+        this(contextLookup, false);
+    }
+
+    public ScimSchemaTranslator(ContextLookup contextLookup, boolean flattenSingleValueComplex) {
         this.contextLookup = contextLookup;
+        this.flattenSingleValueComplex = flattenSingleValueComplex;
         registerDefaultRules();
     }
 
@@ -117,7 +124,10 @@ public class ScimSchemaTranslator {
 
         for (var scimAttr : scim.primarySchema().getAttributes()) {
             if (isComplexNotMembership(scimAttr, scim.primarySchema())) {
-                if (!onlyListed && !isAlreadyDefined(scimAttr, objectClass)) {
+                if (!onlyListed && !isAlreadyDefined(scimAttr, objectClass)
+                        && flattenSingleValueComplex && !scimAttr.isMultiValued()) {
+                    populateFlattenedComplexAttribute(scimAttr, objectClass);
+                } else if (!onlyListed && !isAlreadyDefined(scimAttr, objectClass)) {
                     populateComplexAttribute(scimAttr, schema, objectClass);
                 }
                 continue;
@@ -221,6 +231,27 @@ public class ScimSchemaTranslator {
         complexAttr.connId()
                 .roleInReference(detected(
                         AttributeInfo.RoleInReference.SUBJECT.toString()));
+    }
+
+    /**
+     * Flatten a single-valued complex attribute into plain attributes of the containing
+     * object class: each scalar sub-attribute {@code <parent>/<sub>} becomes an attribute
+     * named {@code <parent>_<sub>} (e.g. {@code name/formatted} &rarr; {@code name_formatted})
+     * whose SCIM mapping path points into the complex attribute. No embedded object class
+     * is created. Nested complex sub-attributes are skipped.
+     */
+    private void populateFlattenedComplexAttribute(AttributeDefinition scimAttr,
+                                                    RestObjectClassDefinitionBuilder parentOc) {
+        for (AttributeDefinition subAttr : scimAttr.getSubAttributes()) {
+            if (AttributeDefinition.Type.COMPLEX.equals(subAttr.getType())) {
+                continue;
+            }
+            var flatName = scimAttr.getName() + "_" + subAttr.getName();
+            var subAttribute = parentOc.attribute(flatName);
+            subAttribute.scim()
+                    .path(AttributePath.of(scimAttr.getName(), subAttr.getName()));
+            applySubAttributeRules(subAttribute, subAttr);
+        }
     }
 
     private void applySubAttributeRules(RestAttributeBuilderImpl attr,

@@ -14,6 +14,17 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
     String getScimBaseUrl();
 
     /**
+     * Optional SCIM mapping rule: when {@code true}, single-valued SCIM complex attributes are
+     * flattened into plain attributes of the containing object, named
+     * {@code <attribute>_<subAttribute>} (e.g. {@code name/formatted} becomes the
+     * {@code name_formatted} attribute). Multi-valued complex attributes (e.g. {@code emails})
+     * are not affected and keep their embedded-object mapping.
+     */
+    default Boolean getScimFlattenSingleValueComplexAttributes() {
+        return Boolean.FALSE;
+    }
+
+    /**
      * HTTP Basic authorization — legacy interface, prefer {@link BasicAuthorization}.
      *
      * @see <a href="https://www.rfc-editor.org/rfc/rfc7617">RFC 7617 — The 'Basic' HTTP Authentication Scheme</a>

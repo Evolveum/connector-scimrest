@@ -14,6 +14,7 @@ import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.unboundid.scim2.common.GenericScimResource;
+import com.unboundid.scim2.common.types.AttributeDefinition;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
@@ -53,7 +54,8 @@ public class ScimUpdateHandler implements UpdateOperationHandler {
         URI resourceUri = relativeEndpoint(resource.relativeEndpoint(), request.uid().getUidValue());
         
         try {
-            context.scimClient().replaceRequest(resourceUri, scimResource);
+            context.scimClient().replaceRequest(resourceUri, scimResource)
+                    .invoke(GenericScimResource.class);
         } catch (Exception e) {
             throw new ConnectorException("Failed to update SCIM resource: " + e.getMessage(), e);
         }
@@ -68,13 +70,36 @@ public class ScimUpdateHandler implements UpdateOperationHandler {
 
         List<AttributeDelta> supported = new ArrayList<>();
         for (AttributeDelta delta : request) {
-            AttributePath path = AttributePath.of(delta.getName());
-            var definition = resource.findAttributeDefinition(path);
-            if (definition != null) {
+            if (findScimDefinition(resource, delta.getName()) != null) {
                 supported.add(delta);
             }
         }
         return new Capability<>(this, supported);
+    }
+
+    /**
+     * Resolve the SCIM attribute definition for a ConnId attribute name. Attributes that
+     * are mapped by a plain SCIM name are found directly; attributes mapped by a deeper SCIM
+     * path (e.g. flattened {@code name_formatted} &rarr; {@code name.formatted}) are resolved
+     * through the object class definition's SCIM mapping path.
+     */
+    private AttributeDefinition findScimDefinition(
+            ScimResourceContext resource, String connIdAttributeName) {
+        var direct = resource.findAttributeDefinition(AttributePath.of(connIdAttributeName));
+        if (direct != null) {
+            return direct;
+        }
+        var connectorContext = context.contextLookup().get(RestConnectorContext.class);
+        var definition = connectorContext.schema().objectClass(objectClass.getObjectClassValue())
+                .attributeFromConnIdName(connIdAttributeName);
+        if (definition == null) {
+            return null;
+        }
+        var scim = definition.scim();
+        if (scim == null || scim.path() == null) {
+            return null;
+        }
+        return resource.findAttributeDefinition(scim.path());
     }
 
     private GenericScimResource buildScimResource(Set<AttributeDelta> deltas, RestObjectClassDefinition objectClass, ConnectorObject before) {
@@ -84,7 +109,7 @@ public class ScimUpdateHandler implements UpdateOperationHandler {
             AttributePath path = AttributePath.of(delta.getName());
             RestAttributeDefinition definition = objectClass.attributeFromConnIdName(delta.getName());
             if (definition != null) {
-                JsonAttributeMapping jsonMapping = definition.mapping(JsonAttributeMapping.class);
+                JsonAttributeMapping jsonMapping = definition.scim();
                 if (jsonMapping != null) {
                     AttributeBuilder attrBuilder = new AttributeBuilder();
                     attrBuilder.setName(delta.getName());

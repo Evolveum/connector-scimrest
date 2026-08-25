@@ -94,13 +94,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
     }
 
     private boolean scimNotUsed() {
-        if (scim == null) {
-            return true;
-        }
-        if (!scim.enabled) {
-            return true;
-        }
-        return !(scim.put != null && scim.put.enabled) && !(scim.patch != null && scim.patch.enabled);
+        return scim == null || !scim.enabled;
     }
 
     private RestAttributeDefinition resolveAttribute(String key) {

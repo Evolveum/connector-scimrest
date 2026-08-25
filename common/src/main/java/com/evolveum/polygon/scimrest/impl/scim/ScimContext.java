@@ -222,7 +222,8 @@ public class ScimContext implements RetrievableContext {
     }
 
     public void contributeToSchema(RestSchemaBuilderImpl schemaBuilder) {
-        var translator = new ScimSchemaTranslator(contextLookup);
+        var translator = new ScimSchemaTranslator(contextLookup,
+                Boolean.TRUE.equals(configuration.getScimFlattenSingleValueComplexAttributes()));
         for (var resource : resources.values()) {
             translator.correlateObjectClasses(resource, schemaBuilder);
         }

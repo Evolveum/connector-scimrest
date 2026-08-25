@@ -14,6 +14,7 @@ import org.identityconnectors.framework.spi.ConfigurationProperty;
 public class ScimDevConfiguration extends BaseGroovyConnectorConfiguration implements ScimClientConfiguration.BearerTokenAuthorization {
 
     private GuardedString tokenValue;
+    private Boolean flattenSingleValueComplexAttributes;
 
     public void setScimTokenValue(GuardedString tokenValue) {
         this.tokenValue = tokenValue;
@@ -23,6 +24,16 @@ public class ScimDevConfiguration extends BaseGroovyConnectorConfiguration imple
     @ConfigurationProperty(groupMessageKey = "scim.auth.tokenValue", required = true)
     public GuardedString getScimTokenValue() {
         return tokenValue;
+    }
+
+    @Override
+    @ConfigurationProperty(groupMessageKey = "scim.flattenSingleValueComplexAttributes", required = false)
+    public Boolean getScimFlattenSingleValueComplexAttributes() {
+        return flattenSingleValueComplexAttributes == null ? Boolean.FALSE : flattenSingleValueComplexAttributes;
+    }
+
+    public void setScimFlattenSingleValueComplexAttributes(Boolean flattenSingleValueComplexAttributes) {
+        this.flattenSingleValueComplexAttributes = flattenSingleValueComplexAttributes;
     }
 
     @Override
