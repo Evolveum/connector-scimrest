@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.build.api.SearchHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimSearchBuilder;
 import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
@@ -27,6 +28,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
     private final RestObjectClassDefinition objectClass;
     private final Set<FilterSpecification> supportedFilters;
+    private final ScimFilterTranslator filterTranslator;
 
     private final boolean supportsEmptyFilter;
     private final boolean supportsAnyFilter;
@@ -36,6 +38,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
         this.supportsEmptyFilter = emptySupported;
         this.supportsAnyFilter = anyFilterSupported;
         this.supportedFilters = supportedFilters;
+        this.filterTranslator = ScimFilterTranslator.fromObjectClass(objectClass);
     }
 
     public void performSearch(ScimContext context, Filter query, ResultsHandler handler, OperationOptions options) {
@@ -46,7 +49,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
         var scim = context.scimClient();
         var resource = context.resourceForObjectClass(objectClass.objectClass());
-        var scimFilter = translate(query);
+        var scimFilter = query == null ? null : filterTranslator.translate(query);
         try {
             do {
                 var batchProcessed = 0;
@@ -81,11 +84,6 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
         }
     }
 
-    private String translate(Filter query) {
-        return null;
-
-    }
-
     private ConnectorObject deserializeFromRemote(GenericScimResource remoteObj) {
         var builder = objectClass.newObjectBuilder();
         for (var attributeDef : objectClass.attributes()) {
@@ -103,7 +101,13 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
     @Override
     public boolean supports(Filter filter) {
-        if ((supportsEmptyFilter && filter == null) || supportsAnyFilter) {
+        if (filter == null) {
+            return supportsEmptyFilter;
+        }
+        if (!filterTranslator.isTranslatable(filter)) {
+            return false;
+        }
+        if (supportsAnyFilter) {
             return true;
         }
         return supportedFilters.stream().anyMatch(a -> a.matches(filter));
@@ -175,9 +179,24 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
                 return this;
             }
 
+            /**
+             * Declares the filter as supported. Unlike REST endpoints, SCIM search has no
+             * per-filter mapping hook - filters are translated to SCIM filter expressions
+             * automatically - so the closure carries no mapping behavior. It is evaluated
+             * against the (currently empty) {@link SearchHandlerBuilder.FilterSupportImplementation}
+             * delegate purely so that declarative {@code supportedFilter(spec) { ... } }
+             * blocks are accepted; the specification itself is what limits which filters
+             * the search handler - and thus the {@code FilterBasedSearchDispatcher} - applies.
+             */
             @Override
             public Limitations supportedFilter(FilterSpecification filterSpec, Closure<?> closure) {
-                throw new UnsupportedOperationException("Not implemented yet.");
+                var delegate = new SearchHandlerBuilder.FilterSupportImplementation() {
+                };
+                closure.setDelegate(delegate);
+                closure.setResolveStrategy(Closure.DELEGATE_ONLY);
+                closure.call();
+                Builder.this.supportedFilters(filterSpec);
+                return this;
             }
         }
 

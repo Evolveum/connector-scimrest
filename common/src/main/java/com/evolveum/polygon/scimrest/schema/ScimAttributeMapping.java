@@ -16,5 +16,4 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
     public ScimAttributeMapping(AttributePathDeclaration<?,?> path, ValueMapping<Object, JsonNode> mapping) {
         super(path, mapping);
     }
-
 }
