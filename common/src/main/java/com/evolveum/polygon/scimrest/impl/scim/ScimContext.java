@@ -221,7 +221,12 @@ public class ScimContext implements RetrievableContext {
         return rel.startsWith("/") ? rel : "/" + rel;
     }
 
-    public void contributeToSchema(RestSchemaBuilderImpl schemaBuilder) {
+    /**
+     * Populates the given schema builder from the discovered SCIM resources.
+     *
+     * @return the translator used, so the caller can apply its rules before {@code build()}
+     */
+    public ScimSchemaTranslator contributeToSchema(RestSchemaBuilderImpl schemaBuilder) {
         var translator = new ScimSchemaTranslator(contextLookup);
         for (var resource : resources.values()) {
             translator.correlateObjectClasses(resource, schemaBuilder);
@@ -247,6 +252,7 @@ public class ScimContext implements RetrievableContext {
             schemaBuilder.defineObjectClass(scimAttributeBlock());
             new ScimDevelopmentMode().contributeSchemaObjects(schemaBuilder);
         }
+        return translator;
     }
 
     private static final String SCIM_BLOCK = "scim";

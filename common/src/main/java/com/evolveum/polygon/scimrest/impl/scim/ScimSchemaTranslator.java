@@ -7,12 +7,10 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
-import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.scimrest.schema.RestAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinitionBuilder;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.ScimAttributeMappingRule;
-import com.evolveum.polygon.scimrest.schema.ScimMappingAction;
 import com.evolveum.polygon.scimrest.schema.ScimResourceMappingRule;
 import com.evolveum.polygon.scimrest.schema.strategy.ScimMetadataToConnIdRule;
 import com.evolveum.polygon.scimrest.schema.strategy.ScimMembershipReferenceRule;
@@ -36,25 +34,18 @@ import java.util.Map;
 
 /**
  * Translates SCIM schema metadata into Connector Framework schema definitions using a
- * rule-based approach. Strategies examine resource and attribute metadata, produce
- * {@link ScimMappingAction} instances that modify schema builders.
+ * rule-based approach. Strategies examine resource and attribute metadata and apply their
+ * effect directly to the schema builder — see {@link ScimResourceMappingRule}/
+ * {@link ScimAttributeMappingRule}.
  *
- * <p>Flow within {@link #populateSchema(ScimResourceContext, RestSchemaBuilderImpl)}:</p>
- * <ol>
- *   <li>Create attributes from SCIM schema and run attribute-level rules</li>
- *   <li>Handle COMPLEX attributes inline (embedded object class creation)</li>
- *   <li>Apply resource-level rules (Uid detection)</li>
- *   <li>Populate path-based attributes from Groovy definitions</li>
- * </ol>
+ * <p>{@link #populateSchema(ScimResourceContext, RestSchemaBuilderImpl)} only creates attributes
+ * (identity only). The caller must call {@link #applyRules()} and then {@code build()} itself,
+ * in that order.
  *
  * @see ScimResourceMappingRule
  * @see ScimAttributeMappingRule
- * @see ScimMappingAction
  */
 public class ScimSchemaTranslator {
-
-    private static final String USER_SCHEMA_URN = "urn:ietf:params:scim:schemas:core:2.0:User";
-    private static final String GROUP_SCHEMA_URN = "urn:ietf:params:scim:schemas:core:2.0:Group";
 
     private Map<String, String> resourceToObjectClass = new HashMap<>();
     private Map<String, ScimResourceContext> objectClassToResource = new HashMap<>();
@@ -63,6 +54,13 @@ public class ScimSchemaTranslator {
 
     private final List<ScimResourceMappingRule> resourceRules = new ArrayList<>();
     private final List<ScimAttributeMappingRule> attributeRules = new ArrayList<>();
+
+    /** Object classes this translator correlated to a SCIM resource (see {@link #populateSchema}),
+     * kept here rather than on the builder itself, since the correlation is this translator's
+     * concern. */
+    private final Map<RestObjectClassDefinitionBuilder, Correlation> correlated = new HashMap<>();
+
+    private record Correlation(ScimResourceContext resource, boolean onlyListed) {}
 
     public ScimSchemaTranslator(ContextLookup contextLookup) {
         this.contextLookup = contextLookup;
@@ -118,14 +116,47 @@ public class ScimSchemaTranslator {
         for (var scimAttr : scim.primarySchema().getAttributes()) {
             if (isComplexNotMembership(scimAttr, scim.primarySchema())) {
                 if (!onlyListed && !isAlreadyDefined(scimAttr, objectClass)) {
-                    populateComplexAttribute(scimAttr, schema, objectClass);
+                    populateComplexAttribute(scim, scimAttr, schema, objectClass);
                 }
                 continue;
             }
 
+            // Attribute identity only here — rule evaluation and application is deferred to
+            // #applyRules.
             var attribute = findOrCreateAttribute(scimAttr, objectClass, onlyListed);
             if (attribute != null) {
                 attribute.scim().name(scimAttr.getName());
+            }
+        }
+
+        // Defer rule dispatch to #applyRules — this resource's metadata must still be reachable
+        // then, since it may run long after this resource is processed.
+        correlated.put(objectClass, new Correlation(scim, onlyListed));
+
+        // Path-based attributes from Groovy definitions
+        populatePathBasedSchema(scim, objectClass);
+    }
+
+    /**
+     * Applies {@link #applyRulesFor} to every object class this translator correlated to a SCIM
+     * resource (see {@link #populateSchema}). Must be called before {@code build()}.
+     */
+    public void applyRules() {
+        for (var entry : correlated.entrySet()) {
+            applyRulesFor(entry.getValue().resource(), entry.getKey(), entry.getValue().onlyListed());
+        }
+    }
+
+    /**
+     * Evaluates and applies this translator's rules against the given resource.
+     */
+    public void applyRulesFor(ScimResourceContext scim, RestObjectClassDefinitionBuilder objectClass, boolean onlyListed) {
+        for (var scimAttr : scim.primarySchema().getAttributes()) {
+            if (isComplexNotMembership(scimAttr, scim.primarySchema())) {
+                continue;
+            }
+            var attribute = findOrCreateAttribute(scimAttr, objectClass, onlyListed);
+            if (attribute != null) {
                 applyAttributeRules(scim, scimAttr, objectClass, attribute);
             }
         }
@@ -171,12 +202,7 @@ public class ScimSchemaTranslator {
         if (!AttributeDefinition.Type.COMPLEX.equals(attrDef.getType())) {
             return false;
         }
-        return !isMembershipReference(schemaResource.getId(), attrDef.getName());
-    }
-
-    private static boolean isMembershipReference(String schemaId, String attrName) {
-        return (USER_SCHEMA_URN.equals(schemaId) && "groups".equals(attrName))
-                || (GROUP_SCHEMA_URN.equals(schemaId) && "members".equals(attrName));
+        return !ScimMembershipReferenceRule.isMembershipReference(schemaResource.getId(), attrDef.getName());
     }
 
     private static boolean isAlreadyDefined(AttributeDefinition scimAttr,
@@ -190,7 +216,8 @@ public class ScimSchemaTranslator {
         return false;
     }
 
-    private void populateComplexAttribute(AttributeDefinition scimAttr,
+    private void populateComplexAttribute(ScimResourceContext resource,
+                                           AttributeDefinition scimAttr,
                                            RestSchemaBuilderImpl schema,
                                            RestObjectClassDefinitionBuilder parentOc) {
         var complexAttr = parentOc.attribute(scimAttr.getName());
@@ -205,7 +232,7 @@ public class ScimSchemaTranslator {
             }
             var subAttribute = embeddedBuilder.attribute(subAttr.getName());
             subAttribute.scim().name(subAttr.getName());
-            applySubAttributeRules(subAttribute, subAttr);
+            applyAttributeRules(resource, subAttr, embeddedBuilder, subAttribute);
         }
 
         complexAttr.scim()
@@ -223,53 +250,6 @@ public class ScimSchemaTranslator {
                         AttributeInfo.RoleInReference.SUBJECT.toString()));
     }
 
-    private void applySubAttributeRules(RestAttributeBuilderImpl attr,
-                                         AttributeDefinition scimAttr) {
-        switch (scimAttr.getType()) {
-            case DATETIME:
-                attr.scim().type("string");
-                attr.scim().implementation(OpenApiValueMapping.DateTime);
-                break;
-            case DECIMAL:
-                attr.scim().type("number");
-                attr.scim().implementation(OpenApiValueMapping.Decimal);
-                break;
-            case BINARY:
-                attr.scim().type("binary");
-                attr.scim().implementation(OpenApiValueMapping.Binary);
-                break;
-            case REFERENCE:
-                attr.scim().type("string");
-                break;
-            default:
-                attr.scim().type(scimAttr.getType().getName());
-                break;
-        }
-        attr.nativeType(scimAttr.getType().getName());
-        if (scimAttr.getDescription() != null) {
-            attr.connId().description(detected(scimAttr.getDescription()));
-        }
-        attr.connId().required(detected(scimAttr.isRequired()));
-        attr.connId().multiValued(detected(scimAttr.isMultiValued()));
-        attr.connId().returnedByDefault(detected(
-                AttributeDefinition.Returned.DEFAULT.equals(scimAttr.getReturned())));
-
-        switch (scimAttr.getMutability()) {
-            case IMMUTABLE:
-                attr.connId().readable(detected(true)).creatable(detected(true)).updatable(detected(false));
-                break;
-            case READ_ONLY:
-                attr.connId().readable(detected(true)).creatable(detected(false)).updatable(detected(false));
-                break;
-            case READ_WRITE:
-                attr.connId().readable(detected(true)).creatable(detected(true)).updatable(detected(true));
-                break;
-            case WRITE_ONLY:
-                attr.connId().readable(detected(false)).creatable(detected(true)).updatable(detected(true));
-                break;
-        }
-    }
-
     /**
      * Apply all matching attribute-level rules to the given attribute.
      */
@@ -277,11 +257,12 @@ public class ScimSchemaTranslator {
                                       AttributeDefinition attrDef,
                                       RestObjectClassDefinitionBuilder objectClass,
                                       RestAttributeBuilderImpl attribute) {
+        var context = new ScimAttributeMappingRule.Context(resource, attrDef);
         for (var rule : attributeRules) {
-            if (rule.checkIfApplicable(resource, attrDef)) {
-                var action = rule.createAction(resource, attrDef);
-                if (action instanceof ScimMappingAction.AttributeSpecific attrSpecific) {
-                    attrSpecific.applyToAttribute(objectClass, attribute);
+            if (rule.checkIfApplicable(context, objectClass, attribute)) {
+                var action = rule.createAction(context);
+                if (action != null) {
+                    action.applyToAttribute(attribute);
                 }
             }
         }
@@ -293,7 +274,7 @@ public class ScimSchemaTranslator {
     private void applyResourceRules(ScimResourceContext resource,
                                       RestObjectClassDefinitionBuilder objectClass) {
         for (var rule : resourceRules) {
-            if (rule.checkIfApplicable(resource)) {
+            if (rule.checkIfApplicable(resource, objectClass, null)) {
                 var action = rule.createAction(resource);
                 if (action != null) {
                     action.applyToSchema(objectClass);
@@ -313,7 +294,7 @@ public class ScimSchemaTranslator {
             if (attrDef == null) {
                 throw new IllegalStateException(String.format("Attribute '%s' not found", path));
             }
-            applySubAttributeRules(attr, attrDef);
+            applyAttributeRules(scim, attrDef, objectClass, attr);
         }
     }
 

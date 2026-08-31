@@ -40,6 +40,7 @@ public class ScimConnIdTypeInferenceTest {
                 }
                 """);
 
+        schema.applyStructuralRules();
         var attribute = schema.objectClass("User").attribute("active").build();
 
         assertEquals(attribute.connId().getType(), Boolean.class);
@@ -60,6 +61,7 @@ public class ScimConnIdTypeInferenceTest {
                 }
                 """);
 
+        schema.applyStructuralRules();
         var attribute = schema.objectClass("User").attribute("userName").build();
 
         assertEquals(attribute.connId().getType(), String.class);
@@ -81,6 +83,7 @@ public class ScimConnIdTypeInferenceTest {
                 }
                 """);
 
+        schema.applyStructuralRules();
         var attribute = schema.objectClass("User").attribute("active").build();
 
         assertEquals(attribute.connId().getType(), String.class);

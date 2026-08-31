@@ -104,6 +104,12 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
         }
 
         @Override
+        public RestReferenceAttributeBuilder nativeType(String nativeType) {
+            delegate.nativeType(nativeType);
+            return this;
+        }
+
+        @Override
         public ScimMapping scim() {
             return delegate.scim();
         }

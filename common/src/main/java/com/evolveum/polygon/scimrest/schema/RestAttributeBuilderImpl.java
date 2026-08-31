@@ -43,7 +43,7 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
         this.mappedObjectClass = parent;
     }
 
-    /** The native protocol type as declared by the remote system (e.g. SCIM {@code dateTime}). */
+    @Override
     public RestAttributeBuilderImpl nativeType(String nativeType) {
         this.nativeType = nativeType;
         return this;
@@ -64,7 +64,7 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
     }
 
     @Override
-    public RestAttributeDefinition build() {
+    protected RestAttributeDefinition newDefinition() {
         return new RestAttributeDefinition(this);
     }
 

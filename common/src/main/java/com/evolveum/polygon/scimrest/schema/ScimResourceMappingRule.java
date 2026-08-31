@@ -6,39 +6,22 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.concepts.MappingRule;
+import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestObjectClassSchemaBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
+import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
 
 /**
  * Strategy for detecting properties from SCIM resource-type metadata at the resource level.
  * <p>
- * Rules are evaluated against each SCIM resource (object class).
- * Applicable rules produce {@link ScimMappingAction} instances that
- * modify both schema definitions and handler configurations.
- * <p>
- * Usage follows a two-phase pattern:
- * <ol>
- *   <li>{@code checkIfApplicable(resource)} determines if the rule applies</li>
- *   <li>{@code createAction(resource)} produces an action to apply</li>
- * </ol>
+ * A thin binding of conndev's shared {@link MappingRule} to SCIM's concrete types — the context
+ * is a {@link ScimResourceContext}.
  */
-public interface ScimResourceMappingRule {
-
-    /**
-     * Check if this rule is applicable to the given SCIM resource.
-     *
-     * @param resource the SCIM resource context
-     * @return {@code true} if this rule has effects
-     */
-    boolean checkIfApplicable(ScimResourceContext resource);
-
-    /**
-     * Create a mapping action.
-     * Called only when {@link #checkIfApplicable(ScimResourceContext)} returns {@code true}.
-     *
-     * @param resource the SCIM resource context
-     * @return an action to apply, or {@code null} if nothing to apply
-     */
-    default ScimMappingAction createAction(ScimResourceContext resource) {
-        return null;
-    }
+public interface ScimResourceMappingRule extends MappingRule<
+        ScimResourceContext,
+        RestObjectClassSchemaBuilder,
+        RestAttributeBuilder<RestReferenceAttributeBuilder>,
+        BaseOperationSupportBuilder> {
 }

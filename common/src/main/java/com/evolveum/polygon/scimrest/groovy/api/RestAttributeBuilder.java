@@ -17,6 +17,9 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
     // Protocol specific mappings
     String name();
 
+    /** The native protocol type as declared by the remote system (e.g. SCIM {@code dateTime}). */
+    F nativeType(String nativeType);
+
     ScimMapping scim();
 
     ScimMapping scim(@DelegatesTo(value = ScimMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);

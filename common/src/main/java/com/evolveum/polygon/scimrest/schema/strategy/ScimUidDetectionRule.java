@@ -6,8 +6,10 @@
  */
 package com.evolveum.polygon.scimrest.schema.strategy;
 
+import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestObjectClassSchemaBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
-import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinitionBuilder;
 import com.evolveum.polygon.scimrest.schema.ScimMappingAction;
 import com.evolveum.polygon.scimrest.schema.ScimResourceMappingRule;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -21,7 +23,7 @@ public class ScimUidDetectionRule implements ScimResourceMappingRule {
     private static final String ID_ATTR_NAME = "id";
 
     @Override
-    public boolean checkIfApplicable(ScimResourceContext resource) {
+    public boolean checkIfApplicable(ScimResourceContext resource, RestObjectClassSchemaBuilder objectClass, RestAttributeBuilder<RestReferenceAttributeBuilder> attribute) {
         return resource.primarySchema() != null
                 && resource.primarySchema().getAttributes().stream()
                         .anyMatch(a -> ID_ATTR_NAME.equals(a.getName()));
@@ -31,15 +33,15 @@ public class ScimUidDetectionRule implements ScimResourceMappingRule {
     public ScimMappingAction createAction(ScimResourceContext resource) {
         return new ScimMappingAction() {
             @Override
-            public void applyToSchema(RestObjectClassDefinitionBuilder objectClass) {
-                for (var attr : objectClass.allAttributes()) {
-                    if (ID_ATTR_NAME.equals(attr.scim().name())) {
-                        attr.scim().name(ID_ATTR_NAME).type("string");
-                        if (objectClass.connIdAttributeNotDefined(Uid.NAME)) {
-                            attr.connId().name(Uid.NAME);
-                        }
-                        break;
+            public void applyToSchema(RestObjectClassSchemaBuilder objectClass) {
+                for (var attr : objectClass.findAttributes(a -> ID_ATTR_NAME.equals(a.scim().name()))) {
+                    attr.scim().name(ID_ATTR_NAME).type("string");
+                    boolean uidAlreadyDefined = !objectClass.findAttributes(
+                            a -> Uid.NAME.equals(a.connId().name().value())).isEmpty();
+                    if (!uidAlreadyDefined) {
+                        attr.connId().name(Uid.NAME);
                     }
+                    break;
                 }
             }
         };

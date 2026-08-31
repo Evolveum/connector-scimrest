@@ -105,9 +105,10 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         context.initializeScim(handlersBuilder.scimCustomizer());
         if (context.isScimEnabled()) {
             context.scim().initialize();
-            context.scim().contributeToSchema(schemaBuilder);
+            context.scim().contributeToSchema(schemaBuilder).applyRules();
         }
 
+        schemaBuilder.applyStructuralRules();
         context.schema(schemaBuilder.build());
     }
 
@@ -216,7 +217,10 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
             schemaResources(request.filename()).forEach(loader::loadFromResource);
             RestSchema[] candidateSchema = new RestSchema[1];
             var schemaResult = GroovyScriptValidator.validate(
-                    loader::parse, () -> candidateSchema[0] = builder.build(), request.scriptText(), request.operation());
+                    loader::parse, () -> {
+                        builder.applyStructuralRules();
+                        candidateSchema[0] = builder.build();
+                    }, request.scriptText(), request.operation());
             if (schemaResult.status() != ScriptValidationResult.Status.OK
                     || !ScriptValidationRequest.SCRIPT_OPERATION_BUILD.equals(request.operation())) {
                 return schemaResult;

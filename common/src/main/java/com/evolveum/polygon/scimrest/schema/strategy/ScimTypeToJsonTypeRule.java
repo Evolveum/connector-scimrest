@@ -7,7 +7,9 @@
 package com.evolveum.polygon.scimrest.schema.strategy;
 
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
-import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
+import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestObjectClassSchemaBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import com.evolveum.polygon.scimrest.schema.ScimAttributeMappingRule;
 import com.evolveum.polygon.scimrest.schema.ScimMappingAction;
 import com.unboundid.scim2.common.types.AttributeDefinition;
@@ -23,34 +25,38 @@ import com.unboundid.scim2.common.types.AttributeDefinition;
 public class ScimTypeToJsonTypeRule implements ScimAttributeMappingRule {
 
     @Override
-    public boolean checkIfApplicable(ScimResourceContext resource, AttributeDefinition attrDef) {
-        return attrDef != null;
+    public boolean checkIfApplicable(ScimAttributeMappingRule.Context context, RestObjectClassSchemaBuilder objectClass, RestAttributeBuilder<RestReferenceAttributeBuilder> attribute) {
+        return context.attribute() != null;
     }
 
     @Override
-    public ScimMappingAction createAction(ScimResourceContext resource, AttributeDefinition attrDef) {
-        return ScimMappingAction.attributeSpecific(attrDef.getName(), attribute -> {
-            switch (attrDef.getType()) {
-                case DATETIME:
-                    attribute.scim().type("string");
-                    attribute.scim().implementation(OpenApiValueMapping.DateTime);
-                    break;
-                case DECIMAL:
-                    attribute.scim().type("number");
-                    attribute.scim().implementation(OpenApiValueMapping.Decimal);
-                    break;
-                case BINARY:
-                    attribute.scim().type("binary");
-                    attribute.scim().implementation(OpenApiValueMapping.Binary);
-                    break;
-                case REFERENCE:
-                    attribute.scim().type("string");
-                    break;
-                default:
-                    attribute.scim().type(jsonType(attrDef.getType()));
-                    break;
+    public ScimMappingAction createAction(ScimAttributeMappingRule.Context context) {
+        var attrDef = context.attribute();
+        return new ScimMappingAction() {
+            @Override
+            public void applyToAttribute(RestAttributeBuilder<RestReferenceAttributeBuilder> attribute) {
+                switch (attrDef.getType()) {
+                    case DATETIME:
+                        attribute.scim().type("string");
+                        attribute.scim().implementation(OpenApiValueMapping.DateTime);
+                        break;
+                    case DECIMAL:
+                        attribute.scim().type("number");
+                        attribute.scim().implementation(OpenApiValueMapping.Decimal);
+                        break;
+                    case BINARY:
+                        attribute.scim().type("binary");
+                        attribute.scim().implementation(OpenApiValueMapping.Binary);
+                        break;
+                    case REFERENCE:
+                        attribute.scim().type("string");
+                        break;
+                    default:
+                        attribute.scim().type(jsonType(attrDef.getType()));
+                        break;
+                }
             }
-        });
+        };
     }
 
     private static String jsonType(AttributeDefinition.Type type) {

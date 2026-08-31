@@ -6,43 +6,32 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.concepts.MappingRule;
+import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestObjectClassSchemaBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
+import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 
 /**
  * Strategy for detecting properties from SCIM attribute metadata at the attribute level.
  * <p>
- * Rules are evaluated against each attribute of a given SCIM resource.
- * Applicable rules produce {@link ScimMappingAction} instances that
- * modify both schema definitions and handler configurations.
- * <p>
- * Usage follows a two-phase pattern:
- * <ol>
- *   <li>{@code checkIfApplicable(resource, attr)} determines if the rule applies</li>
- *   <li>{@code createAction(resource, attr)} produces an action to apply</li>
- * </ol>
+ * A thin binding of conndev's shared {@link MappingRule} to SCIM's concrete types — the context
+ * is a {@link Context} (resource + attribute definition).
  */
-public interface ScimAttributeMappingRule {
+public interface ScimAttributeMappingRule extends MappingRule<
+        ScimAttributeMappingRule.Context,
+        RestObjectClassSchemaBuilder,
+        RestAttributeBuilder<RestReferenceAttributeBuilder>,
+        BaseOperationSupportBuilder> {
 
     /**
-     * Check if this rule is applicable to the given SCIM resource and attribute.
-     *
-     * @param resource the SCIM resource context
-     * @param attrDef  the SCIM attribute definition
-     * @return {@code true} if this rule has effects for this resource/attribute
+     * The context an attribute-level SCIM rule needs: the resource it belongs to, and the
+     * attribute definition it describes. Bundled into one record so this rule fits conndev's
+     * shared {@code MappingRule<C, OC, A, H>} shape (a single context type), rather than carrying
+     * two separate context parameters.
      */
-    boolean checkIfApplicable(ScimResourceContext resource, AttributeDefinition attrDef);
-
-    /**
-     * Create a mapping action.
-     * Called only when {@link #checkIfApplicable(ScimResourceContext, AttributeDefinition)}
-     * returns {@code true}.
-     *
-     * @param resource the SCIM resource context
-     * @param attrDef  the SCIM attribute definition
-     * @return an action to apply, or {@code null} if nothing to apply
-     */
-    default ScimMappingAction createAction(ScimResourceContext resource, AttributeDefinition attrDef) {
-        return null;
+    record Context(ScimResourceContext resource, AttributeDefinition attribute) {
     }
 }

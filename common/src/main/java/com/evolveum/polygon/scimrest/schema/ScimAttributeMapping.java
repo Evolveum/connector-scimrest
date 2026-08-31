@@ -10,24 +10,11 @@ import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ObjectNode;
 
 public class ScimAttributeMapping extends JsonAttributeMapping {
 
     public ScimAttributeMapping(AttributePath path, ValueMapping<Object, JsonNode> mapping) {
         super(path, mapping);
-    }
-
-    @Override
-    public JsonNode attributeFromObject(ObjectNode object) {
-        if (path != null) {
-            return path.resolve(object);
-        }
-        return null;
-    }
-
-    public AttributePath path() {
-        return path;
     }
 
 }

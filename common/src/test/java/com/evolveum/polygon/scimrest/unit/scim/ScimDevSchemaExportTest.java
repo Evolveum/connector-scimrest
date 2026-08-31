@@ -168,6 +168,8 @@ public class ScimDevSchemaExportTest {
         for (var info : ConnDevSchema.objectClassInfos()) {
             builder.defineObjectClass(info);
         }
+        translator.applyRules();
+        builder.applyStructuralRules();
         return builder.build();
     }
 

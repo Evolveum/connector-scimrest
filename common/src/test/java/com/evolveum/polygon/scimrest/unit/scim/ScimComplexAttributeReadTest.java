@@ -23,9 +23,7 @@ import org.identityconnectors.framework.spi.Connector;
 import tools.jackson.databind.node.ObjectNode;
 import org.testng.annotations.Test;
 
-import java.math.BigDecimal;
 import java.net.URI;
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 
@@ -54,6 +52,8 @@ public class ScimComplexAttributeReadTest {
         for (var info : ConnDevSchema.objectClassInfos()) {
             builder.defineObjectClass(info);
         }
+        translator.applyRules();
+        builder.applyStructuralRules();
         return builder.build();
     }
 
