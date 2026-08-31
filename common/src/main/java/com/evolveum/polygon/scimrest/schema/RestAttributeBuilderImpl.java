@@ -139,8 +139,8 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
 
         @Override
         public ScimMapping path(String path) {
-            // FIXME: Implement parsing of SCIM paths to AttributePath
-            throw new UnsupportedOperationException("Not supported yet.");
+            this.path = AttributePathDeclaration.of(ScimPathFormat.INSTANCE, path);
+            return this;
         }
 
         @Override

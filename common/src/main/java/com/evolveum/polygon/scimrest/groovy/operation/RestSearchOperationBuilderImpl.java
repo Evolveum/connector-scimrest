@@ -86,6 +86,10 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
         }
         if (scim != null && scim.isEnabled()) {
             var handler = scim.build();
+            // The SCIM handler also takes part in the per-filter dispatch, so its
+            // supports() check (filter translatability and declared limitations)
+            // is consulted like any other handler's.
+            handlers.add(handler);
 
             if (emptyFilterHandler == null && scim.emptyFilterSupported()) {
                 emptyFilterHandler = handler;
