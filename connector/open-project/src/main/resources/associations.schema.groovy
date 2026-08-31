@@ -30,6 +30,8 @@ relationship("MembershipProject") {
         attribute("project") {
             //objectClass "Project"
             json {
+                type ("string")
+                openApiFormat ("uri-reference")
                 path attribute("_links").child("project")
                 implementation {
                     deserialize {

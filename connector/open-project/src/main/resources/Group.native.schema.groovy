@@ -58,6 +58,8 @@ objectClass("Group") {
         multiValued(true)
 
         json {
+            type("string")
+            openApiFormat("uri-reference")
             path attribute("_links").child("members")
             implementation {
                 deserialize {

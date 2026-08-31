@@ -32,10 +32,12 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
         loader.loadFromResource("/Role.native.schema.groovy");
         loader.loadFromResource("/Role.connid.schema.groovy");
         loader.loadFromResource("/Formattable.native.schema.groovy");
-        loader.loadFromResource("/Principal.native.schema.groovy");
+//        loader.loadFromResource("/Principal.native.schema.groovy");
         loader.loadFromResource("/Membership.native.schema.groovy");
         loader.loadFromResource("/Membership.connid.schema.groovy");
-        loader.loadFromResource("/associations.schema.groovy");
+//        loader.loadFromResource("/associations.schema.groovy");
+        loader.loadFromResource("/WorkPackage.connid.schema.groovy");
+        loader.loadFromResource("/WorkPackage.native.schema.groovy");
     }
 
     @Override
@@ -51,6 +53,7 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
         builder.loadFromResource("/User.op.groovy");
         builder.loadFromResource("/User.create.op.groovy");
         builder.loadFromResource("/User.update.op.groovy");
+        builder.loadFromResource("/WorkPackage.create.op.groovy");
 //        builder.loadFromResource("/User.delete.op.groovy");
     }
 

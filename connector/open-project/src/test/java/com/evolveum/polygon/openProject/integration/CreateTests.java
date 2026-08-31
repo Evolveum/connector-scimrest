@@ -28,11 +28,25 @@ public class CreateTests extends BaseTest {
             "password", "SwordfightInsultChampion123!"
     );
 
+    private static final Map<String, Object> propertiesWPCreate = Map.of(
+            "subject", "Work Package "+ generateRandomFiveDigitCode(),
+            "type", "/api/v3/types/3",
+            "project", "/api/v3/projects/1"
+    );
+
     @Test(enabled = true)
     public void test10CreateUser() {
 
         Set<Attribute> attributes = getTestAttributes(propertiesGuybrushCreate);
         testCreate("User", attributes);
+    }
+
+
+    @Test(enabled = true)
+    public void test11CreateWorkPackage() {
+
+        Set<Attribute> attributes = getTestAttributes(propertiesWPCreate);
+        testCreate("WorkPackage", attributes);
     }
 
     private Set<Attribute> getTestAttributes(Map<String, Object> properties) {

@@ -23,6 +23,7 @@ import org.identityconnectors.test.common.TestHelpers;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -185,5 +186,10 @@ public class BaseTest {
         connector.delete(new ObjectClass(objectType), uid,
                 new OperationOptions(Map.of()));
         //TODO assertion
+    }
+
+    public static String generateRandomFiveDigitCode() {
+        return String.format("%05d",
+                ThreadLocalRandom.current().nextInt(0, 100_000));
     }
 }
