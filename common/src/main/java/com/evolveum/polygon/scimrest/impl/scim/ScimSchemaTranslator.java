@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Translates SCIM schema metadata into Connector Framework schema definitions using a
@@ -226,7 +227,8 @@ public class ScimSchemaTranslator {
         var embeddedBuilder = schema.objectClass(embeddedClassName);
         embeddedBuilder.embedded(true);
 
-        for (AttributeDefinition subAttr : scimAttr.getSubAttributes()) {
+        var subAttributes = Objects.requireNonNullElse(scimAttr.getSubAttributes(), List.<AttributeDefinition>of());
+        for (AttributeDefinition subAttr : subAttributes) {
             if (AttributeDefinition.Type.COMPLEX.equals(subAttr.getType())) {
                 continue;
             }
