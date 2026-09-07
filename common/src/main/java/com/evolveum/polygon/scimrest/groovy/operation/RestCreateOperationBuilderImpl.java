@@ -13,6 +13,7 @@ import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 
 import com.evolveum.polygon.conndev.api.AttributeSupport;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.groovy.AbstractCreateOperationBuilder;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
@@ -158,7 +159,8 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                            Map<String, AttributeSupport> supportedAttributes) implements CreateOperationHandler {
 
         @Override
-        public Result create(Set<Attribute> createAttributes, OperationOptions options) {
+        public Result create(
+                Set<Attribute> createAttributes, OperationOptions options, ContextLookup operationContext) {
             var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method);

@@ -15,6 +15,7 @@ import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 
 import com.evolveum.polygon.conndev.api.AttributeSupport;
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateRequest;
 import com.evolveum.polygon.conndev.groovy.AbstractUpdateOperationBuilder;
@@ -208,7 +209,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                            boolean requiresOriginalState) implements UpdateOperationHandler {
 
         @Override
-        public void update(UpdateRequest updateRequest, OperationOptions options) {
+        public void update(
+                UpdateRequest updateRequest, OperationOptions options, ContextLookup operationContext) {
             var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method);
