@@ -6,7 +6,6 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;

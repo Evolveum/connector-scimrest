@@ -14,6 +14,7 @@ import com.evolveum.polygon.scimrest.groovy.api.RestObjectClassSchemaBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 
 import java.util.HashMap;
@@ -46,6 +47,29 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
     @Override
     public RestAttributeBuilderImpl reference(String name) {
         return (RestAttributeBuilderImpl) super.reference(name);
+    }
+
+    /**
+     * The SCIM half of the "NAME defaults to a copy of UID" rule (see
+     * {@code NameDefaultsToUidRule}): the default {@code __NAME__} attribute copies the UID's
+     * SCIM path and wire type, so it reads the same resource property (the resource {@code id})
+     * that {@code __UID__} reads. Only plain path+type copies are made — a custom value-mapping
+     * implementation on the UID is not inherited; if the UID has no SCIM path or wire type
+     * there is nothing to copy.
+     */
+    @Override
+    public RestAttributeBuilderImpl deriveDefaultNameFromUid(RestAttributeBuilderImpl uidAttribute) {
+        var uidScim = uidAttribute.scim;
+        if (uidScim == null || uidScim.path() == null || uidScim.type() == null) {
+            return null;
+        }
+        if (!findAttributes(a -> Name.NAME.equals(a.name())).isEmpty()) {
+            return null;
+        }
+        var nameAttribute = attribute(Name.NAME);
+        nameAttribute.scim();
+        nameAttribute.scim.copyFrom(uidScim);
+        return nameAttribute;
     }
 
     @Override

@@ -23,7 +23,6 @@ import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.EmbeddedObject;
-import org.identityconnectors.framework.common.objects.Uid;
 
 import static com.evolveum.polygon.conndev.concepts.DefinitionValue.detected;
 
@@ -111,9 +110,6 @@ public class ScimSchemaTranslator {
         var objectClass = schema.objectClass(objectClassName);
         var onlyListed = objectClass.scim().isOnlyExplicitlyListed();
 
-        // Handle built-in attributes (id) from explicit Groovy definitions
-        populateBuiltInAttributes(objectClass, onlyListed);
-
         for (var scimAttr : scim.primarySchema().getAttributes()) {
             if (isComplexNotMembership(scimAttr, scim.primarySchema())) {
                 if (!onlyListed && !isAlreadyDefined(scimAttr, objectClass)) {
@@ -167,35 +163,6 @@ public class ScimSchemaTranslator {
 
         // Path-based attributes from Groovy definitions
         populatePathBasedSchema(scim, objectClass);
-    }
-
-    /**
-     * Handle built-in attributes from explicit Groovy definitions.
-     * This ensures that explicitly-defined attributes (like "id") get
-     * their ConnId mapping applied even when the SCIM schema doesn't list them.
-     */
-    private void populateBuiltInAttributes(RestObjectClassDefinitionBuilder objectClass, boolean onlyListed) {
-        var idAttr = findOrCreateAttributeByScimName("id", objectClass, onlyListed);
-        if (idAttr != null) {
-            idAttr.scim().name("id").type("string");
-            if (objectClass.connIdAttributeNotDefined(Uid.NAME)) {
-                idAttr.connId().name(Uid.NAME);
-            }
-        }
-    }
-
-    private RestAttributeBuilderImpl findOrCreateAttributeByScimName(String scimName,
-                                                                      RestObjectClassDefinitionBuilder objectClass,
-                                                                      boolean onlyListed) {
-        for (var attr : objectClass.allAttributes()) {
-            if (scimName.equals(attr.scim().name())) {
-                return attr;
-            }
-        }
-        if (onlyListed) {
-            return null;
-        }
-        return objectClass.attribute(scimName);
     }
 
     private boolean isComplexNotMembership(AttributeDefinition attrDef,

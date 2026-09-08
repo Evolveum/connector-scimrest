@@ -11,6 +11,7 @@ import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnecto
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
 import org.identityconnectors.framework.common.objects.ScriptContext;
@@ -93,7 +94,7 @@ public class ScriptValidationTest {
         validate(connector, VALID_OPERATION_SCRIPT);
 
         try {
-            connector.handlerFor(new org.identityconnectors.framework.common.objects.ObjectClass("User"));
+            connector.handlerFor(new ObjectClass("User"));
             fail("Validated script must not register any handler");
         } catch (UnsupportedOperationException e) {
             assertTrue(e.getMessage().contains("Cannot find handler"));

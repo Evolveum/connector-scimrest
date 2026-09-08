@@ -10,7 +10,6 @@ import com.evolveum.polygon.scimrest.support.AbstractCrudConnectorTest;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.testng.Assert.assertEquals;
 
 /**
  * Verifies the {@code pagingSupport} search directive: the closure receives the request

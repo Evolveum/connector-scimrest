@@ -10,7 +10,6 @@ import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.api.JavaPathFormat;
-import com.evolveum.polygon.conndev.build.api.AttributeBuilder;
 import com.evolveum.polygon.conndev.build.api.ValueMappingBuilder;
 import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
@@ -19,6 +18,7 @@ import com.evolveum.polygon.conndev.schema.AttributeProtocolMappingBuilder;
 import com.evolveum.polygon.conndev.schema.BaseAttributeBuilder;
 import com.evolveum.polygon.conndev.schema.BasePathBuilder;
 import com.evolveum.polygon.conndev.schema.BaseValueMappingBuilder;
+import com.evolveum.polygon.conndev.schema.ValueTypeOverrideMapping;
 import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
@@ -82,6 +82,29 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
         private AttributePathDeclaration<?,?> path;
         private String type;
         private ValueMapping implementation;
+        private Class<?> connIdTypeOverride;
+
+        /**
+         * Copies the protocol-side identity (path and wire type) from another SCIM mapping —
+         * not its custom value-mapping {@code implementation}, which stays specific to the
+         * original attribute. Used by {@code deriveDefaultNameFromUid} to create the default
+         * {@code __NAME__} as a copy of the {@code __UID__} attribute's SCIM mapping.
+         */
+        void copyFrom(ScimBuilder other) {
+            this.path = other.path;
+            this.type = other.type;
+        }
+
+        /**
+         * Stores the attribute's final ConnId type, pushed by
+         * {@code AttributeTypeCoercionRule} during structural rule dispatch;
+         * {@link #build()} then wraps the value mapping to expose exactly that type
+         * (e.g. a non-string SCIM backing presented to ConnId as a String UID).
+         */
+        @Override
+        public void applyConnIdTypeOverride(Class<?> connIdType) {
+            this.connIdTypeOverride = connIdType;
+        }
 
         @Override
         public String name() {
@@ -95,6 +118,11 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
         @Override
         public ScimMapping name(String name) {
             return path(AttributePath.of(name));
+        }
+
+        @Override
+        public String type() {
+            return type;
         }
 
         @Override
@@ -172,9 +200,12 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
                 implementation =  OpenApiValueMapping.from(type, null);
             }
             if (implementation != null) {
-                // Adapt the mapping to the attribute's final ConnId type via the shared hook
-                // (e.g. a non-string SCIM implementation backing a uid/name presented as String).
-                implementation = connId().overrideMappingIfNeeded(implementation);
+                // Adapt the mapping to the attribute's final ConnId type, pushed here by
+                // AttributeTypeCoercionRule before build() runs (e.g. a non-string SCIM
+                // backing presented to ConnId as a String UID).
+                if (connIdTypeOverride != null) {
+                    implementation = ValueTypeOverrideMapping.of(connIdTypeOverride, implementation);
+                }
                 return new ScimAttributeMapping(path, implementation);
             }
             return null;

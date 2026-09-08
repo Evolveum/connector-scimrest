@@ -27,7 +27,6 @@ import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
-import com.evolveum.polygon.conndev.spi.UpdateOperationStrategyHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimUpdateHandler;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;

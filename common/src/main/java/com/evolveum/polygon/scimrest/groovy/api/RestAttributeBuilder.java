@@ -11,8 +11,6 @@ import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.api.AttributePathFormat;
 import com.evolveum.polygon.conndev.build.api.AttributeBuilder;
-import com.evolveum.polygon.conndev.concepts.GroovyClosures;
-import com.evolveum.polygon.conndev.schema.BasePathBuilder;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.ScimPathFormat;
 import groovy.lang.Closure;
@@ -37,6 +35,14 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
         String name();
 
         ScimMapping name(String name);
+
+        /**
+         * The SCIM (JSON) wire type of this attribute, as declared by the SCIM schema or a
+         * Groovy definition — or {@code null} if none has been declared yet.
+         *
+         * @return the declared wire type, or {@code null}
+         */
+        String type();
 
         ScimMapping type(String name);
 

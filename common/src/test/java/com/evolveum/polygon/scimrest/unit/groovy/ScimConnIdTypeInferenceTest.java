@@ -98,8 +98,9 @@ public class ScimConnIdTypeInferenceTest {
     /**
      * Regression: a built-in ConnId attribute (uid) must present {@code String} to ConnId and
      * convert values even when its SCIM backing suggests another type (here integer) — the same
-     * guarantee the JSON slot has, now applied to the SCIM slot by the shared
-     * {@code connId().overrideMappingIfNeeded} hook in {@code ScimBuilder.build()}.
+     * guarantee the JSON slot has, now applied to the SCIM slot: {@code AttributeTypeCoercionRule}
+     * pushes the final ConnId type into {@code ScimBuilder#build()} via
+     * {@code applyConnIdTypeOverride}, which wraps the value mapping accordingly.
      */
     @Test
     public void uidWithIntegerScimBackingPresentsStringToConnId() {
