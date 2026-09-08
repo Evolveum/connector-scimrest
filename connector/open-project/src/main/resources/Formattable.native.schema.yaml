@@ -1,0 +1,17 @@
+objectClasses:
+  Formattable:
+    embedded: true
+    description: "Projects are containers structuring the information (e.g. work packages, wikis) into smaller groups."
+    attributes:
+      format:
+        jsonType: string
+        returnedByDefault: true
+        description: "Indicates the formatting language of the raw text"
+      raw:
+        jsonType: string
+        returnedByDefault: true
+        description: "The raw text, as entered by the user"
+      html:
+        jsonType: string
+        returnedByDefault: true
+        description: "The text converted to HTML according to the format"

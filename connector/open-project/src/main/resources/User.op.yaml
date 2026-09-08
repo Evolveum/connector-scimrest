@@ -1,0 +1,49 @@
+objectClasses:
+  User:
+    create:
+      endpoints:
+        - method: POST
+          path: users
+          request:
+            contentType: APPLICATION_JSON
+    update:
+      endpoints:
+        # Attributes that are updatable for a User.
+        # NOTE: 'password' is only writable on creation (see UserCreateModel),
+        #       so you may want to exclude it from updates.
+        # NOTE: 'identityUrl' is deprecated and will be removed in the future.
+        - method: PATCH
+          path: /users/{id}
+          request:
+            contentType: APPLICATION_JSON
+          supportedAttributes:
+            - admin
+            - avatar
+            - firstName
+            - language
+            - lastName
+            - login
+            - email
+            - name
+        # Locking endpoint – no body required.
+        - method: POST
+          path: /users/{id}/lock
+          request:
+            body: EMPTY
+          supportedAttributes:
+            - name: status
+              transition:
+                from: active
+                to: locked
+        # Unlocking endpoint – no body required.
+        - method: DELETE
+          path: /users/{id}/lock
+          supportedAttributes:
+            - name: status
+              transition:
+                from: locked
+                to: active
+    delete:
+      endpoints:
+        - method: DELETE
+          path: /users/{id}

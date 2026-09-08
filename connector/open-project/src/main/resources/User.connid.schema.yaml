@@ -1,0 +1,9 @@
+objectClasses:
+  User:
+    attributes:
+      id:
+        connId:
+          name: UID
+      login:
+        connId:
+          name: NAME

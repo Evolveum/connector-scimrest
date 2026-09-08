@@ -1,0 +1,15 @@
+# Imports: java.nio.charset.StandardCharsets
+objectClasses:
+  Group:
+    search:
+      endpoints:
+        - path: projects/
+          responseFormat: JSON_ARRAY
+          pagingSupport: |
+            request.queryParameter("limit", paging.pageSize)
+                    .queryParameter("page", paging.pageOffset)
+          supportedFilters:
+            - spec: project eq ?
+              request: |
+                String filter = "[{ \"principal\": { \"operator\": \"=\", \"values\": [\"${value.value.uid}\"] } }]"
+                request.queryParameter("filters", URLEncoder.encode(filter, StandardCharsets.UTF_8.toString()))

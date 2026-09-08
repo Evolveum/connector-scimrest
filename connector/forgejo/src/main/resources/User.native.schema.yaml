@@ -1,0 +1,105 @@
+objectClasses:
+  User:
+    attributes:
+      active:
+        jsonType: boolean
+        updateable: true
+        description: "Is user active"
+      avatar_url:
+        jsonType: string
+        description: "URL to the user's avatar"
+      created_at:
+        jsonType: string
+        openApiFormat: date-time
+        creatable: true
+        description: "The date and time when the user was created"
+      description:
+        jsonType: string
+        description: "the user's description"
+      email:
+        jsonType: string
+        openApiFormat: email
+        updateable: true
+        description: "The user's email address"
+      followers_count:
+        jsonType: integer
+        openApiFormat: int64
+        description: "Number of users following this user"
+      following_count:
+        jsonType: integer
+        openApiFormat: int64
+        description: "Number of users this user is following"
+      full_name:
+        jsonType: string
+        creatable: true
+        updateable: true
+        description: "the user's full name"
+      html_url:
+        jsonType: string
+        description: "URL to the user's profile page"
+      id:
+        jsonType: integer
+        openApiFormat: int64
+        description: "The unique identifier for the user"
+      is_admin:
+        jsonType: boolean
+        description: "Is the user an administrator"
+      language:
+        jsonType: string
+        description: "UserSchema locale"
+      last_login:
+        jsonType: string
+        openApiFormat: date-time
+        description: "The date and time when the user last logged in"
+      location:
+        jsonType: string
+        updateable: true
+        description: "the user's location"
+      login:
+        jsonType: string
+        description: "the user's username"
+      login_name:
+        jsonType: string
+        creatable: true
+        updateable: true
+        description: "The user's authentication sign-in name."
+      must_change_password:
+        jsonType: boolean
+        creatable: true
+        updateable: true
+        readable: false
+      password:
+        jsonType: string
+        creatable: true
+        updateable: true
+        readable: false
+      prohibit_login:
+        jsonType: boolean
+        updateable: true
+        description: "Is user login prohibited"
+      pronouns:
+        jsonType: string
+        updateable: true
+        description: "the user's pronouns"
+      restricted:
+        jsonType: boolean
+        creatable: true
+        updateable: true
+        description: "Is user restricted"
+      source_id:
+        jsonType: integer
+        openApiFormat: int64
+        creatable: true
+        updateable: true
+        description: "The ID of the user's Authentication Source"
+      starred_repos_count:
+        jsonType: integer
+        openApiFormat: int64
+        description: "Number of repositories starred by this user"
+      visibility:
+        jsonType: string
+        updateable: true
+        description: "UserSchema visibility level option: public, limited, private"
+      website:
+        jsonType: string
+        description: "the user's website"

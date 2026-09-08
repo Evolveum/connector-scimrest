@@ -1,0 +1,55 @@
+objectClasses:
+  User:
+    # SCIM specific mappings for whole User schema (customizations)
+    scim:
+      extensions:
+        # his  also could be shortcut for creating container enterprise with attributes inside
+        enterprise: "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+
+    attributes:
+      givenName:
+        scim:
+          path: name.givenName
+      familyName:
+        scim:
+          path: name.familyName
+      formattedName:
+        scim:
+          path: name.formatted
+      primaryEmail:
+        scim:
+          path: emails[primary eq true].value
+
+      employeeNumber:
+        scim:
+          path: urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber
+
+  Office:
+    attributes:
+      name:
+        connId:
+          name: NAME
+
+relationships:
+  OfficeEmployment:
+    subject:
+      class: User
+      # This is attribute on user containing objects
+      attribute:
+        name: office
+        multivalued: true
+        resolver:
+          resolution: PER_OBJECT
+          search: employees eq $value
+    object:
+      class: Office
+      attribute:
+        name: employees
+        scim:
+          implementation:
+            deserialize: |
+              var object = new ConnectorObjectBuilder();
+              object.setObjectClass(new ObjectClass("User"))
+              object.setUid(new Uid(it.get("id").asText()))
+              object.setName(new Name(it.get("display").asText()))
+              new ConnectorObjectReference(object.build())

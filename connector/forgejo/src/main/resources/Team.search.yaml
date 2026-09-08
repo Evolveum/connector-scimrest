@@ -1,0 +1,19 @@
+objectClasses:
+  Team:
+    search:
+      endpoints:
+        - path: orgs/{org}/teams
+          responseFormat: JSON_ARRAY
+          pagingSupport: |
+            request.queryParameter("limit", paging.pageSize)
+                   .queryParameter("page", paging.pageOffset)
+          supportedFilters:
+            - spec: organization.name eq ?
+              request: |
+                request.pathParameter("org", value);
+        - path: teams/{id}
+          singleResult: true
+          supportedFilters:
+            - spec: id eq ?
+              request: |
+                request.pathParameter("id", value);

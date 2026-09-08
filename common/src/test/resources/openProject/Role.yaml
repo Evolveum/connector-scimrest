@@ -1,0 +1,14 @@
+objectClasses:
+  Role:
+    attributes:
+      id:
+        jsonType: integer
+        openApiFormat: int64
+        creatable: false
+        updateable: false
+        description: "Role id"
+      name:
+        jsonType: string
+        creatable: false
+        updateable: false
+        description: "Role name"

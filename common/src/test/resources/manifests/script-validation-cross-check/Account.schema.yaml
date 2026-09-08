@@ -1,0 +1,9 @@
+objectClasses:
+  Account:
+    attributes:
+      id:
+        connId:
+          type: string
+      email:
+        connId:
+          type: string

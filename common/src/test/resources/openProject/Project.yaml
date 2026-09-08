@@ -1,0 +1,34 @@
+objectClasses:
+  Project:
+    attributes:
+      id:
+        jsonType: integer
+        openApiFormat: int64
+        description: "Projects’ id"
+      identifier:
+        jsonType: string
+      name:
+        jsonType: string
+      active:
+        jsonType: boolean
+        description: "Indicates whether the project is currently active or already archived"
+      statusExplanation:
+        jsonType: formattable
+        description: "A text detailing and explaining why the project has the reported status"
+      public:
+        jsonType: boolean
+        description: "Indicates whether the project is accessible for everybody"
+      description:
+        jsonType: formattable
+      createdAt:
+        jsonType: string
+        openApiFormat: dateTime
+        creatable: false
+        updateable: false
+        description: "Time of creation"
+      updatedAt:
+        jsonType: string
+        openApiFormat: dateTime
+        creatable: false
+        updateable: false
+        description: "Time of the most recent change to the project"

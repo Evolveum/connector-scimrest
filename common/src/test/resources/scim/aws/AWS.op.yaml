@@ -1,0 +1,51 @@
+objectClasses:
+  User:
+    update:
+      scim:
+        patch:
+            externalId:
+            displayName:
+            nickName:
+            profileUrl:
+            title:
+            userType:
+            preferredLanguage:
+            locale:
+            name:
+            enterprise:
+            emails:
+            addresses:
+            phoneNumbers:
+            userName:
+              limitations:
+                operations: [ADD, REPLACE]
+                maxPerRequest: 1
+            active:
+              limitations:
+                operations: [ADD, REPLACE]
+                maxPerRequest: 1
+      search:
+        scim:
+          limitations:
+            supportedFilters:
+              - externalId eq ?
+              - userName eq ?
+              - groups.value eq ?
+  Group:
+    create:
+      scim:
+        supportedAttributes:
+          displayName:
+          externalId:
+          members:
+            limitations:
+              maxPerRequest: 100
+    update:
+      scim:
+        patch:
+          supportedAttributes:
+            displayName:
+            externalId:
+            members:
+              limitations:
+                maxPerRequest: 100

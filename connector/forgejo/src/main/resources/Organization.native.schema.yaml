@@ -1,0 +1,26 @@
+objectClasses:
+  Organization:
+    attributes:
+      avatar_url:
+        jsonType: string
+      description:
+        jsonType: string
+      email:
+        jsonType: string
+      full_name:
+        jsonType: string
+      id:
+        jsonType: integer
+        openApiFormat: int64
+      location:
+        jsonType: string
+      name:
+        jsonType: string
+      username:
+        jsonType: string
+      visibility:
+        jsonType: string
+      website:
+        jsonType: string
+      repo_admin_change_team_access:
+        jsonType: boolean

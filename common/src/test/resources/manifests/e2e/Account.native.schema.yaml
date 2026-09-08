@@ -1,0 +1,7 @@
+objectClasses:
+  Account:
+    attributes:
+      id:
+        jsonType: string
+      name:
+        jsonType: string

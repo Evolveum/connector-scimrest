@@ -1,0 +1,29 @@
+objectClasses:
+  User:
+    update:
+      endpoints:
+        - method: PATCH
+          path: /users/{id}
+          request:
+            contentType: APPLICATION_JSON
+          supportedAttributes:
+            - admin
+            - email
+            - login
+            - language
+            - lastName
+            - firstName
+        - method: POST
+          path: /users/{id}/lock
+          request:
+            body: EMPTY
+          supportedAttributes:
+            - name: status
+              value: locked
+        - method: DELETE
+          path: /users/{id}/lock
+          request:
+            body: EMPTY
+          supportedAttributes:
+            - name: status
+              value: active

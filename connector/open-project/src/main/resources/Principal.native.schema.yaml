@@ -1,0 +1,15 @@
+objectClasses:
+  Principal:
+    description: "Principals are the superclass of users, groups and placeholder users"
+    embedded: true
+    attributes:
+      name:
+        jsonType: string
+        readable: true
+        returnedByDefault: true
+      id:
+        jsonType: integer
+        readable: true
+        returnedByDefault: true
+        required: true
+        description: "User’s id"

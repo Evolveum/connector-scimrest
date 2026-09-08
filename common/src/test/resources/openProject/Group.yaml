@@ -1,0 +1,28 @@
+objectClasses:
+  Group:
+    attributes:
+      id:
+        description: Group’s id
+        creatable: false
+        updateable: false
+        json:
+          type: integer
+          openApiFormat: int64
+
+      name:
+        jsonType: string
+        description: "Group’s full name, formatting depends on instance settings"
+
+      createdAt:
+        jsonType: string
+        openApiFormat: dateTime
+        creatable: false
+        updatable: false
+        description: "Time of creation"
+
+      updatedAt:
+        jsonType: "string"
+        openApiFormat: "dateTime"
+        creatable: false
+        updateable: false
+        description: "Time of the most recent change to the user"

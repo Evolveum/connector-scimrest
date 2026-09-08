@@ -1,0 +1,60 @@
+# Imports:
+#   com.evolveum.polygon.scimrest.groovy.api.FilterSpecification
+#   org.identityconnectors.common.logging.Log
+#   org.identityconnectors.framework.common.objects.ConnectorObject
+#   org.identityconnectors.framework.common.objects.filter.EqualsFilter
+#   org.json.JSONArray
+objectClasses:
+  User:
+    search:
+      endpoints:
+        - path: users/
+          objectExtractor: |
+            if (response.body() == null) {
+                return new JSONArray()
+            }
+            var jsonArray = response.body().get("_embedded").get("elements")
+            return jsonArray
+          pagingSupport: |
+            request.queryParameter("pageSize", paging.pageSize)
+                    .queryParameter("offset", paging.pageOffset)
+          emptyFilterSupported: true
+          supportedFilters:
+            - spec: name eq ?
+              request: |
+                String filter = "[{ \"name\": { \"operator\": \"=\", \"values\": [\"${value}\"] } }]"
+                request.queryParameter("filters", filter)
+            - spec: name contains ?
+              request: |
+                String filter = "[{ \"name\": { \"operator\": \"~\", \"values\": [\"${value}\"] } }]"
+                request.queryParameter("filters", filter)
+        - path: users/{id}
+          singleResult: true
+          supportedFilters:
+            - spec: id eq ?
+              request: |
+                request.pathParameter("id", value)
+      custom:
+        emptyFilterSupported: false
+        supportedFilters:
+          - admin eq ?
+          - language eq ?
+        implementation: |
+          // hoisted from the top of the original script:
+          var LOG = Log.getLog(this.getClass())
+
+          if(LOG.isInfo()){
+
+              LOG.info("Query not supported by the remote system, handling explicitly in connector.")
+          }
+          EqualsFilter filter = filter() as EqualsFilter
+          if(LOG.isInfo()){
+              LOG.info("Handling 'Equals Filter' based query for the attribute {0}",  filter.getName())
+          }
+
+          List<ConnectorObject> users = objectClass("User").search() as List<ConnectorObject>
+          for (def user: users) {
+              if (filter.accept(user)) {
+                  resultHandler().handle(user)
+              }
+          }

@@ -1,0 +1,61 @@
+# Imports:
+#   org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
+#   org.identityconnectors.framework.common.objects.ConnectorObjectReference
+#   org.identityconnectors.framework.common.objects.ObjectClass
+objectClasses:
+  Group:
+    description: "Team represents a team in an organization"
+    attributes:
+      id:
+        jsonType: integer
+        readable: true
+        updateable: false
+        creatable: false
+        returnedByDefault: true
+        required: true
+        description: "User’s id"
+      name:
+        jsonType: string
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        required: true
+        description: "Group’s full name, formatting depends on instance settings"
+      created_at:
+        jsonType: string
+        openApiFormat: date-time
+        readable: true
+        updateable: false
+        creatable: false
+        returnedByDefault: true
+        required: false
+        description: "Time of creation"
+      updated_at:
+        jsonType: string
+        openApiFormat: date-time
+        readable: true
+        updateable: false
+        creatable: false
+        returnedByDefault: true
+        required: false
+        description: "Time of the most recent change to the user"
+    references:
+      members:
+        description: "The list all all the users that are members of the group"
+        objectClass: User
+        role: object
+        subtype: UserGroupMembership
+        multiValued: true
+        json:
+          path: _links.members
+          implementation:
+            deserialize: |
+              var href = value.get("href")?.asText()
+              var pid = href.substring(href.lastIndexOf("/") + 1)
+
+              var obj = new ConnectorObjectBuilder()
+                      .setObjectClass(new ObjectClass("User"))
+                      .setUid(pid)
+                      .setName(value.get("title")?.asText())
+              return new ConnectorObjectReference(obj.build())

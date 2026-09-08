@@ -1,0 +1,66 @@
+# Imports:
+#   org.identityconnectors.framework.common.objects.ConnectorObject
+#   org.json.JSONArray
+#   java.nio.charset.StandardCharsets
+objectClasses:
+  Membership:
+    search:
+      normalize:
+        toSingleValue: roles
+        rewriteUid: |
+          if(value == null
+          ){
+              return original;
+          }
+          def ref = (ConnectorObject) value.getValue()
+          return original + ":" + ref.uid.uidValue
+        rewriteName: |
+          if(value == null
+          ){
+              return original
+          }
+          def ref = (ConnectorObject) value.getValue()
+          return original + ":" + ref.name.nameValue
+        restoreUid: |
+          return original.substring(0, original.indexOf(':'));
+        restoreName: |
+          return original.substring(0, original.indexOf(':'));
+      endpoints:
+        - path: memberships
+          objectExtractor: |
+            if(response.body()==null){
+                return new JSONArray();
+            }
+
+            var jsonArray = response.body().get("_embedded").get("elements");
+            return jsonArray;
+          pagingSupport: |
+            request.queryParameter("pageSize", paging.pageSize)
+                    .queryParameter("offset", paging.pageOffset)
+          emptyFilterSupported: true
+          supportedFilters:
+            - spec: principal eq ?
+              request: |
+                var valList = value.value.uid.getValue();
+
+                var status = value.value.getAttributeByName("status");
+
+                var statusVal = status.getValue().get(0);
+
+                if("locked".equals(statusVal)){
+                    // TODO workaround, locked users have this request blocked.
+
+                    return null;
+                }
+
+                var val =  valList.get(0);
+
+                // [{"principal":{"operator":"=","values":["2273"]}}]
+                String filter = "[{\"principal\":{\"operator\":\"=\",\"values\":[\"${val}\"]}}]"
+                request.queryParameter("filters", filter)
+        - path: memberships/{id}
+          singleResult: true
+          supportedFilters:
+            - spec: id eq ?
+              request: |
+                request.pathParameter("id", value)

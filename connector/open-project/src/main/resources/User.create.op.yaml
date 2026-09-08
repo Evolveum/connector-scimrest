@@ -1,0 +1,6 @@
+objectClasses:
+  User:
+    create:
+      endpoints:
+        - method: POST
+          path: /users

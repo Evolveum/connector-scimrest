@@ -1,0 +1,18 @@
+objectClasses:
+  Team:
+    description: "Team represents a team in an organization"
+    attributes:
+      id:
+        jsonType: integer
+        openApiFormat: int64
+      name:
+        jsonType: string
+      description:
+        jsonType: string
+      visibility:
+        jsonType: string
+      permission:
+        jsonType: string
+      # FIXME: This should be nested object of organization and somehow allow filtering to specify it.
+      organization.name:
+        jsonType: string

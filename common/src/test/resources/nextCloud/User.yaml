@@ -1,0 +1,27 @@
+objectClasses:
+  User:
+    attributes:
+      userid:
+        jsonType: string
+        description: "the required username for the new user"
+      password:
+        jsonType: string
+        description: "the password for the new user, leave empty to send welcome mail"
+      displayName:
+        jsonType: string
+        description: "the display name for the new user"
+      email:
+        jsonType: string
+        description: "the email for the new user, required if password empty"
+      groups:
+        jsonType: array
+        description: "the groups for the new user"
+      subadmin:
+        jsonType: array
+        description: "the groups in which the new user is subadmin"
+      quota:
+        jsonType: string
+        description: "quota for the new user"
+      language:
+        jsonType: string
+        description: "language for the new user"

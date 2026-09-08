@@ -1,0 +1,62 @@
+objectClasses:
+  User:
+    attributes:
+      id:
+        jsonType: integer
+        openApiFormat: int64
+        creatable: false
+        updateable: false
+        description: "User’s id"
+      login:
+        jsonType: string
+        description: "User’s login name"
+      firstName:
+        jsonType: string
+        description: "User’s first name"
+      lastName:
+        jsonType: string
+        description: "User’s last name"
+      name:
+        jsonType: string
+        creatable: false
+        updateable: false
+        description: "User’s full name, formatting depends on instance settings"
+      email:
+        jsonType: string
+        openApiFormat: email
+        description: "User’s email address"
+      admin:
+        jsonType: boolean
+        description: "Flag indicating whether or not the user is an admin"
+      avatar:
+        jsonType: string
+        creatable: false
+        updateable: false
+        description: "URL to user’s avatar"
+      status:
+        jsonType: string
+        creatable: false
+        updateable: false
+        description: "The current activation status of the user (see below)"
+      language:
+        jsonType: string
+        description: "User’s language"
+      password:
+        jsonType: string
+        readable: false
+        description: "User’s password for the default password authentication"
+      identity_url:
+        jsonType: string
+        description: "User’s identity_url for OmniAuth authentication"
+      createdAt:
+        jsonType: string
+        openApiFormat: dateTime
+        creatable: false
+        updateable: false
+        description: "Time of creation"
+      updatedAt:
+        jsonType: string
+        openApiFormat: dateTime
+        creatable: false
+        updateable: false
+        description: "Time of the most recent change to the user"

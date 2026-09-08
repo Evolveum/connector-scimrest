@@ -1,0 +1,14 @@
+objectClasses:
+  Group:
+    attributes:
+      search:
+        jsonType: string
+        description: "optional search string"
+      limit:
+        jsonType: int
+        openApiFormat: int64
+        description: "optional limit value"
+      offset:
+        jsonType: int
+        openApiFormat: int64
+        description: "optional offset value"

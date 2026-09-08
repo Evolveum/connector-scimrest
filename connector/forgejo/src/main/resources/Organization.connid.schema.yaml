@@ -1,0 +1,9 @@
+objectClasses:
+  Organization:
+    attributes:
+      name:
+        connId:
+          name: UID
+      username:
+        connId:
+          name: NAME

@@ -1,0 +1,27 @@
+objectClasses:
+  User:
+    search:
+      endpoints:
+        - path: /users/search
+          objectExtractor: |
+            return response.body().get("data")
+          pagingSupport: |
+            request.queryParameter("limit", paging.pageSize)
+                   .queryParameter("page", paging.pageOffset)
+          emptyFilterSupported: true
+          supportedFilters:
+            - spec: id eq ?
+              request: |
+                # API weirdness of Forgejo - attribute is called id, but query parameter is called uid
+                request.queryParameter("uid",value)
+            - spec: login contains ?
+              request: |
+                request.queryParameter("q", value)
+
+        # This is actually get user by username
+        - path: /users/{username}
+          singleResult: true
+          supportedFilters:
+            - spec: login eq ?
+              request: |
+                request.pathParameter("username", value)

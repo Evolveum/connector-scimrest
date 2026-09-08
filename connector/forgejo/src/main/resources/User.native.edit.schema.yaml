@@ -1,0 +1,8 @@
+objectClasses:
+  User:
+    attributes:
+      must_change_password:
+        jsonType: boolean
+        creatable: true
+        updateable: true
+        readable: false

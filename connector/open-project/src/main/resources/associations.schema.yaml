@@ -1,0 +1,54 @@
+# Imports:
+#   org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
+#   org.identityconnectors.framework.common.objects.ConnectorObjectReference
+#   org.identityconnectors.framework.common.objects.ObjectClass
+relationships:
+  UserProjectMembership:
+    subject:
+      class: User
+      attribute:
+        name: memberships
+        multivalued: true
+        resolver:
+          resolution: PER_OBJECT
+          search: principal eq $value
+    object:
+      class: Membership
+      attribute:
+        name: principal
+
+  MembershipProject:
+    subject:
+      class: Membership
+      attribute:
+        name: project
+        json:
+          path: _links.project
+          implementation:
+            deserialize: |
+              if(it == null){
+                  it = value
+              }
+              var href = it.get("href")?.asText();
+              var pid = href.substring(href.lastIndexOf("/") + 1)
+
+              var obj = new ConnectorObjectBuilder()
+                      .setObjectClass(new ObjectClass("Project"))
+                      .setUid(pid)
+                      .setName(it.get("title")?.asText())
+              return new ConnectorObjectReference(obj.build());
+    object:
+      class: Project
+      attribute:
+        name: memberships
+        # FIXME: Add implementation
+
+  MembershipRole:
+    subject:
+      class: Membership
+      attribute:
+        name: roles
+    object:
+      class: Role
+      attribute:
+        name: memberships

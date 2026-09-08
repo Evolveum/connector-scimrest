@@ -1,0 +1,16 @@
+relationships:
+  UserOrganizationMembership:
+    subject:
+      class: User
+      attribute:
+        name: organization
+        resolver:
+          resolution: PER_OBJECT
+          search: member eq $value
+    object:
+      class: Organization
+      attribute:
+        name: member
+        resolver:
+          resolution: PER_OBJECT
+          search: organization eq $value

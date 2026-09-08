@@ -1,0 +1,109 @@
+objectClasses:
+  User:
+    description: ""
+    attributes:
+      admin:
+        jsonType: boolean
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        description: "Flag indicating whether or not the user is an admin"
+      avatar:
+        jsonType: string
+        openApiFormat: uri
+        updateable: false
+        creatable: false
+        readable: true
+        returnedByDefault: true
+        description: "URL to user’s avatar"
+      created_at:
+        jsonType: string
+        openApiFormat: date-time
+        readable: true
+        updateable: false
+        creatable: false
+        returnedByDefault: true
+        description: "Time of creation"
+      email:
+        jsonType: string
+        openApiFormat: email
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        description: "User’s email address"
+      firstName:
+        jsonType: string
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        description: "User’s first name"
+      id:
+        jsonType: integer
+        readable: true
+        updateable: false
+        creatable: false
+        returnedByDefault: true
+        required: true
+        description: "User’s id"
+      identity_url:
+        jsonType: string
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        description: "User’s identity_url for OmniAuth authentication"
+      language:
+        jsonType: string
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        description: "User’s language"
+      lastName:
+        jsonType: string
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        description: "User’s last name"
+      login:
+        jsonType: string
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        required: true
+        description: "User’s login name"
+      status:
+        jsonType: string
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        required: true
+        description: "Status"
+      # //TODO association ....
+      name:
+        jsonType: string
+        readable: true
+        creatable: false
+        updateable: false
+        returnedByDefault: true
+        description: "User’s full name, formatting depends on instance settings"
+      password:
+        jsonType: string
+        updateable: true
+        creatable: true
+        readable: false
+        description: "User’s password for the default password authentication"
+      updated_at:
+        jsonType: string
+        openApiFormat: date-time
+        readable: true
+        creatable: false
+        updateable: false
+        returnedByDefault: true
+        description: "Time of the most recent change to the user"

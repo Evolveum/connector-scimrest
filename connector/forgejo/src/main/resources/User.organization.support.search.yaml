@@ -1,0 +1,26 @@
+objectClasses:
+  Organization:
+    search:
+      endpoints:
+        - path: users/{username}/orgs
+          responseFormat: JSON_ARRAY
+          pagingSupport: |
+            request.queryParameter("limit", paging.pageSize)
+                    .queryParameter("page", paging.pageOffset)
+          supportedFilters:
+            - spec: member eq ?
+              request: |
+                request.pathParameter("username", value.value.name)
+
+  User:
+    search:
+      endpoints:
+        - path: orgs/{org}/members
+          responseFormat: JSON_ARRAY
+          pagingSupport: |
+            request.queryParameter("limit", paging.pageSize)
+                    .queryParameter("page", paging.pageOffset)
+          supportedFilters:
+            - spec: organization eq ?
+              request: |
+                request.pathParameter("org", value.value.uid)

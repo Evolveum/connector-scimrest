@@ -1,0 +1,52 @@
+objectClasses:
+  User:
+    attributes:
+      active:
+        jsonType: boolean
+        updateable: true
+        description: "Is user active"
+        connId:
+          name: ENABLE
+      email:
+        jsonType: string
+        openApiFormat: email
+        updateable: true
+        description: "The user's email address"
+      full_name:
+        jsonType: string
+        creatable: true
+        updateable: true
+        description: "the user's full name"
+      id:
+        jsonType: integer
+        openApiFormat: int64
+        description: "The unique identifier for the user"
+        connId:
+          name: UID
+      last_login:
+        jsonType: string
+        openApiFormat: date-time
+        description: "The date and time when the user last logged in"
+      login:
+        jsonType: string
+        description: "the user's username"
+        connId:
+          name: NAME
+      login_name:
+        jsonType: string
+        creatable: true
+        updateable: true
+        description: "The user's authentication sign-in name."
+      password:
+        jsonType: string
+        creatable: true
+        updateable: true
+        readable: false
+      website:
+        jsonType: string
+        description: "the user's website"
+
+      # connId attribute mapped by the original script although not declared above
+      last_login_date:
+        connId:
+          name: LAST_LOGIN_DATE

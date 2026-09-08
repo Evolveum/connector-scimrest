@@ -1,0 +1,80 @@
+# Imports:
+#   org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
+#   org.identityconnectors.framework.common.objects.ConnectorObjectReference
+#   org.identityconnectors.framework.common.objects.ObjectClass
+objectClasses:
+  Membership:
+    embedded: true
+    attributes:
+      id:
+        jsonType: integer
+        readable: true
+        returnedByDefault: true
+        required: true
+        description: "Membership id"
+      name:
+        json:
+          type: integer
+          name: id
+        readable: true
+        returnedByDefault: true
+        required: true
+        description: "Membership name (copy of id)"
+      createdAt:
+        jsonType: string
+        openApiFormat: date-time
+        readable: true
+        returnedByDefault: true
+        description: "Time of creation"
+      updatedAt:
+        jsonType: string
+        openApiFormat: date-time
+        readable: true
+        returnedByDefault: true
+        description: "Time of latest update"
+    references:
+      principal:
+        objectClass: Principal
+        json:
+          path: _links.principal
+          implementation:
+            deserialize: |
+              var href = value.get("href")?.asText()
+              var pid = href.substring(href.lastIndexOf("/") + 1)
+
+              var obj = new ConnectorObjectBuilder()
+                      .setObjectClass(new ObjectClass("Principal"))
+                      .setUid(pid)
+                      .setName(value.get("title")?.asText())
+              return new ConnectorObjectReference(obj.build())
+      roles:
+        objectClass: Role
+        json:
+          path: _links.roles
+          implementation:
+            deserialize: |
+              if(it == null){
+                  it = value
+              }
+              var obj = new ConnectorObjectBuilder()
+                      .setObjectClass(new ObjectClass("Role"))
+                      .setUid(it.get("href")?.asText())
+                      .setName(it.get("title")?.asText())
+              return new ConnectorObjectReference(obj.build())
+      project:
+        objectClass: Project
+        json:
+          path: _links.project
+          implementation:
+            deserialize: |
+              if(it == null){
+                  it = value
+              }
+              var href = it.get("href")?.asText()
+              var pid = href.substring(href.lastIndexOf("/") + 1)
+
+              var obj = new ConnectorObjectBuilder()
+                      .setObjectClass(new ObjectClass("Project"))
+                      .setUid(pid)
+                      .setName(it.get("title")?.asText())
+              return new ConnectorObjectReference(obj.build())

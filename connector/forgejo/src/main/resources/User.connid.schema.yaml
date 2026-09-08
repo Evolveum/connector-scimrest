@@ -1,0 +1,10 @@
+objectClasses:
+  User:
+    # Mapping from native attributes to connID attributes
+    attributes:
+      id:
+        connId:
+          name: UID
+      login:
+        connId:
+          name: NAME

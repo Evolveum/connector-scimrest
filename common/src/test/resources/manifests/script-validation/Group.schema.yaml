@@ -1,0 +1,6 @@
+objectClasses:
+  Group:
+    attributes:
+      id:
+        connId:
+          type: string

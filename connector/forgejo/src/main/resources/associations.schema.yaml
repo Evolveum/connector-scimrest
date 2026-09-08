@@ -1,0 +1,46 @@
+objectClasses:
+  User:
+    references:
+      organization:
+        subtype: UserOrganizationMembership
+        returnedByDefault: false
+        multiValued: true
+        description: "Virtual relationship shortcut to organization (determined by teams membership)"
+        updateable: false
+        role: subject
+      teams:
+        subtype: UserTeamMembership
+        returnedByDefault: false
+        multiValued: true
+        updateable: true
+        role: subject
+
+  Organization:
+    references:
+      member:
+        objectClass: User
+        subtype: UserOrganizationMembership
+        returnedByDefault: false
+        multiValued: true
+        role: object
+      teams:
+        objectClass: Team
+        subtype: TeamOrganizationMembership
+        returnedByDefault: false
+        multiValued: true
+        role: object
+
+  Team:
+    references:
+      organization:
+        objectClass: Organization
+        subtype: TeamOrganizationMembership
+        returnedByDefault: true
+        required: true
+        role: subject
+      members:
+        objectClass: User
+        subtype: UserTeamMembership
+        returnedByDefault: false
+        multiValued: true
+        role: object

@@ -1,0 +1,9 @@
+objectClasses:
+  Project:
+    attributes:
+      id:
+        connId:
+          name: UID
+      name:
+        connId:
+          name: NAME

@@ -1,0 +1,15 @@
+objectClasses:
+  Organization:
+    search:
+      endpoints:
+        - path: orgs
+          responseFormat: JSON_ARRAY
+          pagingSupport: |
+            request.queryParameter("limit", paging.pageSize)
+                   .queryParameter("page", paging.pageOffset)
+        - path: orgs/{org}
+          singleResult: true
+          supportedFilters:
+            - spec: name eq ?
+              request: |
+                request.pathParameter("org", value)

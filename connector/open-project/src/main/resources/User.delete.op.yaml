@@ -1,0 +1,6 @@
+objectClasses:
+  User:
+    delete:
+      endpoints:
+        - method: DELETE
+          path: users/{id}

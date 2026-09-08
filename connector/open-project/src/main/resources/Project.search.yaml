@@ -1,0 +1,23 @@
+# Imports: org.json.JSONArray
+objectClasses:
+  Project:
+    search:
+      endpoints:
+        - path: projects/
+          objectExtractor: |
+            if(response.body()==null){
+                return new JSONArray();
+            }
+
+            var jsonArray = response.body().get("_embedded").get("elements");
+            return jsonArray;
+          pagingSupport: |
+            request.queryParameter("pageSize", paging.pageSize)
+                    .queryParameter("offset", paging.pageOffset)
+          emptyFilterSupported: true
+        - path: projects/{id}
+          singleResult: true
+          supportedFilters:
+            - spec: id eq ?
+              request: |
+                request.pathParameter("id", value)

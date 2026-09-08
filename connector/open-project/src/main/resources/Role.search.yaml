@@ -1,0 +1,20 @@
+# Imports: org.json.JSONArray
+objectClasses:
+  Role:
+    search:
+      endpoints:
+        - path: roles/
+          objectExtractor: |
+            if(response.body()==null){
+                return new JSONArray();
+            }
+
+            var jsonArray = response.body().get("_embedded").get("elements");
+            return jsonArray;
+          emptyFilterSupported: true
+        - path: roles/{id}
+          singleResult: true
+          supportedFilters:
+            - spec: id eq ?
+              request: |
+                request.pathParameter("id", value)
