@@ -60,7 +60,7 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
                 }
                 """;
 
-        createConnector(script, null, null).schema();
+        createConnector(script, "user", new GuardedString("pass".toCharArray())).schema();
 
         assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(SCHEMAS_ENDPOINT))
                 .withHeader("Authorization", equalTo("Basic dXNlcjpwYXNz"))).size(), 1);

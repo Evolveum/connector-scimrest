@@ -20,11 +20,14 @@ import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
 import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import java.util.Map;
 
 public class RestConnectorContext implements ConnectorContext {
+
+    private static final Log LOG = Log.getLog(RestConnectorContext.class);
 
     Map<ObjectClass, ObjectClassHandler> handlers;
     BaseGroovyConnectorConfiguration configuration;
@@ -92,9 +95,11 @@ public class RestConnectorContext implements ConnectorContext {
     }
 
     public void initializeScim(AuthorizationCustomizer<ScimClientConfiguration> authentication) {
-        if (configuration instanceof ScimClientConfiguration scimConf) {
-            if (scimConf.getScimBaseUrl() != null) {
+        if (configuration instanceof ScimClientConfiguration scimConf && scimConf.getScimBaseUrl() != null) {
+            if (ScimClientConfiguration.hasCredentials(scimConf)) {
                 scim = new ScimContext(this, scimConf, getDevelopmentMode(), authentication);
+            } else {
+                LOG.ok("SCIM context not initialized: no SCIM credentials configured");
             }
         }
     }

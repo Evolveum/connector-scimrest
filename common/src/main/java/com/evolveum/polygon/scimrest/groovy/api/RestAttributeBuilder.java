@@ -6,9 +6,15 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
+import com.evolveum.polygon.conndev.api.AttributePathFormat;
 import com.evolveum.polygon.conndev.build.api.AttributeBuilder;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import com.evolveum.polygon.conndev.schema.BasePathBuilder;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
+import com.evolveum.polygon.scimrest.schema.ScimPathFormat;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -64,8 +70,16 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
 
         AttributePath extension(String uriOrAlias);
 
-        AttributePath path();
+        AttributePathDeclaration<?,?> path();
 
+        ScimMapping path(
+                @DelegatesTo(value = ScimPathBuilder.class, strategy = Closure.DELEGATE_ONLY)
+                @Script.Initialization
+                Closure<?> closure);
+    }
+
+    interface ScimPathBuilder extends PathBuilder {
+        AttributePathFormat<String> SCIM = ScimPathFormat.INSTANCE;
     }
 
 }

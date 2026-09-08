@@ -6,13 +6,18 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
+import com.evolveum.polygon.conndev.api.JavaPathFormat;
+import com.evolveum.polygon.conndev.build.api.AttributeBuilder;
 import com.evolveum.polygon.conndev.build.api.ValueMappingBuilder;
 import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.conndev.schema.AttributeProtocolMappingBuilder;
 import com.evolveum.polygon.conndev.schema.BaseAttributeBuilder;
+import com.evolveum.polygon.conndev.schema.BasePathBuilder;
 import com.evolveum.polygon.conndev.schema.BaseValueMappingBuilder;
 import com.evolveum.polygon.conndev.spi.AttributeProtocolMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
@@ -74,14 +79,14 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
      * the ConnId type from {@link ScimAttributeMapping#connIdType()} when none is explicitly declared.
      */
     class ScimBuilder implements AttributeProtocolMappingBuilder, ScimMapping {
-        private AttributePath path;
+        private AttributePathDeclaration<?,?> path;
         private String type;
         private ValueMapping implementation;
 
         @Override
         public String name() {
-            if (path != null && path.onlyAttribute() != null) {
-                return path.onlyAttribute().name();
+            if (path != null && path.actual().onlyAttribute() != null) {
+                return path.actual().onlyAttribute().name();
             }
 
             return null;
@@ -89,8 +94,7 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
 
         @Override
         public ScimMapping name(String name) {
-            this.path = AttributePath.of(name);
-            return this;
+            return path(AttributePath.of(name));
         }
 
         @Override
@@ -101,7 +105,7 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
 
 
         @Override
-        public AttributePath path() {
+        public AttributePathDeclaration<?,?> path() {
             return path;
         }
 
@@ -112,8 +116,19 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
         }
 
         @Override
+        public ScimMapping path(
+                @DelegatesTo(value = RestAttributeBuilder.ScimPathBuilder.class, strategy = Closure.DELEGATE_ONLY)
+                @Script.Initialization
+                Closure<?> closure) {
+            var builder = new PathBuilder();
+            GroovyClosures.callAndReturnDelegate(closure, builder);
+            this.path = builder.build();
+            return this;
+        }
+
+        @Override
         public ScimMapping path(AttributePath path) {
-            this.path = path;
+            this.path = AttributePathDeclaration.of(JavaPathFormat.INSTANCE, path);
             return this;
         }
 
@@ -157,6 +172,9 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
                 implementation =  OpenApiValueMapping.from(type, null);
             }
             if (implementation != null) {
+                // Adapt the mapping to the attribute's final ConnId type via the shared hook
+                // (e.g. a non-string SCIM implementation backing a uid/name presented as String).
+                implementation = connId().overrideMappingIfNeeded(implementation);
                 return new ScimAttributeMapping(path, implementation);
             }
             return null;
@@ -172,5 +190,9 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
             }
             return null;
         }
+    }
+
+    private static class PathBuilder extends BasePathBuilder implements ScimPathBuilder {
+
     }
 }

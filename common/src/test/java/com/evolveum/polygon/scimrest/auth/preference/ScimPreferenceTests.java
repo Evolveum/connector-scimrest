@@ -251,9 +251,11 @@ public class ScimPreferenceTests extends WireMockTestSupport {
             return null;
         }
 
+        // dummy value: satisfies the "SCIM credentials configured" check; the actual
+        // Authorization header on the wire always comes from the script implementations
         @Override
         public GuardedString getScimTokenValue() {
-            return null;
+            return new GuardedString("placeholder".toCharArray());
         }
     }
 }

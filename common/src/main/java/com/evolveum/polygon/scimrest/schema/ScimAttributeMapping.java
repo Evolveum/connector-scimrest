@@ -7,13 +7,14 @@
 package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
 import tools.jackson.databind.JsonNode;
 
 public class ScimAttributeMapping extends JsonAttributeMapping {
 
-    public ScimAttributeMapping(AttributePath path, ValueMapping<Object, JsonNode> mapping) {
+    public ScimAttributeMapping(AttributePathDeclaration<?,?> path, ValueMapping<Object, JsonNode> mapping) {
         super(path, mapping);
     }
 

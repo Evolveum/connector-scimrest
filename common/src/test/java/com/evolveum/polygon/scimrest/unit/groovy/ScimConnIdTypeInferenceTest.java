@@ -6,13 +6,17 @@
  */
 package com.evolveum.polygon.scimrest.unit.groovy;
 
-import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
+import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
+import com.evolveum.polygon.scimrest.schema.ScimAttributeMapping;
 import org.testng.annotations.Test;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 /**
  * {@code scim { type "boolean" } } (whether written by hand or set behind the scenes by SCIM
@@ -73,19 +77,58 @@ public class ScimConnIdTypeInferenceTest {
         var loader = new GroovySchemaLoader(new GroovyContext(), schema);
         loader.load("""
                 objectClass("User") {
-                    attribute("active") {
+                    attribute("counter") {
                         connId { type String.class }
                         scim {
-                            path attribute("active")
-                            type "boolean"
+                            path attribute("counter")
+                            type "integer"
                         }
                     }
                 }
                 """);
 
         schema.applyStructuralRules();
-        var attribute = schema.objectClass("User").attribute("active").build();
+        var attribute = schema.objectClass("User").attribute("counter").build();
 
         assertEquals(attribute.connId().getType(), String.class);
+        // the declared type also drives the runtime mapping override
+        assertEquals(attribute.scim().connIdType(), String.class);
+    }
+
+    /**
+     * Regression: a built-in ConnId attribute (uid) must present {@code String} to ConnId and
+     * convert values even when its SCIM backing suggests another type (here integer) — the same
+     * guarantee the JSON slot has, now applied to the SCIM slot by the shared
+     * {@code connId().overrideMappingIfNeeded} hook in {@code ScimBuilder.build()}.
+     */
+    @Test
+    public void uidWithIntegerScimBackingPresentsStringToConnId() {
+        var mapper = new ObjectMapper();
+        var schema = new RestSchemaBuilderImpl(AbstractGroovyRestConnector.class, null);
+        var loader = new GroovySchemaLoader(new GroovyContext(), schema);
+        loader.load("""
+                objectClass("User") {
+                    attribute("id") {
+                        scim {
+                            path attribute("id")
+                            type "integer"
+                        }
+                    }
+                    connIdAttribute("UID", "id")
+                }
+                """);
+
+        schema.applyStructuralRules();
+        var attribute = schema.objectClass("User").attribute("id").build();
+
+        assertEquals(attribute.connId().getType(), String.class);
+        var scimMapping = attribute.scim();
+        assertNotNull(scimMapping);
+        assertTrue(scimMapping instanceof ScimAttributeMapping);
+        assertEquals(scimMapping.connIdType(), String.class);
+
+        var root = mapper.createObjectNode();
+        root.put("id", 42);
+        assertEquals(scimMapping.singleValueFromObject(root), "42");
     }
 }

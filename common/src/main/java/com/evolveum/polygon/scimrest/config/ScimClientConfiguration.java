@@ -310,6 +310,69 @@ public interface ScimClientConfiguration extends ConfigurationMixin {
         String getScimNtlmVersion();
     }
 
+    /**
+     * Returns true when at least one SCIM authentication mixin in the configuration contains
+     * credential values (any single value counts, e.g. only a password or only a token secret).
+     */
+    static boolean hasCredentials(ScimClientConfiguration configuration) {
+        if (configuration == null) {
+            return false;
+        }
+        if (configuration instanceof BasicAuthorization basic
+                && (basic.getScimUsername() != null || basic.getScimPassword() != null)) {
+            return true;
+        }
+        if (configuration instanceof HttpBasic basic
+                && (basic.getScimUsername() != null || basic.getScimPassword() != null)) {
+            return true;
+        }
+        if (configuration instanceof BearerTokenAuthorization bearer && bearer.getScimTokenValue() != null) {
+            return true;
+        }
+        if (configuration instanceof JwtBearerAuthorization jwt && jwt.getScimJwtSecret() != null) {
+            return true;
+        }
+        if (configuration instanceof ApiKeyAuthorization apiKey && apiKey.getScimApiKey() != null) {
+            return true;
+        }
+        if (configuration instanceof DigestAuthorization digest
+                && (digest.getScimDigestUsername() != null || digest.getScimDigestPassword() != null)) {
+            return true;
+        }
+        if (configuration instanceof OAuth2ClientCredentialsAuthorization clientCredentials
+                && (clientCredentials.getScimOAuth2ClientId() != null
+                || clientCredentials.getScimOAuth2ClientSecret() != null)) {
+            return true;
+        }
+        if (configuration instanceof OAuth2PasswordAuthorization password
+                && (password.getScimOAuth2ClientId() != null
+                || password.getScimOAuth2Username() != null
+                || password.getScimOAuth2Password() != null)) {
+            return true;
+        }
+        if (configuration instanceof OAuth2JwtBearerAuthorization jwtBearer
+                && (jwtBearer.getScimOAuth2ClientId() != null || jwtBearer.getScimOAuth2PrivateKey() != null)) {
+            return true;
+        }
+        if (configuration instanceof OAuth2SamlAuthorization saml
+                && (saml.getScimOAuth2ClientId() != null || saml.getScimOAuth2PrivateKey() != null)) {
+            return true;
+        }
+        if (configuration instanceof HawkAuthorization hawk
+                && (hawk.getScimHawkId() != null || hawk.getScimHawkKey() != null)) {
+            return true;
+        }
+        if (configuration instanceof AwsSignatureAuthorization aws
+                && (aws.getScimAwsAccessKey() != null || aws.getScimAwsSecretKey() != null)) {
+            return true;
+        }
+        if (configuration instanceof NtlmAuthorization ntlm
+                && (ntlm.getScimNtlmUsername() != null || ntlm.getScimNtlmPassword() != null)) {
+            return true;
+        }
+        return false;
+    }
+
     static boolean isConfigured(Class<? extends ScimClientConfiguration> type, ScimClientConfiguration configuration) {
         if (NtlmAuthorization.class.isAssignableFrom(type)) {
             return configuration instanceof NtlmAuthorization o

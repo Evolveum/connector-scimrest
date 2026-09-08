@@ -12,6 +12,7 @@ import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
+import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -107,7 +108,8 @@ public class ScimDiscoveredBooleanTypeTest extends WireMockTestSupport {
             }
             """;
 
-    private static class TestConfiguration extends BaseGroovyConnectorConfiguration implements ScimClientConfiguration {
+    private static class TestConfiguration extends BaseGroovyConnectorConfiguration
+            implements ScimClientConfiguration.BearerTokenAuthorization {
         private final int port;
 
         TestConfiguration(int port) {
@@ -117,6 +119,11 @@ public class ScimDiscoveredBooleanTypeTest extends WireMockTestSupport {
         @Override
         public String getScimBaseUrl() {
             return "http://localhost:" + port + SCIM_BASE_PATH;
+        }
+
+        @Override
+        public GuardedString getScimTokenValue() {
+            return new GuardedString("test-token".toCharArray());
         }
     }
 

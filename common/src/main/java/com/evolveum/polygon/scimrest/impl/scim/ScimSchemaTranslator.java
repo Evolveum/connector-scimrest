@@ -288,13 +288,13 @@ public class ScimSchemaTranslator {
     private void populatePathBasedSchema(ScimResourceContext scim, RestObjectClassDefinitionBuilder objectClass) {
         for (var attr : objectClass.allAttributes()) {
             var path = attr.scim().path();
-            if (path == null || path.onlyAttribute() != null) {
+            if (path == null || path.actual().onlyAttribute() != null) {
                 // Simple path — handled in primary schema processing
                 continue;
             }
-            var attrDef = scim.findAttributeDefinition(path);
+            var attrDef = scim.findAttributeDefinition(path.actual());
             if (attrDef == null) {
-                throw new IllegalStateException(String.format("Attribute '%s' not found", path));
+                throw new IllegalStateException(String.format("Attribute '%s' not found", path.actual()));
             }
             applyAttributeRules(scim, attrDef, objectClass, attr);
         }

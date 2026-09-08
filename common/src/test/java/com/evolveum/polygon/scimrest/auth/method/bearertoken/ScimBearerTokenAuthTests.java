@@ -78,7 +78,7 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
                 }
                 """;
 
-        createScimConnector(script).schema();
+        createScimConnectorWithToken(script, new GuardedString("placeholder".toCharArray())).schema();
 
         assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(SCHEMAS_ENDPOINT))
                 .withHeader("Authorization", equalTo("Bearer static-token"))).size(), 1);
@@ -120,7 +120,7 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
                 }
                 """;
 
-        createScimConnector(script).schema();
+        createScimConnectorWithToken(script, new GuardedString("placeholder".toCharArray())).schema();
 
         assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(SCHEMAS_ENDPOINT))
                 .withHeader("X-Token", equalTo("tok"))
@@ -157,7 +157,7 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
                 }
                 """.formatted(tokenUrl);
 
-        createScimConnector(script).schema();
+        createScimConnectorWithToken(script, new GuardedString("placeholder".toCharArray())).schema();
 
         assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(SCHEMAS_ENDPOINT))
                 .withHeader("Authorization", equalTo("Bearer fetched-token"))).size(), 1);
