@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.operation;
 
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.groovy.endpoint.DeclarativeResponseBuilder;
 import com.evolveum.polygon.scimrest.groovy.endpoint.DeclarativeRequestBuilder;
 import com.evolveum.polygon.scimrest.groovy.endpoint.AbstractSingleObjectEndpointBuilder;
@@ -122,7 +123,7 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
 
     record EndpointHandler(RestConnectorContext context, String path, HttpMethod method) implements DeleteOperationHandler {
         @Override
-        public void delete(Uid uid, OperationOptions options) {
+        public void delete(Uid uid, OperationOptions options, ContextLookup operationContext) {
             var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method != null ? method : HttpMethod.DELETE);

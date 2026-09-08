@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.impl.scim;
 
+import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.spi.DeleteOperationHandler;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -23,7 +24,7 @@ public class ScimDeleteHandler implements DeleteOperationHandler {
     }
 
     @Override
-    public void delete(Uid uid, OperationOptions options) {
+    public void delete(Uid uid, OperationOptions options, ContextLookup operationContext) {
         var resource = context.resourceForObjectClass(objectClass);
         if (resource == null) {
             throw new IllegalStateException("No SCIM resource mapping for object class: " + objectClass.getObjectClassValue());
