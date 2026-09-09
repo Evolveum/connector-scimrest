@@ -6,9 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.yaml.binding;
 
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.StructuralHandler;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestOperationBuilder;
 
@@ -23,10 +23,10 @@ import java.util.ArrayList;
  * <p>{@code method}/{@code path} are consumed here (they select the endpoint) and are not bound as
  * entries, so they must not be re-declared on the endpoint type.
  */
-public class EndpointsHandler implements StructuralHandler {
+public class EndpointsHandler implements CustomYamlHandler {
 
     @Override
-    public void apply(YamlBinder binder, Object target, LocatedNode value) {
+    public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
         if (!(target instanceof RestOperationBuilder<?> operation)) {
             throw new IllegalArgumentException("The 'endpoints' block requires an operation builder, got: "
                     + target.getClass().getName());

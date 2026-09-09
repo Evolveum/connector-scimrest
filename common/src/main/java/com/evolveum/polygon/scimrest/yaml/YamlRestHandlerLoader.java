@@ -9,53 +9,31 @@ package com.evolveum.polygon.scimrest.yaml;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
 import com.evolveum.polygon.scimrest.groovy.handler.RestHandlerBuilder;
-import com.evolveum.polygon.scimrest.yaml.model.YamlOperationDocument;
 
 import java.io.Reader;
-import java.util.List;
+import java.io.StringReader;
 
 /**
  * YAML front-end of connector operation/authentication scripts — the YAML counterpart of
- * {@link com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder}. Each document (one operation
- * per file, mirroring the wizard convention) is parsed and validated by {@link YamlOperationLoader}
- * and immediately bound onto the same format-agnostic {@link RestHandlerBuilder} the Groovy DSL
- * drives, so operations defined in YAML execute exactly like their Groovy counterparts and both
- * front-ends can contribute to one connector.
+ * {@link com.evolveum.polygon.scimrest.groovy.GroovyRestHandlerBuilder}. Documents use the extended
+ * envelope (a top-level {@code objectClasses} mapping and/or an {@code authentication} block) and are
+ * driven through the location-aware binding engine ({@link YamlRestOperationsLoader}) onto the same
+ * format-agnostic {@link RestHandlerBuilder} the Groovy DSL drives.
  */
 public class YamlRestHandlerLoader {
 
-    private final YamlOperationLoader operationLoader = new YamlOperationLoader();
-    private final YamlObjectClassHandler objectClassHandler;
-    private final YamlAuthenticationHandler authenticationHandler;
+    private final YamlRestOperationsLoader operationsLoader;
 
     public YamlRestHandlerLoader(RestHandlerBuilder builder, GroovyContext groovyContext) {
         var scriptCompiler = new GroovyScriptCompiler(groovyContext);
-        this.objectClassHandler = new YamlObjectClassHandler(builder, scriptCompiler);
-        this.authenticationHandler = new YamlAuthenticationHandler(builder, scriptCompiler);
+        this.operationsLoader = new YamlRestOperationsLoader(builder, scriptCompiler);
     }
 
     public void loadFromString(String yaml) {
-        operationLoader.load(yaml);
-        bind(lastDocument());
+        operationsLoader.load(new StringReader(yaml), "inline document");
     }
 
     public void load(Reader reader, String sourceName) {
-        operationLoader.load(reader, sourceName);
-        bind(lastDocument());
-    }
-
-    private YamlOperationDocument lastDocument() {
-        var documents = operationLoader.documents();
-        return documents.get(documents.size() - 1);
-    }
-
-    private void bind(YamlOperationDocument document) {
-        objectClassHandler.load(document);
-        authenticationHandler.load(document.authentication);
-    }
-
-    /** All documents loaded so far, in loading order. */
-    public List<YamlOperationDocument> documents() {
-        return operationLoader.documents();
+        operationsLoader.load(reader, sourceName);
     }
 }

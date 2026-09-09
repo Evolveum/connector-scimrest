@@ -1,12 +1,13 @@
-objectClass: TestUser
-attributes:
-  id:
-    jsonType: string
-    creatable: false
-    updateable: false
-  login:
-    jsonType: string
-    required: true
-  email:
-    jsonType: string
-    openApiFormat: email
+objectClasses:
+  TestUser:
+    attributes:
+      id:
+        jsonType: string
+        creatable: false
+        updateable: false
+      login:
+        jsonType: string
+        required: true
+      email:
+        jsonType: string
+        openApiFormat: email

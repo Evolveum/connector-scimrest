@@ -6,9 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.yaml.binding;
 
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.StructuralHandler;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder.OAuth2Builder;
 import groovy.lang.Closure;
@@ -20,12 +20,12 @@ import groovy.lang.Closure;
  * Groovy runtime so every block (implementation, OAuth2 token-flow hooks) is compiled to a closure.
  *
  * <p>Structural handlers are instantiated once per binding and reused, so this type is stateless — all
- * per-document data flows in through {@link #apply(YamlBinder, Object, LocatedNode)}.
+ * per-document data flows in through {@link #apply(DeclYamlBinder, Object, LocatedNode)}.
  */
-abstract class AuthChannelHandler implements StructuralHandler {
+abstract class AuthChannelHandler implements CustomYamlHandler {
 
     @Override
-    public final void apply(YamlBinder binder, Object target, LocatedNode channel) {
+    public final void apply(DeclYamlBinder binder, Object target, LocatedNode channel) {
         if (!(target instanceof AuthenticationCustomizationBuilder auth)) {
             throw new IllegalArgumentException("The authentication channel block requires the authentication builder, got: "
                     + target.getClass().getName());
@@ -33,7 +33,7 @@ abstract class AuthChannelHandler implements StructuralHandler {
         bind(binder, auth, channel);
     }
 
-    protected abstract void bind(YamlBinder binder, AuthenticationCustomizationBuilder auth, LocatedNode channel);
+    protected abstract void bind(DeclYamlBinder binder, AuthenticationCustomizationBuilder auth, LocatedNode channel);
 
     /** The text of a scalar/block child of {@code map}, or {@code null} when absent. */
     protected static String block(LocatedNode map, String key) {
@@ -45,7 +45,7 @@ abstract class AuthChannelHandler implements StructuralHandler {
      * A driver closure handed to an {@code oauth2*(Closure)} method: when invoked (with the
      * {@link OAuth2Builder} as delegate) it sets each configured token-flow hook from a compiled snippet.
      */
-    protected static Closure<?> oauth2Driver(YamlBinder binder, LocatedNode node) {
+    protected static Closure<?> oauth2Driver(DeclYamlBinder binder, LocatedNode node) {
         return new Closure<Object>(AuthChannelHandler.class) {
             public Object doCall(Object context) {
                 var builder = (OAuth2Builder) getDelegate();

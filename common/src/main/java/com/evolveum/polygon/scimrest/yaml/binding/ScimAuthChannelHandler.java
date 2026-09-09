@@ -6,8 +6,8 @@
  */
 package com.evolveum.polygon.scimrest.yaml.binding;
 
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
 
@@ -21,7 +21,7 @@ public final class ScimAuthChannelHandler extends AuthChannelHandler {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected void bind(YamlBinder binder, AuthenticationCustomizationBuilder auth, LocatedNode channel) {
+    protected void bind(DeclYamlBinder binder, AuthenticationCustomizationBuilder auth, LocatedNode channel) {
         var scim = auth.scim();
         for (var entry : channel.entries()) {
             var key = entry.key();
@@ -41,7 +41,7 @@ public final class ScimAuthChannelHandler extends AuthChannelHandler {
         }
     }
 
-    private void implementation(YamlBinder binder, LocatedNode method,
+    private void implementation(DeclYamlBinder binder, LocatedNode method,
                                 AuthenticationCustomizationBuilder.ScimBuilder scim,
                                 Class<? extends ScimClientConfiguration> type) {
         var impl = block(method, "implementation");

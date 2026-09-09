@@ -32,34 +32,37 @@ public class YamlCreateUpdateTest extends AbstractCrudConnectorTest {
 
     /** YAML counterpart of {@code Account.search.id.op.groovy} — updates read the object first. */
     private static final String SEARCH_BY_ID_YAML = """
-            objectClass: Account
-            search:
-              endpoints:
-                - path: accounts/{id}
-                  singleResult: true
-                  supportedFilters:
-                    - spec: |
-                        attribute("id").eq().anySingleValue()
-                      request: |
-                        request.pathParameter("id", value)
+            objectClasses:
+              Account:
+                search:
+                  endpoints:
+                    - path: accounts/{id}
+                      singleResult: true
+                      supportedFilters:
+                        - spec: |
+                            attribute("id").eq().anySingleValue()
+                          request: |
+                            request.pathParameter("id", value)
             """;
 
     private static final String CREATE_YAML = """
-            objectClass: Account
-            create:
-              endpoints:
-                - method: POST
-                  path: accounts
+            objectClasses:
+              Account:
+                create:
+                  endpoints:
+                    - method: POST
+                      path: accounts
             """;
 
     private static final String PATCH_UPDATE_YAML = """
-            objectClass: Account
-            update:
-              endpoints:
-                - method: PATCH
-                  path: accounts/{id}
-                  request:
-                    contentType: application/json
+            objectClasses:
+              Account:
+                update:
+                  endpoints:
+                    - method: PATCH
+                      path: accounts/{id}
+                      request:
+                        contentType: application/json
             """;
 
     // Schema with the extra attributes the supported-attributes routing needs.
@@ -73,19 +76,20 @@ public class YamlCreateUpdateTest extends AbstractCrudConnectorTest {
             """;
 
     private static final String SUPPORTED_UPDATE_YAML = """
-            objectClass: Account
-            update:
-              endpoints:
-                - method: PUT
-                  path: accounts/{id}
-                  request:
-                    contentType: application/json
-                  supportedAttributes:
-                    - displayName
-                - method: POST
-                  path: accounts/{id}/activate
-                  supportedAttributes:
-                    - status
+            objectClasses:
+              Account:
+                update:
+                  endpoints:
+                    - method: PUT
+                      path: accounts/{id}
+                      request:
+                        contentType: application/json
+                      supportedAttributes:
+                        - displayName
+                    - method: POST
+                      path: accounts/{id}/activate
+                      supportedAttributes:
+                        - status
             """;
 
     @Test

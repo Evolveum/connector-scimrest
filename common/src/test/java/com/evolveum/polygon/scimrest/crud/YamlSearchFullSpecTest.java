@@ -52,15 +52,16 @@ public class YamlSearchFullSpecTest extends AbstractCrudConnectorTest {
     // ----------------------------------------------------------------------------------------------
 
     private static final String PAGING_YAML = """
-            objectClass: Account
-            search:
-              endpoints:
-                - path: accounts
-                  responseFormat: JSON_ARRAY
-                  emptyFilterSupported: true
-                  pagingSupport: |
-                    request.queryParameter("pageSize", paging.pageSize)
-                           .queryParameter("page", paging.pageOffset)
+            objectClasses:
+              Account:
+                search:
+                  endpoints:
+                    - path: accounts
+                      responseFormat: JSON_ARRAY
+                      emptyFilterSupported: true
+                      pagingSupport: |
+                        request.queryParameter("pageSize", paging.pageSize)
+                               .queryParameter("page", paging.pageOffset)
             """;
 
     @Test
@@ -83,29 +84,30 @@ public class YamlSearchFullSpecTest extends AbstractCrudConnectorTest {
     // ----------------------------------------------------------------------------------------------
 
     private static final String NORMALIZE_YAML = """
-            objectClass: Account
-            search:
-              normalize:
-                toSingleValue: roles
-                rewriteUid: |
-                  return original + ":" + value
-                rewriteName: |
-                  return original + ":" + value
-                restoreUid: |
-                  return original.substring(0, original.indexOf(':'))
-                restoreName: |
-                  return original.substring(0, original.indexOf(':'))
-              endpoints:
-                - path: accounts
-                  responseFormat: JSON_ARRAY
-                  emptyFilterSupported: true
-                - path: accounts/{id}
-                  singleResult: true
-                  supportedFilters:
-                    - spec: |
-                        attribute("id").eq().anySingleValue()
-                      request: |
-                        request.pathParameter("id", value)
+            objectClasses:
+              Account:
+                search:
+                  normalize:
+                    toSingleValue: roles
+                    rewriteUid: |
+                      return original + ":" + value
+                    rewriteName: |
+                      return original + ":" + value
+                    restoreUid: |
+                      return original.substring(0, original.indexOf(':'))
+                    restoreName: |
+                      return original.substring(0, original.indexOf(':'))
+                  endpoints:
+                    - path: accounts
+                      responseFormat: JSON_ARRAY
+                      emptyFilterSupported: true
+                    - path: accounts/{id}
+                      singleResult: true
+                      supportedFilters:
+                        - spec: |
+                            attribute("id").eq().anySingleValue()
+                          request: |
+                            request.pathParameter("id", value)
             """;
 
     @Test
@@ -130,16 +132,17 @@ public class YamlSearchFullSpecTest extends AbstractCrudConnectorTest {
     // ----------------------------------------------------------------------------------------------
 
     private static final String RESOLVER_YAML = """
-            objectClass: Account
-            search:
-              attributeResolvers:
-                - attribute: description
-                  implementation: |
-                    value.addAttribute("description", "resolved")
-              endpoints:
-                - path: accounts
-                  responseFormat: JSON_ARRAY
-                  emptyFilterSupported: true
+            objectClasses:
+              Account:
+                search:
+                  attributeResolvers:
+                    - attribute: description
+                      implementation: |
+                        value.addAttribute("description", "resolved")
+                  endpoints:
+                    - path: accounts
+                      responseFormat: JSON_ARRAY
+                      emptyFilterSupported: true
             """;
 
     @Test
@@ -160,21 +163,22 @@ public class YamlSearchFullSpecTest extends AbstractCrudConnectorTest {
     // ----------------------------------------------------------------------------------------------
 
     private static final String CUSTOM_YAML = """
-            objectClass: Account
-            search:
-              custom:
-                supportedFilters:
-                  - spec: |
-                      attribute("name").eq().anySingleValue()
-                implementation: |
-                  var builder = definition().newObjectBuilder()
-                  builder.setUid("custom-1")
-                  builder.setName("custom-name")
-                  resultHandler().handle(builder.build())
-              endpoints:
-                - path: accounts
-                  responseFormat: JSON_ARRAY
-                  emptyFilterSupported: true
+            objectClasses:
+              Account:
+                search:
+                  custom:
+                    supportedFilters:
+                      - spec: |
+                          attribute("name").eq().anySingleValue()
+                    implementation: |
+                      var builder = definition().newObjectBuilder()
+                      builder.setUid("custom-1")
+                      builder.setName("custom-name")
+                      resultHandler().handle(builder.build())
+                  endpoints:
+                    - path: accounts
+                      responseFormat: JSON_ARRAY
+                      emptyFilterSupported: true
             """;
 
     @Test
@@ -184,7 +188,7 @@ public class YamlSearchFullSpecTest extends AbstractCrudConnectorTest {
         var results = search(initYaml(CUSTOM_YAML), filter);
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "custom-1");
+        assertEquals(results.getFirst().getUid().getUidValue(), "custom-1");
         // The custom implementation must not touch the REST endpoint at all.
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 0);
     }

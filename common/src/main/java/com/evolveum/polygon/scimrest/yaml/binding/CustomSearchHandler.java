@@ -8,9 +8,9 @@ package com.evolveum.polygon.scimrest.yaml.binding;
 
 import com.evolveum.polygon.conndev.api.FilterSpecification;
 import com.evolveum.polygon.conndev.build.api.SearchScriptBuilder;
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.StructuralHandler;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 
 /**
@@ -19,10 +19,10 @@ import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
  * the script builder, yielding a {@link FilterSpecification}); {@code implementation} is the runtime
  * Groovy block (its {@code SearchScriptContext} delegate is applied by the builder at run time).
  */
-public class CustomSearchHandler implements StructuralHandler {
+public class CustomSearchHandler implements CustomYamlHandler {
 
     @Override
-    public void apply(YamlBinder binder, Object target, LocatedNode value) {
+    public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
         if (!(target instanceof RestSearchOperationBuilder search)) {
             throw new IllegalArgumentException("The 'custom' block requires a search operation builder, got: "
                     + target.getClass().getName());
@@ -40,7 +40,7 @@ public class CustomSearchHandler implements StructuralHandler {
         }
     }
 
-    private static void bindSupportedFilters(YamlBinder binder, SearchScriptBuilder custom, LocatedNode list) {
+    private static void bindSupportedFilters(DeclYamlBinder binder, SearchScriptBuilder custom, LocatedNode list) {
         for (var item : list.elements()) {
             var spec = item.get("spec");
             if (spec == null || !spec.isValue()) {

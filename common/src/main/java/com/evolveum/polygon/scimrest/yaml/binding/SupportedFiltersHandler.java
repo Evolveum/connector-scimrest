@@ -7,9 +7,9 @@
 package com.evolveum.polygon.scimrest.yaml.binding;
 
 import com.evolveum.polygon.conndev.api.FilterSpecification;
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.StructuralHandler;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
 
 /**
@@ -18,10 +18,10 @@ import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
  * {@code request} is a runtime Groovy block (compiled to a closure that maps the filter onto the HTTP
  * request).
  */
-public class SupportedFiltersHandler implements StructuralHandler {
+public class SupportedFiltersHandler implements CustomYamlHandler {
 
     @Override
-    public void apply(YamlBinder binder, Object target, LocatedNode value) {
+    public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
         if (!(target instanceof RestSearchEndpointBuilder endpoint)) {
             throw new IllegalArgumentException("The 'supportedFilters' block requires a search endpoint, got: "
                     + target.getClass().getName());

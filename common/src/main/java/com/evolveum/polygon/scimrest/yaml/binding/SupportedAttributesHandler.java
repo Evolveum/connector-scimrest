@@ -7,20 +7,20 @@
 package com.evolveum.polygon.scimrest.yaml.binding;
 
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.StructuralHandler;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 
 /**
  * Binds a {@code supportedAttributes:} block onto an update endpoint. Each list item is either a
  * bare attribute name (the short form, e.g. {@code - displayName}) or a mapping with a {@code name}
  * and optional {@code value}/{@code transition} ({@code from}/{@code to}) selectors.
  */
-public class SupportedAttributesHandler implements StructuralHandler {
+public class SupportedAttributesHandler implements CustomYamlHandler {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public void apply(YamlBinder binder, Object target, LocatedNode value) {
+    public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
         if (!(target instanceof UpdateOperationBuilder.AttributeSpecific specific)) {
             throw new IllegalArgumentException("The 'supportedAttributes' block requires an update endpoint, got: "
                     + target.getClass().getName());

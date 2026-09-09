@@ -36,27 +36,29 @@ public class YamlSearchOperationTest extends AbstractCrudConnectorTest {
 
     /** YAML counterpart of {@code Account.search.all.op.groovy}. */
     private static final String SEARCH_ALL_YAML = """
-            objectClass: Account
-            search:
-              endpoints:
-                - path: accounts
-                  emptyFilterSupported: true
-                  objectExtractor: |
-                    response.body().get("_embedded").get("elements")
+            objectClasses:
+              Account:
+                search:
+                  endpoints:
+                    - path: accounts
+                      emptyFilterSupported: true
+                      objectExtractor: |
+                        response.body().get("_embedded").get("elements")
             """;
 
     /** YAML counterpart of {@code Account.search.id.op.groovy}. */
     private static final String SEARCH_BY_ID_YAML = """
-            objectClass: Account
-            search:
-              endpoints:
-                - path: accounts/{id}
-                  singleResult: true
-                  supportedFilters:
-                    - spec: |
-                        attribute("id").eq().anySingleValue()
-                      request: |
-                        request.pathParameter("id", value)
+            objectClasses:
+              Account:
+                search:
+                  endpoints:
+                    - path: accounts/{id}
+                      singleResult: true
+                      supportedFilters:
+                        - spec: |
+                            attribute("id").eq().anySingleValue()
+                          request: |
+                            request.pathParameter("id", value)
             """;
 
     @Test
@@ -93,8 +95,8 @@ public class YamlSearchOperationTest extends AbstractCrudConnectorTest {
         var results = search(initConnectorFromYaml(), FilterBuilder.equalTo(new Uid("123")));
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "123");
-        assertEquals(results.get(0).getName().getNameValue(), "by-id");
+        assertEquals(results.getFirst().getUid().getUidValue(), "123");
+        assertEquals(results.getFirst().getName().getNameValue(), "by-id");
         wireMockServer.verify(getRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH)));
     }
 
@@ -116,7 +118,7 @@ public class YamlSearchOperationTest extends AbstractCrudConnectorTest {
         var results = search(connector, null);
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "1");
+        assertEquals(results.getFirst().getUid().getUidValue(), "1");
     }
 
     /** A referenced script with neither the Groovy file nor a YAML fallback fails clearly at init. */

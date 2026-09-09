@@ -3,4 +3,4 @@ objectClasses:
     attributes:
       id:
         connId:
-          type: string
+          type: String

@@ -7,9 +7,9 @@
 package com.evolveum.polygon.scimrest.yaml.binding;
 
 import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.StructuralHandler;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 
 /**
@@ -19,10 +19,10 @@ import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
  * {@code AttributeResolutionScriptContext} delegate is applied by the builder at run time) and
  * {@code resolutionType} selects {@code PER_OBJECT}/{@code BATCH} handling.
  */
-public class AttributeResolversHandler implements StructuralHandler {
+public class AttributeResolversHandler implements CustomYamlHandler {
 
     @Override
-    public void apply(YamlBinder binder, Object target, LocatedNode value) {
+    public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
         if (!(target instanceof RestSearchOperationBuilder search)) {
             throw new IllegalArgumentException("The 'attributeResolvers' block requires a search operation builder, got: "
                     + target.getClass().getName());

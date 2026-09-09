@@ -7,9 +7,9 @@
 package com.evolveum.polygon.scimrest.yaml;
 
 import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
-import com.evolveum.polygon.conndev.yaml.binding.LocatedDocument;
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedDocument;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.handler.RestHandlerBuilder;
 
 import java.io.Reader;
@@ -17,7 +17,7 @@ import java.io.Reader;
 /**
  * The location-aware, engine-driven front-end for REST/SCIM operation and authentication documents —
  * the YAML counterpart of the Groovy DSL, but driving the live builders through the {@code @Yaml.*}
- * binding engine (see {@link YamlBinder}) instead of a dedicated POJO model.
+ * binding engine (see {@link DeclYamlBinder}) instead of a dedicated POJO model.
  *
  * <p>The document uses the extended envelope: an {@code objectClasses} mapping (object-class name to
  * its {@code create}/{@code update}/{@code delete}/{@code search} blocks) and/or a top-level
@@ -40,7 +40,7 @@ public final class YamlRestOperationsLoader {
     }
 
     public void load(LocatedDocument document) {
-        var binder = new YamlBinder(document, compiler);
+        var binder = new DeclYamlBinder(document, compiler);
         var root = document.root();
         if (root.kind() != LocatedNode.Kind.OBJECT) {
             throw new IllegalArgumentException("YAML operations document must be a mapping ("
@@ -55,13 +55,13 @@ public final class YamlRestOperationsLoader {
         }
     }
 
-    private void applyObjectClasses(YamlBinder binder, LocatedNode node) {
+    private void applyObjectClasses(DeclYamlBinder binder, LocatedNode node) {
         for (var entry : requireMap(node, "objectClasses").entries()) {
             binder.bind(entry.value(), builder.objectClass(entry.key()));
         }
     }
 
-    private void applyAuthentication(YamlBinder binder, LocatedNode node) {
+    private void applyAuthentication(DeclYamlBinder binder, LocatedNode node) {
         binder.bind(requireMap(node, "authentication"), builder.authentication());
     }
 

@@ -11,6 +11,7 @@ import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.api.AttributePathFormat;
 import com.evolveum.polygon.conndev.build.api.AttributeBuilder;
+import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.ScimPathFormat;
 import groovy.lang.Closure;
@@ -22,8 +23,10 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
     String name();
 
     /** The native protocol type as declared by the remote system (e.g. SCIM {@code dateTime}). */
+    @Yaml.Key
     F nativeType(String nativeType);
 
+    @Yaml.Sub
     ScimMapping scim();
 
     ScimMapping scim(@DelegatesTo(value = ScimMapping.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
@@ -34,6 +37,7 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
          **/
         String name();
 
+        @Yaml.Key
         ScimMapping name(String name);
 
         /**
@@ -44,6 +48,7 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
          */
         String type();
 
+        @Yaml.Key
         ScimMapping type(String name);
 
         /**

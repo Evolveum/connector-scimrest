@@ -3,7 +3,7 @@ objectClasses:
     attributes:
       id:
         connId:
-          type: string
+          type: String
       email:
         connId:
-          type: string
+          type: String

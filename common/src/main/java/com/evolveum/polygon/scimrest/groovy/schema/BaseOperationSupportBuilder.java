@@ -16,7 +16,11 @@ import com.evolveum.polygon.conndev.build.api.ListOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.ReadOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.BaseObjectOperationSupportBuilder;
-import com.evolveum.polygon.scimrest.groovy.api.*;
+import com.evolveum.polygon.conndev.annotations.Yaml;
+import com.evolveum.polygon.scimrest.groovy.api.RestCreateOperationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestDeleteOperationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -52,21 +56,25 @@ public class BaseOperationSupportBuilder
     }
 
     @Override
+    @Yaml.Sub
     public RestSearchOperationBuilderImpl search() {
         return searchOpBuilder;
     }
 
     @Override
+    @Yaml.Sub
     public RestCreateOperationBuilderImpl create() {
         return createOpBuilder;
     }
 
     @Override
+    @Yaml.Sub
     public RestUpdateOperationBuilderImpl update() {
         return updateOpBuilder;
     }
 
     @Override
+    @Yaml.Sub
     public RestDeleteOperationBuilderImpl delete() {
         return deleteOpBuilder;
     }

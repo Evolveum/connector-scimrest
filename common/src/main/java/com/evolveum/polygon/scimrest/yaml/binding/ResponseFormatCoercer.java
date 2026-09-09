@@ -7,8 +7,8 @@
 package com.evolveum.polygon.scimrest.yaml.binding;
 
 import com.evolveum.polygon.conndev.concepts.SourceLocation;
-import com.evolveum.polygon.conndev.yaml.binding.Coercer;
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlValueParser;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -16,7 +16,7 @@ import tools.jackson.databind.node.ObjectNode;
  * Coerces a {@code responseFormat} value (the built-in constant names {@code JSON_ARRAY}/
  * {@code JSON_OBJECT}) to the corresponding Jackson node class a search endpoint unmarshals into.
  */
-public final class ResponseFormatCoercer implements Coercer {
+public final class ResponseFormatCoercer implements DeclYamlValueParser {
 
     @Override
     public Object coerce(LocatedNode value, SourceLocation location, Class<?> targetType) {

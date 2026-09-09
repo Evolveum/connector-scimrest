@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.conndev.build.api.ObjectClassSchemaBuilder;
+import com.evolveum.polygon.conndev.annotations.Yaml;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -18,6 +19,7 @@ public interface RestObjectClassSchemaBuilder extends ObjectClassSchemaBuilder<
      *
      * @return an instance of {@link ScimMapping} representing the SCIM schema mappings
      */
+    @Yaml.Sub
     ScimMapping scim();
 
     /**
@@ -52,6 +54,7 @@ public interface RestObjectClassSchemaBuilder extends ObjectClassSchemaBuilder<
          * @param schemaUri The URI identifying the SCIM schema.
          * @return The current ScimMapping instance for method chaining.
          */
+        @Yaml.Key
         ScimMapping schemaUri(String schemaUri);
 
         /**
@@ -69,6 +72,7 @@ public interface RestObjectClassSchemaBuilder extends ObjectClassSchemaBuilder<
          *
          * @return The current ScimMapping instance for method chaining.
          */
+        @Yaml.Key
         ScimMapping name(String name);
 
         boolean isOnlyExplicitlyListed();
@@ -79,6 +83,7 @@ public interface RestObjectClassSchemaBuilder extends ObjectClassSchemaBuilder<
          * @param value If true, only explicitly listed attributes will be considered. Otherwise, all attributes will be added.
          * @return The current ScimMapping instance for method chaining.
          */
+        @Yaml.Key
         ScimMapping onlyExplicitlyListed(boolean value);
 
         String extensionUriFromAlias(String uriOrAlias);

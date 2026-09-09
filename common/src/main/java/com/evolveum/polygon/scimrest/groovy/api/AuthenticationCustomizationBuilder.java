@@ -10,6 +10,9 @@ import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.conndev.annotations.Script;
+import com.evolveum.polygon.conndev.annotations.Yaml;
+import com.evolveum.polygon.scimrest.yaml.binding.RestAuthChannelHandler;
+import com.evolveum.polygon.scimrest.yaml.binding.ScimAuthChannelHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -19,10 +22,18 @@ public interface AuthenticationCustomizationBuilder {
 
     ScimBuilder scim(@DelegatesTo(ScimBuilder.class) @Script.Initialization Closure<?> closure);
 
-    /** Closure-free accessor for non-Groovy front-ends (e.g. YAML). */
+    /**
+     * Closure-free accessor for non-Groovy front-ends (e.g. YAML). The YAML {@code rest:} channel block
+     * is bound onto the returned builder by {@link RestAuthChannelHandler}.
+     */
+    @Yaml.Custom(RestAuthChannelHandler.class)
     RestBuilder rest();
 
-    /** Closure-free accessor for non-Groovy front-ends (e.g. YAML). */
+    /**
+     * Closure-free accessor for non-Groovy front-ends (e.g. YAML). The YAML {@code scim:} channel block
+     * is bound onto the returned builder by {@link ScimAuthChannelHandler}.
+     */
+    @Yaml.Custom(ScimAuthChannelHandler.class)
     ScimBuilder scim();
 
     interface RestBuilder {

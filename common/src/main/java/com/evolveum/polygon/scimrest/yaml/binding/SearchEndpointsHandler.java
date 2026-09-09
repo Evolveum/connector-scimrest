@@ -6,9 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.yaml.binding;
 
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.StructuralHandler;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 
 import java.util.ArrayList;
@@ -19,10 +19,10 @@ import java.util.ArrayList;
  * {@code pagingSupport}, {@code singleResult}, {@code emptyFilterSupported}, {@code supportedFilters})
  * are bound onto the {@code RestSearchEndpointBuilder} returned by {@code endpoint(path)}.
  */
-public class SearchEndpointsHandler implements StructuralHandler {
+public class SearchEndpointsHandler implements CustomYamlHandler {
 
     @Override
-    public void apply(YamlBinder binder, Object target, LocatedNode value) {
+    public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
         if (!(target instanceof RestSearchOperationBuilder search)) {
             throw new IllegalArgumentException("The search 'endpoints' block requires a search operation builder, got: "
                     + target.getClass().getName());

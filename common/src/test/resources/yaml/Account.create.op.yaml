@@ -1,13 +1,14 @@
-objectClass: Account
-create:
-  endpoints:
-    - method: POST
-      path: accounts
-      request:
-        contentType: application/json
-        body: |
-          builder.set("name", attributes.name)
-      supportedAttributes:
-        - name
-        - name: status
-          value: active
+objectClasses:
+  Account:
+    create:
+      endpoints:
+        - method: POST
+          path: accounts
+          request:
+            contentType: application/json
+            body: |
+              builder.set("name", attributes.name)
+          supportedAttributes:
+            - name
+            - name: status
+              value: active

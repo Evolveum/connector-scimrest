@@ -10,7 +10,6 @@ import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.conndev.schema.BaseSchema;
-import com.evolveum.polygon.conndev.schema.BaseSchemaBuilder;
 import com.evolveum.polygon.conndev.yaml.ScriptResources;
 import com.evolveum.polygon.conndev.yaml.YamlSchemaLoader;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
@@ -25,13 +24,14 @@ import java.nio.charset.StandardCharsets;
  * Schema definition loader dispatching between the two schema front-ends: Groovy definitions go to
  * {@link GroovySchemaLoader} (the functional {@code RestSchema}), YAML definitions
  * ({@code *.schema.yaml}/{@code *.schema.yml}) go to the conndev {@link YamlSchemaLoader} and build
- * a conndev {@link BaseSchema}. A referenced Groovy definition missing from the bundle falls back
- * to the YAML document of the same name ({@link ScriptResources}).
+ * a {@link RestSchema}. A referenced Groovy definition missing from the bundle falls back to the
+ * YAML document of the same name ({@link ScriptResources}).
  * <p>
- * The YAML-built schema is inert for now: nothing is derived from it, the connector still runs
- * solely on the Groovy/SCIM-discovery schema. It exists so YAML definitions are parsed and
- * validated, and so the declarative model can later be compared with the functional one and
- * gradually take over (see {@code .tasks/in-progress/yaml-declarative-schema-inert.txt}).
+ * The YAML front-end drives a live {@link RestSchemaBuilderImpl} (see
+ * {@link #baseSchema()}), so the declarative definitions populate a real {@code RestSchema} — SCIM
+ * mappings and {@code DefinitionValue} source locations included — rather than an inert conndev
+ * {@link BaseSchema}. It is deliberately built without a runtime context so any context-dependent
+ * construct fails fast during loading.
  */
 public class SchemaDefinitionLoader extends GroovySchemaLoader {
 
@@ -41,9 +41,11 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
     public SchemaDefinitionLoader(GroovyContext context, RestSchemaBuilderImpl schemaBuilder) {
         super(context, schemaBuilder);
         // The declarative YAML schema must be fully literal — its builder deliberately gets no
-        // runtime context, so any context-dependent construct fails fast during loading.
+        // runtime context, so any context-dependent construct fails fast during loading. It is a
+        // live RestSchemaBuilderImpl (not the inert conndev BaseSchemaBuilder), so the definitions
+        // populate a real RestSchema with SCIM mappings and source locations.
         this.yamlLoader = new YamlSchemaLoader(
-                new BaseSchemaBuilder(schemaBuilder.connectorClass(), ContextLookup.none()));
+                new RestSchemaBuilderImpl(schemaBuilder.connectorClass(), ContextLookup.none()));
     }
 
     @Override

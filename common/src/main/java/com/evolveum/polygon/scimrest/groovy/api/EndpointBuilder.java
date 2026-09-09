@@ -7,7 +7,9 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 
+import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import com.evolveum.polygon.conndev.annotations.Yaml;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -30,7 +32,7 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
                     return null;
                 }
                 if (attr.getValue().size() == 1) {
-                    return attr.getValue().get(0);
+                    return attr.getValue().getFirst();
                 }
                 throw new IllegalArgumentException("Multiple values found for attribute " + name);
             };
@@ -38,6 +40,7 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
 
         void pathParameter(String name, Function<ConnectorObject, Object> extractor);
 
+        @Yaml.Sub
         RequestBuilder<I> request();
 
         default RequestBuilder<I> request(@DelegatesTo(value = RequestBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
@@ -68,13 +71,14 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
         RequestBuilder<I> accept(String... contentType);
 
         @Override
+        @Yaml.Key
         RequestBuilder<I> contentType(String contentType);
 
         @Override
         RequestBuilder<I> body(Function<? super I, byte[]> bodyTransformer);
 
         @Override
-        RequestBuilder<I> body(Closure<byte[]> bodyTransformer);
+        RequestBuilder<I> body(@Script.Runtime Closure<byte[]> bodyTransformer);
     }
 
     interface QueryRequestBuilder<I> extends RequestHeadersBuilder<I>{

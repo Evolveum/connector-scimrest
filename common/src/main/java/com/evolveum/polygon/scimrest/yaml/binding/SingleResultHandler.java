@@ -6,19 +6,19 @@
  */
 package com.evolveum.polygon.scimrest.yaml.binding;
 
-import com.evolveum.polygon.conndev.yaml.binding.LocatedNode;
-import com.evolveum.polygon.conndev.yaml.binding.StructuralHandler;
-import com.evolveum.polygon.conndev.yaml.binding.YamlBinder;
+import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
+import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
+import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
 
 /**
  * Binds the {@code singleResult: true} flag onto a search endpoint, marking it as returning a single
  * object rather than a list.
  */
-public class SingleResultHandler implements StructuralHandler {
+public class SingleResultHandler implements CustomYamlHandler {
 
     @Override
-    public void apply(YamlBinder binder, Object target, LocatedNode value) {
+    public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
         if (!(target instanceof RestSearchEndpointBuilder endpoint)) {
             throw new IllegalArgumentException("The 'singleResult' key requires a search endpoint, got: "
                     + target.getClass().getName());

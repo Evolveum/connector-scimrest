@@ -7,6 +7,8 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import com.evolveum.polygon.conndev.annotations.Yaml;
+import com.evolveum.polygon.scimrest.yaml.binding.EndpointsHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
@@ -15,6 +17,15 @@ public interface RestOperationBuilder<E extends EndpointBuilder> extends GroovyH
     E endpoint(String path);
 
     E endpoint(HttpMethod method, String path);
+
+    /**
+     * Marker for the YAML front-end: the {@code endpoints:} list block is bound by
+     * {@link EndpointsHandler}, which calls {@link #endpoint(HttpMethod, String)} per list item. The
+     * method is never invoked directly (its body is unused).
+     */
+    @Yaml.Custom(EndpointsHandler.class)
+    default void endpoints() {
+    }
 
     default E endpoint(String path, @DelegatesTo(value = EndpointBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> value) {
         return GroovyClosures.callAndReturnDelegate(value, endpoint(path));

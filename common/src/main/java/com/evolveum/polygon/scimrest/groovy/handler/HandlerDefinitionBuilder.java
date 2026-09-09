@@ -11,13 +11,11 @@ import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.conndev.yaml.ScriptResources;
 import com.evolveum.polygon.scimrest.yaml.YamlRestHandlerLoader;
-import com.evolveum.polygon.scimrest.yaml.model.YamlOperationDocument;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 /**
  * Handler definition loader dispatching between the two operation front-ends: Groovy scripts go to
@@ -55,10 +53,5 @@ public class HandlerDefinitionBuilder extends GroovyRestHandlerBuilder {
         } catch (IOException e) {
             throw new UncheckedIOException("Couldn't read YAML operations document " + resource, e);
         }
-    }
-
-    /** Operations documents parsed from YAML definitions; empty when the connector has none. */
-    public List<YamlOperationDocument> yamlOperations() {
-        return yamlLoader.documents();
     }
 }

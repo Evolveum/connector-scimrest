@@ -6,9 +6,14 @@
  */
 package com.evolveum.polygon.scimrest.groovy.api;
 
+import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.api.FilterSpecification;
 import com.evolveum.polygon.conndev.build.api.SearchHandlerBuilder;
+import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
+import com.evolveum.polygon.scimrest.yaml.binding.ResponseFormatCoercer;
+import com.evolveum.polygon.scimrest.yaml.binding.SingleResultHandler;
+import com.evolveum.polygon.scimrest.yaml.binding.SupportedFiltersHandler;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -31,6 +36,8 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
      *
      * @param responseFormat The Class object representing the desired response format.
      */
+    @Yaml.Key
+    @Yaml.ValueParser(ResponseFormatCoercer.class)
     void responseFormat(Class<?> responseFormat);
 
 
@@ -41,15 +48,24 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
      * @param closure A closure that modifies request to include paging information.
      * @return This builder instance, allowing method chaining.
      */
-    RestSearchEndpointBuilder pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure);
+     RestSearchEndpointBuilder pagingSupport(@Script.Runtime @DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure);
 
 
+    @Yaml.Custom(SingleResultHandler.class)
     RestSearchEndpointBuilder singleResult();
 
 
-    RestSearchEndpointBuilder objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+    RestSearchEndpointBuilder objectExtractor(@Script.Runtime @DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec, @DelegatesTo(value = FilterSupportBase.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+
+    /**
+     * Marker for the YAML front-end: the {@code supportedFilters:} block is bound by
+     * {@link SupportedFiltersHandler}; the method body is unused.
+     */
+    @Yaml.Custom(SupportedFiltersHandler.class)
+    default void supportedFilters() {
+    }
 
 
     record PagingSupportBase(HttpRequestSpecification request, PagingInfo paging) {
@@ -70,7 +86,7 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
 
         public Object getValue() {
             if (filter instanceof AttributeFilter attrFilter) {
-                return attrFilter.getAttribute().getValue().get(0);
+                return attrFilter.getAttribute().getValue().getFirst();
             }
             return null;
         }

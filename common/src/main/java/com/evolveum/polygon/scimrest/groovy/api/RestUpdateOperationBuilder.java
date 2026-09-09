@@ -9,7 +9,9 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Script;
+import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
+import com.evolveum.polygon.scimrest.yaml.binding.SupportedAttributesHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
@@ -55,6 +57,12 @@ public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<R
     interface Endpoint extends UpdateOperationBuilder.AttributeSpecific<UpdateOperationBuilder.AttributeValueFilter, Endpoint>,
             EndpointBuilder.SingleObject<UpdateOperationBuilder.UpdateRequest, Set<AttributeDelta>> {
 
-
+        /**
+         * Marker for the YAML front-end: the {@code supportedAttributes:} block is bound by
+         * {@link SupportedAttributesHandler}; the method body is unused.
+         */
+        @Yaml.Custom(SupportedAttributesHandler.class)
+        default void supportedAttributes() {
+        }
     }
 }

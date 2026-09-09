@@ -25,7 +25,7 @@
     <properties>
         <bundle.name>${project.groupId}.${project.artifactId}</bundle.name>
         <bundle.version>${project.version}</bundle.version>
-        <project.source.version>17</project.source.version>
+        <project.source.version>21</project.source.version>
     </properties>
 
     <modules>
