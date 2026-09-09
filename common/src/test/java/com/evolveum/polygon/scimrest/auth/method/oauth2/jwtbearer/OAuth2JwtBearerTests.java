@@ -190,7 +190,7 @@ public class OAuth2JwtBearerTests extends AbstractOAuth2JwtBearerTests {
     String captureAssertion(String tokenEndpoint) {
         var requests = wireMockServer.findAll(postRequestedFor(urlEqualTo(tokenEndpoint)));
         assertFalse(requests.isEmpty(), "No requests to " + tokenEndpoint);
-        for (String param : requests.get(0).getBodyAsString().split("&")) {
+        for (String param : requests.getFirst().getBodyAsString().split("&")) {
             if (param.startsWith("assertion=")) {
                 return URLDecoder.decode(param.substring("assertion=".length()), StandardCharsets.UTF_8);
             }

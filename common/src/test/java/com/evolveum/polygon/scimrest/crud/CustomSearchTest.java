@@ -48,7 +48,7 @@ public class CustomSearchTest extends AbstractCrudConnectorTest {
         var results = search(initConnector(SCRIPT), filter);
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "custom-1");
+        assertEquals(results.getFirst().getUid().getUidValue(), "custom-1");
         // The custom implementation must not touch the REST endpoint at all
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 0);
     }
@@ -61,7 +61,7 @@ public class CustomSearchTest extends AbstractCrudConnectorTest {
         var results = search(initConnector(SCRIPT), null);
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getName().getNameValue(), "from-endpoint");
+        assertEquals(results.getFirst().getName().getNameValue(), "from-endpoint");
         assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(ACCOUNTS_PATH))).size(), 1);
     }
 }

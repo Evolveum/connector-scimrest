@@ -18,7 +18,7 @@ public class ConnectorDevelopmentKit extends AbstractGroovyRestConnector<Develop
     protected void initializeSchema(GroovySchemaLoader loader) {
         for (var script : getConfiguration().configuration(DevelopmentKitConfiguration.class).getSchemaScripts()) {
             loader.load(script);
-        };
+        }
     }
 
     @Override

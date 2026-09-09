@@ -84,7 +84,7 @@ public class ScimEmbeddedObjectValueMapping implements ValueMapping<EmbeddedObje
             }
             var connIdValues = scim.valuesFromObject(objectNode);
             if (connIdValues != null) {
-                var attribute = attr.attributeOf(connIdValues.size() == 1 ? connIdValues.get(0) : connIdValues);
+                var attribute = attr.attributeOf(connIdValues.size() == 1 ? connIdValues.getFirst() : connIdValues);
                 attributes.add(attribute);
             }
         }

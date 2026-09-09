@@ -40,7 +40,7 @@ public class YamlManifestConnectorTest extends AbstractCrudConnectorTest {
         var results = search(connector, null);
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "1");
-        assertEquals(results.get(0).getName().getNameValue(), "first");
+        assertEquals(results.getFirst().getUid().getUidValue(), "1");
+        assertEquals(results.getFirst().getName().getNameValue(), "first");
     }
 }

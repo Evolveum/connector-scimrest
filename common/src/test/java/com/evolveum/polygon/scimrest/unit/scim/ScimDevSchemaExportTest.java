@@ -68,10 +68,10 @@ public class ScimDevSchemaExportTest {
         var objects = export(resource("User", "/Users", USER_URN, schema));
 
         assertEquals(objects.size(), 1);
-        var user = objects.get(0);
+        var user = objects.getFirst();
         assertEquals(user.getObjectClass().getObjectClassValue(), "conndev_ObjectClass");
         assertEquals(user.getName().getNameValue(), "User");
-        var scim = (EmbeddedObject) user.getAttributeByName("scim").getValue().get(0);
+        var scim = (EmbeddedObject) user.getAttributeByName("scim").getValue().getFirst();
         assertEquals(string(scim, "name"), "User");
         assertEquals(string(scim, "schemaUri"), USER_URN);
 

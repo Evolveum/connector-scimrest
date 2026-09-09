@@ -16,7 +16,7 @@ public class StoryTests extends BaseTest {
     @Test(enabled = false)
     public void test110UserProjectMembership() {
       var results = testSearchByUid("User", "1");
-        var projects = results.get(0).getAttributeByName("project");
+        var projects = results.getFirst().getAttributeByName("project");
         assertNotNull(projects);
         assertFalse(projects.getValue().isEmpty());
         assertTrue(projects.getValue().stream().
@@ -26,7 +26,7 @@ public class StoryTests extends BaseTest {
     @Test(enabled = false)
     public void test120UserGroupMembership() {
         var results = testSearchByUid("User", "1");
-        var objects = results.get(0).getAttributeByName("group");
+        var objects = results.getFirst().getAttributeByName("group");
         assertNotNull(objects);
         assertFalse(objects.getValue().isEmpty());
         assertTrue(objects.getValue().stream().

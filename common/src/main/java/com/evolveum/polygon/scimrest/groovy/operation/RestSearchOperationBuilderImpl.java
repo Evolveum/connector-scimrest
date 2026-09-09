@@ -101,7 +101,7 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
     public ScimSearchHandler.Builder scim() {
         if (this.scim == null) {
             this.scim = new ScimSearchHandler.Builder(parent.getObjectClass());
-        };
+        }
         return scim;
     }
 }

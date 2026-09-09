@@ -55,6 +55,6 @@ public class SearchResponseFormatTest extends AbstractCrudConnectorTest {
         var results = search(initConnector(script), null);
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "1");
+        assertEquals(results.getFirst().getUid().getUidValue(), "1");
     }
 }

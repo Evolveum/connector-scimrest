@@ -120,7 +120,7 @@ public class AwsRequestSigner {
 
         String presetBodyHash = request.getHeaders().entrySet().stream()
                 .filter(e -> e.getKey().equalsIgnoreCase("x-amz-content-sha256") && !e.getValue().isEmpty())
-                .map(e -> e.getValue().get(0))
+                .map(e -> e.getValue().getFirst())
                 .findFirst().orElse(null);
         String bodyHash = presetBodyHash != null ? presetBodyHash
                 : sha256Hex(request.getBody() != null ? request.getBody() : new byte[0]);
@@ -150,7 +150,7 @@ public class AwsRequestSigner {
         for (String extraName : extraSignedHeaders) {
             request.getHeaders().forEach((name, values) -> {
                 if (name.equalsIgnoreCase(extraName) && !values.isEmpty()) {
-                    allHeaders.putIfAbsent(extraName, values.get(0).trim());
+                    allHeaders.putIfAbsent(extraName, values.getFirst().trim());
                 }
             });
         }

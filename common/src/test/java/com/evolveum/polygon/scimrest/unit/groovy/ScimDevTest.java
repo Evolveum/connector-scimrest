@@ -151,7 +151,7 @@ public class ScimDevTest {
         assertFalse(objectClasses.isEmpty(), "Dev mode should expose discovered object classes");
 
         // each object carries the structured representation, not a JSON blob
-        var sample = objectClasses.get(0);
+        var sample = objectClasses.getFirst();
         assertNotNull(sample.getAttributeByName("attributes"), "must carry structured attributes");
 
         var uid = sample.getUid();
@@ -169,7 +169,7 @@ public class ScimDevTest {
         connector.executeQuery(oc, null, configs::add, null);
 
         assertEquals(configs.size(), 1, "Dev mode should expose the service provider config");
-        var config = configs.get(0);
+        var config = configs.getFirst();
         assertNotNull(config.getAttributeByName("content"), "must carry the full /ServiceProviderConfig JSON");
 
         var single = new ExpectSingle();

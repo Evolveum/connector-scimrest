@@ -82,7 +82,7 @@ public class TestForgejoConnector {
         connector.executeQuery(new ObjectClass("User"), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "1");
+        assertEquals(results.getFirst().getUid().getUidValue(), "1");
     }
 
     @Test(enabled = false)
@@ -93,7 +93,7 @@ public class TestForgejoConnector {
         connector.executeQuery(new ObjectClass("Organization"), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 1);
-        var firstResult = results.get(0);
+        var firstResult = results.getFirst();
         assertEquals(firstResult.getUid().getUidValue(), "dfx.sk");
         var members = firstResult.getAttributeByName("member");
         assertNotNull(members);
@@ -109,7 +109,7 @@ public class TestForgejoConnector {
         connector.executeQuery(new ObjectClass("User"), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 2);
-        assertEquals(results.get(0).getUid().getUidValue(), "1");
+        assertEquals(results.getFirst().getUid().getUidValue(), "1");
     }
 
     @Test(enabled = false)
@@ -120,7 +120,7 @@ public class TestForgejoConnector {
         connector.executeQuery(new ObjectClass("User"), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "1");
+        assertEquals(results.getFirst().getUid().getUidValue(), "1");
     }
 
     @Test(enabled = false)
@@ -131,7 +131,7 @@ public class TestForgejoConnector {
         connector.executeQuery(new ObjectClass("Team"), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "3");
+        assertEquals(results.getFirst().getUid().getUidValue(), "3");
     }
 
     @Test(enabled = false)
@@ -142,7 +142,7 @@ public class TestForgejoConnector {
         connector.executeQuery(new ObjectClass("Team"), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "3");
+        assertEquals(results.getFirst().getUid().getUidValue(), "3");
     }
 
     @Test(enabled = false)
@@ -153,9 +153,9 @@ public class TestForgejoConnector {
         connector.executeQuery(new ObjectClass("User"), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "1");
+        assertEquals(results.getFirst().getUid().getUidValue(), "1");
 
-        var organizations = results.get(0).getAttributeByName("organization");
+        var organizations = results.getFirst().getAttributeByName("organization");
         assertNotNull(organizations);
         assertFalse(organizations.getValue().isEmpty());
         assertTrue(organizations.getValue().stream().anyMatch(o -> o instanceof ConnectorObjectReference cor && cor.getValue() instanceof ConnectorObject co && co.getName().getNameValue().equals("vaia-test")));

@@ -31,12 +31,14 @@ public class ObjectClassCaseMergeTest {
     // Same logical object class, declared with different casing, each contributing a
     // different operation. Both must end up on the one handler for ObjectClass("Account").
     private static final String HANDLER_SCRIPT =
-            "objectClass('Account') { \n" +
-            "  create { endpoint('accounts') { } } \n" +
-            "} \n" +
-            "objectClass('account') { \n" +
-            "  search { endpoint('accounts') { emptyFilterSupported true } } \n" +
-            "}";
+            """
+            objectClass('Account') {\s
+              create { endpoint('accounts') { } }\s
+            }\s
+            objectClass('account') {\s
+              search { endpoint('accounts') { emptyFilterSupported true } }\s
+            }\
+            """;
 
     public static class TestConfiguration extends BaseGroovyConnectorConfiguration implements RestClientConfiguration {
         @Override public String getBaseAddress()      { return "http://localhost"; }

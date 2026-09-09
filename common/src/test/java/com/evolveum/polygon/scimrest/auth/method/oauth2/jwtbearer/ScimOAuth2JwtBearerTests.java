@@ -144,7 +144,7 @@ public class ScimOAuth2JwtBearerTests extends AbstractScimOAuth2JwtBearerTests {
     private String captureScimAssertion() {
         var requests = wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT)));
         assertFalse(requests.isEmpty());
-        for (String param : requests.get(0).getBodyAsString().split("&")) {
+        for (String param : requests.getFirst().getBodyAsString().split("&")) {
             if (param.startsWith("assertion=")) {
                 return URLDecoder.decode(param.substring("assertion=".length()), StandardCharsets.UTF_8);
             }

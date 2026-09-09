@@ -13,6 +13,7 @@ import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.testng.annotations.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
@@ -80,7 +81,7 @@ public class ManifestScriptValidationTest {
 
         assertEquals(result.get("status"), "error", "Unexpected result: " + result);
         @SuppressWarnings("unchecked")
-        var errors = (java.util.List<Map<String, Object>>) result.get("errors");
+        var errors = (List<Map<String, Object>>) result.get("errors");
         assertEquals(errors.size(), 1, "Unexpected errors: " + errors);
     }
 

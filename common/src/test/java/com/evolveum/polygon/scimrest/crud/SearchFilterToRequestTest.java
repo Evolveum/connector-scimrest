@@ -43,7 +43,7 @@ public class SearchFilterToRequestTest extends AbstractCrudConnectorTest {
         var results = search(initConnector(SCRIPT), filter);
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getName().getNameValue(), "alice");
+        assertEquals(results.getFirst().getName().getNameValue(), "alice");
         assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(ACCOUNTS_PATH))
                 .withQueryParam("nameLike", equalTo("ali"))).size(), 1);
     }

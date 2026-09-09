@@ -104,6 +104,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.16.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -132,10 +133,9 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.12.1</version>
+                    <version>3.16.0</version>
                     <configuration>
-                        <source>${project.source.version}</source>
-                        <target>${project.source.version}</target>
+                        <release>${project.source.version}</release>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -212,9 +212,7 @@
                             -->
                             <recipe>org.openrewrite.java.RemoveUnusedImports</recipe>
                             <!-- automatically upgrades coding patterns to use Java 21, first run should not be automated -->
-                            <!-- 
-                               <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
-                            -->
+                            <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
                             <recipe>com.evolveum.rewrite.AddLicenseHeaderEUPL</recipe>
                             <recipe>org.openrewrite.xml.RemoveTrailingWhitespace</recipe>
                             <recipe>org.openrewrite.java.ShortenFullyQualifiedTypeReferences</recipe>

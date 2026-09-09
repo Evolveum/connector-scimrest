@@ -63,7 +63,7 @@ public class AwsSignatureTests extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(API_ENDPOINT)));
         assertFalse(requests.isEmpty());
-        String auth = requests.get(0).getHeader("Authorization");
+        String auth = requests.getFirst().getHeader("Authorization");
         assertTrue(auth.startsWith("AWS4-HMAC-SHA256 "), "Must use SigV4 algorithm");
         assertTrue(auth.contains("Credential=" + ACCESS_KEY + "/"), "Must include access key in credential");
         assertTrue(auth.contains("/" + REGION + "/"), "Must include region in credential scope");
@@ -106,7 +106,7 @@ public class AwsSignatureTests extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(API_ENDPOINT)));
         assertFalse(requests.isEmpty());
-        assertNull(requests.get(0).getHeader("x-amz-security-token"),
+        assertNull(requests.getFirst().getHeader("x-amz-security-token"),
                 "x-amz-security-token should not be present when session token is not configured");
     }
 
@@ -120,7 +120,7 @@ public class AwsSignatureTests extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(API_ENDPOINT)));
         assertFalse(requests.isEmpty());
-        String contentSha256 = requests.get(0).getHeader("x-amz-content-sha256");
+        String contentSha256 = requests.getFirst().getHeader("x-amz-content-sha256");
         assertNotNull(contentSha256, "x-amz-content-sha256 must be present");
         // empty body hash
         assertEquals(contentSha256, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
@@ -134,7 +134,7 @@ public class AwsSignatureTests extends WireMockTestSupport {
         createConnector(null, "some-token").test();
 
         String auth = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(API_ENDPOINT)))
-                .get(0).getHeader("Authorization");
+                .getFirst().getHeader("Authorization");
         assertTrue(auth.contains("x-amz-security-token"), "x-amz-security-token must appear in SignedHeaders when present");
     }
 
@@ -146,7 +146,7 @@ public class AwsSignatureTests extends WireMockTestSupport {
         createConnector(null).test();
 
         String auth = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(API_ENDPOINT)))
-                .get(0).getHeader("Authorization");
+                .getFirst().getHeader("Authorization");
         String signedHeaders = auth.replaceAll(".*SignedHeaders=([^,]+).*", "$1");
         assertEquals(signedHeaders, "host;x-amz-content-sha256;x-amz-date",
                 "SignedHeaders must be in alphabetical order");
@@ -160,7 +160,7 @@ public class AwsSignatureTests extends WireMockTestSupport {
         createConnector(null, "some-token").test();
 
         String auth = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(API_ENDPOINT)))
-                .get(0).getHeader("Authorization");
+                .getFirst().getHeader("Authorization");
         String signedHeaders = auth.replaceAll(".*SignedHeaders=([^,]+).*", "$1");
         assertEquals(signedHeaders, "host;x-amz-content-sha256;x-amz-date;x-amz-security-token",
                 "SignedHeaders must be in alphabetical order");
@@ -188,9 +188,9 @@ public class AwsSignatureTests extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(API_ENDPOINT)));
         assertFalse(requests.isEmpty());
-        assertEquals(requests.get(0).getHeader("x-custom"), "custom-value",
+        assertEquals(requests.getFirst().getHeader("x-custom"), "custom-value",
                 "beforeSign hook must run before signing");
-        String auth = requests.get(0).getHeader("Authorization");
+        String auth = requests.getFirst().getHeader("Authorization");
         assertNotNull(auth, "AWS signing must always run after beforeSign hook");
         assertTrue(auth.contains("x-custom"), "signHeader must include x-custom in SignedHeaders");
     }
@@ -208,7 +208,7 @@ public class AwsSignatureTests extends WireMockTestSupport {
         var requests = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(API_ENDPOINT)));
         assertEquals(requests.size(), 2);
         // Both requests must have a valid x-amz-date header
-        assertTrue(requests.get(0).getHeader("x-amz-date").matches("\\d{8}T\\d{6}Z"));
+        assertTrue(requests.getFirst().getHeader("x-amz-date").matches("\\d{8}T\\d{6}Z"));
         assertTrue(requests.get(1).getHeader("x-amz-date").matches("\\d{8}T\\d{6}Z"));
     }
 

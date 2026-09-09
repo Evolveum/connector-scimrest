@@ -15,7 +15,10 @@ import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
 
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
-import com.evolveum.polygon.scimrest.groovy.api.*;
+import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
+import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
+import com.evolveum.polygon.scimrest.groovy.api.ResponseWrapper;
+import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
 import tools.jackson.databind.node.ArrayNode;
@@ -149,7 +152,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
             List<Object> values = List.of();
             if (filter instanceof AttributeFilter attrFilter && !attrFilter.getAttribute().getValue().isEmpty()) {
                 values = attrFilter.getAttribute().getValue();
-                value = values.get(0);
+                value = values.getFirst();
 
             }
             GroovyClosures.copyAndCall(prototype, new FilterSupportBase(builder, filter, value, values));

@@ -255,13 +255,16 @@ public class OAuth2TokenManager {
 
             Long expiresIn = null;
             Object val = responseMap.get(EXPIRES_IN);
-            if (val instanceof Long l) expiresIn = l;
-            else if (val instanceof Number n) expiresIn = n.longValue();
-            else if (val instanceof String s) {
-                try {
-                    expiresIn = Long.parseLong(s);
-                } catch (NumberFormatException ignored) {
+            switch (val) {
+                case Long l -> expiresIn = l;
+                case Number n -> expiresIn = n.longValue();
+                case String s -> {
+                    try {
+                        expiresIn = Long.parseLong(s);
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
+                case null, default -> {}
             }
 
             if (expiresIn != null) {

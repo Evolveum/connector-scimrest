@@ -82,7 +82,7 @@ public class BaseTest {
         connector.search(new ObjectClass(objectType), filter, results::add, new OperationOptions(Map.of()));
         assertNotNull(results);
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), id);
+        assertEquals(results.getFirst().getUid().getUidValue(), id);
 
         return results;
     }
@@ -102,7 +102,7 @@ public class BaseTest {
         }
 
         if (assertId != null) {
-            assertEquals(results.get(0).getUid().getUidValue(), assertId);
+            assertEquals(results.getFirst().getUid().getUidValue(), assertId);
         }
     }
 

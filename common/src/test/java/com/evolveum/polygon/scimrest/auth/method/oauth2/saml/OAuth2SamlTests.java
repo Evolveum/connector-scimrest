@@ -169,7 +169,7 @@ public class OAuth2SamlTests extends AbstractOAuth2SamlTests {
     private String captureAssertion(String tokenEndpoint) {
         var requests = wireMockServer.findAll(postRequestedFor(urlEqualTo(tokenEndpoint)));
         assertFalse(requests.isEmpty(), "No requests to " + tokenEndpoint);
-        for (String param : requests.get(0).getBodyAsString().split("&")) {
+        for (String param : requests.getFirst().getBodyAsString().split("&")) {
             if (param.startsWith("assertion=")) {
                 String base64url = URLDecoder.decode(param.substring("assertion=".length()), StandardCharsets.UTF_8);
                 return decodeAssertion(base64url);

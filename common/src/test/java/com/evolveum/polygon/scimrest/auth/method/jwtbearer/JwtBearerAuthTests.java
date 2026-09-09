@@ -126,7 +126,7 @@ public class JwtBearerAuthTests extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(getRequestedFor(urlEqualTo(API_ENDPOINT)));
         assertEquals(requests.size(), 1);
-        String[] parts = requests.get(0).getHeader("Authorization")
+        String[] parts = requests.getFirst().getHeader("Authorization")
                 .substring("Bearer ".length()).split("\\.");
         assertEquals(parts.length, 3);
         String headerJson  = new String(Base64.getUrlDecoder().decode(parts[0]));
@@ -175,7 +175,7 @@ public class JwtBearerAuthTests extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(getRequestedFor(urlEqualTo(API_ENDPOINT)));
         assertEquals(requests.size(), 2);
-        assertEquals(requests.get(0).getHeader("Authorization"), requests.get(1).getHeader("Authorization"));
+        assertEquals(requests.getFirst().getHeader("Authorization"), requests.get(1).getHeader("Authorization"));
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 2);
     }
 

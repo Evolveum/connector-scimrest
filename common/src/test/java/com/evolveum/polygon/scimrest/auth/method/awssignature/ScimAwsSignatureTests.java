@@ -89,9 +89,9 @@ public class ScimAwsSignatureTests extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(SCHEMAS_EP)));
         assertFalse(requests.isEmpty());
-        assertEquals(requests.get(0).getHeader("x-custom"), "scim-custom",
+        assertEquals(requests.getFirst().getHeader("x-custom"), "scim-custom",
                 "beforeSign hook must run before signing");
-        String auth = requests.get(0).getHeader("Authorization");
+        String auth = requests.getFirst().getHeader("Authorization");
         assertNotNull(auth, "AWS signing must always run after beforeSign hook");
         assertTrue(auth.contains("x-custom"), "signHeader must include x-custom in SignedHeaders");
     }

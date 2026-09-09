@@ -82,6 +82,6 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
 
         } else {
             throw new IllegalStateException("Cannot execute query");
-        };
+        }
     }
 }

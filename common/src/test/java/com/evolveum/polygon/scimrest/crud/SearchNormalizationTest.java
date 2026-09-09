@@ -89,6 +89,6 @@ public class SearchNormalizationTest extends AbstractCrudConnectorTest {
         assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo("/accounts/1"))).size(), 1);
         // ...and only the normalized object matching the queried uid is returned
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "1:admin");
+        assertEquals(results.getFirst().getUid().getUidValue(), "1:admin");
     }
 }

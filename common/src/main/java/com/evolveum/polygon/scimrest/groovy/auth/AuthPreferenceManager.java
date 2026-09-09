@@ -98,7 +98,7 @@ public class AuthPreferenceManager<C extends ConfigurationMixin> implements Auth
         var subpath = probeSubpathExtractor.apply(configuration);
 
         if (baseUrl == null || subpath == null) {
-            activeMethod = preferenceOrder.get(0);
+            activeMethod = preferenceOrder.getFirst();
             LOG.ok("Auth preference: no probe URL configured, defaulting to ''{0}''", activeMethod.getSimpleName());
             return;
         }

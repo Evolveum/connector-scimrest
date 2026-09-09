@@ -97,7 +97,7 @@ public class ScimJwtBearerAuthTests extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(SCHEMAS_ENDPOINT)));
         assertEquals(requests.size(), 1);
-        String[] parts = requests.get(0).getHeader("Authorization")
+        String[] parts = requests.getFirst().getHeader("Authorization")
                 .substring("Bearer ".length()).split("\\.");
         assertEquals(parts.length, 3);
         String headerJson  = new String(Base64.getUrlDecoder().decode(parts[0]));
@@ -143,8 +143,8 @@ public class ScimJwtBearerAuthTests extends WireMockTestSupport {
         var resourcesRequests = wireMockServer.findAll(getRequestedFor(urlPathEqualTo(RESOURCES_ENDPOINT)));
         assertEquals(schemasRequests.size(), 1);
         assertEquals(resourcesRequests.size(), 1);
-        assertEquals(schemasRequests.get(0).getHeader("Authorization"),
-                resourcesRequests.get(0).getHeader("Authorization"));
+        assertEquals(schemasRequests.getFirst().getHeader("Authorization"),
+                resourcesRequests.getFirst().getHeader("Authorization"));
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 2);
     }
 
