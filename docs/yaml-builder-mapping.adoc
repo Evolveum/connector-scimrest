@@ -1,0 +1,257 @@
+= YAML Declarative Format → Builder Mapping (scimrest-connector)
+
+This reference covers the SCIM/REST-specific part of the declarative YAML format: the
+`scim` protocol blocks (class- and attribute-level), operation documents
+(`search`/`create`/`update`/`delete`, REST endpoints, SCIM limitations), and
+`authentication`. The shared core (object classes, attributes, references, relationships,
+path/filter string syntax, block scalars) is documented in the framework repo:
+`conndev/docs/yaml-builder-mapping.adoc`.
+
+Reference examples (committed next to their `.groovy` originals):
+`common/src/test/resources/` — `nextCloud/`, `openProject/`, `rest/groovy/schema/`,
+`scim/aws/AWS.{schema,op}.yaml`, `scim/schema/dev/ScimDev.schema.yaml`,
+`scim/slack/User.schema.yaml`, `manifests/**` (operation documents); and the production
+scripts under `connector/forgejo/src/main/resources/`, `connector/open-project/src/main/resources/`,
+`connector/sample-scimdev*/src/main/resources/`.
+
+All paths below are relative to `common/src/main/java/com/evolveum/polygon/scimrest/`.
+
+== 1. Loading
+
+[cols="1.4,2.6"]
+|===
+| Entry point | Behaviour
+
+| Schema scripts — `groovy/schema/SchemaDefinitionLoader.loadFromResource` :50
+| resolves the resource with `ScriptResources.resolveWithYamlFallback`; the YAML path currently builds into the generic `BaseSchemaBuilder` (see `YamlSchemaLoader` in conndev) — the Groovy path drives `RestSchemaBuilderImpl`
+
+| Operation / authorization scripts — `groovy/handler/HandlerDefinitionBuilder.loadFromResource` :37
+| same fallback; YAML is driven live by the location-aware binding engine — `yaml/YamlRestHandlerLoader.java` → `YamlRestOperationsLoader` — onto the same `RestHandlerBuilder` the Groovy DSL uses
+|===
+
+Operation documents use the `objectClasses:` envelope: a top-level mapping of object-class name to its
+operation sections (`search`, `create`, `update`, `delete`), optionally alongside a top-level
+`authentication:` block in the same file. One file can carry several classes; the file-per-operation
+wizard convention (one section per file) still works, with each file holding a single `objectClasses:`
+entry. Documents are bound live through the engine (`YamlRestOperationsLoader`) — there is no separate
+POJO document model, so the YAML front-end and the Groovy DSL drive the exact same builders.
+
+== 2. SCIM schema mapping
+
+=== Object-class level (`scim { }` inside `objectClass`)
+
+[cols="1.4,1.6,2.6"]
+|===
+| YAML | Groovy DSL | Builder
+
+| `scim.extensions.<alias>: <uri>`
+| `scim { extension("enterprise", "urn:...:User") }`
+| `RestObjectClassSchemaBuilder.scim()` — `groovy/api/RestObjectClassSchemaBuilder.java:21` (no-arg) / :29 (closure) → `ScimMapping.extension(alias, namespace)` — :40 (impl `schema/RestObjectClassDefinitionBuilder.java:103`)
+
+| `scim.onlyExplicitlyListed: true`
+| `scim { onlyExplicitlyListed true }`
+| `ScimMapping.onlyExplicitlyListed(boolean)` — :82 (impl :136)
+
+| `scim.name` / `scim.schemaUri`
+| `scim { name "User"; schemaUri "urn:..." }`
+| `ScimMapping.name` — :72 (impl :125) / `schemaUri` — :55 (impl :114)
+|===
+
+NOTE: scimrest has no `YamlProtocolBlockConsumer` implementation yet, so `scim:` blocks in
+YAML *schema* documents are not parsed by the current loader — the mapping above documents
+the target semantics (the Groovy `scim {}` DSL is live).
+
+=== Attribute level (`scim { }` inside `attribute`)
+
+[cols="1.4,1.8,2.4"]
+|===
+| YAML | Groovy DSL | Builder
+
+| `scim.path: "<path string>"`
+| `scim { path attribute("name").child("givenName") }`
+| `RestAttributeBuilder.scim()` — `groovy/api/RestAttributeBuilder.java:29` / :31 → `ScimMapping.path(AttributePath)` — :73 (impl `schema/RestAttributeBuilderImpl.java:159`, `ScimBuilder` :82); string → path syntax in the conndev reference (§8)
+
+| `scim.name` / `scim.type`
+| `scim { name "x"; type "email" }`
+| `ScimMapping.name` — :39 / `type` — :49 (`type` drives the `OpenApiValueMapping`)
+
+| `scim.implementation.deserialize` / `.serialize`
+| `scim { implementation { deserialize { ... } serialize { ... } } }`
+| `MappingBuilder.implementation` → `ValueMappingBuilder.deserialize`/`.serialize` (conndev `build/api/ValueMappingBuilder.java:32`/`:43`); SCIM hook impl `RestAttributeBuilderImpl.implementation(ValueMapping)` :184; block scalars compiled by conndev `GroovyScriptCompiler`
+|===
+
+== 3. Relationships (SCIM)
+
+`relationship("X") { subject("A") { ... } object("B") { ... } }` — see the conndev
+reference for the generic mapping; the SCIM specialization is
+`RestRelationshipBuilder` — `groovy/api/RestRelationshipBuilder.java`: `subject` :23,
+`object` :33, `Participant` :36-43; participant attribute configuration in
+`schema/ParticipantBuilder.java:37`-:126 (participant `scim` blocks :113/:118,
+`resolver` :123, `complexType` :87, `emulated` :92).
+
+== 4. Operation documents
+
+Groovy entry: `objectClass("X") { search { ... } create { ... } ... }` with delegate
+`BaseOperationSupportBuilder` — `groovy/schema/BaseOperationSupportBuilder.java`
+(`search` :55/:83, `create` :60/:98, `update` :65/:103, `delete` :70/:108), narrowing to the
+`Rest*OperationBuilder` interfaces below.
+
+=== search
+
+[cols="1.6,1.8,2.4"]
+|===
+| YAML | Groovy DSL | Builder
+
+| `search.endpoints[]: { path }`
+| `search { endpoint("users/") { ... } }`
+| `RestSearchOperationBuilder.endpoint(path)` — `groovy/api/RestSearchOperationBuilder.java:26` (no-arg) / :37 (closure) → `RestSearchEndpointBuilder` (impl `groovy/operation/RestSearchOperationBuilderImpl.java:40`); the `endpoints:` list is bound by `yaml/binding/SearchEndpointsHandler`
+
+| `endpoints[].responseFormat`
+| `responseFormat JSON_ARRAY`
+| `RestSearchEndpointBuilder.responseFormat` — `groovy/api/RestSearchEndpointBuilder.java:34`
+
+| `endpoints[].pagingSupport: <groovy>`
+| `pagingSupport { request.queryParameter(...) }`
+| `RestSearchEndpointBuilder.pagingSupport(closure)` — :44, delegate `PagingSupportBase`
+
+| `endpoints[].objectExtractor: <groovy>`
+| `objectExtractor { ... }`
+| `RestSearchEndpointBuilder.objectExtractor(closure)` — :50, delegate `ResponseWrapper`
+
+| `endpoints[].emptyFilterSupported`
+| `emptyFilterSupported true`
+| `SearchHandlerBuilder.emptyFilterSupported` (conndev `build/api/SearchHandlerBuilder.java:33`)
+
+| `endpoints[].singleResult`
+| `singleResult()`
+| `RestSearchEndpointBuilder.singleResult` — :47
+
+| `endpoints[].supportedFilters[]: { spec, request }`
+| `supportedFilter(attribute("id").eq().anySingleValue()) { request.pathParameter("id", value) }`
+| `RestSearchEndpointBuilder.supportedFilter(FilterSpecification, closure)` — :52, delegate `FilterSupportBase`; `spec` is the filter string (`id eq ?`, `login contains ?` — conndev reference §9), `request` the request-adaptation closure
+
+| `search.custom: { supportedFilters, emptyFilterSupported, implementation }`
+| `search { custom { ... implementation { ... } } }`
+| `RestSearchOperationBuilder.custom()` — :74/:76 → `SearchScriptBuilder` (conndev `build/api/SearchScriptBuilder.java`; Groovy impl `groovy/GroovySearchScriptBuilder.java`): `emptyFilterSupported` :36, `supportedFilter` :48, `implementation` :42 (delegate `SearchScriptContext`); the `custom:` block is bound by `yaml/binding/CustomSearchHandler` (`spec` entries are build-time expressions, `implementation` a runtime closure)
+
+| `search.attributeResolvers[]: { attribute, resolutionType, implementation }`
+| `search { attributeResolver { attribute "team"; resolutionType PER_OBJECT; implementation { ... } } }`
+| `RestSearchOperationBuilder.attributeResolver()` — :40/:42 → `AttributeResolverBuilder` (conndev `build/api/AttributeResolverBuilder.java`); the `attributeResolvers:` list is bound by `yaml/binding/AttributeResolversHandler` (one `attributeResolver()` per list item)
+
+| `search.normalize: { toSingleValue, rewriteUid, rewriteName, restoreUid, restoreName }`
+| `search { normalize { ... } }`
+| `RestSearchOperationBuilder.normalize()` — :53/:55 → `NormalizationBuilder` (conndev `build/api/NormalizationBuilder.java:24`: `toSingleValue` :35, `rewriteUid` :46, `rewriteName` :57, `restoreUid` :68, `restoreName` :79); the `normalize:` block is bound by `yaml/binding/NormalizationHandler` (the `rewrite*`/`restore*` entries are runtime closures)
+
+| `search.scim.limitations.supportedFilters: ["attr eq ?"]`
+| `search { scim { limitations { supportedFilter attribute("x").eq().anySingleValue() } } }`
+| `RestSearchOperationBuilder.scim()` — :80/:82 → `ScimSearchHandler.Builder` — `impl/scim/ScimSearchHandler.java:137+`: `enabled` :189, `emptyFilterSupported` :199, `anyFilterSupported` :204, `supportedFilters` :209, `limitations` :216 (delegate `SearchHandlerBuilder`)
+|===
+
+=== create / update / delete — REST endpoints
+
+[cols="1.8,1.8,2.2"]
+|===
+| YAML | Groovy DSL | Builder
+
+| `create.endpoints[]: { method, path, request }`
+| `create { endpoint(POST, "users") { request { contentType APPLICATION_JSON } } }`
+| `RestCreateOperationBuilder.endpoint(HttpMethod, path)` — `groovy/api/RestCreateOperationBuilder.java:23`-:39 → `EndpointBuilder` / `RequestBuilder` (`contentType`/`accept`/`body`, `request.body: EMPTY` = `RequestEntityBuilder.EMPTY`)
+
+| `update.endpoints[]`
+| `update { endpoint(PATCH, "/users/{id}") { ... } }`
+| `RestUpdateOperationBuilder.endpoint(method, path)` — `groovy/api/RestUpdateOperationBuilder.java:31`-:53
+
+| `delete.endpoints[]`
+| `delete { endpoint(DELETE, "users/{id}") }`
+| `RestDeleteOperationBuilder.endpoint` — `groovy/api/RestDeleteOperationBuilder.java:18`-:24
+
+| `endpoints[].supportedAttributes: ["a", "b", ...]`
+| `supportedAttributes "a", "b"`
+| `UpdateOperationBuilder.AttributeSpecific.supportedAttributes(String...)` — conndev `build/api/UpdateOperationBuilder.java:65`
+
+| `endpoints[].supportedAttributes[]: { name, value }`
+| `supportedAttribute("status") { value "locked" }`
+| `supportedAttribute(String, closure)` — :54 / :45 → `AttributeValueFilter.value` — :89
+
+| `endpoints[].supportedAttributes[]: { name, transition: {from, to} }`
+| `supportedAttribute("status") { transition "active", "locked" }`
+| `AttributeValueFilter.transition(Object, Object)` — :98
+|===
+
+=== SCIM operation capabilities
+
+[cols="1.8,2.0,2.2"]
+|===
+| YAML | Groovy DSL | Builder
+
+| `update.scim.put: {...}` / `update.scim.patch: {...}`
+| `update { scim { put { ... } patch { ... } } }`
+| `RestUpdateOperationBuilder.scim()` — `groovy/api/RestUpdateOperationBuilder.java:21`/:27 → `ScimUpdateBuilder` — `groovy/api/scim/ScimUpdateBuilder.java`: `put` :16-:21, `patch` :24-:29, `Put` :32, `Patch` :44
+
+| `create.scim.supportedAttributes: {...}`
+| `create { scim { supportedAttributes "a"; supportedAttribute("x") { ... } } }`
+| `RestCreateOperationBuilder.scim()` — `groovy/api/RestCreateOperationBuilder.java:41`/:47 → `ScimCreateBuilder` — `groovy/api/scim/ScimCreateBuilder.java:16`-:26 (inherits `supportedAttributes` from `UpdateOperationBuilder.AttributeSpecific`)
+
+| `scim.patch.<attr>:` (empty value = plain supported attribute; or with `limitations`)
+| `supportedAttributes "externalId", "displayName", ...` + `supportedAttribute("userName") { limitations { ... } }`
+| the `scim.patch`/`scim.create` YAML map unifies the bulk `supportedAttributes(...)` call and the per-attribute `supportedAttribute(name, closure)` calls onto the same `AttributeSpecific` builder
+
+| `limitations.operations: [ADD, REPLACE]`
+| `limitations { operations ADD, REPLACE }`
+| `ScimOperationBuilder.AttributeLimitations.operations(String...)` — `groovy/api/scim/ScimOperationBuilder.java:70`; constants `ADD`/`REPLACE`/`REMOVE` — `ScimUpdateBuilder.java:66`-:68
+
+| `limitations.maxPerRequest: N`
+| `limitations { maxPerRequest 100 }`
+| `AttributeLimitations.maxPerRequest(int)` — `ScimOperationBuilder.java:55`-:80
+
+| `scim.enabled`
+| `scim { enabled false }`
+| `ScimOperationBuilder.enabled(boolean)` — :17; `limitations` — :28/:35
+|===
+
+== 5. Authentication
+
+`authentication { ... }` — top-level section (no object class), file `*.authorization.op.*` /
+`authorization.op.*`.
+
+[cols="1.6,2.0,2.4"]
+|===
+| YAML | Groovy DSL | Builder
+
+| `authentication.rest` / `authentication.scim`
+| `authentication { rest { ... } scim { ... } }`
+| `OperationBuilder.authentication(closure)` — `groovy/api/OperationBuilder.java:22` → `AuthenticationCustomizationBuilder` — `groovy/api/AuthenticationCustomizationBuilder.java`: `rest()` :18/:23, `scim()` :20/:26
+
+| `rest.basic` / `rest.bearer` / `rest.jwtBearer` / `rest.apiKey` (+ `implementation` block scalar)
+| `rest { bearer { implementation { request.header(...) } } }`
+| `RestBuilder.basic` :41, `bearer` :47, `jwtBearer` :53, `apiKey` :59
+
+| `rest.preference`
+| `rest { preference(Types...) }`
+| `RestBuilder.preference` :86
+
+| OAuth2 flavors (`oauth2ClientCredentials`, `oauth2JwtBearer`, `oauth2Password`, `oauth2Saml`)
+| `rest { oauth2 { ... } }`
+| `OAuth2Builder` — `AuthenticationCustomizationBuilder.java` (closures: `buildTokenRequest`, `parseTokenResponse`, `validateToken`, `applyToken`, `onResponse`)
+|===
+
+== 6. Worked examples (committed WIP files)
+
+* `common/src/test/resources/manifests/script-validation/Account.op.yaml` — minimal REST
+  endpoint: `search.endpoints[0] {path, emptyFilterSupported}` ≙
+  `search { endpoint('/accounts') { emptyFilterSupported true } }`.
+* `connector/open-project/src/main/resources/User.op.yaml` — full CRUD: POST create with
+  `contentType`, PATCH update with `supportedAttributes`, lock/unlock endpoints with
+  `transition {from, to}`, DELETE.
+* `common/src/test/resources/scim/aws/AWS.op.yaml` — pure SCIM capabilities:
+  `update.scim.patch` supported-attribute map with per-attribute
+  `limitations {operations: [ADD, REPLACE], maxPerRequest: 1}` and
+  `search.scim.limitations.supportedFilters`.
+* `common/src/test/resources/scim/aws/AWS.schema.yaml` — SCIM schema mapping: class-level
+  `scim.extensions`, attribute-level `scim.path` strings
+  (`name.givenName`, `emails[primary eq true].value`, extension-URI path), and a
+  `relationships` entry with a `PER_OBJECT` resolver.
+* `connector/forgejo/src/main/resources/authorization.op.yaml` — `authentication.rest`
+  with `bearer`/`apiKey` `implementation` block scalars.
+* `connector/open-project/src/main/resources/Membership.search.yaml` — `search.normalize`
+  closures plus endpoints with `objectExtractor`/`pagingSupport`/`supportedFilters`.

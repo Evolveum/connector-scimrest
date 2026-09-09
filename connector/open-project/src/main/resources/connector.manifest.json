@@ -1,0 +1,34 @@
+{
+    "application": {
+        "name": "OpenProject",
+        "description": "OpenProject is a web based project and issue tracking tool."
+    },
+    "connector": {
+        "schema": [
+            { "script": "/User.native.schema.groovy" },
+            { "script": "/User.connid.schema.groovy" },
+            { "script": "/Group.native.schema.groovy" },
+            { "script": "/Group.connid.schema.groovy" },
+            { "script": "/Project.native.schema.groovy" },
+            { "script": "/Project.connid.schema.groovy" },
+            { "script": "/Role.native.schema.groovy" },
+            { "script": "/Role.connid.schema.groovy" },
+            { "script": "/Formattable.native.schema.groovy" },
+            { "script": "/Principal.native.schema.groovy" },
+            { "script": "/Membership.native.schema.groovy" },
+            { "script": "/Membership.connid.schema.groovy" },
+            { "script": "/associations.schema.groovy" }
+        ],
+        "authorization": [],
+        "operation": [
+            { "script": "/User.search.groovy" },
+            { "script": "/Group.search.groovy" },
+            { "script": "/Project.search.groovy" },
+            { "script": "/Role.search.groovy" },
+            { "script": "/Membership.search.groovy" },
+            { "script": "/User.op.groovy" },
+            { "script": "/User.create.op.groovy" },
+            { "script": "/User.update.op.groovy" }
+        ]
+    }
+}
