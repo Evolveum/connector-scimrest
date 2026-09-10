@@ -106,6 +106,7 @@ public class ScimContext implements RetrievableContext {
             }
             clientBuilder.register(new ScimHttpErrorFilter());
             clientBuilder.register(new ScimSchemaDefaultsFilter());
+            clientBuilder.register(new ScimProtocolLogFilter());
             if (authentication != null) {
                 clientBuilder.register(new JerseyRequestCustomizerFilter(authentication, scimConf));
             }

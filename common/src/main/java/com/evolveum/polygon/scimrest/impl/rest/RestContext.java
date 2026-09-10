@@ -7,8 +7,10 @@
 package com.evolveum.polygon.scimrest.impl.rest;
 
 import com.evolveum.polygon.conndev.concepts.RetrievableContext;
+import com.evolveum.polygon.conndev.logging.ConnDevLog;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.Checks;
+import com.evolveum.polygon.scimrest.logging.ProtocolTrace;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -49,6 +51,7 @@ import com.evolveum.polygon.scimrest.groovy.auth.DispatchingAuthorizationCustomi
 public class RestContext implements RetrievableContext {
 
     private static final Log LOG = Log.getLog(RestContext.class);
+    private static final ConnDevLog PROTOCOL_LOG = ConnDevLog.of(RestContext.class);
     private static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
     private final AuthorizationCustomizer<RestClientConfiguration> customizer;
@@ -146,15 +149,20 @@ public class RestContext implements RetrievableContext {
             throw e;
         }
         LOG.ok("Executing request {0}", request);
+        ProtocolTrace.request(PROTOCOL_LOG, request.method(), request.uri().toString(), spec.getBody());
         try {
-            return client.send(request, handler);
+            var response = client.send(request, handler);
+            ProtocolTrace.response(PROTOCOL_LOG, response.statusCode(), request.uri().toString(), response.body());
+            return response;
         } catch (IOException e) {
             if (isStaleConnection(e)) {
                 // Pooled keep-alive connection was already closed by the other side, so the
                 // request was never sent. The pool dropped the dead connection on failure,
                 // therefore a single retry is safe even for non-idempotent requests.
                 LOG.ok("Stale pooled connection detected ({0}), retrying request once", e.toString());
-                return client.send(request, handler);
+                var response = client.send(request, handler);
+                ProtocolTrace.response(PROTOCOL_LOG, response.statusCode(), request.uri().toString(), response.body());
+                return response;
             }
             throw e;
         }

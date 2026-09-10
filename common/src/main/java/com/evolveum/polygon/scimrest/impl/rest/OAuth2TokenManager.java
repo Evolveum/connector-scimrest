@@ -6,9 +6,11 @@
  */
 package com.evolveum.polygon.scimrest.impl.rest;
 
+import com.evolveum.polygon.conndev.logging.ConnDevLog;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.config.OAuth2GrantType;
+import com.evolveum.polygon.scimrest.logging.ProtocolTrace;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
@@ -178,6 +180,7 @@ public class OAuth2TokenManager {
     protected final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Log LOG = Log.getLog(OAuth2TokenManager.class);
+    private static final ConnDevLog PROTOCOL_LOG = ConnDevLog.of(OAuth2TokenManager.class);
 
     public static final String ACCESS_TOKEN = "access_token";
     public static final String TOKEN_TYPE = "token_type";
@@ -231,9 +234,12 @@ public class OAuth2TokenManager {
         customizeBuildTokenRequest(tokenRequest);
 
         try {
-            var response = httpClient.send(
-                    new JdkHttpRequestConverter().convert(tokenRequest),
-                    HttpResponse.BodyHandlers.ofString());
+            var request = new JdkHttpRequestConverter().convert(tokenRequest);
+            // The token endpoint exchange carries credentials; the body is only visible in
+            // development mode, where seeing auth values is intentional.
+            ProtocolTrace.request(PROTOCOL_LOG, request.method(), request.uri().toString(), tokenRequest.getBody());
+            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            ProtocolTrace.response(PROTOCOL_LOG, response.statusCode(), request.uri().toString(), response.body());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new ConnectorIOException(
                         "OAuth2 token request failed with HTTP status " + response.statusCode());
