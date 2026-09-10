@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
-@ConnectorClass(displayNameKey = "scimdev.rest.display", configurationClass = ScimDevConfiguration.class)
+@ConnectorClass(displayNameKey = "scimdev.rest.display", configurationClass = ScimDevConfiguration.class, messageCatalogPaths = "Messages")
 public class ScimDevConnector extends AbstractGroovyRestConnector<ScimDevConfiguration> {
 
     @Override

@@ -12,7 +12,7 @@ import com.evolveum.polygon.scimrest.groovy.impl.ManifestBasedConnector;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
-@ConnectorClass(displayNameKey = "forgejo.rest.display", configurationClass = ForgejoConfiguration.class)
+@ConnectorClass(displayNameKey = "forgejo.rest.display", configurationClass = ForgejoConfiguration.class, messageCatalogPaths = "Messages")
 public class ForgejoConnector extends ManifestBasedConnector {
 
     @Override

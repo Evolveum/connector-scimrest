@@ -18,7 +18,7 @@ public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyCon
     private Integer timeoutSeconds = 30;
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.baseAddress", required = true)
+    @ConfigurationProperty(groupMessageKey = "rest.service", order = 105, required = true)
     public String getBaseAddress() {
         return baseAddress;
     }
@@ -28,7 +28,7 @@ public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyCon
     }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.trustAllCertificates", required = false)
+    @ConfigurationProperty(groupMessageKey = "rest.ssl", order = 305, required = false)
     public Boolean getTrustAllCertificates() {
         return trustAllCertificates;
     }
@@ -38,6 +38,7 @@ public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyCon
     }
 
     @Override
+    @ConfigurationProperty(groupMessageKey = "rest.service", order = 110, required = false)
     public String getRestTestEndpoint() {
         return restTestEndpoint;
     }
@@ -47,6 +48,7 @@ public abstract class BaseRestGroovyConnectorConfiguration extends BaseGroovyCon
     }
 
     @Override
+    @ConfigurationProperty(groupMessageKey = "rest.service", order = 115, required = false)
     public Integer getTimeoutSeconds() {
         return timeoutSeconds;
     }

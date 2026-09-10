@@ -20,12 +20,13 @@ public class ScimDevConfiguration extends BaseGroovyConnectorConfiguration imple
     }
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "scim.auth.tokenValue", required = true)
+    @ConfigurationProperty(groupMessageKey = "scim.auth.bearer", order = 705, required = true)
     public GuardedString getScimTokenValue() {
         return tokenValue;
     }
 
     @Override
+    @ConfigurationProperty(groupMessageKey = "scim.service", order = 205, required = false)
     public String getScimBaseUrl() {
         return "https://api.scim.dev/scim/v2";
     }

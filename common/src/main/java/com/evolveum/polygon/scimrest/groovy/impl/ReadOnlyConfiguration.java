@@ -199,7 +199,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.address.base")
+    @ConfigurationProperty(displayMessageKey = "rest.address.base", groupMessageKey = "rest.service", order = 105)
     public String getBaseAddress() {
         return baseAddress;
     }
@@ -209,7 +209,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "ssl.trustAll")
+    @ConfigurationProperty(displayMessageKey = "ssl.trustAll", groupMessageKey = "rest.ssl", order = 305)
     public Boolean getTrustAllCertificates() {
         return trustAllCertificates;
     }
@@ -219,7 +219,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.address.test")
+    @ConfigurationProperty(displayMessageKey = "rest.address.test", groupMessageKey = "rest.service", order = 110)
     public String getRestTestEndpoint() {
         return restTestEndpoint;
     }
@@ -229,7 +229,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.timeout.seconds", required = false)
+    @ConfigurationProperty(displayMessageKey = "rest.timeout.seconds", groupMessageKey = "rest.service", order = 115, required = false)
     public Integer getTimeoutSeconds() {
         return 30;
     }
@@ -239,7 +239,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.basic.username")
+    @ConfigurationProperty(displayMessageKey = "rest.basic.username", groupMessageKey = "rest.auth.basic", order = 405)
     public String getRestUsername() {
         return restUsername;
     }
@@ -249,7 +249,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.basic.password")
+    @ConfigurationProperty(displayMessageKey = "rest.basic.password", groupMessageKey = "rest.auth.basic", order = 410)
     public GuardedString getRestPassword() {
         return restPassword;
     }
@@ -263,7 +263,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.token.value", order = 10)
+    @ConfigurationProperty(displayMessageKey = "rest.token.value", groupMessageKey = "rest.auth.bearer", order = 505)
     public GuardedString getRestTokenValue() {
         return restTokenValue;
     }
@@ -277,7 +277,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.token.name", order = 10)
+    @ConfigurationProperty(displayMessageKey = "rest.token.name", groupMessageKey = "rest.auth.jwt", order = 805)
     public String getRestJwtTokenName() {
         return restJwtTokenName;
     }
@@ -287,7 +287,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.algorithm", order = 20, allowedValues = {"HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
+    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.algorithm", groupMessageKey = "rest.auth.jwt", order = 810, allowedValues = {"HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
     public String getRestJwtAlgorithm() {
         return restJwtAlgorithm;
     }
@@ -297,7 +297,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.secret", order = 30)
+    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.secret", groupMessageKey = "rest.auth.jwt", order = 815)
     public GuardedString getRestJwtSecret() {
         return restJwtSecret;
     }
@@ -307,7 +307,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.secretBase64", order = 40)
+    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.secretBase64", groupMessageKey = "rest.auth.jwt", order = 820)
     public Boolean getRestJwtSecretBase64Encoded() {
         return restJwtSecretBase64Encoded;
     }
@@ -317,7 +317,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.payload", order = 50)
+    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.payload", groupMessageKey = "rest.auth.jwt", order = 825)
     public String getRestJwtPayload() {
         return restJwtPayload;
     }
@@ -327,7 +327,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.location", order = 60, allowedValues = {"header", "query"})
+    @ConfigurationProperty(displayMessageKey = "rest.token.jwt.location", groupMessageKey = "rest.auth.jwt", order = 830, allowedValues = {"header", "query"})
     public String getRestJwtLocation() {
         return restJwtLocation;
     }
@@ -341,7 +341,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.apikey.value")
+    @ConfigurationProperty(displayMessageKey = "rest.apikey.value", groupMessageKey = "rest.auth.apiKey", order = 910)
     public GuardedString getRestApiKey() {
         return restApiKey;
     }
@@ -351,7 +351,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.apikey.name")
+    @ConfigurationProperty(displayMessageKey = "rest.apikey.name", groupMessageKey = "rest.auth.apiKey", order = 905)
     public String getRestApiKeyName() {
         return restApiKeyName;
     }
@@ -361,7 +361,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.apikey.location", allowedValues = {"header", "query"})
+    @ConfigurationProperty(displayMessageKey = "rest.apikey.location", groupMessageKey = "rest.auth.apiKey", order = 915, allowedValues = {"header", "query"})
     public String getRestApiKeyLocation() {
         return restApiKeyLocation;
     }
@@ -375,7 +375,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.digest.username")
+    @ConfigurationProperty(displayMessageKey = "rest.digest.username", groupMessageKey = "rest.auth.digest", order = 1005)
     public String getRestDigestUsername() {
         return restDigestUsername;
     }
@@ -385,7 +385,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.digest.password")
+    @ConfigurationProperty(displayMessageKey = "rest.digest.password", groupMessageKey = "rest.auth.digest", order = 1010)
     public GuardedString getRestDigestPassword() {
         return restDigestPassword;
     }
@@ -395,7 +395,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.digest.autoChallenge")
+    @ConfigurationProperty(displayMessageKey = "rest.digest.autoChallenge", groupMessageKey = "rest.auth.digest", order = 1015)
     public Boolean getRestDigestAutoChallenge() {
         return restDigestAutoChallenge;
     }
@@ -405,7 +405,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.digest.maxRetries")
+    @ConfigurationProperty(displayMessageKey = "rest.digest.maxRetries", groupMessageKey = "rest.auth.digest", order = 1025)
     public Integer getRestDigestMaxRetries() {
         return restDigestMaxRetries;
     }
@@ -415,7 +415,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.digest.preemptiveAuth")
+    @ConfigurationProperty(displayMessageKey = "rest.digest.preemptiveAuth", groupMessageKey = "rest.auth.digest", order = 1020)
     public Boolean getRestDigestPreemptiveAuth() {
         return restDigestPreemptiveAuth;
     }
@@ -425,7 +425,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.digest.algorithmPreference", allowedValues = {"MD5", "MD5-sess", "SHA-256", "SHA-256-sess", "SHA-512-256", "SHA-512-256-sess"})
+    @ConfigurationProperty(displayMessageKey = "rest.digest.algorithmPreference", groupMessageKey = "rest.auth.digest", order = 1030, allowedValues = {"MD5", "MD5-sess", "SHA-256", "SHA-256-sess", "SHA-512-256", "SHA-512-256-sess"})
     public String getRestDigestAlgorithmPreference() {
         return restDigestAlgorithmPreference;
     }
@@ -435,7 +435,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.digest.stateCacheEnabled")
+    @ConfigurationProperty(displayMessageKey = "rest.digest.stateCacheEnabled", groupMessageKey = "rest.auth.digest", order = 1035)
     public Boolean getRestDigestStateCacheEnabled() {
         return restDigestStateCacheEnabled;
     }
@@ -449,7 +449,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.tokenUrl")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.tokenUrl", groupMessageKey = "rest.auth.oauth2", order = 1105)
     public String getRestOAuth2TokenUrl() {
         return restOAuth2TokenUrl;
     }
@@ -459,7 +459,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientId")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientId", groupMessageKey = "rest.auth.oauth2", order = 1110)
     public String getRestOAuth2ClientId() {
         return restOAuth2ClientId;
     }
@@ -469,7 +469,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.scope")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.scope", groupMessageKey = "rest.auth.oauth2", order = 1120)
     public String getRestOAuth2Scope() {
         return restOAuth2Scope;
     }
@@ -479,7 +479,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientAuthenticationScheme", allowedValues = {"post", "basic"})
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientAuthenticationScheme", groupMessageKey = "rest.auth.oauth2", order = 1115, allowedValues = {"post", "basic"})
     public String getRestOAuth2ClientAuthenticationScheme() {
         return restOAuth2ClientAuthenticationScheme;
     }
@@ -493,7 +493,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientSecret")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.clientSecret", groupMessageKey = "rest.auth.oauth2", order = 1125)
     public GuardedString getRestOAuth2ClientSecret() {
         return restOAuth2ClientSecret;
     }
@@ -507,7 +507,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.username")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.username", groupMessageKey = "rest.auth.oauth2", order = 1130)
     public String getRestOAuth2Username() {
         return restOAuth2Username;
     }
@@ -517,7 +517,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.password")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.password", groupMessageKey = "rest.auth.oauth2", order = 1135)
     public GuardedString getRestOAuth2Password() {
         return restOAuth2Password;
     }
@@ -531,7 +531,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.privateKey")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.privateKey", groupMessageKey = "rest.auth.oauth2", order = 1140)
     public GuardedString getRestOAuth2PrivateKey() {
         return restOAuth2PrivateKey;
     }
@@ -541,7 +541,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.issuer")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.issuer", groupMessageKey = "rest.auth.oauth2", order = 1145)
     public String getRestOAuth2Issuer() {
         return restOAuth2Issuer;
     }
@@ -555,7 +555,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.keyId")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.keyId", groupMessageKey = "rest.auth.oauth2", order = 1150)
     public String getRestOAuth2KeyId() {
         return restOAuth2KeyId;
     }
@@ -565,7 +565,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.algorithm", allowedValues = {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.algorithm", groupMessageKey = "rest.auth.oauth2", order = 1155, allowedValues = {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
     public String getRestOAuth2Algorithm() {
         return restOAuth2Algorithm;
     }
@@ -575,7 +575,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.oauth2.subject")
+    @ConfigurationProperty(displayMessageKey = "rest.oauth2.subject", groupMessageKey = "rest.auth.oauth2", order = 1160)
     public String getRestOAuth2Subject() {
         return restOAuth2Subject;
     }
@@ -589,7 +589,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.hawk.id")
+    @ConfigurationProperty(displayMessageKey = "rest.hawk.id", groupMessageKey = "rest.auth.hawk", order = 1205)
     public String getRestHawkId() {
         return restHawkId;
     }
@@ -599,7 +599,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.hawk.key")
+    @ConfigurationProperty(displayMessageKey = "rest.hawk.key", groupMessageKey = "rest.auth.hawk", order = 1210)
     public GuardedString getRestHawkKey() {
         return restHawkKey;
     }
@@ -609,7 +609,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.hawk.algorithm", allowedValues = {"sha1", "sha256", "sha384", "sha512"})
+    @ConfigurationProperty(displayMessageKey = "rest.hawk.algorithm", groupMessageKey = "rest.auth.hawk", order = 1215, allowedValues = {"sha1", "sha256", "sha384", "sha512"})
     public String getRestHawkAlgorithm() {
         return restHawkAlgorithm;
     }
@@ -619,7 +619,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.hawk.includePayloadHash")
+    @ConfigurationProperty(displayMessageKey = "rest.hawk.includePayloadHash", groupMessageKey = "rest.auth.hawk", order = 1220)
     public Boolean getRestHawkIncludePayloadHash() {
         return restHawkIncludePayloadHash;
     }
@@ -629,7 +629,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.hawk.offset")
+    @ConfigurationProperty(displayMessageKey = "rest.hawk.offset", groupMessageKey = "rest.auth.hawk", order = 1225)
     public Integer getRestHawkOffset() {
         return restHawkOffset;
     }
@@ -639,7 +639,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.hawk.ext")
+    @ConfigurationProperty(displayMessageKey = "rest.hawk.ext", groupMessageKey = "rest.auth.hawk", order = 1230)
     public String getRestHawkExt() {
         return restHawkExt;
     }
@@ -653,7 +653,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.aws.accessKey")
+    @ConfigurationProperty(displayMessageKey = "rest.aws.accessKey", groupMessageKey = "rest.auth.aws", order = 1305)
     public String getRestAwsAccessKey() {
         return restAwsAccessKey;
     }
@@ -663,7 +663,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.aws.secretKey")
+    @ConfigurationProperty(displayMessageKey = "rest.aws.secretKey", groupMessageKey = "rest.auth.aws", order = 1310)
     public GuardedString getRestAwsSecretKey() {
         return restAwsSecretKey;
     }
@@ -673,7 +673,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.aws.sessionToken")
+    @ConfigurationProperty(displayMessageKey = "rest.aws.sessionToken", groupMessageKey = "rest.auth.aws", order = 1315)
     public GuardedString getRestAwsSessionToken() {
         return restAwsSessionToken;
     }
@@ -683,7 +683,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.aws.region")
+    @ConfigurationProperty(displayMessageKey = "rest.aws.region", groupMessageKey = "rest.auth.aws", order = 1320)
     public String getRestAwsRegion() {
         return restAwsRegion;
     }
@@ -693,7 +693,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.aws.service")
+    @ConfigurationProperty(displayMessageKey = "rest.aws.service", groupMessageKey = "rest.auth.aws", order = 1325)
     public String getRestAwsService() {
         return restAwsService;
     }
@@ -707,7 +707,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.ntlm.username")
+    @ConfigurationProperty(displayMessageKey = "rest.ntlm.username", groupMessageKey = "rest.auth.ntlm", order = 1405)
     public String getRestNtlmUsername() {
         return restNtlmUsername;
     }
@@ -717,7 +717,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.ntlm.password")
+    @ConfigurationProperty(displayMessageKey = "rest.ntlm.password", groupMessageKey = "rest.auth.ntlm", order = 1410)
     public GuardedString getRestNtlmPassword() {
         return restNtlmPassword;
     }
@@ -727,7 +727,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.ntlm.domain")
+    @ConfigurationProperty(displayMessageKey = "rest.ntlm.domain", groupMessageKey = "rest.auth.ntlm", order = 1415)
     public String getRestNtlmDomain() {
         return restNtlmDomain;
     }
@@ -737,7 +737,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.ntlm.workstation")
+    @ConfigurationProperty(displayMessageKey = "rest.ntlm.workstation", groupMessageKey = "rest.auth.ntlm", order = 1420)
     public String getRestNtlmWorkstation() {
         return restNtlmWorkstation;
     }
@@ -747,7 +747,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "rest.ntlm.version", allowedValues = {"NTLMv1", "NTLMv2"})
+    @ConfigurationProperty(displayMessageKey = "rest.ntlm.version", groupMessageKey = "rest.auth.ntlm", order = 1425, allowedValues = {"NTLMv1", "NTLMv2"})
     public String getRestNtlmVersion() {
         return restNtlmVersion;
     }
@@ -761,7 +761,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.basic.username")
+    @ConfigurationProperty(displayMessageKey = "scim.basic.username", groupMessageKey = "scim.auth.basic", order = 605)
     public String getScimUsername() {
         return scimUsername;
     }
@@ -771,7 +771,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.basic.password")
+    @ConfigurationProperty(displayMessageKey = "scim.basic.password", groupMessageKey = "scim.auth.basic", order = 610)
     public GuardedString getScimPassword() {
         return scimPassword;
     }
@@ -785,7 +785,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.token.value", order = 10)
+    @ConfigurationProperty(displayMessageKey = "scim.token.value", groupMessageKey = "scim.auth.bearer", order = 705)
     public GuardedString getScimTokenValue() {
         return scimTokenValue;
     }
@@ -799,7 +799,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.token.name", order = 10)
+    @ConfigurationProperty(displayMessageKey = "scim.token.name", groupMessageKey = "scim.auth.jwt", order = 1505)
     public String getScimJwtTokenName() {
         return scimJwtTokenName;
     }
@@ -809,7 +809,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.algorithm", order = 20, allowedValues = {"HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
+    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.algorithm", groupMessageKey = "scim.auth.jwt", order = 1510, allowedValues = {"HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
     public String getScimJwtAlgorithm() {
         return scimJwtAlgorithm;
     }
@@ -819,7 +819,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.secret", order = 30)
+    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.secret", groupMessageKey = "scim.auth.jwt", order = 1515)
     public GuardedString getScimJwtSecret() {
         return scimJwtSecret;
     }
@@ -829,7 +829,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.secretBase64", order = 40)
+    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.secretBase64", groupMessageKey = "scim.auth.jwt", order = 1520)
     public Boolean getScimJwtSecretBase64Encoded() {
         return scimJwtSecretBase64Encoded;
     }
@@ -839,7 +839,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.payload", order = 50)
+    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.payload", groupMessageKey = "scim.auth.jwt", order = 1525)
     public String getScimJwtPayload() {
         return scimJwtPayload;
     }
@@ -849,7 +849,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.location", order = 60, allowedValues = {"header", "query"})
+    @ConfigurationProperty(displayMessageKey = "scim.token.jwt.location", groupMessageKey = "scim.auth.jwt", order = 1530, allowedValues = {"header", "query"})
     public String getScimJwtLocation() {
         return scimJwtLocation;
     }
@@ -863,7 +863,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.apikey.value")
+    @ConfigurationProperty(displayMessageKey = "scim.apikey.value", groupMessageKey = "scim.auth.apiKey", order = 1610)
     public GuardedString getScimApiKey() {
         return scimApiKey;
     }
@@ -873,7 +873,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.apikey.name")
+    @ConfigurationProperty(displayMessageKey = "scim.apikey.name", groupMessageKey = "scim.auth.apiKey", order = 1605)
     public String getScimApiKeyName() {
         return scimApiKeyName;
     }
@@ -883,7 +883,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.apikey.location", allowedValues = {"header", "query"})
+    @ConfigurationProperty(displayMessageKey = "scim.apikey.location", groupMessageKey = "scim.auth.apiKey", order = 1615, allowedValues = {"header", "query"})
     public String getScimApiKeyLocation() {
         return scimApiKeyLocation;
     }
@@ -897,7 +897,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.digest.username")
+    @ConfigurationProperty(displayMessageKey = "scim.digest.username", groupMessageKey = "scim.auth.digest", order = 1705)
     public String getScimDigestUsername() {
         return scimDigestUsername;
     }
@@ -907,7 +907,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.digest.password")
+    @ConfigurationProperty(displayMessageKey = "scim.digest.password", groupMessageKey = "scim.auth.digest", order = 1710)
     public GuardedString getScimDigestPassword() {
         return scimDigestPassword;
     }
@@ -917,7 +917,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.digest.autoChallenge")
+    @ConfigurationProperty(displayMessageKey = "scim.digest.autoChallenge", groupMessageKey = "scim.auth.digest", order = 1715)
     public Boolean getScimDigestAutoChallenge() {
         return scimDigestAutoChallenge;
     }
@@ -927,7 +927,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.digest.maxRetries")
+    @ConfigurationProperty(displayMessageKey = "scim.digest.maxRetries", groupMessageKey = "scim.auth.digest", order = 1725)
     public Integer getScimDigestMaxRetries() {
         return scimDigestMaxRetries;
     }
@@ -937,7 +937,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.digest.preemptiveAuth")
+    @ConfigurationProperty(displayMessageKey = "scim.digest.preemptiveAuth", groupMessageKey = "scim.auth.digest", order = 1720)
     public Boolean getScimDigestPreemptiveAuth() {
         return scimDigestPreemptiveAuth;
     }
@@ -947,7 +947,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.digest.algorithmPreference", allowedValues = {"MD5", "MD5-sess", "SHA-256", "SHA-256-sess", "SHA-512-256", "SHA-512-256-sess"})
+    @ConfigurationProperty(displayMessageKey = "scim.digest.algorithmPreference", groupMessageKey = "scim.auth.digest", order = 1730, allowedValues = {"MD5", "MD5-sess", "SHA-256", "SHA-256-sess", "SHA-512-256", "SHA-512-256-sess"})
     public String getScimDigestAlgorithmPreference() {
         return scimDigestAlgorithmPreference;
     }
@@ -957,7 +957,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.digest.stateCacheEnabled")
+    @ConfigurationProperty(displayMessageKey = "scim.digest.stateCacheEnabled", groupMessageKey = "scim.auth.digest", order = 1735)
     public Boolean getScimDigestStateCacheEnabled() {
         return scimDigestStateCacheEnabled;
     }
@@ -971,7 +971,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.tokenUrl")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.tokenUrl", groupMessageKey = "scim.auth.oauth2", order = 1805)
     public String getScimOAuth2TokenUrl() {
         return scimOAuth2TokenUrl;
     }
@@ -981,7 +981,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.clientId")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.clientId", groupMessageKey = "scim.auth.oauth2", order = 1810)
     public String getScimOAuth2ClientId() {
         return scimOAuth2ClientId;
     }
@@ -991,7 +991,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.scope")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.scope", groupMessageKey = "scim.auth.oauth2", order = 1820)
     public String getScimOAuth2Scope() {
         return scimOAuth2Scope;
     }
@@ -1001,7 +1001,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.clientAuthenticationScheme", allowedValues = {"post", "basic"})
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.clientAuthenticationScheme", groupMessageKey = "scim.auth.oauth2", order = 1815, allowedValues = {"post", "basic"})
     public String getScimOAuth2ClientAuthenticationScheme() {
         return scimOAuth2ClientAuthenticationScheme;
     }
@@ -1015,7 +1015,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.clientSecret")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.clientSecret", groupMessageKey = "scim.auth.oauth2", order = 1825)
     public GuardedString getScimOAuth2ClientSecret() {
         return scimOAuth2ClientSecret;
     }
@@ -1029,7 +1029,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.username")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.username", groupMessageKey = "scim.auth.oauth2", order = 1830)
     public String getScimOAuth2Username() {
         return scimOAuth2Username;
     }
@@ -1039,7 +1039,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.password")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.password", groupMessageKey = "scim.auth.oauth2", order = 1835)
     public GuardedString getScimOAuth2Password() {
         return scimOAuth2Password;
     }
@@ -1053,7 +1053,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.privateKey")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.privateKey", groupMessageKey = "scim.auth.oauth2", order = 1840)
     public GuardedString getScimOAuth2PrivateKey() {
         return scimOAuth2PrivateKey;
     }
@@ -1063,7 +1063,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.issuer")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.issuer", groupMessageKey = "scim.auth.oauth2", order = 1845)
     public String getScimOAuth2Issuer() {
         return scimOAuth2Issuer;
     }
@@ -1077,7 +1077,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.keyId")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.keyId", groupMessageKey = "scim.auth.oauth2", order = 1850)
     public String getScimOAuth2KeyId() {
         return scimOAuth2KeyId;
     }
@@ -1087,7 +1087,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.algorithm", allowedValues = {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.algorithm", groupMessageKey = "scim.auth.oauth2", order = 1855, allowedValues = {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"})
     public String getScimOAuth2Algorithm() {
         return scimOAuth2Algorithm;
     }
@@ -1097,7 +1097,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.oauth2.subject")
+    @ConfigurationProperty(displayMessageKey = "scim.oauth2.subject", groupMessageKey = "scim.auth.oauth2", order = 1860)
     public String getScimOAuth2Subject() {
         return scimOAuth2Subject;
     }
@@ -1111,7 +1111,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.hawk.id")
+    @ConfigurationProperty(displayMessageKey = "scim.hawk.id", groupMessageKey = "scim.auth.hawk", order = 1905)
     public String getScimHawkId() {
         return scimHawkId;
     }
@@ -1121,7 +1121,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.hawk.key")
+    @ConfigurationProperty(displayMessageKey = "scim.hawk.key", groupMessageKey = "scim.auth.hawk", order = 1910)
     public GuardedString getScimHawkKey() {
         return scimHawkKey;
     }
@@ -1131,7 +1131,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.hawk.algorithm", allowedValues = {"sha1", "sha256", "sha384", "sha512"})
+    @ConfigurationProperty(displayMessageKey = "scim.hawk.algorithm", groupMessageKey = "scim.auth.hawk", order = 1915, allowedValues = {"sha1", "sha256", "sha384", "sha512"})
     public String getScimHawkAlgorithm() {
         return scimHawkAlgorithm;
     }
@@ -1141,7 +1141,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.hawk.includePayloadHash")
+    @ConfigurationProperty(displayMessageKey = "scim.hawk.includePayloadHash", groupMessageKey = "scim.auth.hawk", order = 1920)
     public Boolean getScimHawkIncludePayloadHash() {
         return scimHawkIncludePayloadHash;
     }
@@ -1151,7 +1151,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.hawk.offset")
+    @ConfigurationProperty(displayMessageKey = "scim.hawk.offset", groupMessageKey = "scim.auth.hawk", order = 1925)
     public Integer getScimHawkOffset() {
         return scimHawkOffset;
     }
@@ -1161,7 +1161,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.hawk.ext")
+    @ConfigurationProperty(displayMessageKey = "scim.hawk.ext", groupMessageKey = "scim.auth.hawk", order = 1930)
     public String getScimHawkExt() {
         return scimHawkExt;
     }
@@ -1175,7 +1175,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.aws.accessKey")
+    @ConfigurationProperty(displayMessageKey = "scim.aws.accessKey", groupMessageKey = "scim.auth.aws", order = 2005)
     public String getScimAwsAccessKey() {
         return scimAwsAccessKey;
     }
@@ -1185,7 +1185,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.aws.secretKey")
+    @ConfigurationProperty(displayMessageKey = "scim.aws.secretKey", groupMessageKey = "scim.auth.aws", order = 2010)
     public GuardedString getScimAwsSecretKey() {
         return scimAwsSecretKey;
     }
@@ -1195,7 +1195,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.aws.sessionToken")
+    @ConfigurationProperty(displayMessageKey = "scim.aws.sessionToken", groupMessageKey = "scim.auth.aws", order = 2015)
     public GuardedString getScimAwsSessionToken() {
         return scimAwsSessionToken;
     }
@@ -1205,7 +1205,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.aws.region")
+    @ConfigurationProperty(displayMessageKey = "scim.aws.region", groupMessageKey = "scim.auth.aws", order = 2020)
     public String getScimAwsRegion() {
         return scimAwsRegion;
     }
@@ -1215,7 +1215,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.aws.service")
+    @ConfigurationProperty(displayMessageKey = "scim.aws.service", groupMessageKey = "scim.auth.aws", order = 2025)
     public String getScimAwsService() {
         return scimAwsService;
     }
@@ -1229,7 +1229,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     // =========================================================================
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.ntlm.username")
+    @ConfigurationProperty(displayMessageKey = "scim.ntlm.username", groupMessageKey = "scim.auth.ntlm", order = 2105)
     public String getScimNtlmUsername() {
         return scimNtlmUsername;
     }
@@ -1239,7 +1239,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.ntlm.password")
+    @ConfigurationProperty(displayMessageKey = "scim.ntlm.password", groupMessageKey = "scim.auth.ntlm", order = 2110)
     public GuardedString getScimNtlmPassword() {
         return scimNtlmPassword;
     }
@@ -1249,7 +1249,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.ntlm.domain")
+    @ConfigurationProperty(displayMessageKey = "scim.ntlm.domain", groupMessageKey = "scim.auth.ntlm", order = 2115)
     public String getScimNtlmDomain() {
         return scimNtlmDomain;
     }
@@ -1259,7 +1259,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.ntlm.workstation")
+    @ConfigurationProperty(displayMessageKey = "scim.ntlm.workstation", groupMessageKey = "scim.auth.ntlm", order = 2120)
     public String getScimNtlmWorkstation() {
         return scimNtlmWorkstation;
     }
@@ -1269,7 +1269,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.ntlm.version", allowedValues = {"NTLMv1", "NTLMv2"})
+    @ConfigurationProperty(displayMessageKey = "scim.ntlm.version", groupMessageKey = "scim.auth.ntlm", order = 2125, allowedValues = {"NTLMv1", "NTLMv2"})
     public String getScimNtlmVersion() {
         return scimNtlmVersion;
     }
@@ -1279,7 +1279,7 @@ public class ReadOnlyConfiguration extends BaseGroovyConnectorConfiguration impl
     }
 
     @Override
-    @ConfigurationProperty(displayMessageKey = "scim.address.base")
+    @ConfigurationProperty(displayMessageKey = "scim.address.base", groupMessageKey = "scim.service", order = 205)
     public String getScimBaseUrl() {
         return scimBaseUrl;
     }

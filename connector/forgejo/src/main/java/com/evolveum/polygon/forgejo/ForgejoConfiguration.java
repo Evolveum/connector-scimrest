@@ -16,7 +16,7 @@ public class ForgejoConfiguration extends BaseRestGroovyConnectorConfiguration i
     private GuardedString tokenValue;
 
     @Override
-    @ConfigurationProperty(groupMessageKey = "rest.auth.tokenValue", required = true)
+    @ConfigurationProperty(groupMessageKey = "rest.auth.bearer", order = 505, required = true)
     public GuardedString getRestTokenValue() {
         return tokenValue;
     }
