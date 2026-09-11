@@ -35,6 +35,7 @@ public final class ScimAuthChannelHandler extends AuthChannelHandler {
                 case "oauth2JwtBearer" -> scim.oauth2JwtBearer(oauth2Driver(binder, method));
                 case "oauth2Password" -> scim.oauth2Password(oauth2Driver(binder, method));
                 case "oauth2Saml" -> scim.oauth2Saml(oauth2Driver(binder, method));
+                case "awsSignature" -> scim.awsSignature(awsSignatureDriver(binder, method));
                 case "preference" -> scim.preference(preference(scim, method));
                 default -> throw unknownMethod(method, key);
             }

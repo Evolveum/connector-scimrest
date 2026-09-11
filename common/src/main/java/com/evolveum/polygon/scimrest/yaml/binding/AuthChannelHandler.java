@@ -78,6 +78,26 @@ abstract class AuthChannelHandler implements CustomYamlHandler {
         };
     }
 
+    /**
+     * A driver closure handed to {@code awsSignature(Closure)}: when invoked (with the
+     * {@link AuthenticationCustomizationBuilder.AwsSignatureCustomizationBuilder} as delegate) it sets
+     * the {@code beforeSign} hook from a compiled snippet. {@code beforeSign} delegates to
+     * {@link AuthenticationCustomizationBuilder.AwsBeforeSignContext} at runtime (not a closure
+     * parameter), so the snippet is compiled without a named parameter, same as {@code implementation}.
+     */
+    protected static Closure<?> awsSignatureDriver(DeclYamlBinder binder, LocatedNode node) {
+        return new Closure<Object>(AuthChannelHandler.class) {
+            public Object doCall(Object context) {
+                var builder = (AuthenticationCustomizationBuilder.AwsSignatureCustomizationBuilder) getDelegate();
+                var hook = block(node, "beforeSign");
+                if (hook != null) {
+                    builder.beforeSign(binder.compileClosure(hook));
+                }
+                return null;
+            }
+        };
+    }
+
     protected static IllegalArgumentException unknownMethod(LocatedNode method, String key) {
         return new IllegalArgumentException("Unknown auth method '" + key + "' at "
                 + method.line() + ":" + method.col());

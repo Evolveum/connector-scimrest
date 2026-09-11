@@ -35,6 +35,7 @@ public final class RestAuthChannelHandler extends AuthChannelHandler {
                 case "oauth2JwtBearer" -> rest.oauth2JwtBearer(oauth2Driver(binder, method));
                 case "oauth2Password" -> rest.oauth2Password(oauth2Driver(binder, method));
                 case "oauth2Saml" -> rest.oauth2Saml(oauth2Driver(binder, method));
+                case "awsSignature" -> rest.awsSignature(awsSignatureDriver(binder, method));
                 case "preference" -> rest.preference(preference(rest, method));
                 default -> throw unknownMethod(method, key);
             }
