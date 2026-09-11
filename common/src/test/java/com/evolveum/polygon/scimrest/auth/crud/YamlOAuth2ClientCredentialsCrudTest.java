@@ -41,16 +41,98 @@ public class YamlOAuth2ClientCredentialsCrudTest extends AbstractCrudConnectorTe
                 .willReturn(okJson("{\"access_token\":\"" + ACCESS_TOKEN + "\",\"token_type\":\"Bearer\",\"expires_in\":3600}")));
         stubSearchAccounts();
 
-        searchAccounts(initConnector());
+        searchAccounts(initConnectorWithAuth(AUTH_YAML));
 
         assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(ACCOUNTS_PATH))
                 .withHeader(CUSTOM_HEADER, equalTo(ACCESS_TOKEN))).size(), 1);
     }
 
-    private ClassHandlerConnectorBase initConnector() {
+    /**
+     * {@code buildTokenRequest} customizes the outgoing token request (replacing the default
+     * entirely — supplying the hook means the built-in grant_type/client_id/client_secret population
+     * is skipped, so the hook must set what it needs); {@code parseTokenResponse} extracts the token
+     * from a non-standard response shape via {@code set("access_token", ...)} on the auth context
+     * (the closure's delegate). The default {@code applyToken} then applies it as a Bearer header.
+     */
+    @Test
+    public void buildAndParseTokenRequestHooksDriveDefaultApplyToken() {
+        wireMockServer.stubFor(post(urlEqualTo(TOKEN_ENDPOINT))
+                .willReturn(okJson("{\"data\":{\"token\":\"nested-token\"}}")));
+        stubSearchAccounts();
+
+        var authYaml = """
+                authentication:
+                  rest:
+                    oauth2ClientCredentials:
+                      buildTokenRequest: |
+                        request.formParam("grant_type", "client_credentials")
+                        request.formParam("custom_param", "extra-value")
+                      parseTokenResponse: |
+                        set("access_token", response.data.token)
+                """;
+
+        searchAccounts(initConnectorWithAuth(authYaml));
+
+        assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))
+                .withRequestBody(containing("custom_param=extra-value"))).size(), 1);
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(ACCOUNTS_PATH))
+                .withHeader("Authorization", equalTo("Bearer nested-token"))).size(), 1);
+    }
+
+    /** {@code validateToken} takes no argument (only the auth-context delegate); always returning
+     * {@code false} forces a token refetch on every request. */
+    @Test
+    public void validateTokenHookForcesRefetchOnEveryRequest() {
+        wireMockServer.stubFor(post(urlEqualTo(TOKEN_ENDPOINT))
+                .willReturn(okJson("{\"access_token\":\"" + ACCESS_TOKEN + "\",\"token_type\":\"Bearer\",\"expires_in\":3600}")));
+        stubSearchAccounts();
+
+        var authYaml = """
+                authentication:
+                  rest:
+                    oauth2ClientCredentials:
+                      validateToken: |
+                        false
+                """;
+
+        var connector = initConnectorWithAuth(authYaml);
+        searchAccounts(connector);
+        searchAccounts(connector);
+
+        assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))).size(), 2,
+                "validateToken always returning false forces the token to be refetched every time");
+    }
+
+    /** {@code onResponse} runs for every response; clearing the token here forces a refetch on the
+     * next request even though the token would otherwise still be considered valid. */
+    @Test
+    public void onResponseHookClearsTokenAfterUse() {
+        wireMockServer.stubFor(post(urlEqualTo(TOKEN_ENDPOINT))
+                .willReturn(okJson("{\"access_token\":\"" + ACCESS_TOKEN + "\",\"token_type\":\"Bearer\",\"expires_in\":3600}")));
+        stubSearchAccounts();
+
+        var authYaml = """
+                authentication:
+                  rest:
+                    oauth2ClientCredentials:
+                      onResponse: |
+                        if (response.statusCode() == 200) {
+                          set("access_token", null)
+                        }
+                """;
+
+        var connector = initConnectorWithAuth(authYaml);
+        searchAccounts(connector);
+        searchAccounts(connector);
+
+        assertEquals(wireMockServer.findAll(postRequestedFor(urlEqualTo(TOKEN_ENDPOINT))).size(), 2,
+                "onResponse cleared the token after the first 200, forcing a refetch on the second request");
+    }
+
+    private ClassHandlerConnectorBase initConnectorWithAuth(String authYaml) {
         var connector = YamlOperationsConnector.fromStrings()
                 .withGroovyOperations(OPERATION_SCRIPT)
-                .withYamlAuthentication(AUTH_YAML);
+                .withYamlAuthentication(authYaml);
         connector.init(new Config(wireMockServer.port()));
         return connector;
     }
