@@ -6,7 +6,9 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.conndev.api.ParsingException;
 import com.evolveum.polygon.conndev.yaml.YamlSchemaLoader;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
@@ -14,6 +16,7 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 /**
  * The SCIM/REST schema front-end is driven by the location-aware engine against a live
@@ -82,5 +85,69 @@ public class YamlRestSchemaLoadingTest {
 
         // building yields a real RestSchema (not the inert conndev BaseSchema)
         assertTrue(loader.build() instanceof RestSchema);
+    }
+
+    @Test
+    public void scimPathBindsFromYaml() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  User:
+                    attributes:
+                      email:
+                        jsonType: string
+                        scim:
+                          path: name.givenName
+                        connId:
+                          name: __UID__
+                """);
+
+        var email = builder.objectClass("User").attribute("email");
+        assertEquals(email.scim().path().actual(), AttributePath.of("name", "givenName"));
+    }
+
+    @Test
+    public void nativeTypeBindsFromYaml() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  User:
+                    attributes:
+                      createdAt:
+                        jsonType: string
+                        nativeType: dateTime
+                        connId:
+                          name: __UID__
+                """);
+
+        var createdAt = builder.objectClass("User").attribute("createdAt");
+        assertEquals(createdAt.nativeType, "dateTime");
+    }
+
+    @Test
+    public void invalidScimPathReportsYamlSourceLocation() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  User:
+                    attributes:
+                      email:
+                        scim:
+                          path: "email[type = work]"
+                        connId:
+                          name: __UID__
+                """);
+
+        var email = builder.objectClass("User").attribute("email");
+        var exception = expectThrows(ParsingException.class, () -> email.scim().path().actual());
+
+        // the error carries the YAML source of the 'path:' key (line 6), not the binder's internal call site
+        assertTrue(exception.getContext().contains("inline document"),
+                "error context should reference the YAML source: " + exception.getContext());
+        assertTrue(exception.getContext().contains(":6:"),
+                "error context should reference the 'path:' line: " + exception.getContext());
     }
 }
