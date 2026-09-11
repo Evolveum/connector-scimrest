@@ -16,7 +16,6 @@ import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimSearchBuilder;
 import com.evolveum.polygon.scimrest.yaml.binding.AttributeResolversHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.CustomSearchHandler;
-import com.evolveum.polygon.scimrest.yaml.binding.NormalizationHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.SearchEndpointsHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -45,11 +44,11 @@ public interface RestSearchOperationBuilder extends SearchOperationBuilder {
     }
 
     /**
-     * Marker for the YAML front-end: the {@code normalize:} block is bound by
-     * {@link NormalizationHandler} onto the {@link NormalizationBuilder} this returns. The method body
-     * is unused.
+     * The {@code normalize:} block binds declaratively onto the returned {@link NormalizationBuilder}
+     * via its own {@code @Yaml.*} annotations — unlike {@code endpoints:}/{@code attributeResolvers:},
+     * {@code normalize:} has no list-shaped field, so no {@code CustomYamlHandler} is needed here.
      */
-    @Yaml.Custom(NormalizationHandler.class)
+    @Yaml.Sub
     NormalizationBuilder normalize();
 
     default NormalizationBuilder normalize(@DelegatesTo(value = NormalizationBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> definition) {

@@ -13,11 +13,15 @@ import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 
+import java.util.ArrayList;
+
 /**
- * Binds a search {@code custom:} block onto the {@code SearchScriptBuilder} returned by {@code
- * custom()}. Each {@code supportedFilters} entry carries a build-time {@code spec} (evaluated against
- * the script builder, yielding a {@link FilterSpecification}); {@code implementation} is the runtime
- * Groovy block (its {@code SearchScriptContext} delegate is applied by the builder at run time).
+ * Binds a search {@code custom:} block onto the {@code SearchScriptBuilder} returned by
+ * {@code custom()}. {@code supportedFilters} is a list (no {@code @Yaml.*} kind expresses that
+ * shape), so it is handled here: each entry carries a build-time {@code spec}, evaluated against
+ * the script builder to yield a {@link FilterSpecification}. The remaining keys
+ * ({@code implementation}, {@code emptyFilterSupported}) bind declaratively via
+ * {@code SearchScriptBuilder}'s own {@code @Yaml.*} annotations.
  */
 public class CustomSearchHandler implements CustomYamlHandler {
 
@@ -28,16 +32,15 @@ public class CustomSearchHandler implements CustomYamlHandler {
                     + target.getClass().getName());
         }
         var custom = search.custom();
+        var remaining = new ArrayList<LocatedNode.Entry>();
         for (var entry : value.entries()) {
-            var key = entry.key();
-            var node = entry.value();
-            switch (key) {
-                case "supportedFilters" -> bindSupportedFilters(binder, custom, node);
-                case "implementation" -> custom.implementation(binder.compileClosure(scalar(node, key)));
-                case "emptyFilterSupported" -> custom.emptyFilterSupported(node.asBoolean());
-                default -> throw unknown(key, node);
+            if ("supportedFilters".equals(entry.key())) {
+                bindSupportedFilters(binder, custom, entry.value());
+            } else {
+                remaining.add(entry);
             }
         }
+        binder.bindEntries(remaining, custom);
     }
 
     private static void bindSupportedFilters(DeclYamlBinder binder, SearchScriptBuilder custom, LocatedNode list) {
@@ -49,18 +52,5 @@ public class CustomSearchHandler implements CustomYamlHandler {
             }
             custom.supportedFilter((FilterSpecification) binder.evaluate(spec.text(), custom));
         }
-    }
-
-    private static String scalar(LocatedNode node, String key) {
-        if (!node.isValue()) {
-            throw new IllegalArgumentException("Expected a block scalar for '" + key + "' at "
-                    + node.line() + ":" + node.col());
-        }
-        return node.text();
-    }
-
-    private static IllegalArgumentException unknown(String key, LocatedNode node) {
-        return new IllegalArgumentException("Unknown key '" + key + "' in search custom block at "
-                + node.line() + ":" + node.col());
     }
 }
