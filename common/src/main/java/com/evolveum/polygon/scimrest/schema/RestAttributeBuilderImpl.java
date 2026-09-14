@@ -144,6 +144,12 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
         }
 
         @Override
+        public ScimMapping path(AttributePathDeclaration<?, ?> declaration) {
+            this.path = declaration;
+            return this;
+        }
+
+        @Override
         public ScimMapping path(DefinitionValue<String> path) {
             this.path = AttributePathDeclaration.of(
                     DefinitionValue.from(ScimPathFormat.INSTANCE, path.location()), path);

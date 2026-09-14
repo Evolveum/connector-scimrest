@@ -88,6 +88,16 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
          */
         ScimMapping path(AttributePath path);
 
+        /**
+         * Sets the SCIM path from a pre-assembled {@link AttributePathDeclaration} (e.g. one built
+         * by the declarative YAML front-end for a {@code @Yaml.Path} binding).
+         *
+         * @param declaration the path declaration
+         * @return this SCIM mapping instance
+         */
+        @Yaml.Path(ScimPathFormat.class)
+        ScimMapping path(AttributePathDeclaration<?, ?> declaration);
+
         default AttributePath attribute(String name) {
             return AttributePath.of(name);
         }
