@@ -27,9 +27,12 @@ import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
-import com.evolveum.polygon.scimrest.impl.scim.ScimUpdateHandler;
+import com.evolveum.polygon.scimrest.impl.scim.ScimPatchOperations;
+import com.evolveum.polygon.scimrest.impl.scim.ScimPatchUpdateHandler;
+import com.evolveum.polygon.scimrest.impl.scim.ScimPutUpdateHandler;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
+import com.unboundid.scim2.common.messages.PatchOpType;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -94,13 +97,9 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
     }
 
     private boolean scimNotUsed() {
-        if (scim == null) {
-            return true;
-        }
-        if (!scim.enabled) {
-            return true;
-        }
-        return !(scim.put != null && scim.put.enabled) && !(scim.patch != null && scim.patch.enabled);
+        // SCIM update is active by default (PATCH); it is only skipped when the SCIM block is
+        // not present (REST-only object class) or explicitly disabled.
+        return scim == null || !scim.isEnabled();
     }
 
     private RestAttributeDefinition resolveAttribute(String key) {
@@ -306,8 +305,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
 
     private class ScimUpdateBuilderImpl implements ScimUpdateBuilder {
 
-        public ScimPutBuilder put;
-        public ScimPatchBuilder patch;
+        private ScimPutBuilder put;
+        private ScimPatchBuilder patch;
         private boolean enabled = true;
         private final RestConnectorContext context;
 
@@ -338,43 +337,155 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
 
         @Override
         public Put put() {
+            if (put == null) {
+                put = new ScimPutBuilder();
+            }
             return put;
         }
 
         @Override
         public Patch patch() {
+            if (patch == null) {
+                patch = new ScimPatchBuilder();
+            }
             return patch;
         }
 
-        protected ScimUpdateHandler build() {
+        protected UpdateOperationHandler build() {
             if (!enabled) {
                 return null;
             }
-            return new ScimUpdateHandler(parent.getObjectClass().objectClass(), ((RestConnectorContext) parent.context).scim());
+            var objectClass = parent.getObjectClass().objectClass();
+            var scimContext = ((RestConnectorContext) parent.context).scim();
+            if (put != null) {
+                var supported = put.supportedAttributes;
+                return new ScimPutUpdateHandler(objectClass, scimContext,
+                        supported.isEmpty() ? null : supported);
+            }
+            Set<String> supported = null;
+            Map<String, ScimPatchOperations.PatchAttrConfig> patchConfig = null;
+            if (patch != null) {
+                supported = patch.supportedAttributes;
+                patchConfig = buildPatchConfig(patch.perAttribute);
+            }
+            return new ScimPatchUpdateHandler(objectClass, scimContext,
+                    supported != null && supported.isEmpty() ? null : supported, patchConfig);
         }
 
+        private Map<String, ScimPatchOperations.PatchAttrConfig> buildPatchConfig(Map<String, AttrData> perAttribute) {
+            if (perAttribute == null || perAttribute.isEmpty()) {
+                return null;
+            }
+            var config = new HashMap<String, ScimPatchOperations.PatchAttrConfig>();
+            for (var entry : perAttribute.entrySet()) {
+                var data = entry.getValue();
+                config.put(entry.getKey(), new ScimPatchOperations.PatchAttrConfig(
+                        toPatchOpTypes(data.operations), data.maxPerRequest, data.pinnedValues));
+            }
+            return config;
+        }
+
+        private static Set<PatchOpType> toPatchOpTypes(Set<String> operations) {
+            if (operations == null) {
+                return null;
+            }
+            var result = new HashSet<PatchOpType>();
+            for (var op : operations) {
+                result.add(PatchOpType.valueOf(op.toUpperCase(Locale.ROOT)));
+            }
+            return result;
+        }
+    }
+
+    /** Per-attribute SCIM update configuration collected from the {@code supportedAttribute} DSL. */
+    private static final class AttrData {
+        List<Object> pinnedValues;
+        Set<String> operations;
+        int maxPerRequest = ScimPatchOperations.PatchAttrConfig.UNLIMITED;
+    }
+
+    /**
+     * The {@code supportedAttribute(name) { ... }} filter for the SCIM put/patch builders. Records a
+     * pinned value ({@code value}) and per-attribute limitations ({@code operations},
+     * {@code maxPerRequest}) into the owning attribute's {@link AttrData}.
+     */
+    private static final class ScimUpdateFilter implements ScimUpdateBuilder.AttributeValueFilter {
+
+        private final AttrData data;
+        private final LimitationsImpl limitations;
+
+        ScimUpdateFilter(AttrData data) {
+            this.data = data;
+            this.limitations = new LimitationsImpl(data);
+        }
+
+        @Override
+        public UpdateOperationBuilder.AttributeValueFilter value(Object value) {
+            if (data.pinnedValues == null) {
+                data.pinnedValues = new ArrayList<>();
+            }
+            data.pinnedValues.add(value);
+            return this;
+        }
+
+        @Override
+        public UpdateOperationBuilder.AttributeValueFilter transition(Object oldValue, Object newValue) {
+            return this;
+        }
+
+        @Override
+        public ScimUpdateBuilder.AttributeLimitations limitations() {
+            return limitations;
+        }
+
+        @Override
+        public ScimUpdateBuilder.AttributeLimitations limitations(Closure<?> definition) {
+            return GroovyClosures.callAndReturnDelegate(definition, limitations());
+        }
+
+        private static final class LimitationsImpl implements ScimUpdateBuilder.AttributeLimitations {
+            private final AttrData data;
+
+            LimitationsImpl(AttrData data) {
+                this.data = data;
+            }
+
+            @Override
+            public ScimUpdateBuilder.AttributeLimitations maxPerRequest(int maximum) {
+                data.maxPerRequest = maximum;
+                return this;
+            }
+
+            @Override
+            public ScimUpdateBuilder.AttributeLimitations operations(String... operations) {
+                data.operations = new HashSet<>(List.of(operations));
+                return this;
+            }
+        }
     }
 
     private class ScimPatchBuilder implements ScimUpdateBuilder.Patch {
 
-        protected boolean enabled;
+        final Set<String> supportedAttributes = new LinkedHashSet<>();
+        final Map<String, AttrData> perAttribute = new HashMap<>();
 
         @Override
         public ScimUpdateBuilder.AttributeValueFilter supportedAttribute(String attribute) {
-            throw new UnsupportedOperationException();
+            supportedAttributes.add(attribute);
+            return new ScimUpdateFilter(perAttribute.computeIfAbsent(attribute, k -> new AttrData()));
         }
-
     }
 
-    protected class ScimPutBuilder implements ScimUpdateBuilder.Put {
+    private class ScimPutBuilder implements ScimUpdateBuilder.Put {
 
-        protected boolean enabled;
+        final Set<String> supportedAttributes = new LinkedHashSet<>();
+        final Map<String, AttrData> perAttribute = new HashMap<>();
 
         @Override
         public ScimUpdateBuilder.AttributeValueFilter supportedAttribute(String attribute) {
-            throw new UnsupportedOperationException();
+            supportedAttributes.add(attribute);
+            return new ScimUpdateFilter(perAttribute.computeIfAbsent(attribute, k -> new AttrData()));
         }
-
     }
 
 }

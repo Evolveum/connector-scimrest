@@ -6,10 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
-import com.evolveum.polygon.conndev.api.AttributePath;
-import com.evolveum.polygon.conndev.api.AttributePathFormat;
-import com.evolveum.polygon.conndev.api.AttributePathFormatException;
-import com.evolveum.polygon.conndev.api.ParsingException;
+import com.evolveum.polygon.conndev.api.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -48,6 +45,10 @@ public final class ScimPathFormat implements AttributePathFormat<String> {
     public static final ScimPathFormat INSTANCE = new ScimPathFormat();
 
     private ScimPathFormat() {
+    }
+
+    static {
+        StringAttributePathFormats.register("SCIM_PATH", ScimPathFormat.INSTANCE);
     }
 
     // ==================== Parsing ====================

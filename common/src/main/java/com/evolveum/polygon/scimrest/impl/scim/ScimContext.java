@@ -110,6 +110,9 @@ public class ScimContext implements RetrievableContext {
             if (authentication != null) {
                 clientBuilder.register(new JerseyRequestCustomizerFilter(authentication, scimConf));
             }
+            // Route requests through Apache HttpClient 5, which (unlike the JDK HttpURLConnection)
+            // supports the PATCH method required by the SCIM PATCH update strategy.
+            clientBuilder.property("jersey.config.client.connector.provider", ScimApacheConnectorProvider.class.getName());
             this.httpClient = clientBuilder.build();
             this.scimClient = new ScimService(httpClient.target(scimConf.getScimBaseUrl()));
         } catch (Exception e) {
@@ -319,6 +322,11 @@ public class ScimContext implements RetrievableContext {
 
     public ScimService scimClient() {
         return scimClient;
+    }
+
+    /** The configured SCIM base URL (e.g. {@code http://host:port/scim}); relative resource endpoints resolve against it. */
+    public String scimBaseUrl() {
+        return configuration.getScimBaseUrl();
     }
 
     public Client httpClient() {
