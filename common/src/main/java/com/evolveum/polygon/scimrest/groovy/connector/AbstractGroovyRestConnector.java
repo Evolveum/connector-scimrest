@@ -6,8 +6,13 @@
  */
 package com.evolveum.polygon.scimrest.groovy.connector;
 
+import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RestObjectClassSchemaBuilder;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.handler.RestHandlerBuilder;
+import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.groovy.schema.SchemaDefinitionLoader;
+import com.evolveum.polygon.scimrest.yaml.YamlRestHandlerLoader;
 
 import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.conndev.api.ContextLookup;
@@ -17,6 +22,11 @@ import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationResult;
 import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
+import com.evolveum.polygon.conndev.yaml.GroovyScriptCompiler;
+import com.evolveum.polygon.conndev.yaml.ScriptResources;
+import com.evolveum.polygon.conndev.yaml.YamlSchemaLoader;
+import com.evolveum.polygon.conndev.yaml.decl.GroovySyntaxChecker;
+import com.evolveum.polygon.conndev.yaml.decl.YamlScriptValidator;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
@@ -26,6 +36,8 @@ import com.evolveum.polygon.scimrest.impl.scim.ScimExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.scim.ScimHttpErrorException;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
+import java.io.InputStreamReader;
+
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
@@ -323,11 +335,16 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
      * rather than merges with its own old content. For a schema candidate that builds
      * successfully, also re-checks every deployed operation script against the candidate schema
      * (not the currently deployed one), since a schema change can break an operation script that
-     * references the changed definitions.
+     * references the changed definitions. A YAML candidate ({@link
+     * ScriptValidationRequest#isYaml()}) goes through {@link #validateYamlSchema}/{@link
+     * #validateYamlOperations} instead, under the same contract.
      */
     @Override
     protected ScriptValidationResult validateScript(ScriptValidationRequest request) throws Exception {
         if (ScriptValidationRequest.ARTIFACT_KIND_SCHEMA.equals(request.artifactKind())) {
+            if (request.isYaml()) {
+                return validateYamlSchema(request);
+            }
             var builder = new RestSchemaBuilderImpl(getClass(), context);
             var loader = new SchemaDefinitionLoader(context.configuration().groovyContext(), builder);
             schemaResources(request.filename()).forEach(loader::loadFromResource);
@@ -343,10 +360,68 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
             }
             return validateOperationsAgainstCandidateSchema(candidateSchema[0]);
         }
+        if (request.isYaml()) {
+            return validateYamlOperations(request);
+        }
         initializeCore();
         var builder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), context);
         operationResources(request.filename()).forEach(builder::loadFromResource);
         return GroovyScriptValidator.validate(builder::parse, builder::build, request.scriptText(), request.operation());
+    }
+
+    /**
+     * YAML counterpart of the schema branch above — {@code compile} only runs the static syntax
+     * check, {@code build} loads the candidate for real via {@link YamlSchemaLoader} onto a
+     * throwaway builder seeded with the deployed siblings.
+     */
+    private ScriptValidationResult validateYamlSchema(ScriptValidationRequest request) {
+        var builder = new RestSchemaBuilderImpl(getClass(), context);
+        var siblingLoader = new SchemaDefinitionLoader(context.configuration().groovyContext(), builder);
+        schemaResources(request.filename()).forEach(siblingLoader::loadFromResource);
+
+        RestSchema[] candidateSchema = new RestSchema[1];
+        var result = YamlScriptValidator.validate(
+                request,
+                document -> GroovySyntaxChecker.checkObjectClasses(document, RestObjectClassSchemaBuilder.class,
+                        new GroovyScriptCompiler(context.configuration().groovyContext())),
+                () -> new YamlSchemaLoader(builder).load(request.scriptText()),
+                () -> {
+                    builder.applyStructuralRules();
+                    candidateSchema[0] = builder.build();
+                });
+        if (result.status() != ScriptValidationResult.Status.OK
+                || !ScriptValidationRequest.SCRIPT_OPERATION_BUILD.equals(request.operation())) {
+            return result;
+        }
+        return validateOperationsAgainstCandidateSchema(candidateSchema[0]);
+    }
+
+    /**
+     * YAML counterpart of the operations branch above — same split as {@link #validateYamlSchema}.
+     * Sibling resources are dispatched per file extension ({@link #loadOperationSibling}), since
+     * {@link GroovyRestHandlerBuilder#loadFromResource} only reads Groovy.
+     */
+    private ScriptValidationResult validateYamlOperations(ScriptValidationRequest request) {
+        initializeCore();
+        var builder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), context);
+        for (String resource : operationResources(request.filename())) {
+            loadOperationSibling(builder, resource);
+        }
+        return YamlScriptValidator.validate(
+                request,
+                document -> GroovySyntaxChecker.checkOperations(document, BaseOperationSupportBuilder.class,
+                        AuthenticationCustomizationBuilder.class, new GroovyScriptCompiler(context.configuration().groovyContext())),
+                () -> new YamlRestHandlerLoader(builder, context.configuration().groovyContext()).loadFromString(request.scriptText()),
+                builder::build);
+    }
+
+    private void loadOperationSibling(RestHandlerBuilder builder, String resource) {
+        if (ScriptResources.isYaml(resource)) {
+            new YamlRestHandlerLoader(builder, context.configuration().groovyContext())
+                    .load(new InputStreamReader(getClass().getResourceAsStream(resource)), resource);
+        } else {
+            ((GroovyRestHandlerBuilder) builder).loadFromResource(resource);
+        }
     }
 
     private ScriptValidationResult validateOperationsAgainstCandidateSchema(RestSchema candidateSchema) {

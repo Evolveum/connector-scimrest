@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.yaml.binding;
 
 import com.evolveum.polygon.conndev.api.FilterSpecification;
+import com.evolveum.polygon.conndev.yaml.decl.GroovySyntaxChecker;
 import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
 import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
@@ -31,6 +32,27 @@ public class SupportedFiltersHandler implements CustomYamlHandler {
             var request = requireScalar(item, "request");
             var filterSpec = (FilterSpecification) binder.evaluate(spec, endpoint);
             endpoint.supportedFilter(filterSpec, binder.compileClosure(request));
+        }
+    }
+
+    @Override
+    public void checkGroovySyntax(LocatedNode value, String path, GroovySyntaxChecker checker) {
+        if (value == null || value.isNull()) {
+            return;
+        }
+        int i = 0;
+        for (var item : value.elements()) {
+            var itemPath = path + "[" + i + "]";
+            checkOptionalField(item, "spec", itemPath, checker);
+            checkOptionalField(item, "request", itemPath, checker);
+            i++;
+        }
+    }
+
+    private static void checkOptionalField(LocatedNode item, String key, String itemPath, GroovySyntaxChecker checker) {
+        var node = item.get(key);
+        if (node != null) {
+            checker.checkFragment(node, itemPath + "." + key);
         }
     }
 

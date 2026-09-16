@@ -6,9 +6,11 @@
  */
 package com.evolveum.polygon.scimrest.yaml.binding;
 
+import com.evolveum.polygon.conndev.yaml.decl.GroovySyntaxChecker;
 import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
 import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
+import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 
 import java.util.ArrayList;
@@ -43,5 +45,19 @@ public class SearchEndpointsHandler implements CustomYamlHandler {
                     + map.line() + ":" + map.col());
         }
         return node.text();
+    }
+
+    @Override
+    public void checkGroovySyntax(LocatedNode value, String path, GroovySyntaxChecker checker) {
+        if (value == null || value.isNull()) {
+            return;
+        }
+        int i = 0;
+        for (var item : value.elements()) {
+            var rest = new ArrayList<>(item.entries());
+            rest.removeIf(e -> e.key().equals("path"));
+            checker.checkFragments(rest, RestSearchEndpointBuilder.class, path + "[" + i + "]");
+            i++;
+        }
     }
 }

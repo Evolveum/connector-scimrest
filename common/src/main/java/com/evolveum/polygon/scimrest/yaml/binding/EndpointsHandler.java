@@ -6,9 +6,11 @@
  */
 package com.evolveum.polygon.scimrest.yaml.binding;
 
+import com.evolveum.polygon.conndev.yaml.decl.GroovySyntaxChecker;
 import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
 import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
+import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestOperationBuilder;
 
@@ -58,5 +60,19 @@ public class EndpointsHandler implements CustomYamlHandler {
         }
         throw new IllegalArgumentException("Missing required key '" + key + "' in endpoint at "
                 + map.line() + ":" + map.col());
+    }
+
+    @Override
+    public void checkGroovySyntax(LocatedNode value, String path, GroovySyntaxChecker checker) {
+        if (value == null || value.isNull()) {
+            return;
+        }
+        int i = 0;
+        for (var entry : value.elements()) {
+            var rest = new ArrayList<>(entry.entries());
+            rest.removeIf(e -> e.key().equals("method") || e.key().equals("path"));
+            checker.checkFragments(rest, EndpointBuilder.class, path + "[" + i + "]");
+            i++;
+        }
     }
 }
