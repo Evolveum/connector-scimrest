@@ -16,16 +16,8 @@ When set to `classic`: the numeric ID as a string (e.g. "123")."""
         readable true
         updateable false
         creatable false
-//        connId{
-//            type String.class
-//        }
         json {
             type "integer"
-//            implementation {
-//                deserialize {
-//                    return value.toString();
-//                }
-//            }
         }
     }
 
@@ -40,95 +32,83 @@ When set to `classic`: the numeric ID as a string (e.g. "123")."""
         }
     }
 
-        attribute("type") {
+    attribute("type") {
         description "The type of the work package"
         required true
         creatable true
         readable true
         updatable true
-            connId{
-                type String.class
-            }
-            json {
-                type "string"
-                path attribute("_links").child("type").child("href")
-                implementation {
-                    deserialize {
-                        return value.asText()
-                    }
-                    serialize {
-                        return value
-                    }
-                }
-            }
+        json {
+            type "string"
+            path attribute("_links").child("type").child("href")
+        }
     }
 
-        attribute("project") {
+    attribute("project") {
         description "The workspace to which the work package belongs"
         required true
         creatable true
         readable true
         updatable true
-            connId{
-                type String.class
-            }
-            json {
-                type ("string")
-                openApiFormat ("uri-reference")
-                path attribute("_links").child("project").child("href")
-                implementation {
-                    deserialize {
-                        return value.asText()
-                    }
-                    serialize {
-                        return value
-                    }
-                }
-            }
+        json {
+            type ("string")
+            openApiFormat ("uri-reference")
+            path attribute("_links").child("project").child("href")
+        }
     }
 
-        attribute("status") {
+    attribute("status") {
         description "The current status of the work package"
         required true
         creatable true
         updatable true
-            connId{
-                type String.class
-            }
-            json {
-                type("string")
-                path attribute("_links").child("status").child("href")
-                implementation {
-                    deserialize {
-                        return value.asText()
-                    }
-                    serialize {
-                        return value
-                    }
-                }
-            }
+        json {
+            type("string")
+            path attribute("_links").child("status").child("href")
+        }
     }
 
-        attribute("priority") {
+    attribute("priority") {
         description "The priority of the work package"
         required true
         creatable true
         readable true
         updatable true
-            connId{
-                type String.class
-            }
-            json {
-                type("string")
-                path attribute("_links").child("priority").child("href")
-                implementation {
-                    deserialize {
-                        return value.asText()
-                    }
-                    serialize {
-                        return value
-                    }
-                }
-            }
+        json {
+            type("string")
+            path attribute("_links").child("priority").child("href")
+        }
+    }
+
+    attribute("description.value") {
+        json{
+            path attribute("description").child("raw")
+            type("string")
+        }
+        creatable true
+        readable true
+        updatable true
+        returnedByDefault false
+    }
+    attribute("description.format") {
+        json{
+            path attribute("description").child("format")
+            type("string")
+        }
+        creatable true
+        readable true
+        updatable true
+        returnedByDefault false
+    }
+
+    attribute("description.html") {
+        json{
+            path attribute("description").child("format")
+            type("string")
+        }
+        creatable true
+        readable true
+        updatable true
+        returnedByDefault false
     }
 }

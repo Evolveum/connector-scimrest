@@ -21,6 +21,7 @@ import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.test.common.TestHelpers;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -30,10 +31,16 @@ import static org.testng.Assert.assertNotNull;
 
 public class BaseTest {
 
+    private static final Integer defaultPageSizeValue = 20;
+    private static final Integer defaultPageOffset = 1;
+    static Map.Entry<String, Integer> _OP_ENTRY_DEFAULT_PAGE_SIZE = Map.entry(OperationOptions.OP_PAGE_SIZE, defaultPageSizeValue);
+    static Map.Entry<String, Integer> _OP_ENTRY_DEFAULT_PAGED_RESULT_OFFSET = Map.entry(OperationOptions.OP_PAGED_RESULTS_OFFSET, defaultPageOffset);
+
+
     protected ConnectorFacade initializedConnector() {
         OpenProjectConfiguration config = new OpenProjectConfiguration();
 
-        config.setBaseAddress("http://127.0.0.1:8080/api/v3");
+        config.setBaseAddress("https://localhost:8443/api/v3");
         config.setRestUsername("");
         config.setRestPassword(new GuardedString("".toCharArray()));
 
@@ -68,10 +75,14 @@ public class BaseTest {
 
 
     public void testSearchAll(String objectType) {
+        testSearchAll(objectType, new OperationOptions(Map.of()));
+    }
+
+    public void testSearchAll(String objectType, OperationOptions options) {
         var connector = initializedConnector();
         var results = new ArrayList<ConnectorObject>();
         connector.search(new ObjectClass(objectType), null,
-                results::add, new OperationOptions(Map.of()));
+                results::add, options);
         assertNotNull(results);
     }
 
@@ -192,4 +203,26 @@ public class BaseTest {
         return String.format("%05d",
                 ThreadLocalRandom.current().nextInt(0, 100_000));
     }
+    @SafeVarargs
+    public static OperationOptions buildOptions(Map.Entry<String, ?>... options){
+        return new OperationOptions(Map.ofEntries(options));
+    }
+
+    public static Map.Entry<String, ?> [] buildPageEntries(Integer pageSize, Integer pageOffset){
+
+        return new Map.Entry[] {
+                pageSize != null
+                        ? Map.entry(OperationOptions.OP_PAGE_SIZE, pageSize)
+                        : _OP_ENTRY_DEFAULT_PAGE_SIZE,
+                pageOffset != null
+                        ? Map.entry(OperationOptions.OP_PAGED_RESULTS_OFFSET, pageOffset)
+                        : _OP_ENTRY_DEFAULT_PAGED_RESULT_OFFSET
+        };
+    }
+
+    public static Map.Entry<String, ?> []  buildPageEntries(){
+
+        return buildPageEntries(null,null);
+    }
+
 }

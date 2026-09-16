@@ -31,7 +31,8 @@ public class CreateTests extends BaseTest {
     private static final Map<String, Object> propertiesWPCreate = Map.of(
             "subject", "Work Package "+ generateRandomFiveDigitCode(),
             "type", "/api/v3/types/3",
-            "project", "/api/v3/projects/1"
+            "project", "/api/v3/projects/1",
+            "description.value", "Username: John"
     );
 
     @Test(enabled = true)
