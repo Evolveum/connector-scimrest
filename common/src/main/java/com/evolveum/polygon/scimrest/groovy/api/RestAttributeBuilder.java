@@ -62,14 +62,15 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
          * @param path
          * @return
          */
-        @Yaml.Key
         ScimMapping path(String path);
 
         /**
-         * Same as {@link #path(String)}, but carrying the value's origin and source location — the
-         * {@code @Yaml.Key} binder prefers this overload so a YAML-declared path that fails SCIM
-         * syntax validation reports the exact {@code source:line:col} it was written at, instead of
-         * the internal call site.
+         * Same as {@link #path(String)}, but carrying the value's origin and source location, so a
+         * programmatically declared path that fails SCIM syntax validation reports the exact
+         * {@code source:line:col} it was written at, instead of the internal call site.
+         *
+         * <p>The YAML front-end does not use this overload: the {@code path:} key is bound by
+         * {@link #path(AttributePathDeclaration)} ({@code @Yaml.Path}).
          *
          * @param path the SCIM attribute path expression, with its origin and location
          * @return this SCIM mapping instance

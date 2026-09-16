@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.schema;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
+import com.evolveum.polygon.conndev.api.BasicJsonPathFormat;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.api.ParsingException;
 import com.evolveum.polygon.conndev.yaml.YamlSchemaLoader;
@@ -14,9 +15,11 @@ import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.testng.annotations.Test;
 
+import java.util.List;
+
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 
 /**
  * The SCIM/REST schema front-end is driven by the location-aware engine against a live
@@ -88,46 +91,76 @@ public class YamlRestSchemaLoadingTest {
     }
 
     @Test
-    public void scimPathBindsFromYaml() {
+    public void scimPathIsBoundWithTheScimFormat() {
         var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
         var loader = new YamlSchemaLoader(builder);
         loader.load("""
                 objectClasses:
                   User:
                     attributes:
-                      email:
-                        jsonType: string
+                      givenName:
                         scim:
                           path: name.givenName
-                        connId:
-                          name: __UID__
                 """);
 
-        var email = builder.objectClass("User").attribute("email");
-        assertEquals(email.scim().path().actual(), AttributePath.of("name", "givenName"));
+        var declaration = builder.objectClass("User").attribute("givenName").scim().path();
+
+        assertEquals(declaration.type().value(), ScimPathFormat.INSTANCE);
+        assertEquals(declaration.value().value(), "name.givenName");
+        assertEquals(declaration.value().location().line(), 6);
+        assertEquals(declaration.value().location().column(), 11);
+        // the expression parses lazily to the expected path
+        assertEquals(declaration.actual(), AttributePath.of("name", "givenName"));
     }
 
     @Test
-    public void nativeTypeBindsFromYaml() {
+    public void scimPathBindsValueFiltersAndExtensionUris() {
         var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
         var loader = new YamlSchemaLoader(builder);
         loader.load("""
                 objectClasses:
                   User:
                     attributes:
-                      createdAt:
-                        jsonType: string
-                        nativeType: dateTime
-                        connId:
-                          name: __UID__
+                      primaryEmail:
+                        scim:
+                          path: emails[primary eq true].value
+                      employeeNumber:
+                        scim:
+                          path: urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber
                 """);
 
-        var createdAt = builder.objectClass("User").attribute("createdAt");
-        assertEquals(createdAt.nativeType, "dateTime");
+        var user = builder.objectClass("User");
+        assertEquals(user.attribute("primaryEmail").scim().path().actual(),
+                AttributePath.of("emails").valueFilter("primary", Boolean.TRUE).child("value"));
+        assertEquals(user.attribute("employeeNumber").scim().path().actual(),
+                AttributePath.of(
+                        new AttributePath.Extension("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"),
+                        new AttributePath.Attribute("employeeNumber")));
     }
 
     @Test
-    public void invalidScimPathReportsYamlSourceLocation() {
+    public void scimPathAcceptsTheExplicitTypeValueMapping() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  User:
+                    attributes:
+                      id:
+                        scim:
+                          path:
+                            type: SCIM_PATH
+                            value: id
+                """);
+
+        var declaration = builder.objectClass("User").attribute("id").scim().path();
+
+        assertEquals(declaration.type().value(), ScimPathFormat.INSTANCE);
+        assertEquals(declaration.value().value(), "id");
+    }
+
+    @Test
+    public void invalidScimPathFailsAtBuildNamingTheExpression() {
         var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
         var loader = new YamlSchemaLoader(builder);
         loader.load("""
@@ -136,18 +169,36 @@ public class YamlRestSchemaLoadingTest {
                     attributes:
                       email:
                         scim:
-                          path: "email[type = work]"
-                        connId:
-                          name: __UID__
+                          type: string
+                          path: emails[primary ne true].value
                 """);
 
-        var email = builder.objectClass("User").attribute("email");
-        var exception = expectThrows(ParsingException.class, () -> email.scim().path().actual());
+        // the structural rules force the mapping build, which forces the lazy path parse
+        var exception = expectThrows(ParsingException.class, builder::applyStructuralRules);
 
-        // the error carries the YAML source of the 'path:' key (line 6), not the binder's internal call site
-        assertTrue(exception.getContext().contains("inline document"),
-                "error context should reference the YAML source: " + exception.getContext());
-        assertTrue(exception.getContext().contains(":6:"),
-                "error context should reference the 'path:' line: " + exception.getContext());
+        assertTrue(exception.getMessage().contains("emails[primary ne true].value"), exception.getMessage());
+    }
+
+    @Test
+    public void jsonPathIsInheritedFromTheBaseBinding() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  User:
+                    attributes:
+                      city:
+                        json:
+                          type: string
+                          path: $.address.city
+                """);
+
+        builder.applyStructuralRules();
+        var city = loader.build().objectClass("User").attributeFromProtocolName("city");
+
+        assertEquals(city.json().pathDeclaration().type().value(), BasicJsonPathFormat.INSTANCE);
+        assertEquals(city.json().path().components(), List.of(
+                new AttributePath.Attribute("address"),
+                new AttributePath.Attribute("city")));
     }
 }
