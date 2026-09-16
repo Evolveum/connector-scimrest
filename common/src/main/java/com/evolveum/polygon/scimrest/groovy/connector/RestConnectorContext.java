@@ -49,8 +49,8 @@ public class RestConnectorContext implements ConnectorContext {
         this.schema = build;
     }
 
-    public void handlers(Map<ObjectClass, ObjectClassHandler> build) {
-        this.handlers = build;
+    public void handlers(Map<ObjectClass, ? extends ObjectClassHandler> build) {
+        this.handlers = build == null ? null : Map.copyOf(build);
     }
 
     public ObjectClassHandler handlerFor(ObjectClass objectClass) {
