@@ -53,6 +53,8 @@ public class ScimMemberToConnectorObjectReference implements JsonValueMapping {
             builder.setName(remote.get("display").asText());
             return new ConnectorObjectReference(builder.build());
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException(
+                "Expected a JSON object reference for the SCIM reference value, got: "
+                        + (value == null ? "null" : value.getClass().getSimpleName()));
     }
 }

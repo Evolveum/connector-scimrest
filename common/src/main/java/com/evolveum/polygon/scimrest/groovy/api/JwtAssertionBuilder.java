@@ -7,12 +7,13 @@
 package com.evolveum.polygon.scimrest.groovy.api;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -144,7 +145,10 @@ public class JwtAssertionBuilder {
         } catch (ConnectorException e) {
             throw e;
         } catch (Exception e) {
-            throw new ConnectorIOException("JWT signing failed (" + algorithmName + "): " + e.getMessage(), e);
+            // Signing with a bad key or algorithm is a connector-configuration problem, not a
+            // transient I/O one (midPoint would keep retrying an I/O error forever).
+            throw new ConfigurationException(
+                    "JWT signing failed (" + algorithmName + "): " + HttpExceptionMapper.causeMessage(e), e);
         }
     }
 
@@ -210,10 +214,13 @@ public class JwtAssertionBuilder {
         }
 
         static Algorithm from(String name) {
+            if (name == null || name.isBlank()) {
+                throw new ConfigurationException("JWT algorithm is not configured");
+            }
             try {
                 return valueOf(name.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw new ConnectorException("Unsupported JWT algorithm: " + name);
+                throw new ConfigurationException("Unsupported JWT algorithm: " + name);
             }
         }
     }
@@ -227,7 +234,9 @@ public class JwtAssertionBuilder {
             byte[] der = Base64.getDecoder().decode(stripped);
             return KeyFactory.getInstance(keyAlgorithm).generatePrivate(new PKCS8EncodedKeySpec(der));
         } catch (Exception e) {
-            throw new ConnectorException("Failed to parse private key (expected PKCS#8 PEM): " + e.getMessage(), e);
+            throw new ConfigurationException(
+                    "Failed to parse private key for JWT signing (expected PKCS#8 PEM): "
+                            + HttpExceptionMapper.causeMessage(e), e);
         }
     }
 

@@ -79,7 +79,10 @@ public class RestContext implements RetrievableContext {
                 throw new ConfigurationException("SSL configuration failed", e);
             }
         }
-        builder.connectTimeout(Duration.of(configuration.getTimeoutSeconds().longValue(), ChronoUnit.SECONDS));
+        // The timeout is optional in the configuration — fall back to the default, like newRequest().
+        var timeoutSeconds = configuration.getTimeoutSeconds() != null
+                ? configuration.getTimeoutSeconds() : DEFAULT_TIMEOUT_SECONDS;
+        builder.connectTimeout(Duration.of(timeoutSeconds, ChronoUnit.SECONDS));
         builder.followRedirects(HttpClient.Redirect.NORMAL);
         return builder.build();
     }
@@ -116,7 +119,8 @@ public class RestContext implements RetrievableContext {
      * @param requestBuilder the builder used to construct the HTTP request
      * @param jsonBodyHandler the handler used to process the response body
      * @return an {@code HttpResponse} containing the response body of type {@code T}
-     * @throws URISyntaxException if the URI built by the {@code RequestBuilder} is invalid
+     * @throws org.identityconnectors.framework.common.exceptions.ConnectorException
+     *         if the URI built by the {@code RequestBuilder} is invalid (wrapped by the converter)
      * @throws IOException if an I/O error occurs while sending or receiving
      * @throws InterruptedException if the operation is interrupted
      */
@@ -148,7 +152,9 @@ public class RestContext implements RetrievableContext {
             Checks.checkConfigurationBaseUri(configuration.getBaseAddress());
             throw e;
         }
-        LOG.ok("Executing request {0}", request);
+        // Log method + URI only: the full HttpRequest would put the Authorization header
+        // (bearer tokens, Basic credentials, AWS signatures) into the operator-visible log.
+        LOG.ok("Executing request {0} {1}", request.method(), request.uri());
         ProtocolTrace.request(PROTOCOL_LOG, request.method(), request.uri().toString(), spec.getBody());
         try {
             var response = client.send(request, handler);

@@ -35,10 +35,14 @@ import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.unboundid.scim2.common.messages.PatchOpType;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
+import com.evolveum.polygon.scimrest.impl.rest.ErrorDetail;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
+import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 
+import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -191,7 +195,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
 
         @Override
         public EndpointBuilder.RequestBuilder<UpdateRequest> body(Closure<byte[]> bodyTransformer) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(
+                    "Custom request bodies are not supported for update endpoints — the body is built from the supported attributes");
         }
     }
 
@@ -220,13 +225,29 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 request.body(requestBody.apply(updateRequest));
             }
             try {
-                var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class));
+                var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class, "endpoint " + path));
                 var result = responseHandler.apply(response);
                 // Here we should compute changed deltas?
 
                 // return new Result(result.getObjectClass(), result.getUid(), result);
+            } catch (ConnectorException e) {
+                // ICF type was already set at the boundary (mapped status error, parse error,
+                // mapped network failure) — never re-wrap or relabel it.
+                throw e;
+            } catch (InterruptedException e) {
+                throw HttpExceptionMapper.map(e, request.getBaseUri() + path);
+            } catch (IOException e) {
+                // The JDK wraps body-handler errors (e.g. a JSON parse error) into an IOException —
+                // surface the original ICF type instead of relabeling it a transient I/O failure.
+                var icf = HttpExceptionMapper.unwrapIcf(e);
+                if (icf != null) {
+                    throw icf;
+                }
+                throw HttpExceptionMapper.map(e, request.getBaseUri() + path);
             } catch (Exception e) {
-                throw new ConnectorException("Cannot create request object", e);
+                throw new ConnectorException(
+                        "Cannot update object with UID " + updateRequest.uid().getUidValue() + " at endpoint " + path
+                                + ": " + HttpExceptionMapper.causeMessage(e), e);
             }
         }
 
@@ -280,12 +301,10 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
 
         @Override
         public ConnectorObject apply(HttpResponse<?> httpResponse) {
-            if (httpResponse.statusCode() == 200 || httpResponse.statusCode() == 201) {
+            int status = httpResponse.statusCode();
+            if (status >= 200 && status < 300) {
                 var obj = httpResponse.body();
-                if (obj instanceof ObjectNode remoteObj) {
-                    if (remoteObj.isEmpty()) {
-                        return null;
-                    }
+                if (obj instanceof ObjectNode remoteObj && !remoteObj.isEmpty()) {
                     var builder = objectClass.newObjectBuilder();
                     for (var attributeDef : objectClass.attributes()) {
                         var valueMapping = attributeDef.mapping(JsonAttributeMapping.class);
@@ -298,8 +317,11 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                     }
                     return builder.build();
                 }
+                // A 2xx with an empty or absent body is a successful update — not an error.
+                return objectClass.newObjectBuilder().build();
             }
-            throw new ConnectorException("Cannot create object. HTTP status code: " + httpResponse.statusCode());
+            throw HttpStatusMapper.map(status, HttpStatusMapper.OperationKind.UPDATE,
+                    String.valueOf(httpResponse.request().uri()), null, ErrorDetail.extract(httpResponse.body()));
         }
     }
 

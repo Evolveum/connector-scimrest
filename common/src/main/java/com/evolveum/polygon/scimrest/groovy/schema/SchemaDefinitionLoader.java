@@ -14,10 +14,10 @@ import com.evolveum.polygon.conndev.yaml.ScriptResources;
 import com.evolveum.polygon.conndev.yaml.YamlSchemaLoader;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -61,12 +61,14 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
     private void loadYamlFromResource(String resource) {
         var stream = getClass().getResourceAsStream(resource);
         if (stream == null) {
-            throw new IllegalArgumentException("YAML schema definition resource not found: " + resource);
+            // The bundle is missing a schema definition the connector expects — a
+            // packaging/configuration error, not a caller-input error.
+            throw new ConfigurationException("YAML schema definition resource not found: " + resource);
         }
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             yamlLoader.load(reader, resource);
         } catch (IOException e) {
-            throw new UncheckedIOException("Couldn't read YAML schema definition " + resource, e);
+            throw new ConfigurationException("Couldn't read YAML schema definition " + resource + ": " + e.getMessage(), e);
         }
         yamlLoaded = true;
     }

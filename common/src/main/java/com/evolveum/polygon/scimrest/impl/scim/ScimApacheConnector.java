@@ -29,6 +29,7 @@ import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.identityconnectors.common.logging.Log;
 
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
@@ -48,6 +49,8 @@ import java.util.concurrent.Future;
  */
 public class ScimApacheConnector implements Connector {
 
+    private static final Log LOG = Log.getLog(ScimApacheConnector.class);
+
     private final CloseableHttpClient httpClient;
 
     public ScimApacheConnector(SSLContext sslContext) {
@@ -61,6 +64,7 @@ public class ScimApacheConnector implements Connector {
 
     @Override
     public ClientResponse apply(ClientRequest request) {
+        var uri = request.getUri();
         try {
             byte[] body = new byte[0];
             if (request.hasEntity()) {
@@ -70,7 +74,6 @@ public class ScimApacheConnector implements Connector {
                 body = buffer.toByteArray();
             }
 
-            var uri = request.getUri();
             var httpRequest = createRequest(request.getMethod(), uri);
             request.getRequestHeaders().forEach((name, values) -> values.forEach(value -> httpRequest.addHeader(name, value)));
             // Disable transparent gzip: the JDK/SCIM responses are not compressed, and forcing the
@@ -97,9 +100,13 @@ public class ScimApacheConnector implements Connector {
                 return clientResponse;
             }
         } catch (ProcessingException e) {
+            // A genuine JAX-RS processing problem (e.g. unsupported HTTP method) — keep as is.
             throw e;
         } catch (Exception e) {
-            throw new ProcessingException(e);
+            // Map network failures (connect/read timeout, reset, TLS, ...) to the ICF types
+            // midPoint reacts to correctly (postponed/retried, resource DOWN) instead of
+            // flattening them into ProcessingException -> generic ConnectorException.
+            throw ScimExceptionMapper.mapFailure(e, uri.toString());
         }
     }
 
@@ -132,8 +139,9 @@ public class ScimApacheConnector implements Connector {
     public void close() {
         try {
             httpClient.close();
-        } catch (Exception ignored) {
-            // best effort
+        } catch (Exception e) {
+            // best effort — only log, the client is going away anyway
+            LOG.info("Failed to close the SCIM Apache HttpClient: {0}", e.getMessage());
         }
     }
 }

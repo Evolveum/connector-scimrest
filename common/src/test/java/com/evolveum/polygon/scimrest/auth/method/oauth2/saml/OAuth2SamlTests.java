@@ -7,8 +7,8 @@
 package com.evolveum.polygon.scimrest.auth.method.oauth2.saml;
 
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -147,7 +147,9 @@ public class OAuth2SamlTests extends AbstractOAuth2SamlTests {
     public void testTokenEndpointErrorThrowsException() {
         stubTokenEndpointWithStatus(TOKEN_ENDPOINT, 400, null);
 
-        assertThrows(ConnectorIOException.class, () -> createConnector(rsaKeyPair.getPrivate()).test());
+        // A 400 (invalid_client/invalid_grant) from the token endpoint means the credentials
+        // are bad — not a transient I/O failure.
+        assertThrows(InvalidCredentialException.class, () -> createConnector(rsaKeyPair.getPrivate()).test());
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);
     }
 
@@ -160,7 +162,8 @@ public class OAuth2SamlTests extends AbstractOAuth2SamlTests {
         var connector = new OAuth2SamlRestConnector();
         connector.init(config);
 
-        assertThrows(ConnectorException.class, connector::test);
+        // An unparseable private key is a connector-configuration problem.
+        assertThrows(ConfigurationException.class, connector::test);
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 0);
     }
 

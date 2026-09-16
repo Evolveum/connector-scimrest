@@ -13,6 +13,8 @@ import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
 import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
 import com.evolveum.polygon.conndev.api.FilterSpecification;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
+import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.unboundid.scim2.common.GenericScimResource;
 import groovy.lang.Closure;
@@ -79,8 +81,18 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
                 }
                 currentPage++;
             } while (shouldContinue);
+        } catch (ScimHttpErrorException e) {
+            // HTTP error (status + RFC 7644 detail) — translate per operation kind: 404 on the
+            // search endpoint is a misconfiguration, 5xx is transient, 401/403 are credential
+            // errors. The server detail is carried into the resulting message.
+            throw ScimExceptionMapper.map(e, HttpStatusMapper.OperationKind.SEARCH, null);
+        } catch (ConnectorException e) {
+            // ICF type was already set at the boundary (e.g. mapped network failure) — never re-wrap.
+            throw e;
         } catch (Exception e) {
-            throw new ConnectorException("SCIM search failed", e);
+            throw new ConnectorException(
+                    "SCIM search failed at " + resource.relativeEndpoint() + ", page " + currentPage
+                            + ": " + HttpExceptionMapper.causeMessage(e), e);
         }
     }
 
@@ -133,8 +145,17 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
             ConnectorObject obj = deserializeFromRemote(remoteObj);
             handler.handle(obj);
             BatchAwareResultHandler.batchFinished(handler);
+        } catch (ScimHttpErrorException e) {
+            // HTTP 404 means the object was deleted on the resource: midPoint must see
+            // UnknownUidException to tombstone the shadow and fire the discovery DELETE.
+            throw ScimExceptionMapper.map(e, HttpStatusMapper.OperationKind.GET, uid.toString());
+        } catch (ConnectorException e) {
+            // ICF type was already set at the boundary (e.g. mapped network failure) — never re-wrap.
+            throw e;
         } catch (Exception e) {
-            throw new ConnectorException("SCIM retrieve failed", e);
+            throw new ConnectorException(
+                    "SCIM retrieve of object with UID " + uid + " failed at " + resource.relativeEndpoint()
+                            + ": " + HttpExceptionMapper.causeMessage(e), e);
         }
     }
 

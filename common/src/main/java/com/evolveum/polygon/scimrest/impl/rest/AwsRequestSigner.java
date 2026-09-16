@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.impl.rest;
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 
@@ -101,9 +101,16 @@ public class AwsRequestSigner {
             String accessKey, GuardedString secretKey,
             GuardedString sessionToken,
             String region, String service,
-            List<String> extraSignedHeaders,
-            ZonedDateTime now) {
+        List<String> extraSignedHeaders,
+        ZonedDateTime now) {
 
+        if (accessKey == null || accessKey.isBlank() || secretKey == null) {
+            // Missing credentials would otherwise surface as an NPE (secretKey) or a
+            // signature with the literal word "null" (accessKey).
+            throw new ConfigurationException(
+                    "AWS SigV4 signing requires both an access key and a secret key "
+                            + "(region: " + region + ", service: " + service + ")");
+        }
         var secretAccessor = new GuardedStringAccessor();
         secretKey.access(secretAccessor);
         String secret = secretAccessor.getClearString();
@@ -201,7 +208,8 @@ public class AwsRequestSigner {
                     || ("http".equalsIgnoreCase(scheme) && port == 80);
             return isDefaultPort ? uri.getHost() : uri.getHost() + ":" + port;
         } catch (Exception e) {
-            throw new ConnectorException("Cannot parse base URI for AWS signing: " + baseUri, e);
+            // The base URI comes from the connector configuration.
+            throw new ConfigurationException("Cannot parse base URI for AWS signing: " + baseUri, e);
         }
     }
 
@@ -271,7 +279,8 @@ public class AwsRequestSigner {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             return hex(md.digest(data));
         } catch (Exception e) {
-            throw new ConnectorException("SHA-256 failed", e);
+            // SHA-256 is mandatory in every JRE; a failure here means a broken security provider.
+            throw new ConfigurationException("SHA-256 unavailable while computing AWS SigV4 signature: " + e.getMessage(), e);
         }
     }
 
@@ -285,7 +294,8 @@ public class AwsRequestSigner {
             mac.init(new SecretKeySpec(key, "HmacSHA256"));
             return mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            throw new ConnectorException("HMAC-SHA256 failed", e);
+            // HmacSHA256 is mandatory in every JRE; a failure here means a broken security provider.
+            throw new ConfigurationException("HMAC-SHA256 unavailable while computing AWS SigV4 signature: " + e.getMessage(), e);
         }
     }
 

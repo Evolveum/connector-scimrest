@@ -11,11 +11,13 @@ import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.AbstractSearchOperationBuilder;
+import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovySearchScriptBuilder;
 
 import com.evolveum.polygon.conndev.build.api.SearchScriptBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 import com.evolveum.polygon.conndev.spi.FilterBasedSearchDispatcher;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import com.evolveum.polygon.scimrest.impl.scim.ScimSearchHandler;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
@@ -70,6 +72,7 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
         var handlers = new HashSet<FilterAwareExecuteQueryProcessor>();
         ObjectSearchOperation emptyFilterHandler = null;
         ObjectSearchOperation anyFilterHandler = null;
+        String defaultEndpoint = null;
         for (var builder : builders) {
             if (builder.isEnabled()) {
                 var handler = builder.build();
@@ -77,9 +80,12 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
                 if (builder.emptyFilterSupported()) {
                     if (emptyFilterHandler == null) {
                         emptyFilterHandler = handler;
+                        defaultEndpoint = endpointPath(builder);
                     } else {
-                        // FIXME: Throw better exception
-                        throw new IllegalStateException("Multiple default endpoints are not supported");
+                        throw new ConfigurationException(
+                                "Multiple search endpoints declare empty-filter support: "
+                                        + defaultEndpoint + " and " + endpointPath(builder)
+                                        + " — only one endpoint may handle the empty filter");
                     }
                 }
             }
@@ -107,5 +113,13 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
             this.scim = new ScimSearchHandler.Builder(parent.getObjectClass());
         }
         return scim;
+    }
+
+    private String endpointPath(FilterAwareSearchProcessorBuilder builder) {
+        return endpointBuilder.entrySet().stream()
+                .filter(entry -> entry.getValue() == builder)
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse("?");
     }
 }

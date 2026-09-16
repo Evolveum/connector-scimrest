@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.impl.rest;
 
 import com.evolveum.polygon.common.GuardedStringAccessor;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -95,7 +96,9 @@ class SamlAssertionBuilder {
         } catch (ConnectorException e) {
             throw e;
         } catch (Exception e) {
-            throw new ConnectorException("Failed to build SAML assertion: " + e.getMessage(), e);
+            // Assertion building only fails on bad key/algorithm configuration.
+            throw new ConfigurationException(
+                    "Failed to build SAML assertion: " + HttpExceptionMapper.causeMessage(e), e);
         }
     }
 
@@ -131,7 +134,8 @@ class SamlAssertionBuilder {
             byte[] der = Base64.getDecoder().decode(stripped);
             return KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(der));
         } catch (Exception e) {
-            throw new ConnectorException("Failed to parse RSA private key for SAML assertion: " + e.getMessage(), e);
+            throw new ConfigurationException(
+                    "Failed to parse RSA private key for SAML assertion: " + HttpExceptionMapper.causeMessage(e), e);
         }
     }
 }

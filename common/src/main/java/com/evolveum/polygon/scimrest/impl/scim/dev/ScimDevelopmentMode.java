@@ -11,7 +11,7 @@ import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Uid;
 
@@ -30,6 +30,8 @@ public class ScimDevelopmentMode {
     public static final String SCHEMA_OC_NAME = "conndev_ScimSchema";
     public static final String RESOURCE_OC_NAME = "conndev_ScimResource";
     public static final String SERVICE_PROVIDER_CONFIG_OC_NAME = "conndev_ScimServiceProviderConfig";
+
+    private static final Log LOG = Log.getLog(ScimDevelopmentMode.class);
 
     private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
             .enable(SerializationFeature.INDENT_OUTPUT)
@@ -150,13 +152,16 @@ public class ScimDevelopmentMode {
      * Converts a SchemaResource object to JSON string.
      */
     public static String schemaToJson(Object schemaResource) {
+        if (schemaResource == null) {
+            return null;
+        }
         try {
-            if (schemaResource == null) {
-                return null;
-            }
             return OBJECT_MAPPER.writeValueAsString(schemaResource);
         } catch (Exception e) {
-            throw new ConnectorException("Failed to convert SchemaResource to JSON", e);
+            // Dev-mode convenience only: a schema that cannot be rendered must not fail the
+            // operation that merely wanted to display it.
+            LOG.warn("Failed to convert SCIM schema to JSON for the dev object class: {0}", e.getMessage());
+            return null;
         }
     }
 }

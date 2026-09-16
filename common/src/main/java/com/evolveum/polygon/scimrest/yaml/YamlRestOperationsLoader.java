@@ -11,6 +11,7 @@ import com.evolveum.polygon.conndev.yaml.decl.LocatedDocument;
 import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.handler.RestHandlerBuilder;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
 import java.io.Reader;
 
@@ -43,7 +44,8 @@ public final class YamlRestOperationsLoader {
         var binder = new DeclYamlBinder(document, compiler);
         var root = document.root();
         if (root.kind() != LocatedNode.Kind.OBJECT) {
-            throw new IllegalArgumentException("YAML operations document must be a mapping ("
+            // A malformed operations document is a connector-packaging error.
+            throw new ConfigurationException("YAML operations document must be a mapping ("
                     + document.sourceName() + ")");
         }
         for (var entry : root.entries()) {
@@ -70,14 +72,14 @@ public final class YamlRestOperationsLoader {
             return node;
         }
         if (node.kind() != LocatedNode.Kind.OBJECT) {
-            throw new IllegalArgumentException("'" + key + "' must be a mapping but found a " + node.kind()
+            throw new ConfigurationException("'" + key + "' must be a mapping but found a " + node.kind()
                     + " at " + node.line() + ":" + node.col());
         }
         return node;
     }
 
-    private static IllegalArgumentException unknownTopLevelKey(LocatedDocument document, LocatedNode.Entry entry) {
-        return new IllegalArgumentException("Unknown top-level key '" + entry.key() + "' in YAML operations document ("
+    private static ConfigurationException unknownTopLevelKey(LocatedDocument document, LocatedNode.Entry entry) {
+        return new ConfigurationException("Unknown top-level key '" + entry.key() + "' in YAML operations document ("
                 + document.sourceName() + ":" + entry.keyLine() + ":" + entry.keyCol() + ")");
     }
 }

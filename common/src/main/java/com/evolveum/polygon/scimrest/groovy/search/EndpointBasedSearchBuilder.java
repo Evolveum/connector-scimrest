@@ -25,6 +25,7 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
@@ -89,7 +90,9 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
     @Override
     public void httpOperation(HttpMethod method) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        // FIXME: Add support for other HTTP methods (probably POST)
+        throw new UnsupportedOperationException(
+                "HTTP method operations are not supported on search endpoints (endpoint '" + path + "' uses GET)");
     }
 
     @Override
@@ -99,7 +102,14 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
     @Override
     public FilterSpecification.Attribute attribute(String name) {
-        var connId = objectClass.attributeFromProtocolName(name).connId();
+        var attr = objectClass.attributeFromProtocolName(name);
+        if (attr == null) {
+            throw new ConfigurationException(
+                    "Attribute '" + name + "' not found in object class '"
+                            + objectClass.objectClass().getObjectClassValue()
+                            + "' when defining a search filter for endpoint '" + path + "'");
+        }
+        var connId = attr.connId();
         if (connId != null) {
             // FIXME: Create deffered search here
             return FilterSpecification.attribute(connId.getName());
@@ -110,7 +120,8 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     @Override
     public RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec) {
         // FIXME: implement builder here
-        throw new UnsupportedOperationException("Not implemented yet.");
+        throw new UnsupportedOperationException(
+                "supportedFilter without a mapping closure is not implemented on search endpoints (endpoint '" + path + "')");
     }
 
     @Override

@@ -16,6 +16,7 @@ import com.evolveum.polygon.scimrest.impl.scim.ScimGroupToConnectorObjectReferen
 import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
 import com.evolveum.polygon.scimrest.schema.ScimAttributeMappingRule;
 import com.evolveum.polygon.scimrest.schema.ScimMappingAction;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -85,11 +86,16 @@ public class ScimMembershipReferenceRule implements ScimAttributeMappingRule {
 
     private void applyGroupMembership(RestAttributeBuilder<RestReferenceAttributeBuilder> attribute) {
         var groupOc = resourceToObjectClass.get("Group");
+        if (groupOc == null) {
+            // The User schema declares 'groups' but the connector bundle defines no Group object
+            // class — previously this blew up later as "Type cannot be null" (ObjectClass ctor).
+            throw new ConfigurationException(
+                    "The User schema declares a 'groups' attribute, but no 'Group' object class is "
+                            + "defined in the connector schema; membership references cannot be mapped");
+        }
         attribute.connId().type(ConnectorObjectReference.class);
         var reference = (RestReferenceAttributeBuilder) attribute;
-        if (groupOc != null) {
-            reference.objectClass(groupOc);
-        }
+        reference.objectClass(groupOc);
         reference.subtype("_User_Group_Membership");
         reference.role(AttributeInfo.RoleInReference.SUBJECT);
         attribute.scim().implementation(new ScimGroupToConnectorObjectReference(new ObjectClass(groupOc)));

@@ -11,10 +11,10 @@ import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.conndev.yaml.ScriptResources;
 import com.evolveum.polygon.scimrest.yaml.YamlRestHandlerLoader;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -46,12 +46,14 @@ public class HandlerDefinitionBuilder extends GroovyRestHandlerBuilder {
     private void loadYamlFromResource(String resource) {
         var stream = getClass().getResourceAsStream(resource);
         if (stream == null) {
-            throw new IllegalArgumentException("YAML operations resource not found: " + resource);
+            // The bundle is missing an operations definition the connector expects — a
+            // packaging/configuration error, not a caller-input error.
+            throw new ConfigurationException("YAML operations resource not found: " + resource);
         }
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             yamlLoader.load(reader, resource);
         } catch (IOException e) {
-            throw new UncheckedIOException("Couldn't read YAML operations document " + resource, e);
+            throw new ConfigurationException("Couldn't read YAML operations document " + resource + ": " + e.getMessage(), e);
         }
     }
 }

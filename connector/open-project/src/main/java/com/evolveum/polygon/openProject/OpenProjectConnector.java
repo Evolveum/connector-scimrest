@@ -6,17 +6,12 @@
  */
 package com.evolveum.polygon.openProject;
 
-import com.evolveum.polygon.common.GuardedStringAccessor;
-import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
-import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.PoolableConnector;
-
-import java.util.Base64;
 
 @ConnectorClass(displayNameKey = "openProject.rest.display", configurationClass = OpenProjectConfiguration.class,  messageCatalogPaths = "Messages")
 public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjectConfiguration>
@@ -57,20 +52,6 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
         builder.loadFromResource("/User.create.op.groovy");
         builder.loadFromResource("/User.update.op.groovy");
 //        builder.loadFromResource("/User.delete.op.groovy");
-    }
-
-    @Override
-    protected AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer() {
-        return (c,request) -> {
-            if (c instanceof RestClientConfiguration.BasicAuthorization basicAuthorization) {
-                var tokenAccessor = new GuardedStringAccessor();
-                basicAuthorization.getRestPassword().access(tokenAccessor);
-                String basicValueB64 = Base64.getEncoder().encodeToString(
-                        (basicAuthorization.getRestUsername()+":"+tokenAccessor.getClearString()).getBytes());
-
-                request.header("Authorization", "Basic " + basicValueB64);
-            }
-        };
     }
 
     @Override

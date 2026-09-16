@@ -15,6 +15,7 @@ import com.evolveum.polygon.scimrest.impl.rest.RestPagingAwareObjectRetriever;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.scimrest.spi.SearchEndpointHandler;
 import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.filter.Filter;
@@ -81,7 +82,8 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
             new RestPagingAwareObjectRetriever(objectClass, spec).fetch(context, filter, resultsHandler, operationOptions);
 
         } else {
-            throw new IllegalStateException("Cannot execute query");
+            throw new ConfigurationException(
+                    "Cannot execute query: no search endpoint supports the filter " + filter + " at endpoint " + apiEndpoint);
         }
     }
 }

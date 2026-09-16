@@ -13,6 +13,8 @@ import com.evolveum.polygon.conndev.schema.BaseObjectClassDefinition;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.ScimAttributeMapping;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.EmbeddedObject;
 import tools.jackson.databind.JsonNode;
@@ -59,15 +61,18 @@ public class ScimEmbeddedObjectValueMapping implements ValueMapping<EmbeddedObje
 
     @Override
     public JsonNode toWireValue(EmbeddedObject value) throws IllegalArgumentException {
-        throw new UnsupportedOperationException("Write not supported yet");
+        // An unsupported capability of the connector — a configuration-level limitation, not a
+        // runtime error midPoint could retry.
+        throw new ConfigurationException(
+                "Writing to the embedded attribute class '" + embeddedClassName + "' is not supported yet");
     }
 
     @Override
     public EmbeddedObject toConnIdValue(JsonNode value) throws IllegalArgumentException {
         if (!(value instanceof ObjectNode objectNode)) {
-            throw new IllegalArgumentException(
-                    "Expected ObjectNode for embedded attribute '" + embeddedClassName +
-                    "', got: " + (value == null ? "null" : value.getClass().getSimpleName()));
+            throw new ConnectorException(
+                    "Expected a JSON object for embedded attribute '" + embeddedClassName +
+                            "', got: " + (value == null ? "null" : value.getClass().getSimpleName()));
         }
 
         if (objectNode.isEmpty()) {

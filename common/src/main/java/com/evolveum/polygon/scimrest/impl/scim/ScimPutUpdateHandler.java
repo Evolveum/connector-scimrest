@@ -9,8 +9,10 @@ package com.evolveum.polygon.scimrest.impl.scim;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateRequest;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.unboundid.scim2.common.GenericScimResource;
 import com.unboundid.scim2.common.exceptions.ScimException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.JsonNodeFactory;
@@ -37,10 +39,18 @@ public class ScimPutUpdateHandler extends AbstractScimUpdateHandler {
 
     @Override
     protected void doUpdate(UpdateRequest request, Set<AttributeDelta> deltas,
-                            RestObjectClassDefinition objectClassDef, URI resourceUri) throws ScimException {
+                            RestObjectClassDefinition objectClassDef, URI resourceUri) {
         GenericScimResource scimResource = buildScimResource(deltas, objectClassDef, request.before());
         scimResource.setId(request.uid().getUidValue());
-        context.scimClient().replaceRequest(resourceUri, scimResource).invoke(GenericScimResource.class);
+        try {
+            context.scimClient().replaceRequest(resourceUri, scimResource).invoke(GenericScimResource.class);
+        } catch (ScimException e) {
+            // Normally the error filter maps the HTTP error first; this covers the rare
+            // case where the SDK still produces its own typed exception.
+            throw new ConnectorException(
+                    "SCIM PUT update of object with UID " + request.uid().getUidValue() + " at " + resourceUri
+                            + " failed: " + HttpExceptionMapper.causeMessage(e), e);
+        }
     }
 
     private GenericScimResource buildScimResource(Set<AttributeDelta> deltas, RestObjectClassDefinition objectClass, ConnectorObject before) {

@@ -12,7 +12,10 @@ import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
+import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import com.unboundid.scim2.common.GenericScimResource;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
@@ -33,21 +36,30 @@ public class ScimCreateHandler implements CreateOperationHandler {
             Set<Attribute> createAttributes, OperationOptions options, ContextLookup operationContext) {
         var resource = context.resourceForObjectClass(objectClass);
         if (resource == null) {
-            throw new IllegalStateException("No SCIM resource mapping for object class: " + objectClass.getObjectClassValue());
+            throw new ConfigurationException("No SCIM resource mapping for object class: " + objectClass.getObjectClassValue());
         }
 
         var connectorContext = context.contextLookup().get(RestConnectorContext.class);
         var schema = connectorContext.schema();
         var objectClassDef = schema.objectClass(objectClass.getObjectClassValue());
-        
+
         var scimResource = buildScimResource(createAttributes, objectClassDef);
-        
+
         GenericScimResource created;
         try {
             created = context.scimClient().createRequest(resource.relativeEndpoint(), scimResource)
                     .invoke(GenericScimResource.class);
+        } catch (ScimHttpErrorException e) {
+            // HTTP error — 409 is a unique-key conflict (discovery), 401/403 credential
+            // errors, 5xx transient; the server's RFC 7644 detail is carried into the message.
+            throw ScimExceptionMapper.map(e, HttpStatusMapper.OperationKind.CREATE, null);
+        } catch (ConnectorException e) {
+            // ICF type was already set at the boundary (e.g. mapped network failure) — never re-wrap.
+            throw e;
         } catch (Exception e) {
-            throw new ConnectorException("Failed to create SCIM resource: " + e.getMessage(), e);
+            throw new ConnectorException(
+                    "Failed to create SCIM resource at " + resource.relativeEndpoint()
+                            + ": " + HttpExceptionMapper.causeMessage(e), e);
         }
 
         var connectorObject = deserializeToObject(created, objectClassDef);

@@ -32,8 +32,12 @@ import com.unboundid.scim2.common.utils.MapperFactory;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.RuntimeDelegate;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
+import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.glassfish.jersey.internal.RuntimeDelegateImpl;
+import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -50,6 +54,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ScimContext implements RetrievableContext {
+
+    private static final Log LOG = Log.getLog(ScimContext.class);
 
     static {
         // Real SCIM servers commonly send `null` (or omit) boolean AttributeDefinition fields such
@@ -116,7 +122,11 @@ public class ScimContext implements RetrievableContext {
             this.httpClient = clientBuilder.build();
             this.scimClient = new ScimService(httpClient.target(scimConf.getScimBaseUrl()));
         } catch (Exception e) {
-            throw new ConnectorException(e);
+            // A bad base URL, an unreachable class or an SSL initialization failure all make
+            // the connector unusable by configuration — not by transient state.
+            throw new ConfigurationException(
+                    "Failed to initialize SCIM client at " + scimConf.getScimBaseUrl()
+                            + ": " + HttpExceptionMapper.causeMessage(e), e);
         } finally {
             Thread.currentThread().setContextClassLoader(classLoader);
         }
@@ -129,6 +139,9 @@ public class ScimContext implements RetrievableContext {
                 // it; the config feeds only the development export, so a failure must not break init
                 this.providerConfig = fetchServiceProviderConfig();
             } catch (Exception e) {
+                // Swallowed on purpose (dev-mode only) — but log it, otherwise a network
+                // outage and a missing endpoint are indistinguishable in the dev export.
+                LOG.info("Failed to fetch /ServiceProviderConfig (dev mode): {0}", HttpExceptionMapper.causeMessage(e));
                 this.providerConfig = null;
             }
         }
@@ -152,9 +165,21 @@ public class ScimContext implements RetrievableContext {
                 resources.put(resource.getName(), new ScimResourceContext(resource, relativeEndpoint, primary, extensions));
             }
 
+        } catch (ScimHttpErrorException e) {
+            if (e.status() == 404) {
+                // The /Schemas or /ResourceTypes endpoint does not exist — the SCIM base URL
+                // is misconfigured (retries will not fix it).
+                throw new ConfigurationException(
+                        "SCIM discovery failed: " + e.requestUri() + " returned 404 — check the SCIM base URL", e);
+            }
+            // 401/403 -> InvalidCredentialException/PermissionDeniedException, 5xx -> transient,
+            // with the server's RFC 7644 detail in the message.
+            throw ScimExceptionMapper.map(e, HttpStatusMapper.OperationKind.GET, null);
+        } catch (ConnectorException e) {
+            // ICF type was already set at the boundary (e.g. mapped network failure) — never re-wrap.
+            throw e;
         } catch (Exception e) {
-            // FIXME: Throw correct connector exceptions
-            throw new ConnectorException(e);
+            throw ScimExceptionMapper.mapFailure(e, configuration.getScimBaseUrl());
         }
 
     }
@@ -184,10 +209,19 @@ public class ScimContext implements RetrievableContext {
      */
     private String relativeEndpoint(URI endpoint) {
         if (endpoint == null) {
-            throw new IllegalArgumentException("endpoint is null");
+            throw new ConfigurationException("SCIM resource endpoint is null — check the resource type endpoint data");
         }
         //Get the base URI from configuration
-        URI base = URI.create(configuration.getScimBaseUrl().trim());
+        String baseUrl = configuration.getScimBaseUrl();
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new ConfigurationException("SCIM base URL is not configured");
+        }
+        URI base;
+        try {
+            base = URI.create(baseUrl.trim());
+        } catch (IllegalArgumentException e) {
+            throw new ConfigurationException("SCIM base URL '" + baseUrl + "' is not a valid URI", e);
+        }
         // Fail early if base URL is missing path
         String basePath = base.getPath();
         if (basePath == null) {
@@ -201,7 +235,8 @@ public class ScimContext implements RetrievableContext {
         if (!endpoint.isAbsolute() && endpoint.getHost() == null) {
             String path = endpoint.getPath();
             if (path == null || path.isBlank() || path.equals("/")) {
-                throw new IllegalArgumentException("Endpoint is blank or root: " + endpoint);
+                throw new ConfigurationException(
+                        "SCIM resource endpoint is blank or root: " + endpoint + " (check the resource type endpoint data)");
             }
             return path.startsWith("/") ? path : "/" + path;
         }
@@ -209,12 +244,13 @@ public class ScimContext implements RetrievableContext {
         //2) Endpoint is absolute URL; verify it is under base URL
         String epPath = endpoint.getPath();
         if (epPath == null || epPath.isEmpty()) {
-            throw new IllegalArgumentException("Absolute endpoint has empty path: " + endpoint);
+            throw new ConfigurationException(
+                    "SCIM resource endpoint has an empty path: " + endpoint + " (check the resource type endpoint data)");
         }
 
         if (!epPath.startsWith(basePath)) {
-            throw new IllegalArgumentException(
-                    "Endpoint path: " + epPath + " not under basePath=" + basePath
+            throw new ConfigurationException(
+                    "SCIM resource endpoint path: " + epPath + " is not under the configured base URL path: " + basePath
             );
         }
 
@@ -338,7 +374,13 @@ public class ScimContext implements RetrievableContext {
     }
 
     public ObjectClass objectClassFromUri(String ref) {
-        var uri = relativeEndpoint(URI.create(ref));
+        URI refUri;
+        try {
+            refUri = URI.create(ref);
+        } catch (IllegalArgumentException e) {
+            throw new ConfigurationException("Cannot parse SCIM resource reference '" + ref + "': " + HttpExceptionMapper.causeMessage(e), e);
+        }
+        var uri = relativeEndpoint(refUri);
         for (var resource : resources.values()) {
             if (uri.startsWith(resource.relativeEndpoint())) {
                 var objectClass = resourceToObjectClass.get(resource.resource().getName());

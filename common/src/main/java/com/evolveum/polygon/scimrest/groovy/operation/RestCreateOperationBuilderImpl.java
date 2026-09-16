@@ -27,12 +27,16 @@ import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
+import com.evolveum.polygon.scimrest.impl.rest.ErrorDetail;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
+import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 
+import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -139,7 +143,9 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
 
         @Override
         public EndpointBuilder.RequestBuilder<Set<Attribute>> body(Closure<byte[]> bodyTransformer) {
-            throw new UnsupportedOperationException();
+            // FIXME: Allow custom implementation
+            throw new UnsupportedOperationException(
+                    "Custom request bodies are not supported for create endpoints — the body is built from the supported attributes");
         }
     }
 
@@ -169,11 +175,26 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                 request.body(requestBody.apply(createAttributes));
             }
             try {
-                var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class));
+                var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class, "endpoint " + path));
                 var result = responseHandler.apply(response);
                 return new Result(result.getObjectClass(), result.getUid(), result);
+            } catch (ConnectorException e) {
+                // ICF type was already set at the boundary (mapped status error, parse error,
+                // mapped network failure) — never re-wrap or relabel it.
+                throw e;
+            } catch (InterruptedException e) {
+                throw HttpExceptionMapper.map(e, request.getBaseUri() + path);
+            } catch (IOException e) {
+                // The JDK wraps body-handler errors (e.g. a JSON parse error) into an IOException —
+                // surface the original ICF type instead of relabeling it a transient I/O failure.
+                var icf = HttpExceptionMapper.unwrapIcf(e);
+                if (icf != null) {
+                    throw icf;
+                }
+                throw HttpExceptionMapper.map(e, request.getBaseUri() + path);
             } catch (Exception e) {
-                throw new ConnectorException("Cannot create request object", e);
+                throw new ConnectorException(
+                        "Cannot create object at endpoint " + path + ": " + HttpExceptionMapper.causeMessage(e), e);
             }
         }
 
@@ -216,12 +237,10 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
 
         @Override
         public ConnectorObject apply(HttpResponse<?> httpResponse) {
-            if (httpResponse.statusCode() == 200 || httpResponse.statusCode() == 201) {
+            int status = httpResponse.statusCode();
+            if (status >= 200 && status < 300) {
                 var obj = httpResponse.body();
-                if (obj instanceof ObjectNode remoteObj) {
-                    if (remoteObj.isEmpty()) {
-                        return null;
-                    }
+                if (obj instanceof ObjectNode remoteObj && !remoteObj.isEmpty()) {
                     var builder = objectClass.newObjectBuilder();
                     for (var attributeDef : objectClass.attributes()) {
                         var valueMapping = attributeDef.mapping(JsonAttributeMapping.class);
@@ -234,8 +253,12 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                     }
                     return builder.build();
                 }
+                // A 2xx with an empty or absent body (204, or a 201 without a response body) is a
+                // successful create with unknown state — not an error. The UID is unknown.
+                return objectClass.newObjectBuilder().build();
             }
-            throw new ConnectorException("Cannot create object. HTTP status code: " + httpResponse.statusCode());
+            throw HttpStatusMapper.map(status, HttpStatusMapper.OperationKind.CREATE,
+                    String.valueOf(httpResponse.request().uri()), null, ErrorDetail.extract(httpResponse.body()));
         }
     }
 

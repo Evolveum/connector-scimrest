@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.exception;
 import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
+import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -61,10 +62,11 @@ public class RestExceptionSimulationTest extends WireMockTestSupport {
 
         try {
             connector.test();
-            fail("Expected ConnectionFailedException was not thrown");
+            fail("Expected timeout exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e.toString().contains("ConnectionFailed"),
-                "Expected ConnectionFailedException but got: " + e.getClass().getName());
+            // A request timeout maps to OperationTimeoutException (transient, retried by midPoint)
+            assertTrue(e instanceof OperationTimeoutException,
+                "Expected OperationTimeoutException but got: " + e.getClass().getName());
         }
     }
 

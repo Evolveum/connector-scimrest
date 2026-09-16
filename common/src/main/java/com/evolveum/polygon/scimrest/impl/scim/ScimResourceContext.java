@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.AttributePath;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
@@ -34,6 +35,11 @@ public record ScimResourceContext(ResourceTypeResource resource, String relative
         var schema = primarySchema;
         if (firstComponent instanceof AttributePath.Extension extension) {
             schema = extensions.get(extension.name());
+            if (schema == null) {
+                throw new ConfigurationException(
+                        "Unknown SCIM extension '" + extension.name()
+                                + "' on resource '" + resource.getName() + "' — check the SCIM schema mapping");
+            }
             firstComponent = nextAttribute(components);
         }
         if (firstComponent instanceof AttributePath.Attribute attribute) {
@@ -59,6 +65,10 @@ public record ScimResourceContext(ResourceTypeResource resource, String relative
     }
 
     private AttributeDefinition findAttribute(String name, Collection<AttributeDefinition> attributes) {
+        if (attributes == null) {
+            // Some servers omit sub-attributes on a complex attribute definition.
+            return null;
+        }
         for (AttributeDefinition attr : attributes) {
             if (attr.getName().equals(name)) {
                 return attr;

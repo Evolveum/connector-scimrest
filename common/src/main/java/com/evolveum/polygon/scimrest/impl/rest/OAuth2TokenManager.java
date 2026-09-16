@@ -19,7 +19,12 @@ import org.identityconnectors.common.security.GuardedString;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import org.identityconnectors.framework.common.exceptions.RetryableException;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -233,6 +238,7 @@ public class OAuth2TokenManager {
 
         customizeBuildTokenRequest(tokenRequest);
 
+        var tokenUrl = config.tokenUrl();
         try {
             var request = new JdkHttpRequestConverter().convert(tokenRequest);
             // The token endpoint exchange carries credentials; the body is only visible in
@@ -241,19 +247,34 @@ public class OAuth2TokenManager {
             var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             ProtocolTrace.response(PROTOCOL_LOG, response.statusCode(), request.uri().toString(), response.body());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new ConnectorIOException(
-                        "OAuth2 token request failed with HTTP status " + response.statusCode());
+                // A 400 (invalid_client/invalid_grant) or 401 from the token endpoint means the
+                // configured credentials are bad — retrying with the same credentials is
+                // pointless, so this is an invalid-credential error, not a transient I/O one.
+                // The server's error/error_description (RFC 6749 §5.2) is the useful part.
+                throw tokenRequestStatusException(response.statusCode(), response.body(), tokenUrl);
             }
             parseAndStoreTokenResponse(response.body());
         } catch (IOException e) {
-            throw new ConnectorIOException("Failed to fetch OAuth2 token: " + e.getMessage(), e);
+            throw new ConnectorIOException("Failed to fetch OAuth2 token from " + tokenUrl + ": " + e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ConnectorIOException("OAuth2 token fetch was interrupted", e);
+            throw new ConnectionBrokenException("OAuth2 token fetch from " + tokenUrl + " was interrupted", e);
         }
     }
 
+    private static RuntimeException tokenRequestStatusException(int status, String body, String tokenUrl) {
+        String detail = ErrorDetail.extract(body);
+        String base = "OAuth2 token request from " + tokenUrl + " failed with HTTP " + status
+                + (detail == null || detail.isBlank() ? "" : ": " + detail);
+        return switch (status) {
+            case 400, 401, 403 -> new InvalidCredentialException(base);
+            case 429 -> RetryableException.wrap(base, (Throwable) null);
+            default -> new ConnectionFailedException(base);
+        };
+    }
+
     protected void parseAndStoreTokenResponse(String responseBody) {
+        var tokenUrl = authContext.getConfiguration().tokenUrl();
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
@@ -267,7 +288,10 @@ public class OAuth2TokenManager {
                 case String s -> {
                     try {
                         expiresIn = Long.parseLong(s);
-                    } catch (NumberFormatException ignored) {
+                    } catch (NumberFormatException e) {
+                        // A non-numeric expires_in used to be swallowed silently, which made the
+                        // token never expire and the refresh never happen again — at least log it.
+                        LOG.warn("OAuth2 token response from {0} has a non-numeric ''expires_in'' value: {1}", tokenUrl, s);
                     }
                 }
                 case null, default -> {}
@@ -278,22 +302,25 @@ public class OAuth2TokenManager {
                 authContext.set(EXPIRES_AT, expiresAt);
             }
         } catch (JacksonException e) {
-            throw new ConnectorIOException("Failed to parse token response: " + e.getMessage(), e);
+            throw new ConnectorIOException("Failed to parse OAuth2 token response from " + tokenUrl + ": " + e.getMessage(), e);
         }
     }
 
     protected void processTokenResponse(Map<String, Object> response) {
+        var tokenUrl = authContext.getConfiguration().tokenUrl();
         Object tokenType = response.get(TOKEN_TYPE);
         if (tokenType == null) {
-            LOG.warn("OAuth2 token response is missing required ''token_type'' field (RFC 6749 §5.1)");
+            LOG.warn("OAuth2 token response from {0} is missing required ''token_type'' field (RFC 6749 §5.1)", tokenUrl);
         } else if (!"bearer".equalsIgnoreCase(tokenType.toString())) {
             throw new ConnectorIOException(
-                    "Unsupported OAuth2 token_type: '" + tokenType + "' — only 'bearer' is supported");
+                    "OAuth2 token response from " + tokenUrl + " has an unsupported token_type: '" + tokenType
+                            + "' — only 'bearer' is supported");
         }
 
         Object accessToken = response.get(ACCESS_TOKEN);
         if (accessToken == null) {
-            throw new ConnectorIOException("OAuth2 token response does not contain 'access_token' (RFC 6749 §5.1)");
+            throw new ConnectorIOException(
+                    "OAuth2 token response from " + tokenUrl + " does not contain 'access_token' (RFC 6749 §5.1)");
         }
         authContext.set(ACCESS_TOKEN, accessToken.toString());
     }
@@ -301,7 +328,16 @@ public class OAuth2TokenManager {
     protected void customizeBuildTokenRequest(HttpRequestSpecification request) {
         var config = authContext.getConfiguration();
 
-        switch (OAuth2GrantType.parse(config.grantType())) {
+        OAuth2GrantType grantType;
+        try {
+            grantType = OAuth2GrantType.parse(config.grantType());
+        } catch (IllegalArgumentException e) {
+            // A bad/missing grant type is a configuration problem.
+            throw new ConfigurationException(
+                    "OAuth2 grant type '" + config.grantType() + "' is not supported", e);
+        }
+
+        switch (grantType) {
             case JWT_BEARER -> buildJwtBearerRequest(request, config);
             case CLIENT_CREDENTIALS -> buildClientCredentialsRequest(request, config);
             case PASSWORD -> buildPasswordRequest(request, config);

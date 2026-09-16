@@ -10,7 +10,7 @@ import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.scimrest.schema.ScimAttributeMapping;
 import com.unboundid.scim2.common.messages.PatchOpType;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.JsonNodeFactory;
@@ -164,7 +164,9 @@ public final class ScimPatchOperations {
         }
         for (var op : ops) {
             if (!attrConfig.allows(op.op())) {
-                throw new ConnectorException("SCIM PATCH operation '" + op.op().getStringValue()
+                // A deterministic limitation of the configured PATCH support — retries will not
+                // change it, so it is a configuration error, not a transient one.
+                throw new ConfigurationException("SCIM PATCH operation '" + op.op().getStringValue()
                         + "' is not supported for attribute '" + delta.getName() + "'");
             }
         }
@@ -174,11 +176,11 @@ public final class ScimPatchOperations {
     private static ScimAttributeMapping resolveMapping(RestObjectClassDefinition objectClass, String connIdName) {
         RestAttributeDefinition definition = objectClass.attributeFromConnIdName(connIdName);
         if (definition == null) {
-            throw new ConnectorException("Unknown attribute: " + connIdName);
+            throw new ConfigurationException("Unknown attribute in SCIM PATCH update: " + connIdName);
         }
         var mapping = definition.scim();
         if (mapping == null) {
-            throw new ConnectorException("Attribute '" + connIdName + "' has no SCIM mapping");
+            throw new ConfigurationException("Attribute '" + connIdName + "' has no SCIM mapping");
         }
         return mapping;
     }

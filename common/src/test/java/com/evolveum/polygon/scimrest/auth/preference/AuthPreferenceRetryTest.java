@@ -10,6 +10,7 @@ import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.testng.annotations.AfterMethod;
@@ -18,6 +19,7 @@ import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Tests 401 retry logic — when an API request returns 401 mid-session,
@@ -154,7 +156,12 @@ public class AuthPreferenceRetryTest extends WireMockTestSupport {
         connector.init(config);
         connector.test();
 
-        connector.executeQuery(new ObjectClass("Account"), null, r -> true, new OperationOptionsBuilder().build());
+        // The original request and the single retry both get 401 — the search then fails with
+        // an invalid-credential error instead of looping forever.
+        var failure = org.testng.Assert.expectThrows(InvalidCredentialException.class,
+                () -> connector.executeQuery(new ObjectClass("Account"), null, r -> true,
+                        new OperationOptionsBuilder().build()));
+        assertTrue(failure.getMessage().contains("401"));
 
         // TEST_ENDPOINT probed twice: initial probe + reprobe after 401
         assertEquals(wireMockServer.findAll(

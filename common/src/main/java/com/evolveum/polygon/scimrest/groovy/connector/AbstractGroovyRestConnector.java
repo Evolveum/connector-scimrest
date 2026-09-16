@@ -20,18 +20,32 @@ import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
+import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
+import com.evolveum.polygon.scimrest.impl.scim.ScimExceptionMapper;
+import com.evolveum.polygon.scimrest.impl.scim.ScimHttpErrorException;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
-import jakarta.ws.rs.WebApplicationException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeDelta;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.filter.Filter;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.common.objects.SyncResultsHandler;
+import org.identityconnectors.framework.common.objects.SyncToken;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Configuration;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase {
@@ -73,7 +87,9 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         if (cfg instanceof BaseGroovyConnectorConfiguration groovyConf) {
             context = new RestConnectorContext(groovyConf);
         } else {
-            throw new IllegalArgumentException("Configuration must be an instance of AbstractGroovyConnectorConfiguration");
+            throw new ConfigurationException(
+                    "Configuration must be an instance of AbstractGroovyConnectorConfiguration, got: "
+                            + (cfg == null ? "null" : cfg.getClass().getName()));
         }
     }
 
@@ -93,33 +109,54 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     }
 
     private void initializeCore0() {
-        var schemaBuilder = new RestSchemaBuilderImpl(getClass(), context);
-        var schemaLoader = new SchemaDefinitionLoader(context.configuration().groovyContext(), schemaBuilder);
-        initializeSchema(schemaLoader);
-        context.baseSchema(schemaLoader.baseSchema());
+        try {
+            var schemaBuilder = new RestSchemaBuilderImpl(getClass(), context);
+            var schemaLoader = new SchemaDefinitionLoader(context.configuration().groovyContext(), schemaBuilder);
+            initializeSchema(schemaLoader);
+            context.baseSchema(schemaLoader.baseSchema());
 
-        handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
-        initializeAuthorizationHandler(handlersBuilder);
+            handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
+            initializeAuthorizationHandler(handlersBuilder);
 
-        context.initializeRest(handlersBuilder.restCustomizer());
-        context.initializeScim(handlersBuilder.scimCustomizer());
-        if (context.isScimEnabled()) {
-            context.scim().initialize();
-            context.scim().contributeToSchema(schemaBuilder).applyRules();
+            context.initializeRest(handlersBuilder.restCustomizer());
+            context.initializeScim(handlersBuilder.scimCustomizer());
+            if (context.isScimEnabled()) {
+                context.scim().initialize();
+                context.scim().contributeToSchema(schemaBuilder).applyRules();
+            }
+
+            schemaBuilder.applyStructuralRules();
+            context.schema(schemaBuilder.build());
+        } catch (ConnectorException e) {
+            // ICF type was already set at the boundary (network failure, bad credentials,
+            // SCIM discovery) — never re-wrap or relabel it.
+            throw e;
+        } catch (Exception e) {
+            // A broken Groovy schema script, a missing script resource or an inconsistent
+            // schema definition all make the connector unusable by configuration.
+            throw new ConfigurationException(
+                    "Failed to initialize the connector configuration: " + HttpExceptionMapper.causeMessage(e), e);
         }
-
-        schemaBuilder.applyStructuralRules();
-        context.schema(schemaBuilder.build());
     }
 
     private void initializeHandlers0() {
-        if (context.isScimEnabled()) {
-            context.scim().contributeToHandlers(handlersBuilder);
+        try {
+            if (context.isScimEnabled()) {
+                context.scim().contributeToHandlers(handlersBuilder);
+            }
+
+            initializeObjectClassHandler(handlersBuilder);
+
+            context.handlers(handlersBuilder.build());
+        } catch (ConnectorException e) {
+            // ICF type was already set at the boundary — never re-wrap or relabel it.
+            throw e;
+        } catch (Exception e) {
+            // A broken Groovy operation script or an inconsistent handler definition makes
+            // the connector unusable by configuration.
+            throw new ConfigurationException(
+                    "Failed to build the connector operation handlers: " + HttpExceptionMapper.causeMessage(e), e);
         }
-
-        initializeObjectClassHandler(handlersBuilder);
-
-        context.handlers(handlersBuilder.build());
     }
 
     protected abstract void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder);
@@ -143,54 +180,133 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         // SCIM Test connection is done automatically during schema discovery
         // FIXME: But makes sense to do again, if connector is poolable (in future)
         var restClientConfig = getConfiguration().configuration(RestClientConfiguration.class);
-        if (restClientConfig != null && restClientConfig.getRestTestEndpoint() != null) {
-            if (context.rest() != null && context.rest().isPreferenceActive()) {
-                context.rest().runProbe();
-            } else if (context.isScimEnabled()) {
-                var scimBase = ((ScimClientConfiguration) getConfiguration()).getScimBaseUrl();
-                var testUrl = scimBase + restClientConfig.getRestTestEndpoint();
+        if (restClientConfig == null || restClientConfig.getRestTestEndpoint() == null) {
+            // Nothing to verify: preference-based auth falls back to its first method without
+            // probing, and the SCIM connection was already checked during schema discovery.
+            return;
+        }
 
-                try {
-                    context.scim().httpClient().target(testUrl).request().get().close();
-                } catch (WebApplicationException e) {
-                    var status = e.getResponse().getStatus();
-                    switch (status) {
-                        case 401:
-                        case 403:
-                            throw new InvalidCredentialException("Authentication required, HTTP status code " + status, e);
-                        default:
-                            throw new ConnectionFailedException("Connection failed. HTTP status code " + status, e);
-                    }
-                } catch (Exception e) {
-                    throw new ConnectionFailedException(e.getMessage(), e);
+        if (context.rest() != null && context.rest().isPreferenceActive()) {
+            context.rest().runProbe();
+        } else if (context.isScimEnabled()) {
+            var scimBase = ((ScimClientConfiguration) getConfiguration()).getScimBaseUrl();
+            var testUrl = scimBase + restClientConfig.getRestTestEndpoint();
+
+            try {
+                context.scim().httpClient().target(testUrl).request().get().close();
+            } catch (ScimHttpErrorException e) {
+                // Carries the status + the server's RFC 7644 detail; classify like the REST branch.
+                throw testEndpointStatusException(e.status(), e.detail(), testUrl, e);
+            } catch (ConnectorException e) {
+                // Network failure already mapped at the connector boundary (timeout, connection) — keep it.
+                throw e;
+            } catch (Exception e) {
+                throw ScimExceptionMapper.mapFailure(e, testUrl);
+            }
+        } else if (context.rest() != null) {
+            var testUrl = restClientConfig.getBaseAddress() + restClientConfig.getRestTestEndpoint();
+            var request = context.rest().newRequest();
+            request.subpath(restClientConfig.getRestTestEndpoint());
+            try {
+                var response = context.rest().executeRequest(request, HttpResponse.BodyHandlers.discarding());
+                if (!isSuccess(response.statusCode())) {
+                    throw testEndpointStatusException(response.statusCode(), null, testUrl, null);
                 }
-            } else if (context.rest() != null) {
-                var request = context.rest().newRequest();
-                request.subpath(restClientConfig.getRestTestEndpoint());
-                try {
-                    var response = context.rest().executeRequest(request, HttpResponse.BodyHandlers.discarding());
-                    if (!isSuccess(response.statusCode())) {
-                        switch (response.statusCode()) {
-                            case 401:
-                            case 403:
-                                throw new InvalidCredentialException("Authentication required, HTTP status code " + response.statusCode());
-                            default:
-                                throw new ConnectionFailedException("Connection failed. HTTP status code " + response.statusCode());
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new ConnectionFailedException(e);
-                } catch (IllegalArgumentException e) {
-                    throw new ConnectionFailedException("DNS or URI configuration error: " + e.getMessage(), e);
-                } catch (InterruptedException e) {
-                    throw new ConnectionBrokenException("Operation was interrupted", e);
-                }
+            } catch (IOException e) {
+                // Timeouts and connection problems become the ICF types midPoint retries
+                // (OperationTimeoutException / ConnectionFailedException) instead of a
+                // generic wrap.
+                throw HttpExceptionMapper.map(e, testUrl);
+            } catch (IllegalArgumentException e) {
+                // A bad base address is misconfiguration, not a connection problem.
+                throw new ConfigurationException("DNS or URI configuration error: " + e.getMessage(), e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ConnectionBrokenException("Test request to " + testUrl + " was interrupted", e);
             }
         }
     }
 
+    /**
+     * Classifies the outcome of a test-endpoint probe: 401/403 are bad credentials, 404 is a
+     * misconfigured test endpoint, anything else is a (transient) connection problem.
+     */
+    private static RuntimeException testEndpointStatusException(int status, String detail, String testUrl, Throwable cause) {
+        String tail = (detail == null || detail.isBlank()) ? "" : ": " + detail;
+        String base = "HTTP " + status + " at " + testUrl + tail;
+        return switch (status) {
+            case 401, 403 -> new InvalidCredentialException("Authentication required: " + base, cause);
+            case 404 -> new ConfigurationException("Test endpoint returned 404 (check the configured test endpoint): " + base, cause);
+            default -> new ConnectionFailedException("Connection failed: " + base, cause);
+        };
+    }
+
     private boolean isSuccess(int statusCode) {
         return statusCode >= 200 && statusCode < 400;
+    }
+
+    // --------------------------------------------------------------------------
+    // Top-level boundary safety net
+    // --------------------------------------------------------------------------
+    //
+    // The SCIM operation handlers translate {@link ScimHttpErrorException} (a custom
+    // transport carrier) into the concrete ICF type for their operation. But the ConnId
+    // base rethrows any {@code ConnectorException} verbatim, so a handler that forgets the
+    // translation would leak the custom type to the ConnId layer, where it is not a
+    // recognized built-in exception. These overrides guarantee the translation happens at
+    // the boundary no matter what, using a kind-neutral default (the per-operation,
+    // kind-specific translation is still done by the handlers themselves).
+
+    private <T> T withStandardIcfBoundary(Callable<T> operation) {
+        try {
+            return operation.call();
+        } catch (ScimHttpErrorException e) {
+            // Last-resort translation so the custom carrier never reaches the ConnId layer.
+            throw ScimExceptionMapper.map(e, HttpStatusMapper.OperationKind.GET, null);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ConnectorException(e);
+        }
+    }
+
+    @Override
+    public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes, OperationOptions options) {
+        return withStandardIcfBoundary(() -> super.create(objectClass, createAttributes, options));
+    }
+
+    @Override
+    public void delete(ObjectClass objectClass, Uid uid, OperationOptions options) {
+        withStandardIcfBoundary(() -> {
+            super.delete(objectClass, uid, options);
+            return null;
+        });
+    }
+
+    @Override
+    public void executeQuery(ObjectClass objectClass, Filter query, ResultsHandler handler, OperationOptions options) {
+        withStandardIcfBoundary(() -> {
+            super.executeQuery(objectClass, query, handler, options);
+            return null;
+        });
+    }
+
+    @Override
+    public Set<AttributeDelta> updateDelta(ObjectClass objclass, Uid uid, Set<AttributeDelta> modifications, OperationOptions options) {
+        return withStandardIcfBoundary(() -> super.updateDelta(objclass, uid, modifications, options));
+    }
+
+    @Override
+    public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler, OperationOptions options) {
+        withStandardIcfBoundary(() -> {
+            super.sync(objectClass, token, handler, options);
+            return null;
+        });
+    }
+
+    @Override
+    public SyncToken getLatestSyncToken(ObjectClass objectClass) {
+        return withStandardIcfBoundary(() -> super.getLatestSyncToken(objectClass));
     }
 
     @Override

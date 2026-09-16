@@ -9,14 +9,14 @@ package com.evolveum.polygon.scimrest.exception;
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
-import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -51,10 +51,12 @@ public class ConnectionTimeoutTests extends WireMockTestSupport {
             long elapsed = System.currentTimeMillis() - start;
             fail("Expected timeout exception but request completed in " + elapsed + "ms");
         } catch (Exception e) {
-            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-            assertTrue(e instanceof ConnectionFailedException ||
-                    e instanceof ConnectionBrokenException,
-                "Expected ConnectionFailedException or ConnectionBrokenException but got: " + e.getClass().getName() + " msg: " + msg);
+            // A request timeout maps to OperationTimeoutException (a transient ICF exception
+            // midPoint retries), not to a generic connection failure.
+            assertTrue(e instanceof OperationTimeoutException,
+                "Expected OperationTimeoutException but got: " + e.getClass().getName()
+                    + " msg: " + (e.getMessage() != null ? e.getMessage().toLowerCase() : ""));
+            assertNotNull(e.getCause(), "Timeout exception should carry the JDK timeout as its cause");
         }
     }
 

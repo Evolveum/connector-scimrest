@@ -11,8 +11,8 @@ import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -52,9 +52,10 @@ public class NetworkFailureTests extends WireMockTestSupport {
 
     @Test
     public void testDnsResolutionFailureBecomesConnectionFailed() {
-        // Use invalid hostname that won't resolve
-        TestConfiguration config = new TestConfiguration(0);
-        config.setBaseAddress("http://invalid-host-that-does-not-exist-12345.com:8080");
+        // Use invalid hostname that won't resolve (port is appended by getBaseAddress(),
+        // so the host must not carry one itself)
+        TestConfiguration config = new TestConfiguration(8080);
+        config.setBaseAddress("http://invalid-host-that-does-not-exist-12345.com");
         config.setRestTestEndpoint("/test");
 
         TestRestConnector connector = new TestRestConnector((BaseRestGroovyConnectorConfiguration) config);
@@ -88,10 +89,9 @@ public class NetworkFailureTests extends WireMockTestSupport {
             connector.test();
             fail("Expected timeout exception was not thrown");
         } catch (Exception e) {
-            // Timeout exception (ConnectionFailed or ConnectionBroken)
-            assertTrue(e instanceof ConnectionFailedException ||
-                    e instanceof ConnectionBrokenException,
-                "Expected timeout exception but got: " + e.getClass().getName());
+            // A request timeout maps to OperationTimeoutException (transient, retried by midPoint)
+            assertTrue(e instanceof OperationTimeoutException,
+                "Expected OperationTimeoutException but got: " + e.getClass().getName());
         }
     }
 
@@ -155,8 +155,8 @@ public class NetworkFailureTests extends WireMockTestSupport {
             connector.test();
             fail("Expected timeout exception was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof ConnectionFailedException ||
-                    e instanceof ConnectionBrokenException);
+            assertTrue(e instanceof OperationTimeoutException,
+                "Expected OperationTimeoutException but got: " + e.getClass().getName());
             // Verify exception has stacktrace
             assertNotNull(e.getStackTrace(),
                 "Exception should have stacktrace for debugging");

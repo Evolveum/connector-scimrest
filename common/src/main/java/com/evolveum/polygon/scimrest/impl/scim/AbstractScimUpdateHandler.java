@@ -11,8 +11,10 @@ import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateRequest;
 import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
+import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
-import com.unboundid.scim2.common.exceptions.ScimException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 
@@ -44,18 +46,38 @@ public abstract class AbstractScimUpdateHandler implements UpdateOperationHandle
     public void update(UpdateRequest request, OperationOptions options, ContextLookup operationContext) {
         ScimResourceContext resource = context.resourceForObjectClass(objectClass);
         if (resource == null) {
-            throw new IllegalStateException("No SCIM resource mapping for object class: " + objectClass.getObjectClassValue());
+            throw new ConfigurationException("No SCIM resource mapping for object class: " + objectClass.getObjectClassValue());
         }
 
         RestConnectorContext connectorContext = context.contextLookup().get(RestConnectorContext.class);
         RestObjectClassDefinition objectClassDef = connectorContext.schema().objectClass(objectClass.getObjectClassValue());
 
-        URI resourceUri = relativeEndpoint(resource.relativeEndpoint(), request.uid().getUidValue());
+        String uid = request.uid().getUidValue();
+        URI resourceUri;
+        try {
+            resourceUri = relativeEndpoint(resource.relativeEndpoint(), uid);
+        } catch (Exception e) {
+            // An unrenderable endpoint/UID is a data/configuration error, not a runtime one.
+            throw new ConfigurationException(
+                    "Cannot build SCIM resource URI '" + resource.relativeEndpoint() + "/" + uid + "': "
+                            + HttpExceptionMapper.causeMessage(e), e);
+        }
 
         try {
             doUpdate(request, toDeltaSet(request), objectClassDef, resourceUri);
+        } catch (ScimHttpErrorException e) {
+            // HTTP 404 is a read-then-write race (object gone on the resource) -> UnknownUidException,
+            // 409 is a unique-key conflict -> AlreadyExistsException; the server's detail is
+            // carried into the message.
+            throw ScimExceptionMapper.map(e, HttpStatusMapper.OperationKind.UPDATE, uid);
+        } catch (ConnectorException e) {
+            // ICF type was already set at the boundary (e.g. mapped network failure or a
+            // deterministic PATCH build error) — never re-wrap.
+            throw e;
         } catch (Exception e) {
-            throw new ConnectorException("Failed to update SCIM resource: " + e.getMessage(), e);
+            throw new ConnectorException(
+                    "Failed to update SCIM resource with UID " + uid + " at " + resource.relativeEndpoint()
+                            + ": " + HttpExceptionMapper.causeMessage(e), e);
         }
     }
 
@@ -90,7 +112,7 @@ public abstract class AbstractScimUpdateHandler implements UpdateOperationHandle
      * @param resourceUri    the (relative) URI of the target SCIM resource
      */
     protected abstract void doUpdate(UpdateRequest request, Set<AttributeDelta> deltas,
-                                     RestObjectClassDefinition objectClassDef, URI resourceUri) throws ScimException;
+                                      RestObjectClassDefinition objectClassDef, URI resourceUri);
 
     private static Set<AttributeDelta> toDeltaSet(UpdateRequest request) {
         return request.attributeDeltaSet() instanceof Set set
@@ -108,7 +130,7 @@ public abstract class AbstractScimUpdateHandler implements UpdateOperationHandle
         try {
             return new URI(endpointUri.getScheme(), endpointUri.getAuthority(), path + id, endpointUri.getQuery(), endpointUri.getFragment());
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to build resource URI", e);
+            throw new IllegalStateException("Failed to build resource URI from endpoint '" + endpoint + "' and id '" + id + "'", e);
         }
     }
 }

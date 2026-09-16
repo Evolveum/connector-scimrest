@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import com.evolveum.polygon.scimrest.schema.RestAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinitionBuilder;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
@@ -261,7 +262,11 @@ public class ScimSchemaTranslator {
             }
             var attrDef = scim.findAttributeDefinition(path.actual());
             if (attrDef == null) {
-                throw new IllegalStateException(String.format("Attribute '%s' not found", path.actual()));
+                // A schema mapping mismatch (the connector maps an attribute to a SCIM path the
+                // server does not expose) — retries will not fix it.
+                throw new ConfigurationException(String.format(
+                        "Attribute path '%s' not found in the SCIM schema of resource '%s' — check the attribute's SCIM mapping",
+                        path.actual(), scim.resource().getName()));
             }
             applyAttributeRules(scim, attrDef, objectClass, attr);
         }

@@ -7,7 +7,7 @@
 package com.evolveum.polygon.scimrest.auth.method.oauth2.password;
 
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -135,10 +135,12 @@ public class OAuth2PasswordTests extends AbstractOAuth2PasswordTests {
 
         try {
             createConnector("bad-client", "alice", new GuardedString("wrong".toCharArray())).test();
-            fail("Expected ConnectorIOException was not thrown");
+            fail("Expected InvalidCredentialException was not thrown");
         } catch (Exception e) {
-            assertTrue(e instanceof ConnectorIOException,
-                    "Expected ConnectorIOException but got: " + e.getClass().getName());
+            // A 401 from the token endpoint means the credentials are bad — retrying with the
+            // same credentials cannot succeed, so this is not a transient I/O error.
+            assertTrue(e instanceof InvalidCredentialException,
+                    "Expected InvalidCredentialException but got: " + e.getClass().getName());
             assertTrue(e.getMessage().contains("401"));
         }
         assertEquals(wireMockServer.findAll(anyRequestedFor(anyUrl())).size(), 1);

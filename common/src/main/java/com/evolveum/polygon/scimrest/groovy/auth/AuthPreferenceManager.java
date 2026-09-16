@@ -9,10 +9,12 @@ package com.evolveum.polygon.scimrest.groovy.auth;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.conndev.config.ConfigurationMixin;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.rest.JdkHttpRequestConverter;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 
 import javax.net.ssl.SSLContext;
@@ -103,6 +105,8 @@ public class AuthPreferenceManager<C extends ConfigurationMixin> implements Auth
             return;
         }
 
+        int lastStatus = -1;
+        Throwable lastError = null;
         for (var type : preferenceOrder) {
             var probeSpec = new HttpRequestSpecification(baseUrl);
             probeSpec.subpath(subpath);
@@ -113,18 +117,38 @@ public class AuthPreferenceManager<C extends ConfigurationMixin> implements Auth
             try {
                 var jdkRequest = new JdkHttpRequestConverter().convert(probeSpec);
                 var response = httpClient.send(jdkRequest, HttpResponse.BodyHandlers.discarding());
+                lastStatus = response.statusCode();
                 if (response.statusCode() >= 200 && response.statusCode() < 400) {
                     activeMethod = type;
                     LOG.ok("Auth preference: selected ''{0}'' (HTTP {1})", type.getSimpleName(), response.statusCode());
                     return;
                 }
                 LOG.ok("Auth preference: ''{0}'' returned HTTP {1}, trying next", type.getSimpleName(), response.statusCode());
-            } catch (IOException | InterruptedException e) {
+            } catch (InterruptedException e) {
+                // Restore the interrupt flag and stop probing — further requests would only
+                // fail again.
+                Thread.currentThread().interrupt();
+                lastError = e;
+                break;
+            } catch (IOException e) {
                 LOG.ok("Auth preference: ''{0}'' probe failed: {1}, trying next", type.getSimpleName(), e.getMessage());
+                lastError = e;
             }
         }
 
         var tried = preferenceOrder.stream().map(Class::getSimpleName).toList();
+        if (lastError instanceof IOException || lastError instanceof InterruptedException) {
+            // Every method failed at the network layer — the host is unreachable. That is a
+            // transient connection problem, not a "bad password" verdict (which this used to
+            // be: a network outage was reported as InvalidCredentialException).
+            throw new ConnectionFailedException(
+                    "Auth probe failed for all methods (" + tried + "); last error: "
+                            + HttpExceptionMapper.causeMessage(lastError), lastError);
+        }
+        if (lastStatus == 401 || lastStatus == 403) {
+            throw new InvalidCredentialException(
+                    "No configured auth method succeeded during probe (last: HTTP " + lastStatus + "). Tried: " + tried);
+        }
         throw new InvalidCredentialException("No configured auth method succeeded during probe. Tried: " + tried);
     }
 
@@ -138,7 +162,9 @@ public class AuthPreferenceManager<C extends ConfigurationMixin> implements Auth
                 sslContext.init(null, new TrustManager[]{RestContext.TRUST_ALL}, new SecureRandom());
                 builder.sslContext(sslContext);
             } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                throw new ConnectorException("SSL configuration failed for auth preference manager", e);
+                throw new ConfigurationException(
+                        "SSL trust-all configuration failed for auth preference manager: "
+                                + HttpExceptionMapper.causeMessage(e), e);
             }
         }
         return builder.build();

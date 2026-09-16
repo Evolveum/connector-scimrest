@@ -12,6 +12,7 @@ import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -34,7 +35,12 @@ public class GroovyRestHandlerBuilder extends RestHandlerBuilder {
     }
 
     public void loadFromResource(String s) {
-        shell.evaluate(new InputStreamReader(this.getClass().getResourceAsStream(s)), s);
+        var stream = this.getClass().getResourceAsStream(s);
+        if (stream == null) {
+            // A missing script resource used to fail with a bare NPE inside the shell.
+            throw new ConfigurationException("Connector script resource not found: " + s);
+        }
+        shell.evaluate(new InputStreamReader(stream), s);
     }
 
     public void loadFromString(String script) {

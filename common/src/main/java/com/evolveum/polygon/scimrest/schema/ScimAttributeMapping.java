@@ -10,6 +10,7 @@ import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.conndev.spi.ValueMapping;
 import tools.jackson.databind.JsonNode;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,6 +20,11 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
 
     public ScimAttributeMapping(AttributePathDeclaration<?,?> path, ValueMapping<Object, JsonNode> mapping) {
         super(path, mapping);
+        if (mapping == null) {
+            // Without a value mapping every read/write of this attribute would NPE at runtime.
+            throw new ConfigurationException(
+                    "Value mapping is null for SCIM attribute mapping " + (path == null ? "<unknown>" : path));
+        }
     }
 
     /**
@@ -26,12 +32,12 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
      * e.g. {@code userName}, {@code name.givenName},
      * {@code urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber}.
      *
-     * @throws IllegalStateException if no SCIM path is configured for the attribute
+     * @throws ConfigurationException if no SCIM path is configured for the attribute
      */
     public String scimPath() {
         var path = path();
         if (path == null) {
-            throw new IllegalStateException("No SCIM path configured for attribute mapping");
+            throw new ConfigurationException("No SCIM path configured for attribute mapping");
         }
         return ScimPathFormat.INSTANCE.serialize(path);
     }

@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.impl.rest;
 import com.evolveum.polygon.scimrest.api.HttpRequestConverter;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.HttpVersion;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 
@@ -43,7 +43,10 @@ public class JdkHttpRequestConverter implements HttpRequestConverter<HttpRequest
         try {
             requestBuilder.uri(new URI(uriString));
         } catch (URISyntaxException e) {
-            throw new ConnectorException("Computed URI: " + uriString + " is not valid", e);
+            // The URI is computed from the configured base address + endpoint, so an invalid
+            // result is a configuration problem. Note: with API-key-in-query auth the computed
+            // URI (and thus this message) may carry the key — accepted for diagnostics.
+            throw new ConfigurationException("Computed URI: " + uriString + " is not valid", e);
         }
 
         byte[] body = dto.getBody();
@@ -81,6 +84,11 @@ public class JdkHttpRequestConverter implements HttpRequestConverter<HttpRequest
     }
 
     private static String buildUriString(HttpRequestSpecification dto) {
+        if (dto.getBaseUri() == null || dto.getBaseUri().isBlank()) {
+            // A missing base address is a configuration problem, not a runtime I/O error.
+            throw new ConfigurationException(
+                    "Cannot build the request URI: the base URI of the REST client configuration is not set");
+        }
         String endpoint = dto.getApiEndpoint();
         if (endpoint != null) {
             for (var entry : dto.getPathParameters().entrySet()) {

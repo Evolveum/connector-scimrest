@@ -14,11 +14,13 @@ import java.net.URISyntaxException;
 public class Checks {
 
     public static void checkConfigurationBaseUri(String baseUri) throws ConfigurationException {
+        if (baseUri == null || baseUri.isBlank()) {
+            throw new ConfigurationException("Base URI is not configured");
+        }
         try {
-            // Lets verify baseUri once more
             new URI(baseUri);
         } catch (URISyntaxException ex) {
-            throw new ConfigurationException("Base URI  is not valid valid URI", ex);
+            throw new ConfigurationException("Base URI '" + baseUri + "' is not a valid URI", ex);
         }
     }
 }

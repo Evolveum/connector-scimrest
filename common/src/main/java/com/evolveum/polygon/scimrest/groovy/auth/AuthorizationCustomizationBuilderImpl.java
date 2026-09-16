@@ -17,11 +17,13 @@ import com.evolveum.polygon.scimrest.groovy.api.AuthImplementationContext;
 import com.evolveum.polygon.scimrest.groovy.api.AuthenticationCustomizationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.JwtAssertionBuilder;
 import com.evolveum.polygon.scimrest.impl.rest.AwsRequestSigner;
+import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.rest.JdkHttpRequestConverter;
 import com.evolveum.polygon.scimrest.impl.rest.OAuth2TokenManager;
 import groovy.json.JsonSlurper;
 import groovy.lang.Closure;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 import java.io.IOException;
@@ -425,7 +427,15 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void customize(RestClientConfiguration configuration, HttpRequestSpecification request) {
-            GroovyClosures.copyAndCall(implementationPrototype, new ExecutionContext(configuration, request));
+            try {
+                GroovyClosures.copyAndCall(implementationPrototype, new ExecutionContext(configuration, request));
+            } catch (ConnectorException e) {
+                throw e;
+            } catch (Exception e) {
+                // A typo in the connector's customAuth script is a configuration problem.
+                throw new ConfigurationException(
+                        "customAuth implementation script failed: " + HttpExceptionMapper.causeMessage(e), e);
+            }
         }
 
         class ExecutionContext implements AuthImplementationContext {
@@ -475,8 +485,13 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
                 try {
                     var httpRequest = new JdkHttpRequestConverter().convert(spec);
                     return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-                } catch (IOException | InterruptedException e) {
-                    throw new ConnectorException("customAuth: HTTP request failed: " + e.getMessage(), e);
+                } catch (IOException e) {
+                    // Map through HttpExceptionMapper so a transient network failure is reported
+                    // as a transient ICF exception, instead of a generic ConnectorException.
+                    throw HttpExceptionMapper.map(e, spec.getBaseUri());
+                } catch (InterruptedException e) {
+                    // Restores the thread's interrupt flag as part of the mapping.
+                    throw HttpExceptionMapper.map(e, spec.getBaseUri());
                 }
             }
 
@@ -503,7 +518,15 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
 
         @Override
         public void customize(ScimClientConfiguration configuration, HttpRequestSpecification request) {
-            GroovyClosures.copyAndCall(implementationPrototype, new ExecutionContext(configuration, request));
+            try {
+                GroovyClosures.copyAndCall(implementationPrototype, new ExecutionContext(configuration, request));
+            } catch (ConnectorException e) {
+                throw e;
+            } catch (Exception e) {
+                // A typo in the connector's customAuth script is a configuration problem.
+                throw new ConfigurationException(
+                        "customAuth implementation script failed: " + HttpExceptionMapper.causeMessage(e), e);
+            }
         }
 
         class ExecutionContext implements AuthImplementationContext {
@@ -553,8 +576,13 @@ public class AuthorizationCustomizationBuilderImpl implements AuthenticationCust
                 try {
                     var httpRequest = new JdkHttpRequestConverter().convert(spec);
                     return httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-                } catch (IOException | InterruptedException e) {
-                    throw new ConnectorException("customAuth: HTTP request failed: " + e.getMessage(), e);
+                } catch (IOException e) {
+                    // Map through HttpExceptionMapper so a transient network failure is reported
+                    // as a transient ICF exception, instead of a generic ConnectorException.
+                    throw HttpExceptionMapper.map(e, spec.getBaseUri());
+                } catch (InterruptedException e) {
+                    // Restores the thread's interrupt flag as part of the mapping.
+                    throw HttpExceptionMapper.map(e, spec.getBaseUri());
                 }
             }
 
