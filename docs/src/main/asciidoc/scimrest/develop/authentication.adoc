@@ -15,47 +15,32 @@ IMPORTANT: SCIM support is enabled only when a `scimBaseUrl` is configured *and*
 
 Nine authentication methods are implemented per protocol namespace:
 
-[cols="1,1,2", options="header"]
-|===
-|Method |DSL keyword |Mechanism
+`basic { ... }`::
+  Basic — `Authorization: Basic base64(user:pass)`
 
-|Basic
-|`basic { ... }`
-|`Authorization: Basic base64(user:pass)`
+`bearer { ... }`::
+  Bearer token — `Authorization: <tokenName> <tokenValue>` (token name defaults to `Bearer`)
 
-|Bearer token
-|`bearer { ... }`
-|`Authorization: <tokenName> <tokenValue>` (token name defaults to `Bearer`)
+`jwtBearer { ... }`::
+  JWT bearer — Self-signed JWT (HS/RS/PS/ES families); placed in the `Authorization` header by default or as a query parameter
 
-|JWT bearer
-|`jwtBearer { ... }`
-|Self-signed JWT (HS/RS/PS/ES families); placed in the `Authorization` header by default or as a query parameter
+`apiKey { ... }`::
+  API key — Header `<name>: <key>` by default, or a query parameter
 
-|API key
-|`apiKey { ... }`
-|Header `<name>: <key>` by default, or a query parameter
+`oauth2ClientCredentials { ... }`::
+  OAuth 2.0 client credentials — Client credentials grant (RFC 6749 §4.4)
 
-|OAuth 2.0 client credentials
-|`oauth2ClientCredentials { ... }`
-|Client credentials grant (RFC 6749 §4.4)
+`oauth2Password { ... }`::
+  OAuth 2.0 password — Resource owner password grant (RFC 6749 §4.3)
 
-|OAuth 2.0 password
-|`oauth2Password { ... }`
-|Resource owner password grant (RFC 6749 §4.3)
+`oauth2JwtBearer { ... }`::
+  OAuth 2.0 JWT bearer — Client JWT assertion (RFC 7523)
 
-|OAuth 2.0 JWT bearer
-|`oauth2JwtBearer { ... }`
-|Client JWT assertion (RFC 7523)
+`oauth2Saml { ... }`::
+  OAuth 2.0 SAML — SAML assertion to the token endpoint
 
-|OAuth 2.0 SAML
-|`oauth2Saml { ... }`
-|SAML assertion to the token endpoint
-
-|AWS Signature
-|`awsSignature { ... }`
-|AWS Signature Version 4
-
-|===
+`awsSignature { ... }`::
+  AWS Signature — AWS Signature Version 4
 
 NOTE: `digest`, `hawk`, and `ntlm` have configuration properties (below) but are **not implemented yet** — configuring them has no effect on requests.
 
@@ -65,31 +50,20 @@ The generic connectors expose the full property set (see xref:generic-connectors
 
 === Endpoints and transport
 
-[cols="1,1,2", options="header"]
-|===
-|Property |Type |Description
+`baseAddress`::
+  String — Base URL of the REST API endpoint (e.g. `https://api.example.com/v1`)
 
-|`baseAddress`
-|String
-|Base URL of the REST API endpoint (e.g. `https://api.example.com/v1`)
+`scimBaseUrl`::
+  String — Base URL of the SCIM endpoint (e.g. `https://api.example.com/scim/v2`)
 
-|`scimBaseUrl`
-|String
-|Base URL of the SCIM endpoint (e.g. `https://api.example.com/scim/v2`)
+`restTestEndpoint`::
+  String — Relative path used to verify connectivity on `test()` (e.g. `/health`); not required
 
-|`restTestEndpoint`
-|String
-|Relative path used to verify connectivity on `test()` (e.g. `/health`); not required
+`trustAllCertificates`::
+  Boolean — Trust all TLS certificates
 
-|`trustAllCertificates`
-|Boolean
-|Trust all TLS certificates
-
-|`timeoutSeconds`
-|Integer
-|HTTP request timeout in seconds; default `30`
-
-|===
+`timeoutSeconds`::
+  Integer — HTTP request timeout in seconds; default `30`
 
 === Basic
 
@@ -109,58 +83,41 @@ The generic connectors expose the full property set (see xref:generic-connectors
 
 === OAuth 2.0 (all four grant types)
 
-[cols="1,1,2", options="header"]
-|===
-|Property |Type |Description
+`restOAuth2TokenUrl`::
+  String — URL of the authorization server token endpoint
 
-|`restOAuth2TokenUrl`
-|String
-|URL of the authorization server token endpoint
+`restOAuth2ClientId`::
+  String — Client identifier
 
-|`restOAuth2ClientId`
-|String
-|Client identifier
+`restOAuth2ClientSecret`::
+  GuardedString — Client secret (required for client credentials)
 
-|`restOAuth2ClientSecret`
-|GuardedString
-|Client secret (required for client credentials)
+`restOAuth2Scope`::
+  String — Space-separated list of scopes to request
 
-|`restOAuth2Scope`
-|String
-|Space-separated list of scopes to request
+`restOAuth2ClientAuthenticationScheme`::
+  String — How client credentials are sent to the token endpoint: `basic` (default) or `post`
 
-|`restOAuth2ClientAuthenticationScheme`
-|String
-|How client credentials are sent to the token endpoint: `basic` (default) or `post`
+`restOAuth2Username`::
+  String — Resource owner username (password grant)
 
-|`restOAuth2Username`
-|String
-|Resource owner username (password grant)
+`restOAuth2Password`::
+  GuardedString — Resource owner password (password grant)
 
-|`restOAuth2Password`
-|GuardedString
-|Resource owner password (password grant)
+`restOAuth2PrivateKey`::
+  GuardedString — PEM-encoded PKCS#8 private key for the JWT bearer grant (RFC 7523)
 
-|`restOAuth2PrivateKey`
-|GuardedString
-|PEM-encoded PKCS#8 private key for the JWT bearer grant (RFC 7523)
+`restOAuth2Issuer`::
+  String — Issuer identifier used as the `iss` claim in JWT assertions and as the SAML issuer
 
-|`restOAuth2Issuer`
-|String
-|Issuer identifier used as the `iss` claim in JWT assertions and as the SAML issuer
+`restOAuth2KeyId`::
+  String — Key ID (`kid`) in the JWT header
 
-|`restOAuth2KeyId`
-|String
-|Key ID (`kid`) in the JWT header
+`restOAuth2Algorithm`::
+  String — JWT signing algorithm for the assertion (e.g. `RS256`, `ES256`)
 
-|`restOAuth2Algorithm`
-|String
-|JWT signing algorithm for the assertion (e.g. `RS256`, `ES256`)
-
-|`restOAuth2Subject`
-|String
-|Subject (`sub` claim); defaults to the client ID if not set
-|===
+`restOAuth2Subject`::
+  String — Subject (`sub` claim); defaults to the client ID if not set
 
 OAuth 2.0 behavior fixed by the framework: the token field in the token response is always `access_token` (missing field → error), the `aud` claim of the JWT assertion is the token URL, and `iss` / `sub` default to the client ID.
 
@@ -225,31 +182,20 @@ See xref:declarative-yaml.adoc[declarative YAML] for the full reference.
 
 The OAuth 2.0 methods accept fine-grained hooks:
 
-[cols="1,2,2", options="header"]
-|===
-|Hook |Argument |Purpose
+`buildTokenRequest { ... }`::
+  customize the token request (argument: the token-endpoint request)
 
-|`buildTokenRequest { ... }`
-|the token-endpoint request
-|customize the token request
+`parseTokenResponse { ... }`::
+  parse non-standard responses (the context must then contain `access_token`) (argument: the token response as a map)
 
-|`parseTokenResponse { ... }`
-|the token response as a map
-|parse non-standard responses (the context must then contain `access_token`)
+`validateToken { ... }`::
+  return `true`/`false` for a cached token
 
-|`validateToken { ... }`
-|—
-|return `true`/`false` for a cached token
+`applyToken { ... }`::
+  attach the token to the request (argument: the request being authorized)
 
-|`applyToken { ... }`
-|the request being authorized
-|attach the token to the request
-
-|`onResponse { ... }`
-|the HTTP response
-|fires on *every* response after an authorized request; by default a 401 clears the cached token — providing a hook replaces that default
-
-|===
+`onResponse { ... }`::
+  fires on *every* response after an authorized request; by default a 401 clears the cached token — providing a hook replaces that default (argument: the HTTP response)
 
 === AWS `beforeSign` hook
 

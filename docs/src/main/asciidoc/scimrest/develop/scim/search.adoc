@@ -16,37 +16,32 @@ For a discovered object class, search works out of the box — no operation scri
 
 The ConnId filter tree is rendered into a canonical SCIM filter expression (including value escaping):
 
-[cols="1,2", options="header"]
-|===
-|ConnId filter |SCIM operator
+`EqualsFilter`::
+  `eq`
 
-|`EqualsFilter`
-|`eq`
+`ContainsFilter` (string values only)::
+  `co`
 
-|`ContainsFilter` (string values only)
-|`co`
+`StartsWithFilter`::
+  `sw`
 
-|`StartsWithFilter`
-|`sw`
+`EndsWithFilter`::
+  `ew`
 
-|`EndsWithFilter`
-|`ew`
+`GreaterThanFilter`::
+  `gt`
 
-|`GreaterThanFilter`
-|`gt`
+`GreaterThanOrEqualFilter`::
+  `ge`
 
-|`GreaterThanOrEqualFilter`
-|`ge`
+`LessThanFilter`::
+  `lt`
 
-|`LessThanFilter`
-|`lt`
+`LessThanOrEqualFilter`::
+  `le`
 
-|`LessThanOrEqualFilter`
-|`le`
-
-|`AndFilter` / `OrFilter` / `NotFilter`
-|`and` / `or` / `not`
-|===
+`AndFilter` / `OrFilter` / `NotFilter`::
+  `and` / `or` / `not`
 
 * Values may be strings (including guarded values), booleans (for `eq` only), or numbers (for the comparison operators).
 * Attribute names are resolved through the object class's SCIM attribute path mapping — a filter on `userName` is sent as `userName eq "..."`, or as `name.givenName eq "..."` when the attribute is mapped to a nested SCIM path. A UID equality filter inside a compound expression is mapped to the SCIM `id` attribute.

@@ -11,26 +11,20 @@ NOTE: The framework supports *SCIM 2.0 only* — SCIM 1.0 is not supported. REST
 The SCIMREST framework in midPoint is a *low‑code scaffolding layer* that lets you build a REST or SCIM‑based connector without writing a full Java connector from scratch.
 It sits above the generic ConnID infrastructure and below the concrete SCIMREST connector implementation.
 
-[cols="1,~", options="header"]
-|===
-|Goal |How the framework achieves it
-|**Rapid connector creation**
-|You supply a small declarative description (endpoint URL, authentication method, supported SCIM resource types, attribute mappings).
-The framework generates the necessary ConnID‑compatible connector code automatically.
-|**Standardized SCIM handling**
-|All SCIM‑specific details—HTTP verbs, JSON payload structures, pagination, bulk operations, error handling—are implemented once in the framework and reused by every connector built on top of it.
+**Rapid connector creation**::
+  You supply a small declarative description (endpoint URL, authentication method, supported SCIM resource types, attribute mappings). The framework generates the necessary ConnID‑compatible connector code automatically.
 
-|**Declarative REST handling**
-|All API‑specific details—HTTP verbs, JSON payload structures, pagination, error handling—are described in declarative form and the framework handles the actual implementation and execution.
+**Standardized SCIM handling**::
+  All SCIM‑specific details—HTTP verbs, JSON payload structures, pagination, bulk operations, error handling—are implemented once in the framework and reused by every connector built on top of it.
 
-|**Uniform ConnID contract**
-|The generated connector conforms to the ConnID SPI, so midPoint treats it exactly like any other ConnID connector (calls create, update, delete, search, etc.).
-This keeps the provisioning engine unchanged regardless of whether the underlying target is a classic LDAP connector or a SCIMREST connector.
-|**Configuration‑driven extensibility**
-|New SCIM resources can be added automatically and customized by filling out a configuration file (or UI form) that describes the changes to the discovered schema and any custom extensions.
-New REST resources can be added by filling out a set of configuration files which describe the APIs for the specified requests.
-No Java coding is required unless you need special behavior.
-|===
+**Declarative REST handling**::
+  All API‑specific details—HTTP verbs, JSON payload structures, pagination, error handling—are described in declarative form and the framework handles the actual implementation and execution.
+
+**Uniform ConnID contract**::
+  The generated connector conforms to the ConnID SPI, so midPoint treats it exactly like any other ConnID connector (calls create, update, delete, search, etc.). This keeps the provisioning engine unchanged regardless of whether the underlying target is a classic LDAP connector or a SCIMREST connector.
+
+**Configuration‑driven extensibility**::
+  New SCIM resources can be added automatically and customized by filling out a configuration file (or UI form) that describes the changes to the discovered schema and any custom extensions. New REST resources can be added by filling out a set of configuration files which describe the APIs for the specified requests. No Java coding is required unless you need special behavior.
 
 A SCIMREST connector in midPoint acts as a translation layer between ConnId and actual SCIM or REST applications.
 When midPoint initiates a provisioning operation (create, update, delete, read, or search), the connector:

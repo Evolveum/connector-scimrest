@@ -74,19 +74,14 @@ This is the pattern used by the SCIM.dev sample connector (`connector/sample-sci
 
 === Resolver
 
-[cols="1,3", options="header"]
-|===
-|Block |Description
+`resolutionType PER_OBJECT` / `resolutionType BATCH`::
+  When to resolve: per object, or batched. `PER_OBJECT` is the default.
 
-|`resolutionType PER_OBJECT` / `resolutionType BATCH`
-|When to resolve: per object, or batched. `PER_OBJECT` is the default.
+`search { ... }`::
+  Search-based resolution: the closure builds the filter used to search the target object class (for example `attributeFilter("employees").eq(value)`). The filter API currently supports `eq()` only. If omitted, the search is performed on the other side of the relation.
 
-|`search { ... }`
-|Search-based resolution: the closure builds the filter used to search the target object class (for example `attributeFilter("employees").eq(value)`). The filter API currently supports `eq()` only. If omitted, the search is performed on the other side of the relation.
-
-|`implementation { ... }`
-|Custom Groovy resolution logic.
-|===
+`implementation { ... }`::
+  Custom Groovy resolution logic.
 
 The `search` / `implementation` closures expose `value()` (the object being resolved), `objectClass(name)`, and `attributeFilter(protocolName)`.
 

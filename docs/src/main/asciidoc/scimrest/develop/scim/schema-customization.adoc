@@ -116,30 +116,20 @@ The ConnId framework requires `UID` and `NAME` attributes. Discovery already map
 
 The `scim` block supports:
 
-[cols="1,2,2", options="header"]
-|===
-|Block |Description |Example
+`extension(name, uri)`::
+  Define SCIM schema extension — e.g. `extension("enterprise", "urn:...")`
 
-|`extension(name, uri)`
-|Define SCIM schema extension
-|`extension("enterprise", "urn:...")`
+`path(path)`::
+  Specify SCIM attribute path — e.g. `path attribute("name").child("familyName")`
 
-|`path(path)`
-|Specify SCIM attribute path
-|`path attribute("name").child("familyName")`
+`name(name)`::
+  Override the SCIM attribute name on the wire — e.g. `name "displayName"`
 
-|`name(name)`
-|Override the SCIM attribute name on the wire
-|`name "displayName"`
+`onlyExplicitlyListed()`::
+  Only include explicitly listed attributes — e.g. `onlyExplicitlyListed()`
 
-|`onlyExplicitlyListed()`
-|Only include explicitly listed attributes
-|`onlyExplicitlyListed()`
-
-|`implementation { deserialize { ... } serialize { ... } }`
-|Custom value mapping for the attribute (e.g. reference values — see xref:relationship-support.adoc[])
-|—
-|===
+`implementation { deserialize { ... } serialize { ... } }`::
+  Custom value mapping for the attribute (e.g. reference values — see xref:relationship-support.adoc[])
 
 The path grammar (attribute names, `child(...)`, `valueFilter(...)`, extension URIs) is the SCIM attribute path format — see xref:complex-attributes.adoc[SCIM paths] for the full reference.
 

@@ -45,56 +45,46 @@ NOTE: `scim.extensions` in the example is shown for the target shape — that ke
 
 Keys:
 
-[cols="1,3", options="header"]
-|===
-|Key |Description
+`objectClasses.<name>`::
+  One object class (the counterpart of `objectClass("...") { ... }`)
 
-|`objectClasses.<name>`
-|One object class (the counterpart of `objectClass("...") { ... }`)
+`description` / `embedded`::
+  The corresponding object-class flags
 
-|`description` / `embedded`
-|The corresponding object-class flags
+`connId` (object-class level)::
+  Built-in attribute aliases, e.g. `connId: { UID: user_id }` binds `__UID__` to the `user_id` attribute
 
-|`connId` (object-class level)
-|Built-in attribute aliases, e.g. `connId: { UID: user_id }` binds `__UID__` to the `user_id` attribute
+`scim` (object-class level)::
+  `schemaUri`, `name` (the SCIM resource name), `onlyExplicitlyListed`; `extensions` (alias → SCIM schema URI) is not supported in YAML yet — declare it in Groovy
 
-|`scim` (object-class level)
-|`schemaUri`, `name` (the SCIM resource name), `onlyExplicitlyListed`; `extensions` (alias → SCIM schema URI) is not supported in YAML yet — declare it in Groovy
+`attributes.<name>`::
+  One attribute — see the attribute keys below
 
-|`attributes.<name>`
-|One attribute — see the attribute keys below
+`references.<name>`::
+  A reference attribute (memberships, foreign keys): `objectClass`, `role` (`subject` / `object`), `subtype`
 
-|`references.<name>`
-|A reference attribute (memberships, foreign keys): `objectClass`, `role` (`subject` / `object`), `subtype`
-
-|`relationships.<name>`
-|An association between object classes: `subject` / `object` participants, each with `class` and `attribute` (including `resolver: { resolution: PER_OBJECT, search: <attribute> eq $value }`)
-|===
+`relationships.<name>`::
+  An association between object classes: `subject` / `object` participants, each with `class` and `attribute` (including `resolver: { resolution: PER_OBJECT, search: <attribute> eq $value }`)
 
 Attribute keys (all optional — only present keys are applied, so the defaults stay untouched):
 
-[cols="1,3", options="header"]
-|===
-|Key |Description
+`description`, `required`, `multiValued`, `creatable`, `updateable` / `updatable`, `readable`, `returnedByDefault`, `emulated`::
+  The regular attribute settings (see xref:rest/user-schema.adoc[user schema])
 
-|`description`, `required`, `multiValued`, `creatable`, `updateable` / `updatable`, `readable`, `returnedByDefault`, `emulated`
-|The regular attribute settings (see xref:rest/user-schema.adoc[user schema])
+`jsonType`, `openApiFormat`, `complexType`::
+  JSON wire type, OpenAPI format, and the embedded object class for structured attributes
 
-|`jsonType`, `openApiFormat`, `complexType`
-|JSON wire type, OpenAPI format, and the embedded object class for structured attributes
+`json: { name, type, openApiFormat, path }`::
+  The JSON wire mapping block; `path` maps the attribute to a (nested) JSON location — see the attribute paths below
 
-|`json: { name, type, openApiFormat, path }`
-|The JSON wire mapping block; `path` maps the attribute to a (nested) JSON location — see the attribute paths below
+`connId: { name, type }`::
+  The ConnId-side name (including the `__UID__` / `__NAME__` built-ins) and value type (`string`, `integer`, `long`, `boolean`, `double`, `bigdecimal`, `binary`)
 
-|`connId: { name, type }`
-|The ConnId-side name (including the `__UID__` / `__NAME__` built-ins) and value type (`string`, `integer`, `long`, `boolean`, `double`, `bigdecimal`, `binary`)
+`scim: { name, type, path }`::
+  The SCIM wire name, SCIM type, and SCIM attribute path (a path string such as `name.givenName`, `emails[0].value`, `emails[primary eq true].value`, or a full extension URI) — see the attribute paths below
 
-|`scim: { name, type, path }`
-|The SCIM wire name, SCIM type, and SCIM attribute path (a path string such as `name.givenName`, `emails[0].value`, `emails[primary eq true].value`, or a full extension URI) — see the attribute paths below
-
-|`scim.implementation: { deserialize: |, serialize: | }`
-|Groovy blocks for custom value mapping
-|===
+`scim.implementation: { deserialize: |, serialize: | }`::
+  Groovy blocks for custom value mapping
 
 A bare `attr:` (no keys) declares the attribute with defaults — the counterpart of `attribute("x")` with an empty closure.
 
@@ -159,43 +149,38 @@ objectClasses:
           # Custom search logic — see the custom search guide
 ----
 
-[cols="1,3", options="header"]
-|===
-|Key |Description
+`search.endpoints[].path`::
+  The search / list endpoint path (required; search endpoints use GET)
 
-|`search.endpoints[].path`
-|The search / list endpoint path (required; search endpoints use GET)
+`search.endpoints[].responseFormat`::
+  Whether the response is a JSON array or a JSON object: `JSON_ARRAY` / `JSON_OBJECT`; default `JSON_OBJECT`
 
-|`search.endpoints[].responseFormat`
-|Whether the response is a JSON array or a JSON object: `JSON_ARRAY` / `JSON_OBJECT`; default `JSON_OBJECT`
+`search.endpoints[].objectExtractor`::
+  Groovy block extracting the list of objects from the response (variable `response`); the default handles a JSON array or a single object
 
-|`search.endpoints[].objectExtractor`
-|Groovy block extracting the list of objects from the response (variable `response`); the default handles a JSON array or a single object
+`search.endpoints[].pagingSupport`::
+  Groovy block adding paging parameters (variables `request`, `paging` with `pageSize` and `pageOffset`)
 
-|`search.endpoints[].pagingSupport`
-|Groovy block adding paging parameters (variables `request`, `paging` with `pageSize` and `pageOffset`)
+`search.endpoints[].singleResult`::
+  The endpoint returns exactly one object
 
-|`search.endpoints[].singleResult`
-|The endpoint returns exactly one object
+`search.endpoints[].emptyFilterSupported`::
+  The endpoint supports the empty (list-all) filter
 
-|`search.endpoints[].emptyFilterSupported`
-|The endpoint supports the empty (list-all) filter
+`search.endpoints[].supportedFilters[].spec`::
+  A filter specification as a build-time Groovy expression, e.g. `attribute("id").eq().anySingleValue()` (see the xref:scim/advanced-filters.adoc[filter specification API])
 
-|`search.endpoints[].supportedFilters[].spec`
-|A filter specification as a build-time Groovy expression, e.g. `attribute("id").eq().anySingleValue()` (see the xref:scim/advanced-filters.adoc[filter specification API])
+`search.endpoints[].supportedFilters[].request`::
+  Groovy block mapping the filter onto the request (variables `request`, `value`)
 
-|`search.endpoints[].supportedFilters[].request`
-|Groovy block mapping the filter onto the request (variables `request`, `value`)
+`search.normalize`::
+  UID/NAME rewriting for reference attributes: `toSingleValue` (attribute name) plus the `rewriteUid`, `rewriteName`, `restoreUid`, `restoreName` Groovy blocks (variables `original`, `value`)
 
-|`search.normalize`
-|UID/NAME rewriting for reference attributes: `toSingleValue` (attribute name) plus the `rewriteUid`, `rewriteName`, `restoreUid`, `restoreName` Groovy blocks (variables `original`, `value`)
+`search.attributeResolvers[]`::
+  One resolver per entry: `attribute`, `resolutionType` (`PER_OBJECT` / `BATCH`), and the `implementation` Groovy block
 
-|`search.attributeResolvers[]`
-|One resolver per entry: `attribute`, `resolutionType` (`PER_OBJECT` / `BATCH`), and the `implementation` Groovy block
-
-|`search.custom`
-|Custom search: `supportedFilters` (each a `spec` expression), `emptyFilterSupported`, and the `implementation` Groovy block (see xref:implement-custom-search/[custom search])
-|===
+`search.custom`::
+  Custom search: `supportedFilters` (each a `spec` expression), `emptyFilterSupported`, and the `implementation` Groovy block (see xref:implement-custom-search/[custom search])
 
 === Create / update / delete
 
@@ -236,28 +221,23 @@ objectClasses:
           path: /users/{id}
 ----
 
-[cols="1,3", options="header"]
-|===
-|Key |Description
+`enabled`::
+  Per-operation switch, e.g. `create: { enabled: false }`
 
-|`enabled`
-|Per-operation switch, e.g. `create: { enabled: false }`
+`endpoints[].method`::
+  HTTP method (`POST`, `PUT`, `PATCH`, `DELETE`, ...); default `POST`
 
-|`endpoints[].method`
-|HTTP method (`POST`, `PUT`, `PATCH`, `DELETE`, ...); default `POST`
+`endpoints[].path`::
+  The endpoint path (required); `{name}` path parameters are replaced from the object
 
-|`endpoints[].path`
-|The endpoint path (required); `{name}` path parameters are replaced from the object
+`endpoints[].request.contentType`::
+  The request content type
 
-|`endpoints[].request.contentType`
-|The request content type
+`endpoints[].request.body`::
+  Groovy block producing the request body, or `EMPTY` for no body; the default serializes the `creatable` / `updateable` attributes into a JSON body
 
-|`endpoints[].request.body`
-|Groovy block producing the request body, or `EMPTY` for no body; the default serializes the `creatable` / `updateable` attributes into a JSON body
-
-|`endpoints[].supportedAttributes`
-|Plain attribute names, a fixed value (`{ name, value }`), or a value transition (`{ name, transition: { from, to } }` — accepted but not enforced yet; a transition-only entry matches no requests)
-|===
+`endpoints[].supportedAttributes`::
+  Plain attribute names, a fixed value (`{ name, value }`), or a value transition (`{ name, transition: { from, to } }` — accepted but not enforced yet; a transition-only entry matches no requests)
 
 See xref:rest/create.adoc[create], xref:rest/update.adoc[update], and xref:rest/delete.adoc[delete] for the operation semantics.
 
@@ -280,21 +260,16 @@ authentication:
       - apiKey
 ----
 
-[cols="1,3", options="header"]
-|===
-|Key |Description
+`authentication.rest` / `authentication.scim`::
+  The per-namespace channel blocks
 
-|`authentication.rest` / `authentication.scim`
-|The per-namespace channel blocks
+`apiKey`, `basic`, `bearer`, `jwtBearer`::
+  Each accepts an `implementation` Groovy block that customizes the request
 
-|`apiKey`, `basic`, `bearer`, `jwtBearer`
-|Each accepts an `implementation` Groovy block that customizes the request
+`oauth2ClientCredentials`, `oauth2JwtBearer`, `oauth2Password`, `oauth2Saml`::
+  The OAuth 2.0 flavors; each accepts the hooks `buildTokenRequest`, `parseTokenResponse`, `validateToken`, `applyToken`, `onResponse` (Groovy blocks) and an `implementation` block
 
-|`oauth2ClientCredentials`, `oauth2JwtBearer`, `oauth2Password`, `oauth2Saml`
-|The OAuth 2.0 flavors; each accepts the hooks `buildTokenRequest`, `parseTokenResponse`, `validateToken`, `applyToken`, `onResponse` (Groovy blocks) and an `implementation` block
-
-|`preference`
-|Ordered list of method names (`apiKey`, `basic`, `bearer`, `jwtBearer`, the `oauth2*` flavors, `awsSignature`)
-|===
+`preference`::
+  Ordered list of method names (`apiKey`, `basic`, `bearer`, `jwtBearer`, the `oauth2*` flavors, `awsSignature`)
 
 See xref:authentication.adoc[authentication & authorization] for the properties each method consumes.

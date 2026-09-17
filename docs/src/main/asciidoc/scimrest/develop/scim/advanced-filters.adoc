@@ -114,29 +114,19 @@ NOTE: Declarations narrow which filters the handler *accepts*; accepted filters 
 
 == Filter specification methods
 
-[cols="1,2,2", options="header"]
-|===
-|Method |Description |Example
+`attribute(name)`::
+  Specify attribute — e.g. `attribute("userName")`
 
-|`attribute(name)`
-|Specify attribute
-|`attribute("userName")`
+`.eq()`::
+  Equals filter — e.g. `.eq()`
 
-|`.eq()`
-|Equals filter
-|`.eq()`
+`.contains()`::
+  Contains filter — e.g. `.contains()`
 
-|`.contains()`
-|Contains filter
-|`.contains()`
+`.chain(spec)`::
+  Combine two attribute specifications (AND) — e.g. `.chain(attribute("active").eq())`
 
-|`.chain(spec)`
-|Combine two attribute specifications (AND)
-|`.chain(attribute("active").eq())`
-
-|`.anySingleValue()` / `.anyValue()`
-|Single value
-|`.anySingleValue()`
-|===
+`.anySingleValue()` / `.anyValue()`::
+  Single value — e.g. `.anySingleValue()`
 
 NOTE: The path methods `.child(name)`, `valueFilter(key, value)`, and `extension(name, uri)` belong to the SCIM *schema path* DSL (xref:schema-customization.adoc[]) and are **not** available on filter specifications.

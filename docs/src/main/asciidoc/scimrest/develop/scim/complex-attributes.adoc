@@ -35,47 +35,37 @@ SCIM `binary` attributes are mapped to `byte[]` in ConnId and represented as bas
 
 The `scim { path ... }` DSL builds a SCIM *attribute path* — the wire format defined in RFC 7644 §3.1. The path grammar (parsed and serialized by the framework's `ScimPathFormat`):
 
-[cols="1,3", options="header"]
-|===
-|Segment |Meaning
+`attrName`::
+  An attribute name: `[A-Za-z][A-Za-z0-9_\-]*`, chained with `.` (e.g. `name.givenName`)
 
-|`attrName`
-|An attribute name: `[A-Za-z][A-Za-z0-9_\-]*`, chained with `.` (e.g. `name.givenName`)
+`uri:attr.attr`::
+  A schema-extension prefix — the URI (identified by the last `:`) followed by attribute names (e.g. `urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber`)
 
-|`uri:attr.attr`
-|A schema-extension prefix — the URI (identified by the last `:`) followed by attribute names (e.g. `urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber`)
+`[index]`::
+  Select the value at a positive-integer index of a multi-valued attribute
 
-|`[index]`
-|Select the value at a positive-integer index of a multi-valued attribute
-
-|`[attr = value, ...]`
-|A value filter on a multi-valued attribute (only the `=` operator is accepted)
-|===
+`[attr = value, ...]`::
+  A value filter on a multi-valued attribute (only the `=` operator is accepted)
 
 The Groovy DSL that builds these paths:
 
-[cols="1,3", options="header"]
-|===
-|DSL |Path segment
+`attribute("name")`::
+  attribute name
 
-|`attribute("name")`
-|attribute name
+`.child("givenName")`::
+  child attribute / extension attribute (appends to the path)
 
-|`.child("givenName")`
-|child attribute / extension attribute (appends to the path)
+`.valueFilter("primary", true)`::
+  value filter `[primary = true]` (multiple key/value pairs allowed)
 
-|`.valueFilter("primary", true)`
-|value filter `[primary = true]` (multiple key/value pairs allowed)
+`.firstValue()`::
+  index filter `[0]`
 
-|`.firstValue()`
-|index filter `[0]`
+`extension("enterprise")` / `extension("enterprise", "urn:...")`::
+  schema extension (with or without explicit URI)
 
-|`extension("enterprise")` / `extension("enterprise", "urn:...")`
-|schema extension (with or without explicit URI)
-
-|`withoutFilters()`
-|drops all filter segments
-|===
+`withoutFilters()`::
+  drops all filter segments
 
 Examples:
 
