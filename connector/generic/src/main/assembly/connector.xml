@@ -32,7 +32,18 @@
             <scope>runtime</scope>
             <excludes>
                 <exclude>net.tirasa.connid:connector-framework</exclude>
+                <!-- Documentation is unpacked into the bundle itself, not shipped as a nested jar. -->
+                <exclude>com.evolveum.polygon.scimrest:connector-scimrest-docs</exclude>
             </excludes>
+        </dependencySet>
+        <!-- Unpack the rendered documentation into META-INF/conndev-doc/ at bundle level. -->
+        <dependencySet>
+            <outputDirectory></outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.evolveum.polygon.scimrest:connector-scimrest-docs</include>
+            </includes>
+            <unpack>true</unpack>
         </dependencySet>
     </dependencySets>
 </assembly>

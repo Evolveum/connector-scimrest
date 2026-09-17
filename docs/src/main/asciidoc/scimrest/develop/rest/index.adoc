@@ -1,0 +1,65 @@
+= Develop connector using Polygon SCIMREST framework
+
+This is a reference for developing connectors using the SCIMREST framework.
+This introductory article contains several resources that may help you before you start and during the development.
+
+== Get started with SCIMREST framework
+
+The SCIMREST Framework is designed using the terminology of the ConnId framework, so it is recommended to have a basic understanding of the link:https://docs.evolveum.com/connectors/connid/[ConnID architecture and terminology].
+
+If the service exposes a SCIM 2.0 API, start with the xref:../scim/[SCIM 2.0 guide] instead — it additionally uses the built-in schema discovery and native SCIM operations.
+
+=== Shipped and sample connectors
+
+Besides the generic low-code connectors (see xref:../generic-connectors.adoc[shipped and sample connectors]), the repository contains sample connectors that demonstrate the framework for various protocols and technologies:
+
+==== Scim.Dev connector
+
+Scim.dev is a sample SCIM 2.0 compliant service, which provides REST API for managing users, groups, and other objects.
+
+Very simple connector, actual implementation is only one Groovy script link:https://github.com/Evolveum/connector-scimrest/blob/main/connector/sample-scimdev/src/main/resources/ScimDev.schema.groovy[`ScimDev.schema.groovy`], which only renames attributes and provides support for references (associations) for the custom object class `Office`.
+
+Search operations, schema discovery and schema mapping are handled by the SCIMREST Framework, so there is no need to implement any additional code for these operations.
+
+Sources are available in the `connector-scimrest` repository in the link:https://github.com/Evolveum/connector-scimrest/tree/main/connector/sample-scimdev[`connector/sample-scimdev` directory].
+
+==== Forgejo connector
+
+link:https://forgejo.org/[Forgejo] is a self-hosted Git service, which provides a REST API for managing users, organizations, and repositories.
+
+Sources are available in the `connector-scimrest` repository in the link:https://github.com/Evolveum/connector-scimrest/tree/main/connector/forgejo[`connector/forgejo` directory].
+
+==== OpenProject connector
+
+link:https://www.openproject.org/[OpenProject] is a web-based project and issue tracking tool.
+The sample connector covers User, Group, Project, Role and Membership object classes with read-write operations and association schemas.
+
+Sources are available in the `connector-scimrest` repository in the link:https://github.com/Evolveum/connector-scimrest/tree/main/connector/open-project[`connector/open-project` directory].
+
+== Initial development steps
+
+=== Read-only connector
+
+. Obtain the documentation for the service / application for which the connector is written.
+. Determine connection & authentication parameters (see xref:../authentication.adoc[])
+. Implement test connection (see the `restTestEndpoint` configuration property, xref:../authentication.adoc[authentication & authorization])
+. Determine a list of objects & concepts for identity & access management
+. Implement search support for the User / account object class
+[arabic]
+.. xref:user-schema.adoc[Write schema for the User object class]
+.. Determine the API endpoint for the object class
+.. xref:search-users.adoc[Implement basic search handler for the object class]
+.. Implement support for getting the user by `UID` (a single-result endpoint with an `eq` filter on the ID)
+.. (optional) implement advanced filtering support (see xref:../implement-custom-search/[])
+. Implement search support for other object classes (same steps as for the first class)
+. Based on the application and its documentation, determine relations (associations) between supported object classes
+. xref:relationship.adoc[Implement the relationship schema]
+. Implement fetching related objects (association resolvers)
+
+=== Read-Write Connector
+
+In addition to the steps for a read-only connector:
+
+. xref:create.adoc[Implement the create operation] for the object classes
+. xref:update.adoc[Implement the update operation] for the object classes
+. xref:delete.adoc[Implement the delete operation] for the object classes

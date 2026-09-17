@@ -1,0 +1,184 @@
+= SCIM Schema customization
+
+While the framework provides automatic schema discovery, you often need to customize it for your specific use case.
+
+This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
+
+== Schema customization blocks
+
+Schema customization is defined in Groovy scripts using the `objectClass()` and `attribute()` builders with SCIM-specific blocks.
+
+[source,groovy]
+----
+objectClass("User") {
+    scim {
+        extension("enterprise", "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")
+    }
+
+    attribute("givenName") {
+        scim {
+            path attribute("name").child("givenName")
+        }
+    }
+}
+----
+
+== SCIM extensions
+
+Define SCIM schema extensions using the `scim { extension(...) }` block:
+
+[source,groovy]
+----
+objectClass("User") {
+    scim {
+        extension("enterprise", "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")
+    }
+}
+----
+
+Extensions allow you to reference attributes from SCIM schema extensions.
+
+== Path-based attribute mapping
+
+SCIM uses nested attribute paths (e.g., `name.givenName`). Map these to flat ConnId attributes:
+
+[source,groovy]
+----
+objectClass("User") {
+    attribute("givenName") {
+        scim {
+            path attribute("name").child("givenName")
+        }
+    }
+
+    attribute("familyName") {
+        scim {
+            path attribute("name").child("familyName")
+        }
+    }
+
+    attribute("employeeNumber") {
+        scim {
+            path extension("enterprise").child("employeeNumber")
+        }
+    }
+}
+----
+
+The `path` method specifies the SCIM attribute path. Use `attribute()` for regular attributes and `extension()` for extension attributes.
+
+== Value filter for multi-valued attributes
+
+For multi-valued attributes with primary/primary flags, use value filters:
+
+[source,groovy]
+----
+attribute("primaryEmail") {
+    scim {
+        path attribute("emails").valueFilter("primary", true).child("value")
+    }
+}
+----
+
+This maps the `value` field from the email object where `primary` is `true`.
+
+== Attribute naming: native name vs SCIM path
+
+An attribute is identified by its *native* (connector) name, and its `scim { path ... }` (or `scim { name ... }`) describes where the value lives on the SCIM wire:
+
+[source,groovy]
+----
+// Native attribute name "Username" mapped to the SCIM path "userName"
+attribute("Username") {
+    scim {
+        name "userName"
+    }
+}
+----
+
+This is also how you merge a discovered SCIM schema with a ConnId-native naming convention — the SCIM `userName` path can be exposed under the native name `Username`, and the ConnId mapping then refers to the native name (`connIdAttribute("NAME", "Username")`).
+
+== ConnId attribute mapping
+
+Map SCIM attributes to ConnId built-in attributes:
+
+[source,groovy]
+----
+objectClass("User") {
+    connIdAttribute("UID", "id")
+    connIdAttribute("NAME", "userName")
+}
+----
+
+The ConnId framework requires `UID` and `NAME` attributes. Discovery already maps them by default (UID ← `id`, NAME ← `userName` on User / `displayName` on Group — see xref:schema-discovery.adoc[built-in mappings]); use `connIdAttribute` to override the mapping when the server deviates.
+
+== SCIM-specific schema blocks
+
+The `scim` block supports:
+
+[cols="1,2,2", options="header"]
+|===
+|Block |Description |Example
+
+|`extension(name, uri)`
+|Define SCIM schema extension
+|`extension("enterprise", "urn:...")`
+
+|`path(path)`
+|Specify SCIM attribute path
+|`path attribute("name").child("familyName")`
+
+|`name(name)`
+|Override the SCIM attribute name on the wire
+|`name "displayName"`
+
+|`onlyExplicitlyListed()`
+|Only include explicitly listed attributes
+|`onlyExplicitlyListed()`
+
+|`implementation { deserialize { ... } serialize { ... } }`
+|Custom value mapping for the attribute (e.g. reference values — see xref:relationship-support.adoc[])
+|—
+|===
+
+The path grammar (attribute names, `child(...)`, `valueFilter(...)`, extension URIs) is the SCIM attribute path format — see xref:complex-attributes.adoc[SCIM paths] for the full reference.
+
+== Complete example
+
+[source,groovy,highlight=14,17,20,23,26]
+----
+objectClass("User") {
+    scim {
+        extension("enterprise", "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")
+    }
+
+    connIdAttribute("UID", "id")
+    connIdAttribute("NAME", "userName")
+
+    attribute("givenName") {
+        scim {
+            path attribute("name").child("givenName")
+        }
+    }
+
+    attribute("familyName") {
+        scim {
+            path attribute("name").child("familyName")
+        }
+    }
+
+    attribute("employeeNumber") {
+        scim {
+            path extension("enterprise").child("employeeNumber")
+        }
+    }
+
+    attribute("primaryEmail") {
+        scim {
+            path attribute("emails").valueFilter("primary", true).child("value")
+        }
+    }
+}
+----
+
+Complex attributes (embedded objects such as `emails` or `addresses`) are exposed as embedded object classes — see xref:complex-attributes.adoc[complex and binary attributes].

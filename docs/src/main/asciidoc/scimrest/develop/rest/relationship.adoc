@@ -1,4 +1,6 @@
-= `relationship` Concept
+= The relationship concept
+
+How to define and implement relationships between object classes in a SCIMREST connector using the relationship builder and virtual reference attributes.
 
 ConnID & schema for Connector allows you to specify some attributes as
 `reference` to other objects.

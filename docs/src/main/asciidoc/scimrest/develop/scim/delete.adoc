@@ -1,0 +1,27 @@
+= SCIM Delete operation
+
+For a well-behaved SCIM 2.0 server, delete works out of the box — no operation script is required.
+
+This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
+
+== Built-in delete
+
+The built-in handler issues a `DELETE {resource endpoint}/{id}` for the object's UID and fails with `ConnectorException` ("Failed to delete SCIM resource") on transport or SCIM errors.
+The resource endpoint comes from the discovered resource type (see xref:schema-discovery.adoc[schema discovery]).
+
+== Customization
+
+To change the endpoint or the request, define a `delete` endpoint in an operation script — the same endpoint DSL as for REST operations (see xref:../rest/delete.adoc[REST delete]):
+
+[source,groovy]
+----
+objectClass("User") {
+    delete {
+        endpoint(DELETE, "/Users/{id}")
+    }
+}
+----
+
+== Disabling delete
+
+Use the generic operation enablement (see xref:../rest/delete.adoc[]) when a resource type does not support deletion.

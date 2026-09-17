@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2025 Evolveum and contributors
+  ~
+  ~ This work is licensed under European Union Public License v1.2. See LICENSE file for details.
+  ~
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.evolveum.polygon.scimrest</groupId>
+        <artifactId>connector-scimrest-parent</artifactId>
+        <version>0.2-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>connector-scimrest-docs</artifactId>
+    <version>0.2-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>Polygon SCIMREST Connector - Documentation</name>
+
+    <!-- Renders every .adoc under src/main/asciidoc (preserving the domain subdirectory,
+         e.g. scimrest/) into fragment HTML into target/generated-docs, then packages
+         META-INF/conndev-doc/{docs.yaml, <domain>/<topic>.html} into this jar. Connector
+         bundles unpack this jar into their own META-INF/conndev-doc/. -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <configuration>
+                    <sourceDirectory>src/main/asciidoc</sourceDirectory>
+                    <outputDirectory>target/generated-docs</outputDirectory>
+                    <backend>html5</backend>
+                    <doctype>fragment</doctype>
+                    <standalone>false</standalone>
+                    <preserveDirectories>true</preserveDirectories>
+                    <attributes>
+                        <source-highlighter>coderay</source-highlighter>
+                        <!-- Fragments must not carry a table of contents: with toc-placement=macro the
+                             TOC is only emitted via a [[toc]] macro, which these documents do not use.
+                             Locked (API) attribute: document headers cannot override it. -->
+                        <toc-placement>macro</toc-placement>
+                    </attributes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>render-docs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-generated-docs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>target/generated-docs</directory>
+                                    <targetPath>META-INF/conndev-doc</targetPath>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

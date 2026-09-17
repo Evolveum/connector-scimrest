@@ -1,0 +1,117 @@
+= SCIM Relationship support
+
+SCIM 2.0 supports relationships through multi-valued reference attributes like `groups` (User) and `members` (Group).
+
+This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
+
+== Automatic relationship support
+
+The framework automatically maps the standardized SCIM membership attributes to ConnId reference attributes:
+
+* User `groups` → multi-valued reference to the Group object class
+* Group `members` → multi-valued reference to the User object class
+
+No script is required for these relationships.
+
+== Custom relationships
+
+For non-standard relationships (for example a SCIM resource that references another resource through a custom attribute), define a relationship with the `relationship` builder:
+
+[source,groovy]
+----
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
+import org.identityconnectors.framework.common.objects.ConnectorObjectReference
+import org.identityconnectors.framework.common.objects.Name
+import org.identityconnectors.framework.common.objects.ObjectClass
+import org.identityconnectors.framework.common.objects.Uid
+
+/** Custom association between User and Office (custom SCIM type) **/
+relationship("OfficeEmployment") {
+    subject("User") {
+        attribute("office") {
+            multiValued true
+            // Emulated true is implied by presence of resolver
+            resolver {
+                resolutionType PER_OBJECT
+                // If not specified, the search is performed on the other side of the relation
+                search {
+                    attributeFilter("employees").eq(value)
+                }
+            }
+        }
+    }
+    object("Office") {
+        attribute("employees") {
+            scim {
+                implementation {
+                    deserialize {
+                        var object = new ConnectorObjectBuilder();
+                        object.setObjectClass(new ObjectClass("User"))
+                        object.setUid(new Uid(it.get("id").asText()))
+                        object.setName(new Name(it.get("display").asText()))
+                        new ConnectorObjectReference(object.build())
+                    }
+                    serialize {
+
+                    }
+                }
+            }
+        }
+    }
+}
+----
+
+This is the pattern used by the SCIM.dev sample connector (`connector/sample-scimdev`, `ScimDev.schema.groovy`).
+
+=== Relationship components
+
+* `relationship(name) { ... }` - Declares the relationship between two object classes
+* `subject(objectClass) { ... }` - The primary side of the relationship
+* `object(objectClass) { ... }` - The other side
+* `attribute(name) { ... }` - The reference attribute on that side (all regular attribute settings apply, e.g. `multiValued true`)
+* `owner()` / `owner(true)` - Marks the side that actually stores the relation
+* `resolver { ... }` - How the reference values are resolved at runtime; the attribute is automatically marked *emulated* (its values come from the resolver, not from the object's own data)
+
+=== Resolver
+
+[cols="1,3", options="header"]
+|===
+|Block |Description
+
+|`resolutionType PER_OBJECT` / `resolutionType BATCH`
+|When to resolve: per object, or batched. `PER_OBJECT` is the default.
+
+|`search { ... }`
+|Search-based resolution: the closure builds the filter used to search the target object class (for example `attributeFilter("employees").eq(value)`). The filter API currently supports `eq()` only. If omitted, the search is performed on the other side of the relation.
+
+|`implementation { ... }`
+|Custom Groovy resolution logic.
+|===
+
+The `search` / `implementation` closures expose `value()` (the object being resolved), `objectClass(name)`, and `attributeFilter(protocolName)`.
+
+== Customizing reference value mapping
+
+When the SCIM representation of the reference values does not match the default handling, provide a custom `deserialize` / `serialize` implementation on the attribute (see the `object("Office")` side of the example above):
+
+* `deserialize { ... }` — receives the raw JSON value and must return a `ConnectorObjectReference`
+* `serialize { ... }` — the reverse direction (write support for complex values is limited — see xref:complex-attributes.adoc[])
+
+== Search support for relationships
+
+Declare which filters on relationship attributes the server supports (single-attribute specifications only — see xref:advanced-filters.adoc[filter specification]):
+
+[source,groovy]
+----
+objectClass("User") {
+    search {
+        scim {
+            limitations {
+                supportedFilter attribute("groups").eq().anySingleValue()
+            }
+        }
+    }
+}
+----
+
+Accepted filters are translated to the SCIM `filter` query parameter and sent to the server (see xref:search.adoc[built-in search]).

@@ -60,6 +60,7 @@
 
     <modules>
         <module>common</module>
+        <module>docs</module>
         <module>connector</module>
     </modules>
 
@@ -189,6 +190,19 @@
                             <version>${failsafe.version}</version>
                         </dependency>
                     </dependencies>
+                </plugin>
+                <!-- Declare this plugin in the connector build to render src/main/asciidoc into
+                     fragment HTML at build time (groupId+artifactId+configuration only). -->
+                <plugin>
+                    <groupId>org.asciidoctor</groupId>
+                    <artifactId>asciidoctor-maven-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+                <!-- Packages the rendered docs into the jar under META-INF/conndev-doc. -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.6.1</version>
                 </plugin>
                 <plugin>
                     <groupId>io.github.pmckeown</groupId>

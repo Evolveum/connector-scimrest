@@ -1,0 +1,37 @@
+= Delete script
+
+How to implement a delete operation in a SCIMREST connector using a Groovy script with a DELETE endpoint and path parameter for the object identifier.
+
+== Basic delete script example
+
+The simplest delete script for `User` object class with common REST pattern, where DELETE HTTP operation is used could look like this:
+
+[source,groovy]
+----
+objectClass("User") {
+    delete {
+        endpoint(DELETE, "/users/{id}")
+    }
+}
+----
+
+Where:
+
+* this simplest script heavily relies on the default behavior of the connector framework.
+* The `endpoint` method specifies the endpoint to be used for the delete operation. The HTTP method is given as the first argument (`endpoint(DELETE, "/users/{id}")`) or set with the `httpOperation` method inside the closure.
+* In this case we use the path parameter `{id}`, which is replaced with the UID value of the object being deleted.
+* By default no request body is sent and no response body is expected.
+
+== The same delete in YAML
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    delete:
+      endpoints:
+        - method: DELETE
+          path: /users/{id}
+----
+
+See xref:../declarative-yaml.adoc[declarative YAML] for the full reference.

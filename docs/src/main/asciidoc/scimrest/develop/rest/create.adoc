@@ -1,0 +1,111 @@
+= Determine how to create objects on the target system
+
+How to implement a create operation in a SCIMREST connector using a Groovy script with a POST endpoint, including default serialization behavior.
+
+Create scripts are used to determine how to create new objects using the target system's API.
+
+
+== Basic create script example using POST
+
+
+The simplest create script for `User` object class could look like this:
+
+[source,groovy]
+----
+objectClass("User") {
+    create {
+        endpoint(POST, "/users") {
+            request {
+                contentType APPLICATION_JSON
+            }
+        }
+    }
+}
+----
+
+Where:
+
+* this simplest script heavily relies on the default behavior of the connector framework.
+* The `endpoint` method specifies the endpoint to be used for the create operation. The HTTP method is given as the first argument (`endpoint(POST, "/users")`) or set with the `httpOperation` method inside the closure (constants `GET`, `POST`, `PUT`, `DELETE`, `PATCH`).
+* The `request` block customizes the request: `accept(...)`, `contentType(...)`, and `body { ... }` (a closure producing the request body as bytes).
+** If no body is specified, the default implementation serializes all `creatable` attributes of the object class into a JSON body.
+** If no `response { ... }` is specified, the response is handled by the default implementation, which expects the created object to be returned in the response body in JSON format.
+** Attributes that are `updatable` but not `creatable` are handled automatically by the framework after the object is created — it issues an `update` operation (if implemented) immediately after the `create` operation.
+* If no `supportedAttributes` is declared, the endpoint handles all `creatable` attributes of the object class. See below for limiting to a supported subset and per-attribute value filters.
+
+== Limiting create to a supported subset of attributes
+
+By default the endpoint accepts all `creatable` attributes of the object class and serializes them into the request body. When the server accepts only part of them, `supportedAttributes` narrows the set the endpoint handles — create requests for attributes covered by no endpoint fail with `ConnectorException` ("Unsupported attributes"):
+
+[source,groovy]
+----
+objectClass("User") {
+    create {
+        endpoint(POST, "/users") {
+            // only these attributes are accepted/sent on create
+            supportedAttributes "externalId", "displayName", "nickName"
+            request {
+                contentType APPLICATION_JSON
+            }
+        }
+    }
+}
+----
+
+The same in YAML:
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    create:
+      endpoints:
+        - method: POST
+          path: /users
+          request:
+            contentType: APPLICATION_JSON
+          supportedAttributes:
+            - externalId
+            - displayName
+            - nickName
+----
+
+== Attribute-specific configuration
+
+`supportedAttribute(name)` configures a single attribute. The `value(...)` filter accepts the attribute only for the listed values (repeatable — the values accumulate):
+
+[source,groovy]
+----
+objectClass("User") {
+    create {
+        endpoint(POST, "/users") {
+            // this endpoint is selected only when userName has the value "generated"
+            supportedAttribute("userName") {
+                value "generated"
+            }
+            supportedAttributes "externalId", "displayName"
+            request {
+                contentType APPLICATION_JSON
+            }
+        }
+    }
+}
+----
+
+NOTE: `supportedAttribute(name) { transition(from, to) }` is accepted by the DSL, but value-transition filtering is *not enforced yet* — a transition-only endpoint does not handle the attribute.
+
+== The same create in YAML
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    create:
+      endpoints:
+        - method: POST
+          path: /users
+          request:
+            contentType: APPLICATION_JSON
+----
+
+See xref:../declarative-yaml.adoc[declarative YAML] for the full reference.

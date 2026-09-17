@@ -1,0 +1,15 @@
+= How to develop connectors using SCIMREST framework
+
+This section provides two development guides for building connectors with the Polygon SCIMREST framework.
+
+The xref:rest/index.adoc[] section covers connector development for generic REST APIs.
+It walks through initial setup, schema definition, search implementation, and—for read-write connectors—create, update, and delete operations using Groovy DSLs.
+
+The xref:scim/index.adoc[] section covers connector development specifically for SCIM 2.0 compliant services.
+It follows the same progression but takes advantage of the built-in SCIM support of the framework, including the automatic schema discovery and the native handling of SCIM search (UID retrieval, list-all, and server-side filtering), create, update (full PUT), and delete.
+
+Shared topics that apply to both REST and SCIM connectors: xref:authentication.adoc[authentication & authorization], xref:generic-connectors.adoc[shipped and sample connectors], and xref:declarative-yaml.adoc[declarative YAML].
+
+Both guides address read-only and read-write connector development.
+If you are unsure which guide to follow, use the SCIM 2.0 guide when the target service exposes a SCIM 2.0 compliant API;
+otherwise, use the SCIMREST connector guide.

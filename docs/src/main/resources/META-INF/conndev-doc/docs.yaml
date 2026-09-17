@@ -1,0 +1,266 @@
+apiVersion: conndev-doc/v1
+# Maps the MidPoint connector wizard help topic keys (ConnectorWizardHelpTopics) to the
+# rendered HTML resources. Topics are tagged with the wizard protocol they belong to:
+# scim, rest, or sql. Pages that apply to both SCIM and REST wizards are declared once
+# per protocol (never protocol-less) so they cannot leak into other wizards' generic
+# bucket. resource is a path relative to META-INF/conndev-doc/.
+connectorId: scimrest
+topics:
+  # --- shared pages (declared for both protocols) ---
+  - key: application-identification
+    protocol: scim
+    title: Introduction to SCIMREST framework
+    resource: scimrest/index.html
+    order: 10
+  - key: application-identification
+    protocol: rest
+    title: Introduction to SCIMREST framework
+    resource: scimrest/index.html
+    order: 10
+  - key: application-identification
+    protocol: scim
+    title: SCIMREST framework design and functionality overview
+    resource: scimrest/functionality-overview.html
+    order: 20
+  - key: application-identification
+    protocol: rest
+    title: SCIMREST framework design and functionality overview
+    resource: scimrest/functionality-overview.html
+    order: 20
+  - key: authentication
+    protocol: scim
+    title: Authentication & authorization
+    resource: scimrest/develop/authentication.html
+    order: 10
+  - key: authentication
+    protocol: rest
+    title: Authentication & authorization
+    resource: scimrest/develop/authentication.html
+    order: 10
+  - key: credentials
+    protocol: scim
+    title: Authentication & authorization
+    resource: scimrest/develop/authentication.html
+    order: 10
+  - key: credentials
+    protocol: rest
+    title: Authentication & authorization
+    resource: scimrest/develop/authentication.html
+    order: 10
+  - key: next-steps
+    protocol: scim
+    title: How to develop connectors using SCIMREST framework
+    resource: scimrest/develop/index.html
+    order: 10
+  - key: next-steps
+    protocol: rest
+    title: How to develop connectors using SCIMREST framework
+    resource: scimrest/develop/index.html
+    order: 10
+  - key: next-steps
+    protocol: scim
+    title: Shipped and sample connectors
+    resource: scimrest/develop/generic-connectors.html
+    order: 20
+  - key: next-steps
+    protocol: rest
+    title: Shipped and sample connectors
+    resource: scimrest/develop/generic-connectors.html
+    order: 20
+  - key: native-schema
+    protocol: scim
+    title: Declarative YAML
+    resource: scimrest/develop/declarative-yaml.html
+    order: 30
+  - key: native-schema
+    protocol: rest
+    title: Declarative YAML
+    resource: scimrest/develop/declarative-yaml.html
+    order: 30
+  # --- REST protocol pages ---
+  - key: object-classes
+    protocol: rest
+    title: Develop connector using Polygon SCIMREST framework
+    resource: scimrest/develop/rest/index.html
+    order: 10
+  - key: select-object-class
+    protocol: rest
+    title: Describe user schema
+    resource: scimrest/develop/rest/user-schema.html
+    order: 10
+  - key: object-class-schema
+    protocol: rest
+    title: Describe user schema
+    resource: scimrest/develop/rest/user-schema.html
+    order: 10
+  - key: object-class-schema
+    protocol: rest
+    title: Map SCIM attributes to ConnID attributes
+    resource: scimrest/develop/rest/attribute-to-connid-attributes.html
+    order: 20
+  - key: native-schema
+    protocol: rest
+    title: Describe user schema
+    resource: scimrest/develop/rest/user-schema.html
+    order: 10
+  - key: native-schema
+    protocol: rest
+    title: Map SCIM attributes to ConnID attributes
+    resource: scimrest/develop/rest/attribute-to-connid-attributes.html
+    order: 20
+  - key: search-all
+    protocol: rest
+    title: Implement basic user search
+    resource: scimrest/develop/rest/search-users.html
+    order: 10
+  - key: search-by-id
+    protocol: rest
+    title: Implement basic user search
+    resource: scimrest/develop/rest/search-users.html
+    order: 10
+  - key: search-all-endpoint
+    protocol: rest
+    title: Implement basic user search
+    resource: scimrest/develop/rest/search-users.html
+    order: 10
+  - key: search-filter
+    protocol: rest
+    title: Implement custom search
+    resource: scimrest/develop/implement-custom-search/index.html
+    order: 10
+  - key: search-filter
+    protocol: rest
+    title: Custom search implementation guide
+    resource: scimrest/develop/implement-custom-search/custom-search-implementation-guide.html
+    order: 20
+  - key: search-all-endpoint
+    protocol: rest
+    title: Custom search implementation guide
+    resource: scimrest/develop/implement-custom-search/custom-search-implementation-guide.html
+    order: 20
+  - key: search-by-id-endpoint
+    protocol: rest
+    title: Custom search implementation guide
+    resource: scimrest/develop/implement-custom-search/custom-search-implementation-guide.html
+    order: 10
+  - key: search-filter-endpoint
+    protocol: rest
+    title: Custom search implementation guide
+    resource: scimrest/develop/implement-custom-search/custom-search-implementation-guide.html
+    order: 10
+  - key: create
+    protocol: rest
+    title: Determine how to create objects on the target system
+    resource: scimrest/develop/rest/create.html
+    order: 10
+  - key: create-endpoint
+    protocol: rest
+    title: Determine how to create objects on the target system
+    resource: scimrest/develop/rest/create.html
+    order: 10
+  - key: update
+    protocol: rest
+    title: Update script
+    resource: scimrest/develop/rest/update.html
+    order: 10
+  - key: update-endpoint
+    protocol: rest
+    title: Update script
+    resource: scimrest/develop/rest/update.html
+    order: 10
+  - key: delete
+    protocol: rest
+    title: Delete script
+    resource: scimrest/develop/rest/delete.html
+    order: 10
+  - key: delete-endpoint
+    protocol: rest
+    title: Delete script
+    resource: scimrest/develop/rest/delete.html
+    order: 10
+  - key: relationships
+    protocol: rest
+    title: The relationship concept
+    resource: scimrest/develop/rest/relationship.html
+    order: 10
+  - key: relationship-selection
+    protocol: rest
+    title: The relationship concept
+    resource: scimrest/develop/rest/relationship.html
+    order: 10
+  - key: relationship
+    protocol: rest
+    title: The relationship concept
+    resource: scimrest/develop/rest/relationship.html
+    order: 10
+  # --- SCIM protocol pages ---
+  - key: object-classes
+    protocol: scim
+    title: Develop SCIM 2.0 connector using Polygon SCIMREST framework
+    resource: scimrest/develop/scim/index.html
+    order: 10
+  - key: select-object-class
+    protocol: scim
+    title: SCIM schema discovery
+    resource: scimrest/develop/scim/schema-discovery.html
+    order: 10
+  - key: object-class-schema
+    protocol: scim
+    title: SCIM schema discovery
+    resource: scimrest/develop/scim/schema-discovery.html
+    order: 10
+  - key: native-schema
+    protocol: scim
+    title: SCIM Schema customization
+    resource: scimrest/develop/scim/schema-customization.html
+    order: 10
+  - key: native-schema
+    protocol: scim
+    title: SCIM complex and binary attributes
+    resource: scimrest/develop/scim/complex-attributes.html
+    order: 20
+  - key: search-all
+    protocol: scim
+    title: SCIM search operation customization
+    resource: scimrest/develop/scim/search.html
+    order: 10
+  - key: search-by-id
+    protocol: scim
+    title: SCIM search operation customization
+    resource: scimrest/develop/scim/search.html
+    order: 10
+  - key: search-filter
+    protocol: scim
+    title: SCIM filter specification
+    resource: scimrest/develop/scim/advanced-filters.html
+    order: 10
+  - key: create
+    protocol: scim
+    title: SCIM create operation customization
+    resource: scimrest/develop/scim/create.html
+    order: 10
+  - key: update
+    protocol: scim
+    title: SCIM Update operation customization
+    resource: scimrest/develop/scim/update.html
+    order: 10
+  - key: delete
+    protocol: scim
+    title: SCIM Delete operation
+    resource: scimrest/develop/scim/delete.html
+    order: 10
+  - key: relationships
+    protocol: scim
+    title: SCIM Relationship support
+    resource: scimrest/develop/scim/relationship-support.html
+    order: 10
+  - key: relationship-selection
+    protocol: scim
+    title: SCIM Relationship support
+    resource: scimrest/develop/scim/relationship-support.html
+    order: 10
+  - key: relationship
+    protocol: scim
+    title: SCIM Relationship support
+    resource: scimrest/develop/scim/relationship-support.html
+    order: 10

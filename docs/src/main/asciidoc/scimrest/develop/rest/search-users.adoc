@@ -1,0 +1,114 @@
+= Implement basic user search
+
+How to implement basic user search in a SCIMREST connector using a Groovy script, including endpoint configuration, object extraction, and paging support.
+
+Write a Groovy script `User.search.groovy` which handles search of the
+object class `User`.
+
+The Groovy script should look like:
+
+[source,groovy]
+----
+objectClass("User") {
+    search {
+        endpoint("/users/search") {
+            objectExtractor {
+                return response.body().get("users")
+            }
+            pagingSupport {
+                request.queryParameter("size", paging.pageSize)
+                       .queryParameter("offset", paging.pageOffset)
+            }
+        }
+    }
+}
+----
+
+Where:
+
+* `endpoint` — the method takes the search / list endpoint as an argument.
+* `objectExtractor` — optional; extracts the list of objects from `response.body()` (JSON). The default extractor accepts a JSON array (its elements) or a single JSON object.
+* `pagingSupport` — optional; specifies paging information on the `request`. The paging information is available in the `paging` object:
+** `pageSize` — the size of the requested page
+** `pageOffset` — the page to be returned (the framework pages through the results starting with the first page)
+* `request` — the object used to customize the request. Use `queryParameter(name, value)` to add HTTP query parameters to the request.
+
+== The same search in YAML
+
+The same search can be written as a YAML operation document:
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    search:
+      endpoints:
+        - path: /users/search
+          objectExtractor: |
+            response.body().get("users")
+          pagingSupport: |
+            request.queryParameter("size", paging.pageSize)
+                   .queryParameter("offset", paging.pageOffset)
+----
+
+See xref:../declarative-yaml.adoc[declarative YAML] for the full reference.
+
+== GET /users/search
+
+Search for users
+
+=== Parameters
+
+[cols="1,1,2",options="header"]
+|===
+|Name |Type |Description
+
+|`size`
+|integer (query)
+|page size of results
+
+|`offset`
+|integer (query)
+|offset of the first result to return
+
+|===
+
+=== Responses
+
+* `200` - SearchResults of a successful search
+
+Example value:
+
+[source,json]
+----
+{
+  "data": [
+    {
+      "active": true,
+      "avatar_url": "string",
+      "created": "2025-05-05T12:10:33.653Z",
+      "description": "string",
+      "email": "user@example.com",
+      "followers_count": 0,
+      "following_count": 0,
+      "full_name": "string",
+      "html_url": "string",
+      "id": 0,
+      "is_admin": true,
+      "language": "string",
+      "last_login": "2025-05-05T12:10:33.653Z",
+      "location": "string",
+      "login": "string",
+      "login_name": "empty",
+      "prohibit_login": true,
+      "pronouns": "string",
+      "restricted": true,
+      "source_id": 0,
+      "starred_repos_count": 0,
+      "visibility": "string",
+      "website": "string"
+    }
+  ],
+  "ok": true
+}
+----
