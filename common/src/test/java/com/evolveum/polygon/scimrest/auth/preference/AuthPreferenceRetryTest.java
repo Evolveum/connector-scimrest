@@ -13,6 +13,7 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -158,7 +159,7 @@ public class AuthPreferenceRetryTest extends WireMockTestSupport {
 
         // The original request and the single retry both get 401 — the search then fails with
         // an invalid-credential error instead of looping forever.
-        var failure = org.testng.Assert.expectThrows(InvalidCredentialException.class,
+        var failure = Assert.expectThrows(InvalidCredentialException.class,
                 () -> connector.executeQuery(new ObjectClass("Account"), null, r -> true,
                         new OperationOptionsBuilder().build()));
         assertTrue(failure.getMessage().contains("401"));

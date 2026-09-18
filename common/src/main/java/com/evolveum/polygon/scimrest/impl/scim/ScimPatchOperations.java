@@ -195,7 +195,7 @@ public final class ScimPatchOperations {
     /** Wraps wired values into the SCIM JSON value: a scalar for a single value, an array for several. */
     public static JsonNode toValueNode(List<JsonNode> values) {
         if (values.size() == 1) {
-            return values.get(0);
+            return values.getFirst();
         }
         var array = FACTORY.arrayNode();
         values.forEach(array::add);

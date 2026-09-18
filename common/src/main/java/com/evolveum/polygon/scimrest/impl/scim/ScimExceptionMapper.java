@@ -8,6 +8,8 @@ package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
+import org.apache.hc.client5.http.ConnectTimeoutException;
+import org.apache.hc.core5.http.ConnectionClosedException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -94,13 +96,13 @@ public final class ScimExceptionMapper {
      * message naming the target URI.
      */
     public static RuntimeException mapNetwork(IOException e, String uri) {
-        if (e instanceof org.apache.hc.client5.http.ConnectTimeoutException t) {
+        if (e instanceof ConnectTimeoutException t) {
             return new OperationTimeoutException("Connection to " + uri + " timed out", t);
         }
         if (e instanceof SocketTimeoutException t) {
             return new OperationTimeoutException("SCIM request to " + uri + " timed out", t);
         }
-        if (e instanceof org.apache.hc.core5.http.ConnectionClosedException t) {
+        if (e instanceof ConnectionClosedException t) {
             return new ConnectionBrokenException("Connection to " + uri + " was closed before the request completed", t);
         }
         if (e instanceof InterruptedIOException t) {

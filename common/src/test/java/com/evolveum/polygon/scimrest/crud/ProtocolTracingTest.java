@@ -9,7 +9,6 @@ package com.evolveum.polygon.scimrest.crud;
 import com.evolveum.polygon.conndev.devtools.log.ConndevLogFormat;
 import com.evolveum.polygon.conndev.devtools.log.LogSeverity;
 import com.evolveum.polygon.conndev.devtools.log.OperationLogParser;
-import com.evolveum.polygon.conndev.devtools.log.OperationTrace;
 import com.evolveum.polygon.scimrest.logging.CapturingLogProvider;
 import com.evolveum.polygon.scimrest.support.AbstractCrudConnectorTest;
 import org.testng.annotations.Test;
@@ -41,7 +40,7 @@ public class ProtocolTracingTest extends AbstractCrudConnectorTest {
         var traces = OperationLogParser.parse(lines.stream()
                 .map(CapturingLogProvider.CapturedLine::message).toList());
         assertEquals(traces.size(), 1);
-        var trace = traces.get(0);
+        var trace = traces.getFirst();
         assertEquals(trace.operation(), "update");
         assertEquals(trace.objectClass(), "Account");
         assertTrue(trace.completed());
@@ -69,9 +68,9 @@ public class ProtocolTracingTest extends AbstractCrudConnectorTest {
                 .filter(event -> "request-body".equals(event.protocol().kind()))
                 .toList();
         assertEquals(requestBodies.size(), 1);
-        assertEquals(requestBodies.get(0).severity(), LogSeverity.TRACE);
-        assertTrue(requestBodies.get(0).protocol().uri().endsWith("/accounts/123"));
-        assertTrue(requestBodies.get(0).protocol().body().contains("updated"));
+        assertEquals(requestBodies.getFirst().severity(), LogSeverity.TRACE);
+        assertTrue(requestBodies.getFirst().protocol().uri().endsWith("/accounts/123"));
+        assertTrue(requestBodies.getFirst().protocol().body().contains("updated"));
 
         var responseBodies = trace.protocolEvents().stream()
                 .filter(event -> "response-body".equals(event.protocol().kind()))

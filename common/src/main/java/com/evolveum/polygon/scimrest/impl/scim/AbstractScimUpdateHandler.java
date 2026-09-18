@@ -16,7 +16,9 @@ import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.AttributeDelta;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 
 import java.net.URI;
 import java.util.*;

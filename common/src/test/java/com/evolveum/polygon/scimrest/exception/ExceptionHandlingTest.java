@@ -9,16 +9,14 @@ package com.evolveum.polygon.scimrest.exception;
 import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.support.TestRestConnector;
-import org.identityconnectors.framework.common.exceptions.ConfigurationException;
-import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
-import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import org.identityconnectors.framework.common.exceptions.*;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import tools.jackson.core.JacksonException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.assertFalse;
@@ -64,7 +62,7 @@ public class ExceptionHandlingTest extends WireMockTestSupport {
         var connector = new TestRestConnector(config);
         connector.init(config);
 
-        var e = org.testng.Assert.expectThrows(InvalidCredentialException.class, connector::test);
+        var e = Assert.expectThrows(InvalidCredentialException.class, connector::test);
         assertTrue(e.getMessage().contains("401"),
                 "Message should carry the HTTP status: " + e.getMessage());
     }
@@ -79,7 +77,7 @@ public class ExceptionHandlingTest extends WireMockTestSupport {
         var connector = new TestRestConnector(config);
         connector.init(config);
 
-        var e = org.testng.Assert.expectThrows(InvalidCredentialException.class, connector::test);
+        var e = Assert.expectThrows(InvalidCredentialException.class, connector::test);
         assertTrue(e.getMessage().contains("403"),
                 "Message should carry the HTTP status: " + e.getMessage());
     }
@@ -94,7 +92,7 @@ public class ExceptionHandlingTest extends WireMockTestSupport {
         var connector = new TestRestConnector(config);
         connector.init(config);
 
-        var e = org.testng.Assert.expectThrows(ConnectionFailedException.class, connector::test);
+        var e = Assert.expectThrows(ConnectionFailedException.class, connector::test);
         assertTrue(e.getMessage().contains("500"),
                 "Message should carry the HTTP status: " + e.getMessage());
     }
@@ -111,7 +109,7 @@ public class ExceptionHandlingTest extends WireMockTestSupport {
         var connector = new ScriptConnector(null, SCHEMA_SCRIPT, OPERATION_SCRIPT);
         connector.init(config);
 
-        var e = org.testng.Assert.expectThrows(ConnectorException.class,
+        var e = Assert.expectThrows(ConnectorException.class,
                 () -> connector.executeQuery(new ObjectClass("Account"), null, r -> true,
                         new OperationOptionsBuilder().build()));
         assertTrue(e.getClass() == ConnectorException.class,
@@ -119,9 +117,9 @@ public class ExceptionHandlingTest extends WireMockTestSupport {
                         + e.getClass().getName());
         assertTrue(e.getMessage().contains("Failed to parse response body"),
                 "Parse error should name the problem: " + e.getMessage());
-        assertFalse(e instanceof org.identityconnectors.framework.common.exceptions.ConnectorIOException,
+        assertFalse(e instanceof ConnectorIOException,
                 "A malformed body is not an I/O failure");
-        assertTrue(e.getCause() instanceof tools.jackson.core.JacksonException,
+        assertTrue(e.getCause() instanceof JacksonException,
                 "The Jackson error must be kept as the cause");
     }
 
@@ -147,7 +145,7 @@ public class ExceptionHandlingTest extends WireMockTestSupport {
         var connector = new TestRestConnector(config);
         connector.init(config);
 
-        var e = org.testng.Assert.expectThrows(ConfigurationException.class, connector::test);
+        var e = Assert.expectThrows(ConfigurationException.class, connector::test);
         assertTrue(e.getMessage().contains("URI"),
                 "Message should say the URI is the problem: " + e.getMessage());
     }

@@ -208,7 +208,7 @@ public class ScimSearchFilterTranslationTest extends WireMockTestSupport {
         var results = search(connector, FilterBuilder.equalTo(AttributeBuilder.build(Name.NAME, "jdoe")));
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getName().getNameValue(), "jdoe");
+        assertEquals(results.getFirst().getName().getNameValue(), "jdoe");
         assertSingleSearchRequestWithFilter("userName eq \"jdoe\"");
     }
 

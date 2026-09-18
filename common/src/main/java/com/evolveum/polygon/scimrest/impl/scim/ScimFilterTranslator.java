@@ -288,10 +288,10 @@ public class ScimFilterTranslator {
 
     private Object singleValue(AttributeFilter single, Filter source) {
         var values = single.getAttribute().getValue();
-        if (values == null || values.size() != 1 || values.get(0) == null) {
+        if (values == null || values.size() != 1 || values.getFirst() == null) {
             throw unsupported(source);
         }
-        return values.get(0);
+        return values.getFirst();
     }
 
     private String asText(Object value) {

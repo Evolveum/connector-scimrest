@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.impl.scim;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
+import java.io.Serial;
 import java.net.URI;
 
 /**
@@ -23,6 +24,7 @@ import java.net.URI;
  */
 public class ScimHttpErrorException extends ConnectorException {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final int status;

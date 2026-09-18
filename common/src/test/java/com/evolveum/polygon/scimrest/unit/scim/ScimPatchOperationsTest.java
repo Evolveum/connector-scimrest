@@ -59,7 +59,7 @@ public class ScimPatchOperationsTest {
                 List.of(AttributeDeltaBuilder.build("displayName", List.of("New Name"))), oc, null);
 
         assertEquals(requests.size(), 1);
-        var op = requests.get(0).get(0);
+        var op = requests.getFirst().getFirst();
         assertEquals(op.op(), PatchOpType.REPLACE);
         assertEquals(op.path(), "displayName");
         assertEquals(op.value().asString(), "New Name");
@@ -71,7 +71,7 @@ public class ScimPatchOperationsTest {
         var requests = ScimPatchOperations.build(
                 List.of(AttributeDeltaBuilder.build("active", List.of(true))), oc, null);
 
-        var op = requests.get(0).get(0);
+        var op = requests.getFirst().getFirst();
         assertEquals(op.op(), PatchOpType.REPLACE);
         assertEquals(op.path(), "active");
         assertEquals(op.value().asBoolean(), true);
@@ -83,7 +83,7 @@ public class ScimPatchOperationsTest {
         var delta = new AttributeDeltaBuilder().setName("emails").addValueToAdd("a@x", "b@x").build();
         var requests = ScimPatchOperations.build(List.of(delta), oc, null);
 
-        var op = requests.get(0).get(0);
+        var op = requests.getFirst().getFirst();
         assertEquals(op.op(), PatchOpType.ADD);
         assertEquals(op.path(), "emails");
         assertTrue(op.value().isArray());
@@ -96,7 +96,7 @@ public class ScimPatchOperationsTest {
         var delta = new AttributeDeltaBuilder().setName("emails").addValueToRemove("old@x").build();
         var requests = ScimPatchOperations.build(List.of(delta), oc, null);
 
-        var op = requests.get(0).get(0);
+        var op = requests.getFirst().getFirst();
         assertEquals(op.op(), PatchOpType.REMOVE);
         assertEquals(op.path(), "emails");
         assertEquals(op.value().asString(), "old@x");
@@ -108,7 +108,7 @@ public class ScimPatchOperationsTest {
         var requests = ScimPatchOperations.build(
                 List.of(AttributeDeltaBuilder.build("active", new ArrayList<>())), oc, null);
 
-        var op = requests.get(0).get(0);
+        var op = requests.getFirst().getFirst();
         assertEquals(op.op(), PatchOpType.REMOVE);
         assertEquals(op.path(), "active");
         assertNull(op.value());
@@ -120,7 +120,7 @@ public class ScimPatchOperationsTest {
         var requests = ScimPatchOperations.build(
                 List.of(AttributeDeltaBuilder.build("givenName", List.of("Jane"))), oc, null);
 
-        var op = requests.get(0).get(0);
+        var op = requests.getFirst().getFirst();
         assertEquals(op.op(), PatchOpType.REPLACE);
         assertEquals(op.path(), "name.givenName");
         assertEquals(op.value().asString(), "Jane");
@@ -134,8 +134,8 @@ public class ScimPatchOperationsTest {
         var requests = ScimPatchOperations.build(List.of(delta), oc, null);
 
         assertEquals(requests.size(), 2);
-        assertEquals(requests.get(0).get(0).op(), PatchOpType.REMOVE);
-        assertEquals(requests.get(1).get(0).op(), PatchOpType.ADD);
+        assertEquals(requests.getFirst().getFirst().op(), PatchOpType.REMOVE);
+        assertEquals(requests.get(1).getFirst().op(), PatchOpType.ADD);
     }
 
     @Test
@@ -155,7 +155,7 @@ public class ScimPatchOperationsTest {
         var addDelta = new AttributeDeltaBuilder().setName("emails").addValueToAdd("a@x").build();
 
         var requests = ScimPatchOperations.build(List.of(addDelta), oc, config);
-        assertEquals(requests.get(0).get(0).op(), PatchOpType.ADD);
+        assertEquals(requests.getFirst().getFirst().op(), PatchOpType.ADD);
     }
 
     @Test
@@ -167,8 +167,8 @@ public class ScimPatchOperationsTest {
         var requests = ScimPatchOperations.build(List.of(delta), oc, config);
         assertEquals(requests.size(), 3);
         for (var request : requests) {
-            assertEquals(request.get(0).op(), PatchOpType.ADD);
-            assertEquals(request.get(0).value().size(), 1);
+            assertEquals(request.getFirst().op(), PatchOpType.ADD);
+            assertEquals(request.getFirst().value().size(), 1);
         }
     }
 
@@ -181,12 +181,12 @@ public class ScimPatchOperationsTest {
         var requests = ScimPatchOperations.build(List.of(delta), oc, config);
         // 1 clear + ceil(5/2) = 3 chunked adds
         assertEquals(requests.size(), 4);
-        assertEquals(requests.get(0).get(0).op(), PatchOpType.REMOVE);
-        assertNull(requests.get(0).get(0).value());
-        assertEquals(requests.get(1).get(0).op(), PatchOpType.ADD);
-        assertEquals(requests.get(1).get(0).value().size(), 2);
-        assertEquals(requests.get(2).get(0).value().size(), 2);
-        assertEquals(requests.get(3).get(0).value().size(), 1);
+        assertEquals(requests.getFirst().getFirst().op(), PatchOpType.REMOVE);
+        assertNull(requests.getFirst().getFirst().value());
+        assertEquals(requests.get(1).getFirst().op(), PatchOpType.ADD);
+        assertEquals(requests.get(1).getFirst().value().size(), 2);
+        assertEquals(requests.get(2).getFirst().value().size(), 2);
+        assertEquals(requests.get(3).getFirst().value().size(), 1);
     }
 
     @Test
@@ -196,7 +196,7 @@ public class ScimPatchOperationsTest {
         var delta = AttributeDeltaBuilder.build("emails", List.of("other@x"));
 
         var requests = ScimPatchOperations.build(List.of(delta), oc, config);
-        var op = requests.get(0).get(0);
+        var op = requests.getFirst().getFirst();
         assertEquals(op.op(), PatchOpType.REPLACE);
         assertEquals(op.value().asString(), "pinned@x");
     }

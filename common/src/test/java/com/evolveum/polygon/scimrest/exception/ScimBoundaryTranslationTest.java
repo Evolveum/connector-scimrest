@@ -22,6 +22,8 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import java.net.URI;
+
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
@@ -88,7 +90,7 @@ public class ScimBoundaryTranslationTest extends WireMockTestSupport {
                         return (T) (ObjectSearchOperation) (context, filter, handler, options) -> {
                             // Deliberately throw the raw custom carrier (no translation).
                             throw new ScimHttpErrorException(status, detail, null,
-                                    java.net.URI.create("http://localhost/scim/v2/Users"));
+                                    URI.create("http://localhost/scim/v2/Users"));
                         };
                     }
                     throw new UnsupportedOperationException("Operation not supported: " + operationType);
