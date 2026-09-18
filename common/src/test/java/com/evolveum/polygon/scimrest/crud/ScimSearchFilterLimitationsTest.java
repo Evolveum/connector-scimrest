@@ -13,6 +13,7 @@ import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
@@ -30,6 +31,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -112,6 +114,19 @@ public class ScimSearchFilterLimitationsTest extends WireMockTestSupport {
                     scim {
                         limitations {
                             supportedFilter(attribute("userName").eq().anySingleValue())
+                        }
+                    }
+                }
+            }
+            """;
+
+    private static final String UNKNOWN_ATTRIBUTE_OPERATIONS_SCRIPT = """
+            objectClass("User") {
+                search {
+                    scim {
+                        limitations {
+                            supportedFilter(attribute("organization").eq().anySingleValue()) {
+                            }
                         }
                     }
                 }
@@ -231,5 +246,30 @@ public class ScimSearchFilterLimitationsTest extends WireMockTestSupport {
 
         assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(USERS_ENDPOINT))
                 .withQueryParam("filter", equalTo("userName eq \"jdoe\""))).size(), 1);
+    }
+
+    @Test
+    public void unknownFilterAttributeFailsBuildWithDescriptiveError() {
+        var connector = new ScriptConnector(UNKNOWN_ATTRIBUTE_OPERATIONS_SCRIPT);
+        connector.init(new TestConfiguration(wireMockServer.port()));
+
+        var exception = Assert.expectThrows(Exception.class, () -> connector.executeQuery(
+                new ObjectClass("User"), null, o -> true, new OperationOptionsBuilder().build()));
+
+        var cause = firstCause(exception, ConfigurationException.class);
+        assertNotNull(cause);
+        assertTrue(cause.getMessage().contains("Attribute 'organization' not found in object class 'User'"),
+                "Unexpected message: " + cause.getMessage());
+        assertTrue(cause.getMessage().contains("when defining a SCIM search limitation"));
+        assertTrue(cause.getMessage().contains("Available attributes"));
+    }
+
+    private static Throwable firstCause(Throwable throwable, Class<? extends Throwable> type) {
+        for (var cause = throwable; cause != null; cause = cause.getCause()) {
+            if (type.isInstance(cause)) {
+                return cause;
+            }
+        }
+        return null;
     }
 }

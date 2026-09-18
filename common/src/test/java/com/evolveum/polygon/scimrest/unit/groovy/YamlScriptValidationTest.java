@@ -17,6 +17,7 @@ import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.testng.annotations.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
@@ -66,6 +67,19 @@ public class YamlScriptValidationTest {
                       supportedFilters:
                         - spec: |
                             return (
+                          request: |
+                            request.pathParameter("id", value)
+            """;
+
+    private static final String OPERATION_SCRIPT_WITH_UNKNOWN_FILTER_ATTRIBUTE = """
+            objectClasses:
+              User:
+                search:
+                  endpoints:
+                    - path: users
+                      supportedFilters:
+                        - spec: |
+                            attribute("missing").eq().anySingleValue()
                           request: |
                             request.pathParameter("id", value)
             """;
@@ -135,12 +149,24 @@ public class YamlScriptValidationTest {
                 "objectClasses.User.search.endpoints[0].supportedFilters[0].spec");
     }
 
+    @Test
+    public void supportedFilterSpecWithUnknownAttributeFailsBuildWithDescriptiveError() {
+        var result = validate(
+                OPERATION_SCRIPT_WITH_UNKNOWN_FILTER_ATTRIBUTE, "operation", ScriptValidationRequest.SCRIPT_OPERATION_BUILD);
+
+        assertEquals(result.get("status"), "error", "Unexpected result: " + result);
+        var message = String.valueOf(result.get("message"));
+        assertTrue(message.contains("Attribute 'missing' not found in object class 'User'"),
+                "Unexpected message: " + message);
+        assertTrue(message.contains("Available attributes"));
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertFirstErrorPhaseAndSource(Map<String, Object> result, String phase, String source) {
         assertEquals(result.get("status"), "error", "Unexpected result: " + result);
-        var errors = (java.util.List<Map<String, Object>>) result.get("errors");
-        assertEquals(errors.get(0).get("phase"), phase, "Unexpected result: " + result);
-        assertEquals(errors.get(0).get("source"), source, "Unexpected result: " + result);
+        var errors = (List<Map<String, Object>>) result.get("errors");
+        assertEquals(errors.getFirst().get("phase"), phase, "Unexpected result: " + result);
+        assertEquals(errors.getFirst().get("source"), source, "Unexpected result: " + result);
     }
 
     private static TestConnector connector() {

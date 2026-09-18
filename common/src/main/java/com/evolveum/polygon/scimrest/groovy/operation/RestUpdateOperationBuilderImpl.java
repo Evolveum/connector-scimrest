@@ -106,9 +106,9 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
         return scim == null || !scim.isEnabled();
     }
 
-    private RestAttributeDefinition resolveAttribute(String key) {
-        // FIXME: Perform checks and throw error if incorrect
-        return parent.getObjectClass().attributeFromProtocolName(key);
+    private RestAttributeDefinition resolveAttribute(String key, String endpointPath) {
+        return parent.getObjectClass().requireAttribute(
+                key, "when defining supported attributes for update endpoint '" + endpointPath + "'");
     }
 
     class EndpointImpl extends AbstractSingleObjectEndpointBuilder<UpdateRequest, ConnectorObject, EndpointImpl> implements Endpoint  {
@@ -128,6 +128,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
 
         @Override
         public UpdateOperationBuilder.AttributeValueFilter supportedAttribute(String attributeName) {
+            // Fail fast at configuration time when the name does not reference a defined attribute
+            resolveAttribute(attributeName, path);
             return supportedAttributes.supportedAttribute(attributeName);
         }
 
@@ -160,10 +162,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
             var supportedAttrs = new HashMap<String, AttributeSupport>();
 
             for (var supported : supportedAttributes.entries()) {
-                var attr = resolveAttribute(supported.getKey());
-                if (attr == null) {
-                    throw new ConnectorException("Attribute " + supported.getKey() + " not found in schema");
-                }
+                var attr = resolveAttribute(supported.getKey(), path);
                 supportedAttrs.put(attr.connId().getName(), supported.getValue().build(attr));
             }
 

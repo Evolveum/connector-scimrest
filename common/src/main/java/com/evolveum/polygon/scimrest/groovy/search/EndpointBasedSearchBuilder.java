@@ -25,7 +25,6 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
-import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
@@ -102,19 +101,8 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
     @Override
     public FilterSpecification.Attribute attribute(String name) {
-        var attr = objectClass.attributeFromProtocolName(name);
-        if (attr == null) {
-            throw new ConfigurationException(
-                    "Attribute '" + name + "' not found in object class '"
-                            + objectClass.objectClass().getObjectClassValue()
-                            + "' when defining a search filter for endpoint '" + path + "'");
-        }
-        var connId = attr.connId();
-        if (connId != null) {
-            // FIXME: Create deffered search here
-            return FilterSpecification.attribute(connId.getName());
-        }
-        return FilterSpecification.attribute(name);
+        // FIXME: Create deffered search here
+        return objectClass.filterAttribute(name, "when defining a search filter for endpoint '" + path + "'");
     }
 
     @Override

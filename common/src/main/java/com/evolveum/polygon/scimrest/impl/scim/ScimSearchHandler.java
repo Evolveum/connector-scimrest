@@ -187,11 +187,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
             @Override
             public FilterSpecification.Attribute attribute(String name) {
-                var connId = objectClass.attributeFromProtocolName(name).connId();
-                if (connId != null) {
-                    return FilterSpecification.attribute(connId.getName());
-                }
-                return FilterSpecification.attribute(name);
+                return objectClass.filterAttribute(name, "when defining a SCIM search limitation");
             }
 
             @Override
