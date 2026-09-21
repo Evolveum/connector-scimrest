@@ -1,0 +1,6 @@
+objectClasses:
+  Group:
+    search:
+      endpoints:
+        - path: /groups
+          emptyFilterSupported: true

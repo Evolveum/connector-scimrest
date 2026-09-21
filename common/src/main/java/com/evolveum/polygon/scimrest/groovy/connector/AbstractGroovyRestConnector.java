@@ -125,7 +125,6 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
             var schemaBuilder = new RestSchemaBuilderImpl(getClass(), context);
             var schemaLoader = new SchemaDefinitionLoader(context.configuration().groovyContext(), schemaBuilder);
             initializeSchema(schemaLoader);
-            context.baseSchema(schemaLoader.baseSchema());
 
             handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
             initializeAuthorizationHandler(handlersBuilder);
@@ -376,8 +375,8 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
      */
     private ScriptValidationResult validateYamlSchema(ScriptValidationRequest request) {
         var builder = new RestSchemaBuilderImpl(getClass(), context);
-        var siblingLoader = new SchemaDefinitionLoader(context.configuration().groovyContext(), builder);
-        schemaResources(request.filename()).forEach(siblingLoader::loadFromResource);
+        var loader = new SchemaDefinitionLoader(context.configuration().groovyContext(), builder);
+        schemaResources(request.filename()).forEach(loader::loadFromResource);
 
         RestSchema[] candidateSchema = new RestSchema[1];
         var result = YamlScriptValidator.validate(
@@ -430,7 +429,7 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         var checks = operationResources(null).stream()
                 .<Callable<ScriptValidationResult>>map(resource -> () -> {
                     var handlerBuilder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), candidateContext);
-                    return GroovyScriptValidator.validateResource(() -> handlerBuilder.loadFromResource(resource), handlerBuilder::build);
+                    return GroovyScriptValidator.validateResource(() -> loadOperationSibling(handlerBuilder, resource), handlerBuilder::build);
                 })
                 .toList();
         return GroovyScriptValidator.combine(checks);

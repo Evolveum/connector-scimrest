@@ -1,0 +1,5 @@
+connector:
+  schema:
+    - script: /manifests/script-validation-cross-check-yaml/Account.schema.groovy
+  operation:
+    - script: /manifests/script-validation-cross-check-yaml/Account.op.yaml

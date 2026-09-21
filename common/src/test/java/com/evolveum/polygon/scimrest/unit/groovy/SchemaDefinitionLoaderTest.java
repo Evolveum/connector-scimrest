@@ -13,7 +13,6 @@ import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import org.testng.annotations.Test;
 
 import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 public class SchemaDefinitionLoaderTest {
@@ -23,43 +22,31 @@ public class SchemaDefinitionLoaderTest {
                 new RestSchemaBuilderImpl(AbstractGroovyRestConnector.class, null));
     }
 
-    /** A Groovy definition missing from the bundle falls back to the YAML document of the same name. */
+    /**
+     * A Groovy definition missing from the bundle falls back to the YAML document of the same
+     * name, and that fallback ends up in the functional schema exactly like a Groovy definition
+     * would.
+     */
     @Test
     public void missingGroovyDefinitionFallsBackToYaml() {
         var loader = loader();
         loader.loadFromResource("/yaml/TestUser.native.schema.groovy");
 
-        var baseSchema = loader.baseSchema();
-        assertNotNull(baseSchema);
-        assertNotNull(baseSchema.objectClass("TestUser"));
+        assertNotNull(loader.build().objectClass("TestUser"));
     }
 
+    /**
+     * loadFromResource() is symmetric across formats: a YAML schema definition's object class ends
+     * up directly in the functional schema {@link SchemaDefinitionLoader#build()} returns, with the
+     * same real attribute mappings a Groovy definition would have - no separate step needed.
+     */
     @Test
-    public void yamlDefinitionBuildsInertBaseSchema() {
+    public void yamlDefinitionMergesIntoFunctionalSchema() {
         var loader = loader();
         loader.loadFromResource("/yaml/TestUser.native.schema.yaml");
 
-        var baseSchema = loader.baseSchema();
-        assertNotNull(baseSchema);
-        var objectClass = baseSchema.objectClass("TestUser");
+        var objectClass = loader.build().objectClass("TestUser");
         assertNotNull(objectClass);
         assertTrue(objectClass.attributeFromProtocolName("login").connId().isRequired());
-
-        // the functional schema is untouched by YAML definitions
-        assertTrue(loader.build().objectClasses().stream()
-                .noneMatch(oc -> "TestUser".equals(oc.objectClass().getObjectClassValue())));
-    }
-
-    @Test
-    public void baseSchemaIsNullWithoutYamlDefinitions() {
-        var loader = loader();
-        loader.load("""
-               objectClass("user") {
-                  attribute("id") {
-                    jsonType "string";
-                  }
-               }
-        """);
-        assertNull(loader.baseSchema());
     }
 }

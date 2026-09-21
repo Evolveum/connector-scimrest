@@ -1,0 +1,6 @@
+connector:
+  schema:
+    - script: /manifests/script-validation-yaml-sibling/Account.schema.groovy
+    - script: /manifests/script-validation-yaml-sibling/Group.schema.yaml
+  operation:
+    - script: /manifests/script-validation-yaml-sibling/Group.op.yaml

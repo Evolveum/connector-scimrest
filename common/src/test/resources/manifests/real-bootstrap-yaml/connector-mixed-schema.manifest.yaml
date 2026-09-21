@@ -1,0 +1,7 @@
+connector:
+  schema:
+    - script: /manifests/real-bootstrap-yaml/Account.schema.yaml
+    - script: /manifests/real-bootstrap-yaml/Group.schema.groovy
+  operation:
+    - script: /manifests/real-bootstrap-yaml/Account.op.yaml
+    - script: /manifests/real-bootstrap-yaml/Group.op.groovy

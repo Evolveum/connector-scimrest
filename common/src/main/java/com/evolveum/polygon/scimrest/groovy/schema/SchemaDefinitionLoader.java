@@ -9,7 +9,6 @@ package com.evolveum.polygon.scimrest.groovy.schema;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
-import com.evolveum.polygon.conndev.schema.BaseSchema;
 import com.evolveum.polygon.conndev.yaml.ScriptResources;
 import com.evolveum.polygon.conndev.yaml.YamlSchemaLoader;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
@@ -22,30 +21,27 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Schema definition loader dispatching between the two schema front-ends: Groovy definitions go to
- * {@link GroovySchemaLoader} (the functional {@code RestSchema}), YAML definitions
- * ({@code *.schema.yaml}/{@code *.schema.yml}) go to the conndev {@link YamlSchemaLoader} and build
- * a {@link RestSchema}. A referenced Groovy definition missing from the bundle falls back to the
- * YAML document of the same name ({@link ScriptResources}).
+ * {@link GroovySchemaLoader} directly. YAML definitions ({@code *.schema.yaml}/{@code
+ * *.schema.yml}) are parsed by the conndev {@link YamlSchemaLoader} onto their own throwaway,
+ * deliberately context-less builder - so any context-dependent construct fails fast during loading,
+ * the same guarantee Groovy validation already has - and merged into the shared builder immediately,
+ * before {@link #loadFromResource} returns. A referenced Groovy definition missing from the bundle
+ * falls back to the YAML document of the same name ({@link ScriptResources}).
  * <p>
- * The YAML front-end drives a live {@link RestSchemaBuilderImpl} (see
- * {@link #baseSchema()}), so the declarative definitions populate a real {@code RestSchema} — SCIM
- * mappings and {@code DefinitionValue} source locations included — rather than an inert conndev
- * {@link BaseSchema}. It is deliberately built without a runtime context so any context-dependent
- * construct fails fast during loading.
+ * Both branches are symmetric from the caller's side: one {@link #loadFromResource} call per
+ * resource is enough regardless of format, exactly as if every script had been Groovy - there is no
+ * separate step to remember afterward.
  */
 public class SchemaDefinitionLoader extends GroovySchemaLoader {
 
-    private final YamlSchemaLoader yamlLoader;
-    private boolean yamlLoaded;
+    // GroovySchemaLoader's own schemaBuilder field is package-private (conndev's package), so it's
+    // not visible here even though we extend it - keep our own reference to the same instance
+    // instead, for merging YAML definitions into it below.
+    private final RestSchemaBuilderImpl schemaBuilder;
 
     public SchemaDefinitionLoader(GroovyContext context, RestSchemaBuilderImpl schemaBuilder) {
         super(context, schemaBuilder);
-        // The declarative YAML schema must be fully literal — its builder deliberately gets no
-        // runtime context, so any context-dependent construct fails fast during loading. It is a
-        // live RestSchemaBuilderImpl (not the inert conndev BaseSchemaBuilder), so the definitions
-        // populate a real RestSchema with SCIM mappings and source locations.
-        this.yamlLoader = new YamlSchemaLoader(
-                new RestSchemaBuilderImpl(schemaBuilder.connectorClass(), ContextLookup.none()));
+        this.schemaBuilder = schemaBuilder;
     }
 
     @Override
@@ -65,17 +61,21 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
             // packaging/configuration error, not a caller-input error.
             throw new ConfigurationException("YAML schema definition resource not found: " + resource);
         }
+        // A fresh, throwaway builder per file - deliberately built without a runtime context, so
+        // any context-dependent construct fails fast during loading. It's a live
+        // RestSchemaBuilderImpl (not the inert conndev BaseSchemaBuilder), so the definitions carry
+        // the same real SCIM/REST attribute mappings a Groovy-declared object class would.
+        var yamlBuilder = new RestSchemaBuilderImpl(schemaBuilder.connectorClass(), ContextLookup.none());
+        var yamlLoader = new YamlSchemaLoader(yamlBuilder);
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             yamlLoader.load(reader, resource);
         } catch (IOException e) {
             throw new ConfigurationException("Couldn't read YAML schema definition " + resource + ": " + e.getMessage(), e);
         }
-        yamlLoaded = true;
-    }
-
-    /** Conndev schema built from the YAML definitions; null when no YAML definition was loaded. */
-    public BaseSchema baseSchema() {
-        return yamlLoaded ? yamlLoader.build() : null;
+        RestSchema parsed = (RestSchema) yamlLoader.build();
+        for (var definition : parsed.objectClasses()) {
+            schemaBuilder.defineObjectClass(definition);
+        }
     }
 
     @Override

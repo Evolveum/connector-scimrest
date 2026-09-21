@@ -1,0 +1,5 @@
+connector:
+  schema:
+    - script: /manifests/real-bootstrap-yaml/Account.schema.yaml
+  operation:
+    - script: /manifests/real-bootstrap-yaml/Account.op.yaml

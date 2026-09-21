@@ -1,0 +1,9 @@
+objectClasses:
+  Group:
+    attributes:
+      id:
+        connId:
+          type: String
+      name:
+        connId:
+          type: String

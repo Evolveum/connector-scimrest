@@ -12,7 +12,6 @@ import com.evolveum.polygon.conndev.concepts.RetrievableContext;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.conndev.groovy.ConnectorContext;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
-import com.evolveum.polygon.conndev.schema.BaseSchema;
 import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
@@ -33,7 +32,6 @@ public class RestConnectorContext implements ConnectorContext {
     BaseGroovyConnectorConfiguration configuration;
 
     private RestSchema schema;
-    private BaseSchema baseSchema;
     private RestContext rest;
     private ScimContext scim;
 
@@ -71,19 +69,6 @@ public class RestConnectorContext implements ConnectorContext {
 
     public RestSchema schema() {
         return schema;
-    }
-
-    /**
-     * Schema built from declarative YAML definitions (conndev {@link BaseSchema} model). Inert for
-     * now: nothing is derived from it, the functional schema is {@link #schema()}. Null when the
-     * connector has no YAML definitions.
-     */
-    public BaseSchema baseSchema() {
-        return baseSchema;
-    }
-
-    public void baseSchema(BaseSchema baseSchema) {
-        this.baseSchema = baseSchema;
     }
 
     public RestContext rest() {

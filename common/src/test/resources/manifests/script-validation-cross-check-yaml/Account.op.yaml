@@ -1,0 +1,7 @@
+objectClasses:
+  Account:
+    search:
+      custom:
+        supportedFilters:
+          - email eq ?
+        emptyFilterSupported: true
