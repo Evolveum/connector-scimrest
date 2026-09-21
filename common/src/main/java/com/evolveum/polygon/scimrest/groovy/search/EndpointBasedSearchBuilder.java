@@ -45,7 +45,8 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         }
         return List.of();
     };
-    PagingHandler pagingSupport;
+    PagingHandler pagingHandler;
+    Integer maxPageSize;
     Boolean emptyFilterSupported = null;
     final String path;
     Set<FilterToRequestMapper> filterMappers = new HashSet<>();
@@ -66,7 +67,13 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
     @Override
     public EndpointBasedSearchBuilder<BF, OF> pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) @Script.Runtime Closure<?> closure) {
-        this.pagingSupport = new GroovyPagingSupport(closure);
+        this.pagingHandler = new GroovyPagingSupport(closure);
+        return this;
+    }
+
+    @Override
+    public EndpointBasedSearchBuilder<BF, OF> maxPageSize(int maxPageSize) {
+        this.maxPageSize = maxPageSize;
         return this;
     }
 

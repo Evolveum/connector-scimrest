@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.search;
 
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.endpoint.ResponseObjectExtractor;
 import com.evolveum.polygon.scimrest.groovy.endpoint.QueryRequestBuilderImpl;
 
@@ -28,22 +29,24 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
 
     private final RestObjectClassDefinition objectClass;
     private final ResponseObjectExtractor<BF,OF> objectExtractor;
-    private final PagingHandler pagingSupport;
+    private final PagingHandler pagingHandler;
     private final String apiEndpoint;
     private final Set<FilterToRequestMapper> filterMappers;
     private final Class<?> responseFormat;
     private final TotalCountExtractor<BF> totalCountExtractor;
     private final QueryRequestBuilderImpl queryRequestBuilder;
+    private final Integer maxPageSize;
 
     public EndpointBasedSearchHandler(EndpointBasedSearchBuilder<BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
         this.objectClass = builder.objectClass;
         this.apiEndpoint = builder.path;
         this.objectExtractor = builder.objectExtractor;
-        this.pagingSupport = builder.pagingSupport;
+        this.pagingHandler = builder.pagingHandler;
         this.filterMappers = new HashSet<>(filterMappers);
         this.responseFormat = builder.responseFormat;
         this.totalCountExtractor = builder.totalCountExtractor;
         this.queryRequestBuilder = builder.queryRequest;
+        this.maxPageSize = builder.maxPageSize;
     }
 
     @Override
@@ -61,17 +64,26 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
         var mapper = maybeMapper.get();
         return RestSearchOperationHandler.<BF,OF>builder()
                 .addRequestUri((request, paging) -> {
-                    request.apiEndpoint(apiEndpoint);
-                    acceptContentTypes.forEach(x->request.header("Accept", x));
-                    mapper.mapToRequest(request, filter);
-                    if (pagingSupport != null) {
-                        pagingSupport.handlePaging(request, paging);
+                    handleRequest(request, acceptContentTypes, mapper, filter);
+                    if (pagingHandler != null) {
+                        pagingHandler.handlePaging(request, paging);
                     }
+                })
+                .addRequestUri((request) ->{
+                    handleRequest(request, acceptContentTypes, mapper, filter);
                 })
                 .remoteObjectExtractor(objectExtractor::extractObjects)
                 .totalCountExtractor(this.totalCountExtractor)
                 .responseFormat(responseFormat)
+                .responsePageLimit(maxPageSize)
                 .build();
+    }
+
+    public void handleRequest(HttpRequestSpecification request, List<String> acceptContentTypes,
+                              FilterToRequestMapper mapper, Filter filter){
+        request.apiEndpoint(apiEndpoint);
+        acceptContentTypes.forEach(x->request.header("Accept", x));
+        mapper.mapToRequest(request, filter);
     }
 
     @Override

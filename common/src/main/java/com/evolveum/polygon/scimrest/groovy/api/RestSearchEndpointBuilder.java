@@ -50,6 +50,7 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
      */
      RestSearchEndpointBuilder pagingSupport(@Script.Runtime @DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) Closure<?> closure);
 
+     RestSearchEndpointBuilder maxPageSize(int maxPageSize);
 
     @Yaml.Custom(SingleResultHandler.class)
     RestSearchEndpointBuilder singleResult();
