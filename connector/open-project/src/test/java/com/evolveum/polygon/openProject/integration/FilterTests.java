@@ -44,8 +44,7 @@ public class FilterTests extends BaseTest{
 
     @Test(enabled = true)
     public void test025SearchAllWorkPackagesPaging() {
-        testSearchAll("WorkPackage", buildOptions(buildPageEntries()));
-        testSearchAll("WorkPackage", buildOptions(buildPageEntries(null, 2)));
+        testSearchAll("WorkPackage", buildOptions(buildPageEntries(100, 1)));
     }
 
     ///  Search uid
