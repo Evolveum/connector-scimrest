@@ -27,7 +27,10 @@ import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import com.unboundid.scim2.client.ScimService;
+import com.unboundid.scim2.common.messages.ListResponse;
+import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
+import com.unboundid.scim2.common.utils.ApiConstants;
 import com.unboundid.scim2.common.utils.JsonUtils;
 import com.unboundid.scim2.common.utils.MapperFactory;
 import jakarta.ws.rs.client.Client;
@@ -146,26 +149,44 @@ public class ScimContext implements RetrievableContext {
                 this.providerConfig = null;
             }
         }
-        try {
-            for (var schema : scimClient.getSchemas()) {
-                schemas.put(schema.getId(), schema);
-            }
+        for (var schema : fetchDiscoveryList(ApiConstants.SCHEMAS_ENDPOINT, SchemaResource.class)) {
+            schemas.put(schema.getId(), schema);
+        }
 
-            for (var resource : scimClient.getResourceTypes()) {
-                var primary = schemas.get(resource.getSchema().toString());
-                var extensions = new HashMap<String, SchemaResource>();
-                var relativeEndpoint = relativeEndpoint(resource.getEndpoint());
-                var schemaExtensions = resource.getSchemaExtensions();
-                if (schemaExtensions != null) {
-                    for (var ext : schemaExtensions) {
-                        extensions.put(ext.getSchema().toString(), schemas.get(ext.getSchema().toString()));
-                    }
+        for (var resource : fetchDiscoveryList(ApiConstants.RESOURCE_TYPES_ENDPOINT, ResourceTypeResource.class)) {
+            var primary = schemas.get(resource.getSchema().toString());
+            var extensions = new HashMap<String, SchemaResource>();
+            var relativeEndpoint = relativeEndpoint(resource.getEndpoint());
+            var schemaExtensions = resource.getSchemaExtensions();
+            if (schemaExtensions != null) {
+                for (var ext : schemaExtensions) {
+                    extensions.put(ext.getSchema().toString(), schemas.get(ext.getSchema().toString()));
                 }
-                // SCIM ResourceType.id is optional and Keycloak omits it, so getId() is null for every
-                // resource and collapses them into one map entry. The name is required and unique.
-                resources.put(resource.getName(), new ScimResourceContext(resource, relativeEndpoint, primary, extensions));
             }
+            // SCIM ResourceType.id is optional and Keycloak omits it, so getId() is null for every
+            // resource and collapses them into one map entry. The name is required and unique.
+            resources.put(resource.getName(), new ScimResourceContext(resource, relativeEndpoint, primary, extensions));
+        }
+    }
 
+    /**
+     * Fetches one SCIM discovery list ({@code path} is {@code "Schemas"} or {@code "ResourceTypes"})
+     * and binds it directly to {@code ListResponse<T>} via the SDK's shared Jackson configuration
+     * ({@link JsonUtils#getObjectReader()}) — the same one {@link ScimService}'s own convenience
+     * methods use internally, just without hiding the request URI from the caller, which the
+     * failure mapping below relies on.
+     *
+     * <p>Only failures of the fetch/parse itself are mapped here — never a failure in code
+     * correlating the results afterward (in {@link #initialize()}), which must surface as its own
+     * exception rather than being disguised as a SCIM failure.</p>
+     */
+    private <T> ListResponse<T> fetchDiscoveryList(String path, Class<T> itemClass) {
+        var target = httpClient.target(configuration.getScimBaseUrl()).path(path);
+        try {
+            var json = target.request(ScimService.MEDIA_TYPE_SCIM_TYPE, MediaType.APPLICATION_JSON_TYPE).get(String.class);
+            var reader = JsonUtils.getObjectReader();
+            var listType = reader.typeFactory().constructParametricType(ListResponse.class, itemClass);
+            return reader.forType(listType).readValue(json);
         } catch (ScimHttpErrorException e) {
             if (e.status() == 404) {
                 // The /Schemas or /ResourceTypes endpoint does not exist — the SCIM base URL
@@ -180,9 +201,8 @@ public class ScimContext implements RetrievableContext {
             // ICF type was already set at the boundary (e.g. mapped network failure) — never re-wrap.
             throw e;
         } catch (Exception e) {
-            throw ScimExceptionMapper.mapFailure(e, configuration.getScimBaseUrl());
+            throw ScimExceptionMapper.mapFailure(e, target.getUri().toString());
         }
-
     }
 
     /**
@@ -196,7 +216,7 @@ public class ScimContext implements RetrievableContext {
      */
     private JsonNode fetchServiceProviderConfig() throws IOException {
         var json = httpClient.target(configuration.getScimBaseUrl())
-                .path("ServiceProviderConfig")
+                .path(ApiConstants.SERVICE_PROVIDER_CONFIG_ENDPOINT)
                 .request(ScimService.MEDIA_TYPE_SCIM_TYPE, MediaType.APPLICATION_JSON_TYPE)
                 .get(String.class);
         return JsonUtils.getObjectReader().readTree(json);
