@@ -13,6 +13,7 @@ import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.scimrest.impl.scim.ScimHttpErrorException;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -58,7 +59,7 @@ public class ScimBoundaryTranslationTest extends WireMockTestSupport {
     }
 
     /** A handler that deliberately forgets to translate the SCIM HTTP error (simulating a bug). */
-    private static final class LeakingHandlerConnector extends AbstractGroovyRestConnector<TestConfiguration> {
+    private static final class LeakingHandlerConnector extends AbstractGroovyRestConnector {
         private final int status;
         private final String detail;
 
@@ -77,7 +78,7 @@ public class ScimBoundaryTranslationTest extends WireMockTestSupport {
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         }
 
         @Override

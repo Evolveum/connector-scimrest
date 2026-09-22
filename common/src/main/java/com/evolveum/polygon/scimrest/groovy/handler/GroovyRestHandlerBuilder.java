@@ -12,6 +12,7 @@ import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
 import groovy.lang.Closure;
@@ -21,7 +22,7 @@ import org.codehaus.groovy.runtime.MethodClosure;
 
 import java.io.InputStreamReader;
 
-public class GroovyRestHandlerBuilder extends RestHandlerBuilder {
+public class GroovyRestHandlerBuilder extends RestHandlerBuilder implements GroovyScriptLoader {
 
     private final GroovyShell shell;
 
@@ -34,6 +35,7 @@ public class GroovyRestHandlerBuilder extends RestHandlerBuilder {
 
     }
 
+    @Override
     public void loadFromResource(String s) {
         var stream = this.getClass().getResourceAsStream(s);
         if (stream == null) {
@@ -43,10 +45,12 @@ public class GroovyRestHandlerBuilder extends RestHandlerBuilder {
         shell.evaluate(new InputStreamReader(stream), s);
     }
 
+    @Override
     public void loadFromString(String script) {
         shell.evaluate(script);
     }
 
+    @Override
     public groovy.lang.Script parse(String script) {
         return shell.parse(script);
     }

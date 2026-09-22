@@ -10,6 +10,7 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import org.identityconnectors.common.security.GuardedString;
@@ -151,7 +152,7 @@ public class ScimSearchFilterLimitationsTest extends WireMockTestSupport {
         }
     }
 
-    private static class ScriptConnector extends AbstractGroovyRestConnector<TestConfiguration> {
+    private static class ScriptConnector extends AbstractGroovyRestConnector {
         private final String operationScript;
 
         ScriptConnector(String operationScript) {
@@ -167,7 +168,7 @@ public class ScimSearchFilterLimitationsTest extends WireMockTestSupport {
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             if (operationScript != null) {
                 builder.loadFromString(operationScript);
             }

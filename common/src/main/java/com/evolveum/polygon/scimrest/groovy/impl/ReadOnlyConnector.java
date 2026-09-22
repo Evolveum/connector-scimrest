@@ -9,17 +9,18 @@ package com.evolveum.polygon.scimrest.groovy.impl;
 
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
 @ConnectorClass(displayNameKey = "readonly.connector.display", configurationClass = ReadOnlyConfiguration.class)
-public class ReadOnlyConnector extends AbstractGroovyRestConnector<ReadOnlyConfiguration> {
+public class ReadOnlyConnector extends AbstractGroovyRestConnector {
 
     @Override
     protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
     @Override
-    protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+    protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         // FIXME: pointer to static scripted connector entry point script / configuration / manifest
     }
 

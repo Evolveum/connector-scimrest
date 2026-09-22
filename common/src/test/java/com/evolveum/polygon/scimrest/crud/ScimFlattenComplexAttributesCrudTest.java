@@ -11,6 +11,7 @@ import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import org.identityconnectors.common.security.GuardedString;
@@ -268,7 +269,7 @@ public class ScimFlattenComplexAttributesCrudTest extends WireMockTestSupport {
         }
     }
 
-    private static class TestConnector extends AbstractGroovyRestConnector<TestConfiguration> {
+    private static class TestConnector extends AbstractGroovyRestConnector {
 
         @Override
         protected void initializeSchema(GroovySchemaLoader loader) {
@@ -279,7 +280,7 @@ public class ScimFlattenComplexAttributesCrudTest extends WireMockTestSupport {
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             builder.loadFromString(OPERATION_SCRIPT);
         }
     }

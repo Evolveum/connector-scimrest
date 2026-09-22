@@ -164,7 +164,7 @@ public class ScimJwtBearerAuthTests extends WireMockTestSupport {
                         .withBody(EMPTY_LIST_RESPONSE)));
     }
 
-    private AbstractGroovyRestConnector<?> createScimConnector(String script) {
+    private AbstractGroovyRestConnector createScimConnector(String script) {
         var config = new ScimTestConfiguration(wireMockServer.port());
         var connector = new ScriptConnector(script);
         connector.init(config);

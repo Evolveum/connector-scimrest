@@ -11,6 +11,7 @@ import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnecto
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
@@ -44,7 +45,7 @@ public class ScriptValidationTest {
         @Override public Boolean getTrustAllCertificates() { return true; }
     }
 
-    public static class TestConnector extends AbstractGroovyRestConnector<TestConfiguration> {
+    public static class TestConnector extends AbstractGroovyRestConnector {
         private final String schemaScript;
         private final String operationScript;
 
@@ -66,7 +67,7 @@ public class ScriptValidationTest {
         protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             if (operationScript != null) {
                 builder.loadFromString(operationScript);
             }

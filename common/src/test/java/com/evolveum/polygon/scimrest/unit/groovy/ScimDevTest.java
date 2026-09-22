@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.unit.groovy;
 
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
@@ -51,7 +52,7 @@ public class ScimDevTest {
         }
     }
 
-    private class Connector extends AbstractGroovyRestConnector<TestConfiguration> {
+    private class Connector extends AbstractGroovyRestConnector {
 
         @Override
         protected void initializeSchema(GroovySchemaLoader loader) {
@@ -63,7 +64,7 @@ public class ScimDevTest {
         protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             // no custom scripts
         }
     }

@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.support;
 
 import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.groovy.impl.ManifestBasedConnector;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -64,7 +65,7 @@ public class WireMockTestSupport {
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             if (operationScript != null) builder.loadFromString(operationScript);
         }
     }

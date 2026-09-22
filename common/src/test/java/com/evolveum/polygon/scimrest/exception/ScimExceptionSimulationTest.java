@@ -11,6 +11,7 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
@@ -126,7 +127,7 @@ public class ScimExceptionSimulationTest extends WireMockTestSupport {
     }
 
     // Test connector with SCIM enabled
-    private static class TestScimConnector extends AbstractGroovyRestConnector<TestConfiguration> {
+    private static class TestScimConnector extends AbstractGroovyRestConnector {
         private final TestConfiguration configuration;
 
         TestScimConnector(TestConfiguration configuration) {
@@ -142,7 +143,7 @@ public class ScimExceptionSimulationTest extends WireMockTestSupport {
         protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             // No handlers needed for test
         }
     }

@@ -10,6 +10,7 @@ import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.Filter;
@@ -85,7 +86,7 @@ public abstract class AbstractCrudConnectorTest extends WireMockTestSupport {
         }
     }
 
-    protected static class TestConnector extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
+    protected static class TestConnector extends AbstractGroovyRestConnector {
 
         private final String nativeSchemaScript;
         private final String connIdSchemaScript;
@@ -110,7 +111,7 @@ public abstract class AbstractCrudConnectorTest extends WireMockTestSupport {
             loader.load(connIdSchemaScript);
         }
         @Override protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) { }
-        @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        @Override protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             builder.loadFromString(operationScript);
         }
     }

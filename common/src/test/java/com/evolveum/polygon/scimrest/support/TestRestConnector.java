@@ -9,9 +9,10 @@ package com.evolveum.polygon.scimrest.support;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
-public class TestRestConnector extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
+public class TestRestConnector extends AbstractGroovyRestConnector {
     private final BaseRestGroovyConnectorConfiguration configuration;
 
     public TestRestConnector(BaseRestGroovyConnectorConfiguration configuration) {
@@ -27,7 +28,7 @@ public class TestRestConnector extends AbstractGroovyRestConnector<BaseRestGroov
     protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
     @Override
-    protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+    protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         // No handlers needed for test
     }
 }

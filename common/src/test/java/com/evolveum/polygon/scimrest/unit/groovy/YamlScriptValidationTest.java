@@ -11,6 +11,7 @@ import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnecto
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
@@ -186,7 +187,7 @@ public class YamlScriptValidationTest {
         @Override public Boolean getTrustAllCertificates() { return true; }
     }
 
-    public static class TestConnector extends AbstractGroovyRestConnector<TestConfiguration> {
+    public static class TestConnector extends AbstractGroovyRestConnector {
         @Override
         protected void initializeSchema(GroovySchemaLoader loader) {
             loader.load("objectClass('User') { attribute('id').connId().type(String.class) }");
@@ -196,7 +197,7 @@ public class YamlScriptValidationTest {
         protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {}
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {}
     }
 
     @Test

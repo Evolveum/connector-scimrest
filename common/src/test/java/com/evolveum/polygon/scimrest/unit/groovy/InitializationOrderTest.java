@@ -7,6 +7,7 @@
 package com.evolveum.polygon.scimrest.unit.groovy;
 
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
@@ -42,7 +43,7 @@ public class InitializationOrderTest {
         @Override public Boolean getTrustAllCertificates() { return true; }
     }
 
-    public static class TestConnector extends AbstractGroovyRestConnector<TestConfiguration> {
+    public static class TestConnector extends AbstractGroovyRestConnector {
         @Override
         protected void initializeSchema(GroovySchemaLoader loader) {
             loader.load(SCHEMA_SCRIPT);
@@ -52,7 +53,7 @@ public class InitializationOrderTest {
         protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             builder.loadFromString(HANDLER_SCRIPT);
         }
     }

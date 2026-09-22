@@ -253,14 +253,14 @@ public class ScimBearerTokenAuthTests extends WireMockTestSupport {
                         .withBody(EMPTY_LIST_RESPONSE)));
     }
 
-    private AbstractGroovyRestConnector<?> createScimConnector(String script) {
+    private AbstractGroovyRestConnector createScimConnector(String script) {
         var config = new ScimTestConfiguration(wireMockServer.port());
         var connector = new ScriptConnector(script);
         connector.init(config);
         return connector;
     }
 
-    private AbstractGroovyRestConnector<?> createScimConnectorWithToken(String script, GuardedString token) {
+    private AbstractGroovyRestConnector createScimConnectorWithToken(String script, GuardedString token) {
         var config = new ScimTestConfiguration(wireMockServer.port());
         config.tokenValue = token;
         var connector = new ScriptConnector(script);

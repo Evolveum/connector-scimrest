@@ -139,7 +139,7 @@ public class ScimOAuth2ClientCredentialsTests extends AbstractScimOAuth2ClientCr
                 .withRequestBody(containing("client_id="))).size(), 0);
     }
 
-    private AbstractGroovyRestConnector<?> createScimConnectorWithExtras(String tokenEndpoint,
+    private AbstractGroovyRestConnector createScimConnectorWithExtras(String tokenEndpoint,
             String clientId, GuardedString clientSecret, String scope, String authScheme) {
         var config = new ExtendedScimOAuth2TestConfig(wireMockServer.port(), tokenEndpoint,
                 clientId, clientSecret, scope, authScheme);
