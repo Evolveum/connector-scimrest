@@ -41,7 +41,7 @@ public class RestPagingAwareObjectRetriever {
         var context = lookup.get(RestContext.class);
         var shouldContinue = true;
         var currentPage = 1;
-        var pageLimit = 25; // FIXME: Make this configurable from builders.
+        var pageLimit = specification.pageLimit();
         var totalProcessed = 0;
         do {
             // The per-page fetch (request, status check, object extraction, total count) is the

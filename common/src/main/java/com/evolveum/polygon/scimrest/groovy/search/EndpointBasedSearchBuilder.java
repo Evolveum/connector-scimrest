@@ -6,10 +6,12 @@
  */
 package com.evolveum.polygon.scimrest.groovy.search;
 
+import com.evolveum.polygon.scimrest.groovy.endpoint.PathBasedObjectExtractor;
 import com.evolveum.polygon.scimrest.groovy.endpoint.ResponseObjectExtractor;
 import com.evolveum.polygon.scimrest.groovy.endpoint.QueryRequestBuilderImpl;
 
 import com.evolveum.polygon.conndev.annotations.Script;
+import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.api.FilterSpecification;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
@@ -25,6 +27,7 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 
@@ -34,6 +37,7 @@ import java.util.*;
 public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProcessorBuilder, RestSearchEndpointBuilder {
 
     final RestObjectClassDefinition objectClass;
+    AttributePathDeclaration<?, ?> objectExtractorPath;
     ResponseObjectExtractor<BF, OF> objectExtractor = r -> {
         if (r.body() instanceof ArrayNode array) {
             var ret = new ArrayList<OF>();
@@ -46,12 +50,15 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         return List.of();
     };
     PagingHandler pagingSupport;
+    Integer declarativePageSize;
+    List<PagingParameter> declarativePagingParameters = new ArrayList<>();
     Boolean emptyFilterSupported = null;
     final String path;
     Set<FilterToRequestMapper> filterMappers = new HashSet<>();
     Class<?> responseFormat = JSON_OBJECT;
     TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
     QueryRequestBuilderImpl queryRequest = new QueryRequestBuilderImpl();
+    HttpMethod httpMethod = HttpMethod.GET;
 
     public EndpointBasedSearchBuilder(String path, RestObjectClassDefinition objectClass) {
         this.path = path;
@@ -61,6 +68,14 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     @Override
     public EndpointBasedSearchBuilder<BF, OF> objectExtractor(@DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_FIRST) @Script.Runtime Closure<?> closure) {
         this.objectExtractor  = new GroovyObjectExtractor<>(closure);
+        this.objectExtractorPath = null;
+        return this;
+    }
+
+    @Override
+    public EndpointBasedSearchBuilder<BF, OF> objectExtractor(AttributePathDeclaration<?, ?> declaration) {
+        this.objectExtractorPath = declaration;
+        this.objectExtractor = new PathBasedObjectExtractor<>(declaration);
         return this;
     }
 
@@ -68,6 +83,26 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     public EndpointBasedSearchBuilder<BF, OF> pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) @Script.Runtime Closure<?> closure) {
         this.pagingSupport = new GroovyPagingSupport(closure);
         return this;
+    }
+
+    @Override
+    public EndpointBasedSearchBuilder<BF, OF> pageSize(int size) {
+        if (size < 1) {
+            throw new IllegalArgumentException(
+                    "Page size of search endpoint '" + path + "' must be at least 1, got " + size);
+        }
+        this.declarativePageSize = size;
+        return this;
+    }
+
+    @Override
+    public EndpointBasedSearchBuilder<BF, OF> pagingParameter(String token, String location, String name) {
+        this.declarativePagingParameters.add(new PagingParameter(token, location, name));
+        return this;
+    }
+
+    int pageLimit() {
+        return declarativePageSize != null ? declarativePageSize : RestSearchOperationHandler.DEFAULT_PAGE_SIZE;
     }
 
     @Override
@@ -89,9 +124,15 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
     @Override
     public void httpOperation(HttpMethod method) {
-        // FIXME: Add support for other HTTP methods (probably POST)
-        throw new UnsupportedOperationException(
-                "HTTP method operations are not supported on search endpoints (endpoint '" + path + "' uses GET)");
+        if (method != HttpMethod.GET && method != HttpMethod.POST) {
+            throw new UnsupportedOperationException(
+                    "Search endpoint '" + path + "' supports only GET and POST, got " + method);
+        }
+        this.httpMethod = method;
+    }
+
+    HttpMethod httpMethod() {
+        return httpMethod;
     }
 
     @Override
@@ -136,6 +177,14 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         }
     }
 
+    /**
+     * A declarative paging parameter: a paging token ({@code pageSize}, {@code page}, or
+     * {@code offset}) mapped onto the request at the given location (query / header / body)
+     * under the given name (which defaults to the token).
+     */
+    public record PagingParameter(String token, String location, String name) {
+    }
+
     public record GroovyPagingSupport(Closure<?> prototype) implements PagingHandler {
         @Override
         public void handlePaging(HttpRequestSpecification request, PagingInfo pagingInfo) {
@@ -165,6 +214,41 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     }
 
     public EndpointBasedSearchHandler<BF, OF> build() {
+        if (objectExtractorPath != null) {
+            // Fail fast at configuration time: an invalid path expression must surface with the
+            // declared source location, not on the first search request.
+            objectExtractorPath.actual();
+        }
+        if (!declarativePagingParameters.isEmpty() && pagingSupport != null) {
+            throw new ConfigurationException(
+                    "Search endpoint '" + path + "' declares both a pagingSupport closure and declarative paging parameters");
+        }
+        // Note: pageSize alone composes with a pagingSupport closure (it feeds the closure's
+        // paging.pageSize); only the declarative parameters list is an alternative to the closure.
+        if (!declarativePagingParameters.isEmpty()) {
+            for (var parameter : declarativePagingParameters) {
+                if (!"pageSize".equals(parameter.token()) && !"page".equals(parameter.token())
+                        && !"offset".equals(parameter.token())) {
+                    throw new ConfigurationException(
+                            "Unknown paging token '" + parameter.token() + "' in search endpoint '" + path
+                                    + "' (expected 'pageSize', 'page', or 'offset')");
+                }
+                if (!"query".equals(parameter.location()) && !"header".equals(parameter.location())
+                        && !"body".equals(parameter.location())) {
+                    throw new ConfigurationException(
+                            "Unknown paging location '" + parameter.location() + "' in search endpoint '" + path
+                                    + "' (expected 'query', 'header', or 'body')");
+                }
+                if ("body".equals(parameter.location()) && httpMethod != HttpMethod.POST) {
+                    throw new ConfigurationException(
+                            "Paging parameter '" + parameter.name() + "' of search endpoint '" + path
+                                    + "' is mapped onto the request body, which requires the endpoint httpOperation to be POST");
+                }
+            }
+            if (pagingSupport == null) {
+                pagingSupport = new DeclarativePagingHandler(declarativePagingParameters);
+            }
+        }
         if (emptyFilterSupported == null && filterMappers.isEmpty()) {
             // No specific filter mappers were specified and empty filter support was not specified explicitly
             // so we assume that empty filter is supported

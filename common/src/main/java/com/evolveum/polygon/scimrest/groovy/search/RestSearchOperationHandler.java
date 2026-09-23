@@ -18,6 +18,11 @@ import java.util.function.Function;
 // FIXME Find proper name
 public interface RestSearchOperationHandler<BF, OF> {
 
+    /**
+     * The default number of remote objects requested per page.
+     */
+    int DEFAULT_PAGE_SIZE = 25;
+
     Iterable<OF> extractRemoteObject(HttpResponse<BF> response);
 
     void addUriAndPaging(HttpRequestSpecification requestBuilder, int currentPage, int pageLimit);
@@ -30,12 +35,20 @@ public interface RestSearchOperationHandler<BF, OF> {
 
     Class<?> responseType();
 
+    /**
+     * The number of remote objects requested per page; defaults to {@link #DEFAULT_PAGE_SIZE}.
+     */
+    default int pageLimit() {
+        return DEFAULT_PAGE_SIZE;
+    }
+
     class Builder<BF, OF> {
 
         private Function<HttpResponse<BF>, Iterable<OF>> extractor = null;
         private BiConsumer<HttpRequestSpecification, PagingInfo> pagingConsumer = (req, resp) -> {};
         private TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
         private Class<?> responseType = JSONObject.class;
+        private int pageLimit = DEFAULT_PAGE_SIZE;
 
         public Builder<BF, OF> remoteObjectExtractor(Function<HttpResponse<BF>, Iterable<OF>> extractor) {
             this.extractor = extractor;
@@ -53,6 +66,14 @@ public interface RestSearchOperationHandler<BF, OF> {
 
         public Builder<BF,OF> totalCountExtractor(TotalCountExtractor<BF> totalCountExtractor) {
             this.totalCountExtractor = totalCountExtractor;
+            return this;
+        }
+
+        public Builder<BF, OF> pageLimit(int pageLimit) {
+            if (pageLimit < 1) {
+                throw new IllegalArgumentException("Page limit must be at least 1, got " + pageLimit);
+            }
+            this.pageLimit = pageLimit;
             return this;
         }
 
@@ -77,6 +98,11 @@ public interface RestSearchOperationHandler<BF, OF> {
                 @Override
                 public Class<?> responseType() {
                     return responseType;
+                }
+
+                @Override
+                public int pageLimit() {
+                    return pageLimit;
                 }
             };
         }

@@ -11,6 +11,7 @@ import com.evolveum.polygon.scimrest.groovy.endpoint.QueryRequestBuilderImpl;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
+import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.impl.rest.RestPagingAwareObjectRetriever;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.scimrest.spi.SearchEndpointHandler;
@@ -30,20 +31,24 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
     private final ResponseObjectExtractor<BF,OF> objectExtractor;
     private final PagingHandler pagingSupport;
     private final String apiEndpoint;
+    private final HttpMethod httpMethod;
     private final Set<FilterToRequestMapper> filterMappers;
     private final Class<?> responseFormat;
     private final TotalCountExtractor<BF> totalCountExtractor;
     private final QueryRequestBuilderImpl queryRequestBuilder;
+    private final int pageLimit;
 
     public EndpointBasedSearchHandler(EndpointBasedSearchBuilder<BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
         this.objectClass = builder.objectClass;
         this.apiEndpoint = builder.path;
         this.objectExtractor = builder.objectExtractor;
         this.pagingSupport = builder.pagingSupport;
+        this.httpMethod = builder.httpMethod();
         this.filterMappers = new HashSet<>(filterMappers);
         this.responseFormat = builder.responseFormat;
         this.totalCountExtractor = builder.totalCountExtractor;
         this.queryRequestBuilder = builder.queryRequest;
+        this.pageLimit = builder.pageLimit();
     }
 
     @Override
@@ -62,7 +67,12 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
         return RestSearchOperationHandler.<BF,OF>builder()
                 .addRequestUri((request, paging) -> {
                     request.apiEndpoint(apiEndpoint);
+                    request.httpMethod(httpMethod);
                     acceptContentTypes.forEach(x->request.header("Accept", x));
+                    if (queryRequestBuilder.contentType != null) {
+                        request.header("Content-Type", queryRequestBuilder.contentType);
+                    }
+                    queryRequestBuilder.bodyParameters.forEach(request::bodyParameter);
                     mapper.mapToRequest(request, filter);
                     if (pagingSupport != null) {
                         pagingSupport.handlePaging(request, paging);
@@ -71,6 +81,7 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
                 .remoteObjectExtractor(objectExtractor::extractObjects)
                 .totalCountExtractor(this.totalCountExtractor)
                 .responseFormat(responseFormat)
+                .pageLimit(pageLimit)
                 .build();
     }
 

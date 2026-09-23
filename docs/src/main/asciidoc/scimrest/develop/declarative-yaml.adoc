@@ -118,24 +118,33 @@ objectClasses:
   User:
     search:
       endpoints:
-        - path: /users/search
-          responseFormat: JSON_OBJECT
-          emptyFilterSupported: true
-          objectExtractor: |
-            response.body().get("users")
-          pagingSupport: |
-            request.queryParameter("size", paging.pageSize)
-                   .queryParameter("offset", paging.pageOffset)
-          supportedFilters:
+         - path: /users/search
+           method: POST
+           responseFormat: JSON_OBJECT
+           emptyFilterSupported: true
+           objectExtractor:
+             value: $.users
+           # objectExtractor: |
+           #   response.body().get("users")  # Groovy alternative for arbitrary logic
+           pagingSupport:
+             parameters:
+               pageSize:
+                 in: query
+                 name: size
+               page:
+                 in: query
+           # pagingSupport: |
+           #   request.queryParameter("size", paging.pageSize)  # Groovy alternative
+           supportedFilters:
             - spec: attribute("login").eq().anySingleValue()
               request: |
                 request.queryParameter("login", value)
-        - path: /users/{id}
-          singleResult: true
-          supportedFilters:
-            - spec: attribute("id").eq().anySingleValue()
-              request: |
-                request.pathParameter("id", value)
+         - path: /users/{id}
+           singleResult: true
+           supportedFilters:
+             - spec: attribute("id").eq().anySingleValue()
+               request: |
+                 request.pathParameter("id", value)
       attributeResolvers:
         - attribute: team
           resolutionType: PER_OBJECT
@@ -150,16 +159,19 @@ objectClasses:
 ----
 
 `search.endpoints[].path`::
-  The search / list endpoint path (required; search endpoints use GET)
+  The search / list endpoint path (required)
+
+`search.endpoints[].method`::
+  The HTTP method of the search endpoint: `GET` (default) or `POST` — for APIs that search via a POST request with a (form or JSON) body
 
 `search.endpoints[].responseFormat`::
   Whether the response is a JSON array or a JSON object: `JSON_ARRAY` / `JSON_OBJECT`; default `JSON_OBJECT`
 
 `search.endpoints[].objectExtractor`::
-  Groovy block extracting the list of objects from the response (variable `response`); the default handles a JSON array or a single object
+  How the list of objects is extracted from the response, in one of two forms. A *path mapping* `{ type, value }` (the same `{ type, value }` shape as the attribute `path` keys) resolves a JSON Pointer (`/_embedded/elements`) or a basic JSONPath (`$._embedded.elements`) against the response body — a resolved array yields its elements, a resolved object yields the single object, and a missing path yields no objects; `type` is case-insensitive and defaults to `JSON_PATH` (so `value:` alone is a JSONPath expression). A *Groovy block* (variable `response`) keeps arbitrary extraction logic. The default (no `objectExtractor`) handles a JSON array or a single object
 
 `search.endpoints[].pagingSupport`::
-  Groovy block adding paging parameters (variables `request`, `paging` with `pageSize` and `pageOffset`)
+  How paging information is mapped onto the request, in one of two forms. A *mapping* declares the paging declaratively: `pageSize` (the requested page size, default 25) and/or `parameters` — a mapping of paging tokens to where they are sent. Each token entry takes `in` — `query`, `header`, or `body` (a request body; requires `method: POST`) — and an optional `name` (the request parameter name, defaulting to the token). The tokens are `pageSize` (the requested page size), `page` (the page number, starting with 1), and `offset` (the zero-based object offset, `(page - 1) * pageSize`). Example: `parameters: { pageSize: { in: query, name: size }, page: { in: query } }`. A *Groovy block* (variables `request`, `paging` with `pageSize` and `pageOffset`) keeps arbitrary mapping logic. The two forms are mutually exclusive; `pageSize` alone (without `parameters`) composes with the Groovy form by feeding its `paging.pageSize`
 
 `search.endpoints[].singleResult`::
   The endpoint returns exactly one object

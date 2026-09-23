@@ -50,6 +50,19 @@ public class JdkHttpRequestConverter implements HttpRequestConverter<HttpRequest
         }
 
         byte[] body = dto.getBody();
+        var bodyObject = dto.getBodyObject();
+        if (bodyObject != null) {
+            if (body != null) {
+                throw new ConfigurationException(
+                        "Request has both a raw body and JSON body parameters — use only one");
+            }
+            body = bodyObject.toString().getBytes(StandardCharsets.UTF_8);
+            boolean contentTypeSet = dto.getHeaders().keySet().stream()
+                    .anyMatch(name -> name.equalsIgnoreCase("Content-Type"));
+            if (!contentTypeSet) {
+                requestBuilder.header("Content-Type", "application/json");
+            }
+        }
         HttpRequest.BodyPublisher bodyPublisher = body != null
                 ? HttpRequest.BodyPublishers.ofByteArray(body)
                 : HttpRequest.BodyPublishers.noBody();

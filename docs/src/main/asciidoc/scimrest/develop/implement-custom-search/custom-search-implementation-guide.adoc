@@ -72,6 +72,14 @@ objectExtractor {
 The `response.body()` is a Java `org.json.JSONObject` that represents
 the parsed JSON response.
 
+If the list lives at a fixed location, a path instead of a closure keeps the
+configuration declarative: `objectExtractor('$._embedded.elements')` (basic
+JSONPath, single quotes because Groovy double-quoted strings interpolate `$`)
+or an explicit `{ type, value }` path — JSON Pointer
+(`/_embedded/elements`) or JSONPath, as in the attribute `path` keys. A
+resolved array yields its elements, a resolved object yields the single
+object, and a missing path yields no objects.
+
 ==== Paging support
 
 Configures pagination for the search request.

@@ -10,6 +10,7 @@ import com.evolveum.polygon.conndev.yaml.decl.GroovySyntaxChecker;
 import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
 import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
+import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchOperationBuilder;
 
@@ -17,9 +18,11 @@ import java.util.ArrayList;
 
 /**
  * Binds a search {@code endpoints:} block. Each list item names an endpoint by its required
- * {@code path}; the item's remaining keys ({@code responseFormat}, {@code objectExtractor},
- * {@code pagingSupport}, {@code singleResult}, {@code emptyFilterSupported}, {@code supportedFilters})
- * are bound onto the {@code RestSearchEndpointBuilder} returned by {@code endpoint(path)}.
+ * {@code path} (and optional {@code method} — {@code GET} by default, {@code POST} for
+ * body-based search APIs); the item's remaining keys ({@code responseFormat},
+ * {@code objectExtractor}, {@code pagingSupport}, {@code singleResult}, {@code emptyFilterSupported},
+ * {@code supportedFilters}) are bound onto the {@code RestSearchEndpointBuilder} returned by
+ * {@code endpoint(path)}.
  */
 public class SearchEndpointsHandler implements CustomYamlHandler {
 
@@ -31,9 +34,13 @@ public class SearchEndpointsHandler implements CustomYamlHandler {
         }
         for (var item : value.elements()) {
             var path = requireScalar(item, "path");
+            var method = optionalScalar(item, "method");
             var endpoint = search.endpoint(path);
+            if (method != null) {
+                endpoint.httpOperation(HttpMethod.valueOf(method.toUpperCase()));
+            }
             var rest = new ArrayList<>(item.entries());
-            rest.removeIf(e -> e.key().equals("path"));
+            rest.removeIf(e -> e.key().equals("path") || e.key().equals("method"));
             binder.bindEntries(rest, endpoint);
         }
     }
@@ -47,6 +54,11 @@ public class SearchEndpointsHandler implements CustomYamlHandler {
         return node.text();
     }
 
+    private static String optionalScalar(LocatedNode map, String key) {
+        var node = map.get(key);
+        return (node != null && node.isValue()) ? node.text() : null;
+    }
+
     @Override
     public void checkGroovySyntax(LocatedNode value, String path, GroovySyntaxChecker checker) {
         if (value == null || value.isNull()) {
@@ -55,7 +67,7 @@ public class SearchEndpointsHandler implements CustomYamlHandler {
         int i = 0;
         for (var item : value.elements()) {
             var rest = new ArrayList<>(item.entries());
-            rest.removeIf(e -> e.key().equals("path"));
+            rest.removeIf(e -> e.key().equals("path") || e.key().equals("method"));
             checker.checkFragments(rest, RestSearchEndpointBuilder.class, path + "[" + i + "]");
             i++;
         }
