@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Set;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -45,7 +44,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -385,7 +383,7 @@ public class ScimFlattenComplexAttributesCrudTest extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(postRequestedFor(urlEqualTo(USERS_ENDPOINT)));
         assertEquals(requests.size(), 1, "exactly one create request expected");
-        var body = parse(requests.get(0));
+        var body = parse(requests.getFirst());
 
         // flat attributes are deflattened into the nested 'name' object
         assertEquals(body.at("/name/formatted").asText(), "John Doe");
@@ -424,7 +422,7 @@ public class ScimFlattenComplexAttributesCrudTest extends WireMockTestSupport {
 
         var requests = wireMockServer.findAll(putRequestedFor(urlEqualTo(USER_BY_ID_ENDPOINT)));
         assertEquals(requests.size(), 1, "exactly one update request expected");
-        var body = parse(requests.get(0));
+        var body = parse(requests.getFirst());
 
         assertEquals(body.at("/name/formatted").asText(), "Jane Doe");
         assertEquals(body.get("id").asText(), "1");

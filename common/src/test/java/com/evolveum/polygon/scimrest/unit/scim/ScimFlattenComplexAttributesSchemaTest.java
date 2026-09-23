@@ -39,7 +39,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 /**
  * Schema-level behavior of the per-family {@code SCIM Mapping} flatten rules: the single-valued
