@@ -10,8 +10,10 @@ import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnecto
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.scimrest.groovy.schema.SchemaDefinitionLoader;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.testng.annotations.Test;
 
+import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -48,5 +50,30 @@ public class SchemaDefinitionLoaderTest {
         var objectClass = loader.build().objectClass("TestUser");
         assertNotNull(objectClass);
         assertTrue(objectClass.attributeFromProtocolName("login").connId().isRequired());
+    }
+
+    /**
+     * A YAML schema definition binds onto the same live builder another source (e.g. SCIM
+     * auto-discovery) already populated - so a same-named object class merges attribute by
+     * attribute instead of producing a second, colliding definition.
+     */
+    @Test
+    public void yamlDefinitionMergesIntoObjectClassFromAnotherSource() {
+        var schemaBuilder = new RestSchemaBuilderImpl(AbstractGroovyRestConnector.class, null);
+        schemaBuilder.objectClass("TestUser").attribute("email").connId().name("email").type(String.class);
+
+        var loader = new SchemaDefinitionLoader(new GroovyContext(), schemaBuilder);
+        loader.loadFromResource("/yaml/TestUser.native.schema.yaml");
+
+        var testUserClasses = loader.build().connIdSchema().getObjectClassInfo().stream()
+                .filter(oci -> "TestUser".equals(oci.getType()))
+                .toList();
+        assertEquals(1, testUserClasses.size());
+
+        var nativeNames = testUserClasses.get(0).getAttributeInfo().stream()
+                .map(AttributeInfo::getNativeName)
+                .toList();
+        assertTrue(nativeNames.contains("email"));
+        assertTrue(nativeNames.contains("login"));
     }
 }

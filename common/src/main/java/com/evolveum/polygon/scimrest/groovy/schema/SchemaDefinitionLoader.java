@@ -6,7 +6,6 @@
  */
 package com.evolveum.polygon.scimrest.groovy.schema;
 
-import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.conndev.yaml.ScriptResources;
@@ -22,11 +21,12 @@ import java.nio.charset.StandardCharsets;
 /**
  * Schema definition loader dispatching between the two schema front-ends: Groovy definitions go to
  * {@link GroovySchemaLoader} directly. YAML definitions ({@code *.schema.yaml}/{@code
- * *.schema.yml}) are parsed by the conndev {@link YamlSchemaLoader} onto their own throwaway,
- * deliberately context-less builder - so any context-dependent construct fails fast during loading,
- * the same guarantee Groovy validation already has - and merged into the shared builder immediately,
- * before {@link #loadFromResource} returns. A referenced Groovy definition missing from the bundle
- * falls back to the YAML document of the same name ({@link ScriptResources}).
+ * *.schema.yml}) are parsed by the conndev {@link YamlSchemaLoader} onto the same live shared
+ * builder the Groovy DSL populates, so an object class named by both a YAML script and, say, SCIM
+ * auto-discovery merges attribute by attribute (last declaration wins per attribute) instead of
+ * producing two definitions of the same name - matching how connector-sql's {@code
+ * SqlSchemaDefinitionLoader} already does it. A referenced Groovy definition missing from the
+ * bundle falls back to the YAML document of the same name ({@link ScriptResources}).
  * <p>
  * Both branches are symmetric from the caller's side: one {@link #loadFromResource} call per
  * resource is enough regardless of format, exactly as if every script had been Groovy - there is no
@@ -36,7 +36,7 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
 
     // GroovySchemaLoader's own schemaBuilder field is package-private (conndev's package), so it's
     // not visible here even though we extend it - keep our own reference to the same instance
-    // instead, for merging YAML definitions into it below.
+    // instead, for binding the YAML loader onto it below.
     private final RestSchemaBuilderImpl schemaBuilder;
 
     public SchemaDefinitionLoader(GroovyContext context, RestSchemaBuilderImpl schemaBuilder) {
@@ -61,20 +61,10 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
             // packaging/configuration error, not a caller-input error.
             throw new ConfigurationException("YAML schema definition resource not found: " + resource);
         }
-        // A fresh, throwaway builder per file - deliberately built without a runtime context, so
-        // any context-dependent construct fails fast during loading. It's a live
-        // RestSchemaBuilderImpl (not the inert conndev BaseSchemaBuilder), so the definitions carry
-        // the same real SCIM/REST attribute mappings a Groovy-declared object class would.
-        var yamlBuilder = new RestSchemaBuilderImpl(schemaBuilder.connectorClass(), ContextLookup.none());
-        var yamlLoader = new YamlSchemaLoader(yamlBuilder);
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
-            yamlLoader.load(reader, resource);
+            new YamlSchemaLoader(schemaBuilder).load(reader, resource);
         } catch (IOException e) {
             throw new ConfigurationException("Couldn't read YAML schema definition " + resource + ": " + e.getMessage(), e);
-        }
-        RestSchema parsed = (RestSchema) yamlLoader.build();
-        for (var definition : parsed.objectClasses()) {
-            schemaBuilder.defineObjectClass(definition);
         }
     }
 
