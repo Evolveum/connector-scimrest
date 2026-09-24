@@ -9,8 +9,8 @@ package com.evolveum.polygon.scimrest.auth.method.oauth2.jwtbearer;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 
@@ -83,7 +83,7 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
     }
 
     protected static class OAuth2RestConnector
-            extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
+            extends AbstractGroovyRestConnector {
 
         private final String script;
 
@@ -107,7 +107,7 @@ abstract class AbstractOAuth2JwtBearerTests extends WireMockTestSupport {
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         }
     }
 

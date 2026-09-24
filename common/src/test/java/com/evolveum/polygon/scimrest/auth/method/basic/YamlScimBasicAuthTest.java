@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.auth.method.basic;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.groovy.impl.ManifestBasedConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
@@ -91,7 +92,7 @@ public class YamlScimBasicAuthTest extends WireMockTestSupport {
             new YamlRestHandlerLoader(builder, getConfiguration().groovyContext()).loadFromString(yaml);
         }
 
-        @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) { }
+        @Override protected void initializeObjectClassHandler(GroovyScriptLoader builder) { }
     }
 
     private static class ScimConfig extends BaseGroovyConnectorConfiguration

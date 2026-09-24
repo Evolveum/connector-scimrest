@@ -152,7 +152,7 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
             populateFilterKeys(entry, filter);
         }
 
-        entry.set(fieldName, values.size() == 1 ? values.get(0) : root.arrayNode().addAll(values));
+        entry.set(fieldName, values.size() == 1 ? values.getFirst() : root.arrayNode().addAll(values));
     }
 
     /** Stamps the discriminator keys of the filter onto a freshly created array entry. */

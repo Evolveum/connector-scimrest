@@ -8,6 +8,8 @@ package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
+import jakarta.ws.rs.client.ResponseProcessingException;
+import jakarta.ws.rs.core.Response;
 import org.apache.hc.client5.http.ConnectTimeoutException;
 import org.apache.hc.core5.http.ConnectionClosedException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
@@ -88,7 +90,29 @@ public final class ScimExceptionMapper {
             }
             t = t.getCause();
         }
-        return new ConnectorException("SCIM request to " + uri + " failed: " + HttpExceptionMapper.causeMessage(e), e);
+        return new ConnectorException(
+                "SCIM request to " + uri + " failed" + responseDetail(e) + ": " + HttpExceptionMapper.causeMessage(e), e);
+    }
+
+    /**
+     * A short " (HTTP <status>, <n> bytes, <content-type>)" suffix describing the actual response
+     * {@code e} carries — recovered from a {@link ResponseProcessingException} in its cause chain
+     * (thrown when a response was received but its body didn't match the expected shape). The SDK
+     * builds every request itself, so the exact URI it targeted isn't available here; the response
+     * it got back is, via the standard {@link Response} API, and is often the more telling fact
+     * (e.g. a response far bigger than the endpoint should ever return).
+     *
+     * @return the suffix, or {@code ""} when {@code e} carries no such response
+     */
+    private static String responseDetail(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof ResponseProcessingException rpe && rpe.getResponse() != null) {
+                var response = rpe.getResponse();
+                return " (HTTP " + response.getStatus() + ", " + response.getLength() + " bytes, "
+                        + response.getMediaType() + ")";
+            }
+        }
+        return "";
     }
 
     /**

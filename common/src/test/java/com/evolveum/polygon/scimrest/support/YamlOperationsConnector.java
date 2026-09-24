@@ -7,8 +7,8 @@
 package com.evolveum.polygon.scimrest.support;
 
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.yaml.YamlRestHandlerLoader;
 
@@ -21,7 +21,7 @@ import java.util.List;
  * wizard file convention), resource paths go through the standard
  * {@code HandlerDefinitionBuilder#loadFromResource} dispatch — including the Groovy → YAML fallback.
  */
-public class YamlOperationsConnector extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
+public class YamlOperationsConnector extends AbstractGroovyRestConnector {
 
     private String nativeSchemaScript = AbstractCrudConnectorTest.NATIVE_SCHEMA_SCRIPT;
     private String connIdSchemaScript = AbstractCrudConnectorTest.CONNID_SCHEMA_SCRIPT;
@@ -71,9 +71,9 @@ public class YamlOperationsConnector extends AbstractGroovyRestConnector<BaseRes
     }
 
     @Override
-    protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+    protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         groovyOperationScripts.forEach(builder::loadFromString);
-        var loader = new YamlRestHandlerLoader(builder, getConfiguration().groovyContext());
+        var loader = new YamlRestHandlerLoader((GroovyRestHandlerBuilder) builder, getConfiguration().groovyContext());
         yamlDocuments.forEach(loader::loadFromString);
         operationResources.forEach(builder::loadFromResource);
     }

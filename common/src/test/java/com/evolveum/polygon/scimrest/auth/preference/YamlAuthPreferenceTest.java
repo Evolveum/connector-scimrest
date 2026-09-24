@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.auth.preference;
 
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.groovy.impl.ManifestBasedConnector;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
@@ -103,7 +104,7 @@ public class YamlAuthPreferenceTest extends WireMockTestSupport {
             new YamlRestHandlerLoader(builder, getConfiguration().groovyContext()).loadFromString(yaml);
         }
 
-        @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) { }
+        @Override protected void initializeObjectClassHandler(GroovyScriptLoader builder) { }
     }
 
     private static class Config extends BaseTestConfiguration

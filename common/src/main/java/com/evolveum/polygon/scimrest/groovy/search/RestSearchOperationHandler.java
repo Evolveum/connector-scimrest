@@ -19,6 +19,11 @@ import java.util.function.Function;
 // FIXME Find proper name
 public interface RestSearchOperationHandler<BF, OF> {
 
+    /**
+     * The default number of remote objects requested per page.
+     */
+    int DEFAULT_PAGE_SIZE = 25;
+
     Iterable<OF> extractRemoteObject(HttpResponse<BF> response);
 
     void addUriAndPaging(HttpRequestSpecification requestBuilder, int currentPage, int pageLimit);
@@ -33,6 +38,18 @@ public interface RestSearchOperationHandler<BF, OF> {
 
     Class<?> responseType();
 
+    /**
+     * The number of remote objects requested per page; defaults to {@link #DEFAULT_PAGE_SIZE}.
+     */
+    default int pageLimit() {
+        return DEFAULT_PAGE_SIZE;
+    }
+
+    /**
+     * The maximum number of remote objects the endpoint returns per real page, or {@code null}
+     * when the endpoint has no such cap. Used to assemble larger logical pages from several
+     * real pages.
+     */
     Integer responsePageLimit();
 
     class Builder<BF, OF> {
@@ -43,6 +60,7 @@ public interface RestSearchOperationHandler<BF, OF> {
         private TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
         private Class<?> responseType = JSONObject.class;
         private Integer responsePageLimit = null;
+        private int pageLimit = DEFAULT_PAGE_SIZE;
 
         public Builder<BF, OF> remoteObjectExtractor(Function<HttpResponse<BF>, Iterable<OF>> extractor) {
             this.extractor = extractor;
@@ -71,6 +89,14 @@ public interface RestSearchOperationHandler<BF, OF> {
 
         public Builder<BF, OF> responsePageLimit(Integer responsePageLimit) {
             this.responsePageLimit = responsePageLimit;
+            return this;
+        }
+
+        public Builder<BF, OF> pageLimit(int pageLimit) {
+            if (pageLimit < 1) {
+                throw new IllegalArgumentException("Page limit must be at least 1, got " + pageLimit);
+            }
+            this.pageLimit = pageLimit;
             return this;
         }
 
@@ -105,6 +131,11 @@ public interface RestSearchOperationHandler<BF, OF> {
                 @Override
                 public Integer responsePageLimit() {
                     return responsePageLimit;
+                }
+
+                @Override
+                public int pageLimit() {
+                    return pageLimit;
                 }
             };
         }

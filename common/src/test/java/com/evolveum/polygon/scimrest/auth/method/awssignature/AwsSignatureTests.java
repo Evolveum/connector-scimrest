@@ -9,8 +9,8 @@ package com.evolveum.polygon.scimrest.auth.method.awssignature;
 import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
@@ -214,11 +214,11 @@ public class AwsSignatureTests extends WireMockTestSupport {
 
     // --- infrastructure ---
 
-    private AbstractGroovyRestConnector<?> createConnector(String script) {
+    private AbstractGroovyRestConnector createConnector(String script) {
         return createConnector(script, null);
     }
 
-    private AbstractGroovyRestConnector<?> createConnector(String script, String sessionToken) {
+    private AbstractGroovyRestConnector createConnector(String script, String sessionToken) {
         var config = new AwsTestConfig(wireMockServer.port(), API_ENDPOINT,
                 ACCESS_KEY, new GuardedString(SECRET_KEY.toCharArray()), REGION, SERVICE);
         if (sessionToken != null) {
@@ -257,7 +257,7 @@ public class AwsSignatureTests extends WireMockTestSupport {
         void setSessionToken(GuardedString t)    { this.sessionToken = t; }
     }
 
-    static class AwsTestConnector extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
+    static class AwsTestConnector extends AbstractGroovyRestConnector {
         private final String script;
 
         AwsTestConnector(String script) {
@@ -272,6 +272,6 @@ public class AwsSignatureTests extends WireMockTestSupport {
             if (script != null) builder.loadFromString(script);
         }
 
-        @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {}
+        @Override protected void initializeObjectClassHandler(GroovyScriptLoader builder) {}
     }
 }

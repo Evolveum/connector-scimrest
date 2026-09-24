@@ -10,6 +10,7 @@ import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.conndev.spi.ObjectCreateOperation;
 import com.evolveum.polygon.conndev.spi.ObjectSearchOperation;
@@ -46,7 +47,7 @@ public class ObjectClassCaseMergeTest {
         @Override public Boolean getTrustAllCertificates() { return true; }
     }
 
-    public static class TestConnector extends AbstractGroovyRestConnector<TestConfiguration> {
+    public static class TestConnector extends AbstractGroovyRestConnector {
         @Override
         protected void initializeSchema(GroovySchemaLoader loader) {
             loader.load(SCHEMA_SCRIPT);
@@ -56,7 +57,7 @@ public class ObjectClassCaseMergeTest {
         protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             builder.loadFromString(HANDLER_SCRIPT);
         }
     }

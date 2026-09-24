@@ -85,6 +85,19 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
 
         @Override
         QueryRequestBuilder<I> accept(String... contentType);
+
+        /**
+         * Sets the {@code Content-Type} of the (usually POST) search request.
+         */
+        QueryRequestBuilder<I> contentType(String contentType);
+
+        /**
+         * Adds a static field to the (usually POST) search request's JSON body.
+         *
+         * @param name the JSON field name
+         * @param value the field value ({@code null} adds nothing)
+         */
+        QueryRequestBuilder<I> bodyParameter(String name, Object value);
     }
 
     interface RequestHeadersBuilder<I> extends GroovyContentTypeMixin {

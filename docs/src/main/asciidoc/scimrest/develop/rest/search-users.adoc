@@ -27,10 +27,12 @@ objectClass("User") {
 Where:
 
 * `endpoint` — the method takes the search / list endpoint as an argument.
-* `objectExtractor` — optional; extracts the list of objects from `response.body()` (JSON). The default extractor accepts a JSON array (its elements) or a single JSON object.
+* `objectExtractor` — optional; extracts the list of objects from `response.body()` (JSON). Two forms are accepted: a Groovy closure (the example above), or an attribute path — `objectExtractor('$._embedded.elements')` (basic JSONPath; single quotes, since Groovy double-quoted strings interpolate `$`) or `objectExtractor(AttributePathDeclaration)` for an explicit `{ type, value }` path (JSON Pointer or JSONPath). A resolved array yields its elements, a resolved object yields the single object, and a missing path yields no objects. The default extractor accepts a JSON array (its elements) or a single JSON object.
 * `pagingSupport` — optional; specifies paging information on the `request`. The paging information is available in the `paging` object:
 ** `pageSize` — the size of the requested page
 ** `pageOffset` — the page to be returned (the framework pages through the results starting with the first page)
++
+Instead of a closure, paging can be declared with `pagingParameter(token, location)` (or `pagingParameter(token, location, name)` to name the request parameter explicitly), which maps a paging token onto the request per page: the token is `pageSize`, `page` (the page number, starting with 1), or `offset` (the zero-based object offset, `(page - 1) * pageSize`), and `location` is `query`, `header`, or `body` (a request body; requires `httpOperation POST`). E.g. `pagingParameter("pageSize", "query", "size")` and `pagingParameter("page", "query")`. `pageSize(size)` sets the requested page size (default 25).
 * `request` — the object used to customize the request. Use `queryParameter(name, value)` to add HTTP query parameters to the request.
 
 == The same search in YAML
@@ -44,11 +46,15 @@ objectClasses:
     search:
       endpoints:
         - path: /users/search
-          objectExtractor: |
-            response.body().get("users")
-          pagingSupport: |
-            request.queryParameter("size", paging.pageSize)
-                   .queryParameter("offset", paging.pageOffset)
+          objectExtractor:
+            value: $.users
+          pagingSupport:
+            parameters:
+              pageSize:
+                in: query
+                name: size
+              page:
+                in: query
 ----
 
 See xref:../declarative-yaml.adoc[declarative YAML] for the full reference.

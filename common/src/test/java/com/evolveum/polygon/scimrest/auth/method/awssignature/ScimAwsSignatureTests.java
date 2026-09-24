@@ -11,6 +11,7 @@ import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
@@ -111,7 +112,7 @@ public class ScimAwsSignatureTests extends WireMockTestSupport {
                         .withBody(EMPTY_LIST)));
     }
 
-    private AbstractGroovyRestConnector<?> createScimConnector(String script) {
+    private AbstractGroovyRestConnector createScimConnector(String script) {
         var config = new ScimAwsConfig(wireMockServer.port(), ACCESS_KEY,
                 new GuardedString(SECRET_KEY.toCharArray()), REGION, SERVICE);
         var connector = new ScimAwsConnector(script);
@@ -144,7 +145,7 @@ public class ScimAwsSignatureTests extends WireMockTestSupport {
         @Override public GuardedString getScimAwsSessionToken() { return null; }
     }
 
-    static class ScimAwsConnector extends AbstractGroovyRestConnector<BaseGroovyConnectorConfiguration> {
+    static class ScimAwsConnector extends AbstractGroovyRestConnector {
         private final String script;
 
         ScimAwsConnector(String script) {
@@ -159,6 +160,6 @@ public class ScimAwsSignatureTests extends WireMockTestSupport {
             if (script != null) builder.loadFromString(script);
         }
 
-        @Override protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {}
+        @Override protected void initializeObjectClassHandler(GroovyScriptLoader builder) {}
     }
 }

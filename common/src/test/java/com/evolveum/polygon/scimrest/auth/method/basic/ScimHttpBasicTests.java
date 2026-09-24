@@ -168,7 +168,7 @@ public class ScimHttpBasicTests extends WireMockTestSupport {
                         .withBody(EMPTY_LIST_RESPONSE)));
     }
 
-    private AbstractGroovyRestConnector<?> createConnector(String script,
+    private AbstractGroovyRestConnector createConnector(String script,
                                                            String username, GuardedString password) {
         var config = new ScimHttpBasicConfig(wireMockServer.port(), username, password);
         var connector = new ScriptConnector(script);

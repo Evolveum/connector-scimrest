@@ -10,6 +10,7 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
 import org.identityconnectors.common.security.GuardedString;
@@ -161,7 +162,7 @@ public class ScimSearchFilterTranslationTest extends WireMockTestSupport {
         }
     }
 
-    private static class ScriptConnector extends AbstractGroovyRestConnector<TestConfiguration> {
+    private static class ScriptConnector extends AbstractGroovyRestConnector {
 
         @Override
         protected void initializeSchema(GroovySchemaLoader loader) {
@@ -172,7 +173,7 @@ public class ScimSearchFilterTranslationTest extends WireMockTestSupport {
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         }
     }
 
@@ -328,7 +329,7 @@ public class ScimSearchFilterTranslationTest extends WireMockTestSupport {
         assertEquals(requests.size(), 1);
     }
 
-    private static List<ConnectorObject> search(AbstractGroovyRestConnector<?> connector, Filter filter) {
+    private static List<ConnectorObject> search(AbstractGroovyRestConnector connector, Filter filter) {
         var results = new ArrayList<ConnectorObject>();
         connector.executeQuery(new ObjectClass("User"), filter, o -> {
             results.add((ConnectorObject) o);

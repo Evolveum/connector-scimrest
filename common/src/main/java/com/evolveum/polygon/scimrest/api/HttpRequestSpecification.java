@@ -8,6 +8,8 @@ package com.evolveum.polygon.scimrest.api;
 
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.HttpVersion;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +45,7 @@ public class HttpRequestSpecification {
     private final Map<String, Object> pathParameters = new LinkedHashMap<>();
     private final Map<String, List<String>> headers = new LinkedHashMap<>();
     private byte[] body;
+    private ObjectNode bodyObject;
     private Duration timeout;
     private HttpVersion version;
     private boolean expectContinue = false;
@@ -60,6 +63,7 @@ public class HttpRequestSpecification {
         this.pathParameters.putAll(source.pathParameters);
         source.headers.forEach((k, v) -> this.headers.put(k, new ArrayList<>(v)));
         this.body = source.body != null ? Arrays.copyOf(source.body, source.body.length) : null;
+        this.bodyObject = source.bodyObject != null ? (ObjectNode) source.bodyObject.deepCopy() : null;
         this.timeout = source.timeout;
         this.version = source.version;
         this.expectContinue = source.expectContinue;
@@ -129,6 +133,47 @@ public class HttpRequestSpecification {
     public HttpRequestSpecification body(String body) {
         this.body = body != null ? body.getBytes(StandardCharsets.UTF_8) : null;
         return this;
+    }
+
+    /**
+     * Adds a single field to the request's JSON body object.
+     *
+     * <p>Used by declarative request customization (e.g. paging or filter parameters mapped into
+     * the body of a POST request). The fields accumulate in declaration order; the body is
+     * serialized as JSON by the request converter, which sets {@code Content-Type: application/json}
+     * unless a content type was already configured. A raw {@link #body(byte[])} and body
+     * parameters are mutually exclusive.
+     *
+     * @param name the JSON field name
+     * @param value the field value ({@code null} adds nothing; strings, numbers and booleans map
+     *        to JSON values, anything else is stringified)
+     * @return this request specification
+     */
+    public HttpRequestSpecification bodyParameter(String name, Object value) {
+        if (value == null) {
+            return this;
+        }
+        if (bodyObject == null) {
+            bodyObject = new JsonNodeFactory().objectNode();
+        }
+        var factory = new JsonNodeFactory();
+        bodyObject.set(name, switch (value) {
+            case String s -> factory.stringNode(s);
+            case Integer i -> factory.numberNode(i);
+            case Long l -> factory.numberNode(l);
+            case Double d -> factory.numberNode(d);
+            case Boolean b -> factory.booleanNode(b);
+            default -> factory.stringNode(String.valueOf(value));
+        });
+        return this;
+    }
+
+    /**
+     * Returns the JSON body object accumulated via {@link #bodyParameter(String, Object)},
+     * or {@code null} when no body parameters were added.
+     */
+    public ObjectNode getBodyObject() {
+        return bodyObject;
     }
 
     public HttpRequestSpecification version(HttpVersion version) {

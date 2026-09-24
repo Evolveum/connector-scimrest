@@ -9,6 +9,7 @@ package com.evolveum.polygon.scimrest.groovy.impl;
 import com.evolveum.polygon.conndev.spi.ConnectorManifest;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConnectorClass;
@@ -16,7 +17,7 @@ import org.identityconnectors.framework.spi.ConnectorClass;
 import java.util.List;
 
 @ConnectorClass(displayNameKey = "manifest.connector.display", configurationClass = ReadOnlyConfiguration.class, messageCatalogPaths = "Messages")
-public class ManifestBasedConnector extends AbstractGroovyRestConnector<ReadOnlyConfiguration> {
+public class ManifestBasedConnector extends AbstractGroovyRestConnector {
 
     private static final String CONNECTOR_MANIFEST = "/connector.manifest";
     private final ConnectorManifest manifest;
@@ -47,7 +48,7 @@ public class ManifestBasedConnector extends AbstractGroovyRestConnector<ReadOnly
     }
 
     @Override
-    protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+    protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         manifest.operationScripts().forEach(builder::loadFromResource);
     }
 

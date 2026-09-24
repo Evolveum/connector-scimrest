@@ -9,9 +9,10 @@ package com.evolveum.polygon.scimrest.groovy.impl;
 
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
-public class ConnectorDevelopmentKit extends AbstractGroovyRestConnector<DevelopmentKitConfiguration> {
+public class ConnectorDevelopmentKit extends AbstractGroovyRestConnector {
 
 
     @Override
@@ -25,7 +26,7 @@ public class ConnectorDevelopmentKit extends AbstractGroovyRestConnector<Develop
     protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
     @Override
-    protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+    protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         for(var script : getConfiguration().configuration(DevelopmentKitConfiguration.class).getOperationScripts()) {
             builder.loadFromString(script);
         }

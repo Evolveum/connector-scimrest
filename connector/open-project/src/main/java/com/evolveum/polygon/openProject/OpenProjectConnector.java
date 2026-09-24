@@ -8,13 +8,14 @@ package com.evolveum.polygon.openProject;
 
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.PoolableConnector;
 
 @ConnectorClass(displayNameKey = "openProject.rest.display", configurationClass = OpenProjectConfiguration.class,  messageCatalogPaths = "Messages")
-public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjectConfiguration>
+public class OpenProjectConnector extends AbstractGroovyRestConnector
         implements PoolableConnector {
 
     public OpenProjectConnector() {
@@ -44,7 +45,7 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector<OpenProjec
     protected void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder) {}
 
     @Override
-    protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+    protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         builder.loadFromResource("/User.search.groovy");
         builder.loadFromResource("/Group.search.groovy");
         builder.loadFromResource("/Project.search.groovy");

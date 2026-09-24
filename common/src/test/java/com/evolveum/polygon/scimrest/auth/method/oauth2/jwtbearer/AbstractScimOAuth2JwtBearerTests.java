@@ -10,6 +10,7 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 
@@ -46,12 +47,12 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
                         .withBody(EMPTY_LIST_RESPONSE)));
     }
 
-    protected AbstractGroovyRestConnector<?> createScimConnector(
+    protected AbstractGroovyRestConnector createScimConnector(
             PrivateKey privateKey, String tokenEndpoint, String clientId) {
         return createScimConnector(privateKey, tokenEndpoint, clientId, null);
     }
 
-    protected AbstractGroovyRestConnector<?> createScimConnector(
+    protected AbstractGroovyRestConnector createScimConnector(
             PrivateKey privateKey, String tokenEndpoint, String clientId, String groovyScript) {
         return createScimConnector(
                 new ScimJwtBearerTestConfig(wireMockServer.port(), tokenEndpoint, clientId,
@@ -59,7 +60,7 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
                 groovyScript);
     }
 
-    protected AbstractGroovyRestConnector<?> createScimConnector(
+    protected AbstractGroovyRestConnector createScimConnector(
             ScimJwtBearerTestConfig config, String groovyScript) {
         var connector = new ScimJwtBearerTestConnector(groovyScript);
         connector.init(config);
@@ -107,7 +108,7 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
     }
 
     protected static class ScimJwtBearerTestConnector
-            extends AbstractGroovyRestConnector<BaseGroovyConnectorConfiguration> {
+            extends AbstractGroovyRestConnector {
 
         private final String groovyScript;
 
@@ -126,7 +127,7 @@ abstract class AbstractScimOAuth2JwtBearerTests extends AbstractOAuth2JwtBearerT
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         }
     }
 }

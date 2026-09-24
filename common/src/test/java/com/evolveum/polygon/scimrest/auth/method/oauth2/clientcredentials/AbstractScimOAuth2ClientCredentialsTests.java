@@ -10,6 +10,7 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.common.security.GuardedString;
 
@@ -44,13 +45,13 @@ abstract class AbstractScimOAuth2ClientCredentialsTests extends AbstractOAuth2Cl
                         .withBody(EMPTY_LIST_RESPONSE)));
     }
 
-    protected AbstractGroovyRestConnector<?> createScimConnector(String tokenEndpoint,
+    protected AbstractGroovyRestConnector createScimConnector(String tokenEndpoint,
                                                                  String clientId,
                                                                  GuardedString clientSecret) {
         return createScimConnector(tokenEndpoint, clientId, clientSecret, null);
     }
 
-    protected AbstractGroovyRestConnector<?> createScimConnector(String tokenEndpoint,
+    protected AbstractGroovyRestConnector createScimConnector(String tokenEndpoint,
                                                                  String clientId,
                                                                  GuardedString clientSecret,
                                                                  String groovyScript) {
@@ -107,7 +108,7 @@ abstract class AbstractScimOAuth2ClientCredentialsTests extends AbstractOAuth2Cl
     }
 
     protected static class ScimOAuth2TestConnector
-            extends AbstractGroovyRestConnector<BaseGroovyConnectorConfiguration> {
+            extends AbstractGroovyRestConnector {
 
         private final String groovyScript;
 
@@ -126,7 +127,7 @@ abstract class AbstractScimOAuth2ClientCredentialsTests extends AbstractOAuth2Cl
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
         }
     }
 }

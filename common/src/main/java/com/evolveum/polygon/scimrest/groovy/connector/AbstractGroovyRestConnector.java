@@ -15,10 +15,8 @@ import com.evolveum.polygon.scimrest.groovy.schema.SchemaDefinitionLoader;
 import com.evolveum.polygon.scimrest.yaml.YamlRestHandlerLoader;
 
 import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
-import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.conndev.groovy.GroovyScriptValidator;
-import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationResult;
 import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
@@ -60,13 +58,8 @@ import java.net.http.HttpResponse;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorConfiguration> extends ClassHandlerConnectorBase {
+public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorBase<RestConnectorContext> {
 
-    private final boolean reinitializeOnEachCall;
-
-    private boolean coreInitialized;
-    private boolean handlersInitialized;
-    private RestConnectorContext context;
     private GroovyRestHandlerBuilder handlersBuilder;
 
     @Deprecated
@@ -75,12 +68,17 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
     }
 
     protected AbstractGroovyRestConnector(boolean reinitializeOnEachCall) {
-        this.reinitializeOnEachCall = reinitializeOnEachCall;
+        super(reinitializeOnEachCall);
     }
 
     @Override
     public BaseGroovyConnectorConfiguration getConfiguration() {
         return context.configuration();
+    }
+
+    @Override
+    public RestConnectorContext context() {
+        return context;
     }
 
     @Override
@@ -104,86 +102,6 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
                             + (cfg == null ? "null" : cfg.getClass().getName()));
         }
     }
-
-    private void initializeCore() {
-        if (reinitializeOnEachCall || !coreInitialized) {
-            initializeCore0();
-            coreInitialized = true;
-            handlersInitialized = false;
-        }
-    }
-
-    private void initializeHandlers() {
-        if (reinitializeOnEachCall || !handlersInitialized) {
-            initializeHandlers0();
-            handlersInitialized = true;
-        }
-    }
-
-    private void initializeCore0() {
-        try {
-            var schemaBuilder = new RestSchemaBuilderImpl(getClass(), context);
-            var schemaLoader = new SchemaDefinitionLoader(context.configuration().groovyContext(), schemaBuilder);
-            initializeSchema(schemaLoader);
-
-            handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
-            initializeAuthorizationHandler(handlersBuilder);
-
-            context.initializeRest(handlersBuilder.restCustomizer());
-            context.initializeScim(handlersBuilder.scimCustomizer());
-            if (context.isScimEnabled()) {
-                context.scim().initialize();
-                context.scim().contributeToSchema(schemaBuilder).applyRules();
-            }
-
-            schemaBuilder.applyStructuralRules();
-            context.schema(schemaBuilder.build());
-        } catch (ConnectorException e) {
-            // ICF type was already set at the boundary (network failure, bad credentials,
-            // SCIM discovery) — never re-wrap or relabel it.
-            throw e;
-        } catch (Exception e) {
-            // A broken Groovy schema script, a missing script resource or an inconsistent
-            // schema definition all make the connector unusable by configuration.
-            throw new ConfigurationException(
-                    "Failed to initialize the connector configuration: " + HttpExceptionMapper.causeMessage(e), e);
-        }
-    }
-
-    private void initializeHandlers0() {
-        try {
-            if (context.isScimEnabled()) {
-                context.scim().contributeToHandlers(handlersBuilder);
-            }
-
-            initializeObjectClassHandler(handlersBuilder);
-
-            context.handlers(handlersBuilder.build());
-        } catch (ConnectorException e) {
-            // ICF type was already set at the boundary — never re-wrap or relabel it.
-            throw e;
-        } catch (Exception e) {
-            // A broken Groovy operation script or an inconsistent handler definition makes
-            // the connector unusable by configuration.
-            throw new ConfigurationException(
-                    "Failed to build the connector operation handlers: " + HttpExceptionMapper.causeMessage(e), e);
-        }
-    }
-
-    protected abstract void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder);
-
-    protected AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer() {
-        return (c,v) -> {};
-    }
-
-    /**
-     * Creates initial configuration for Abstract Groovy Connector
-     *
-     * @param loader
-     */
-    protected abstract void initializeSchema(GroovySchemaLoader loader);
-
-    protected abstract void initializeObjectClassHandler(GroovyRestHandlerBuilder builder);
 
     @Override
     public void test() {
@@ -238,49 +156,6 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         }
     }
 
-    /**
-     * Classifies the outcome of a test-endpoint probe: 401/403 are bad credentials, 404 is a
-     * misconfigured test endpoint, anything else is a (transient) connection problem.
-     */
-    private static RuntimeException testEndpointStatusException(int status, String detail, String testUrl, Throwable cause) {
-        String tail = (detail == null || detail.isBlank()) ? "" : ": " + detail;
-        String base = "HTTP " + status + " at " + testUrl + tail;
-        return switch (status) {
-            case 401, 403 -> new InvalidCredentialException("Authentication required: " + base, cause);
-            case 404 -> new ConfigurationException("Test endpoint returned 404 (check the configured test endpoint): " + base, cause);
-            default -> new ConnectionFailedException("Connection failed: " + base, cause);
-        };
-    }
-
-    private boolean isSuccess(int statusCode) {
-        return statusCode >= 200 && statusCode < 400;
-    }
-
-    // --------------------------------------------------------------------------
-    // Top-level boundary safety net
-    // --------------------------------------------------------------------------
-    //
-    // The SCIM operation handlers translate {@link ScimHttpErrorException} (a custom
-    // transport carrier) into the concrete ICF type for their operation. But the ConnId
-    // base rethrows any {@code ConnectorException} verbatim, so a handler that forgets the
-    // translation would leak the custom type to the ConnId layer, where it is not a
-    // recognized built-in exception. These overrides guarantee the translation happens at
-    // the boundary no matter what, using a kind-neutral default (the per-operation,
-    // kind-specific translation is still done by the handlers themselves).
-
-    private <T> T withStandardIcfBoundary(Callable<T> operation) {
-        try {
-            return operation.call();
-        } catch (ScimHttpErrorException e) {
-            // Last-resort translation so the custom carrier never reaches the ConnId layer.
-            throw ScimExceptionMapper.map(e, HttpStatusMapper.OperationKind.GET, null);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ConnectorException(e);
-        }
-    }
-
     @Override
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes, OperationOptions options) {
         return withStandardIcfBoundary(() -> super.create(objectClass, createAttributes, options));
@@ -326,6 +201,17 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         return context.schema().connIdSchema();
     }
 
+    @Override
+    public void dispose() {
+        // Dispose of connector
+    }
+
+    protected abstract void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder);
+
+    protected AuthorizationCustomizer<RestClientConfiguration> authorizationCustomizer() {
+        return (c,v) -> {};
+    }
+
     /**
      * Validates the candidate script against a throwaway target seeded with all currently
      * deployed sibling scripts (via {@link #schemaResources} / {@link #operationResources}, minus
@@ -366,6 +252,114 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
         var builder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), context);
         operationResources(request.filename()).forEach(builder::loadFromResource);
         return GroovyScriptValidator.validate(builder::parse, builder::build, request.scriptText(), request.operation());
+    }
+
+    private void initializeCore() {
+        if (reinitializeOnEachCall || !coreInitialized) {
+            initializeCore0();
+            coreInitialized = true;
+            fullyInitialized = false;
+        }
+    }
+
+    private void initializeHandlers() {
+        if (reinitializeOnEachCall || !fullyInitialized) {
+            initializeHandlers0();
+            fullyInitialized = true;
+        }
+    }
+
+    private void initializeCore0() {
+        try {
+            var schemaBuilder = new RestSchemaBuilderImpl(getClass(), context);
+            var schemaLoader = new SchemaDefinitionLoader(context.configuration().groovyContext(), schemaBuilder);
+            initializeSchema(schemaLoader);
+
+            handlersBuilder = context.handlerBuilder(context.configuration().groovyContext());
+            initializeAuthorizationHandler(handlersBuilder);
+
+            context.initializeRest(handlersBuilder.restCustomizer());
+            context.initializeScim(handlersBuilder.scimCustomizer());
+            if (context.isScimEnabled()) {
+                context.scim().initialize();
+                context.scim().contributeToSchema(schemaBuilder).applyRules();
+            }
+
+            schemaBuilder.applyStructuralRules();
+            context.schema(schemaBuilder.build());
+        } catch (ConnectorException e) {
+            // ICF type was already set at the boundary (network failure, bad credentials,
+            // SCIM discovery) — never re-wrap or relabel it.
+            throw e;
+        } catch (Exception e) {
+            // A broken Groovy schema script, a missing script resource or an inconsistent
+            // schema definition all make the connector unusable by configuration.
+            throw new ConfigurationException(
+                    "Failed to initialize the connector configuration: " + HttpExceptionMapper.causeMessage(e), e);
+        }
+    }
+
+    private void initializeHandlers0() {
+        try {
+            if (context.isScimEnabled()) {
+                context.scim().contributeToHandlers(handlersBuilder);
+            }
+
+            initializeObjectClassHandler(handlersBuilder);
+
+            context.handlers(handlersBuilder.build());
+        } catch (ConnectorException e) {
+            // ICF type was already set at the boundary — never re-wrap or relabel it.
+            throw e;
+        } catch (Exception e) {
+            // A broken Groovy operation script or an inconsistent handler definition makes
+            // the connector unusable by configuration.
+            throw new ConfigurationException(
+                    "Failed to build the connector operation handlers: " + HttpExceptionMapper.causeMessage(e), e);
+        }
+    }
+
+    /**
+     * Classifies the outcome of a test-endpoint probe: 401/403 are bad credentials, 404 is a
+     * misconfigured test endpoint, anything else is a (transient) connection problem.
+     */
+    private static RuntimeException testEndpointStatusException(int status, String detail, String testUrl, Throwable cause) {
+        String tail = (detail == null || detail.isBlank()) ? "" : ": " + detail;
+        String base = "HTTP " + status + " at " + testUrl + tail;
+        return switch (status) {
+            case 401, 403 -> new InvalidCredentialException("Authentication required: " + base, cause);
+            case 404 -> new ConfigurationException("Test endpoint returned 404 (check the configured test endpoint): " + base, cause);
+            default -> new ConnectionFailedException("Connection failed: " + base, cause);
+        };
+    }
+
+    private boolean isSuccess(int statusCode) {
+        return statusCode >= 200 && statusCode < 400;
+    }
+
+    // --------------------------------------------------------------------------
+    // Top-level boundary safety net
+    // --------------------------------------------------------------------------
+    //
+    // The SCIM operation handlers translate {@link ScimHttpErrorException} (a custom
+    // transport carrier) into the concrete ICF type for their operation. But the ConnId
+    // base rethrows any {@code ConnectorException} verbatim, so a handler that forgets the
+    // translation would leak the custom type to the ConnId layer, where it is not a
+    // recognized built-in exception. These overrides guarantee the translation happens at
+    // the boundary no matter what, using a kind-neutral default (the per-operation,
+    // kind-specific translation is still done by the handlers themselves).
+
+    private <T> T withStandardIcfBoundary(Callable<T> operation) {
+        try {
+            return operation.call();
+        } catch (ScimHttpErrorException e) {
+            // Last-resort translation so the custom carrier never reaches the ConnId layer.
+            throw ScimExceptionMapper.map(e, HttpStatusMapper.OperationKind.GET, null);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ConnectorException(e);
+        }
     }
 
     /**
@@ -433,15 +427,5 @@ public abstract class AbstractGroovyRestConnector<T extends BaseGroovyConnectorC
                 })
                 .toList();
         return GroovyScriptValidator.combine(checks);
-    }
-
-    @Override
-    public void dispose() {
-        // Dispose of connector
-    }
-
-    @Override
-    public ContextLookup context() {
-        return context;
     }
 }

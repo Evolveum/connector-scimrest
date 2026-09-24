@@ -8,8 +8,8 @@ package com.evolveum.polygon.scimrest.auth.crud;
 
 import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
-import com.evolveum.polygon.scimrest.groovy.connector.BaseRestGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
+import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 
 /**
@@ -30,7 +30,7 @@ public abstract class AbstractGroovyAuthCrudTest extends AbstractAuthOnCrudTest 
     }
 
     protected static class GroovyAuthConnector
-            extends AbstractGroovyRestConnector<BaseRestGroovyConnectorConfiguration> {
+            extends AbstractGroovyRestConnector {
 
         private final String authScript;
 
@@ -50,7 +50,7 @@ public abstract class AbstractGroovyAuthCrudTest extends AbstractAuthOnCrudTest 
         }
 
         @Override
-        protected void initializeObjectClassHandler(GroovyRestHandlerBuilder builder) {
+        protected void initializeObjectClassHandler(GroovyScriptLoader builder) {
             builder.loadFromString(OPERATION_SCRIPT);
         }
     }
