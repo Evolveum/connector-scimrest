@@ -43,74 +43,91 @@ public class RestPagingAwareObjectRetriever {
     public void fetch(ContextLookup lookup, Filter query, ResultsHandler handler, OperationOptions options) {
         var context = lookup.get(RestContext.class);
         var shouldContinue = true;
-        var pageLimit = specification.responsePageLimit();
         var totalProcessed = 0;
         var currentPage = 1;
+        var pageLimit = specification.pageLimit();
+        var responsePageLimit = specification.responsePageLimit();
 
-            var pageRequestInfos = planPages(options.getPagedResultsOffset(),
-                    options.getPageSize(), pageLimit);
-            var pageRequestInfoIterator = pageRequestInfos.iterator();
-            while (shouldContinue) {
-                HttpRequestSpecification requestBuilder = context.newRequest();
-                PageRequestInfo pageRequestInfo = null;
+        // When the operation options carry a full logical page (offset + size), fetch exactly that
+        // window, assembling it from one or more real pages when the endpoint caps the real page
+        // size below the requested window. Otherwise fall back to scanning the result set page by
+        // page until it is exhausted (empty page, total count reached, or a short page).
+        Integer logicalPage = options != null ? options.getPagedResultsOffset() : null;
+        Integer logicalSize = options != null ? options.getPageSize() : null;
+        List<PageRequestInfo> pageRequestInfos = (logicalPage != null && logicalSize != null)
+                ? planPages(logicalPage, logicalSize, responsePageLimit)
+                : List.of();
+        var pageRequestInfoIterator = pageRequestInfos.iterator();
+        var fullScan = pageRequestInfos.isEmpty();
+        // A scan page must not ask for more than the remote returns per real page: a page that is
+        // short only because of the server-side cap would be mistaken for the last page.
+        var scanPageLimit = responsePageLimit != null
+                ? Math.min(pageLimit, responsePageLimit)
+                : pageLimit;
 
-                if (pageRequestInfoIterator.hasNext()) {
+        while (shouldContinue) {
+            HttpRequestSpecification requestBuilder = context.newRequest();
+            PageRequestInfo pageRequestInfo = pageRequestInfoIterator.hasNext()
+                    ? pageRequestInfoIterator.next()
+                    : null;
 
-                    pageRequestInfo = pageRequestInfoIterator.next();
-                    specification.addUriAndPaging(requestBuilder, pageRequestInfo.getPageRequest().pageOffset,
-                            pageRequestInfo.getPageRequest().pageSize);
-                    // TODO
-                    currentPage = pageRequestInfo.getPageRequest().pageOffset;
-                } else {
+            if (pageRequestInfo != null) {
+                specification.addUriAndPaging(requestBuilder,
+                        pageRequestInfo.getPageRequest().pageOffset(),
+                        pageRequestInfo.getPageRequest().pageSize());
+                currentPage = pageRequestInfo.getPageRequest().pageOffset();
+            } else if (fullScan) {
+                specification.addUriAndPaging(requestBuilder, currentPage, scanPageLimit);
+            } else {
+                // The planned real pages cover the requested logical window.
+                break;
+            }
 
-                    specification.addUriOnly(requestBuilder);
-                }
+            var page = fetchPage(context, requestBuilder, currentPage);
+            var remoteObject = page.objects();
 
-                var page = fetchPage(context, requestBuilder, currentPage);
-                var batchProcessed = 0;
-                var remoteObject = page.objects();
+            if (pageRequestInfo != null) {
+                remoteObject = assembleLogicalPage(logicalPage, logicalSize, page.objects(), pageRequestInfo);
+            }
 
-                if (pageRequestInfo != null) {
-
-                    remoteObject = assembleLogicalPage(options.getPagedResultsOffset(),
-                            options.getPageSize(), page.objects(),
-                            pageRequestInfo);
-                }
-
-                for (var remoteObj : remoteObject) {
-                    ConnectorObject obj = deserializeFromRemote(remoteObj, page.endpoint(), currentPage);
-                    if (obj != null) {
-                        shouldContinue = handler.handle(obj);
-                        if (!shouldContinue) {
-                            break;
-                        }
-                        batchProcessed++;
-                    }
-                }
-
-                BatchAwareResultHandler.batchFinished(handler);
-                totalProcessed += batchProcessed;
-
-//                // TODO: Add support for cursor-based continuation https://developer.zendesk.com/api-reference/introduction/pagination/#using-offset-pagination
-//                // TODO: Maybe paging and cursor API could be merged to being two different implentations of cursor
-                if (batchProcessed == 0) {
-                    break;
-                }
-                var totalCount = page.totalCount();
-                if (totalCount != null && totalProcessed >= totalCount) {
-                    break;
-
-                } else if (pageRequestInfo != null) {
-
-                    if (pageRequestInfo.isResultSetExhausted()) {
+            var batchProcessed = 0;
+            for (var remoteObj : remoteObject) {
+                ConnectorObject obj = deserializeFromRemote(remoteObj, page.endpoint(), currentPage);
+                if (obj != null) {
+                    shouldContinue = handler.handle(obj);
+                    if (!shouldContinue) {
                         break;
-                    } else {
-                        shouldContinue = pageRequestInfoIterator.hasNext();
                     }
-                } else {
-                    break;
+                    batchProcessed++;
                 }
             }
+
+            BatchAwareResultHandler.batchFinished(handler);
+            totalProcessed += batchProcessed;
+
+//            // TODO: Add support for cursor-based continuation https://developer.zendesk.com/api-reference/introduction/pagination/#using-offset-pagination
+//            // TODO: Maybe paging and cursor API could be merged to being two different implentations of cursor
+            if (batchProcessed == 0) {
+                break;
+            }
+            var totalCount = page.totalCount();
+            if (totalCount != null && totalProcessed >= totalCount) {
+                break;
+            } else if (pageRequestInfo != null) {
+                if (pageRequestInfo.isResultSetExhausted()) {
+                    break;
+                }
+                // Honor a ResultsHandler that asked to stop: do not fetch the remaining real
+                // pages of the logical window.
+                shouldContinue = shouldContinue && pageRequestInfoIterator.hasNext();
+            } else {
+                // Full scan: a short page means the result set is exhausted.
+                if (batchProcessed < scanPageLimit) {
+                    break;
+                }
+                currentPage++;
+            }
+        }
     }
 
     private record Page(Iterable<?> objects, Integer totalCount, String endpoint) {
