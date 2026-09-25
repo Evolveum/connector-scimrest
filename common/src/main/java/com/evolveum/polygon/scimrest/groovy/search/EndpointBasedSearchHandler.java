@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.groovy.search;
 
+import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.endpoint.ResponseObjectExtractor;
 import com.evolveum.polygon.scimrest.groovy.endpoint.QueryRequestBuilderImpl;
 
@@ -29,25 +30,27 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
 
     private final RestObjectClassDefinition objectClass;
     private final ResponseObjectExtractor<BF,OF> objectExtractor;
-    private final PagingHandler pagingSupport;
+    private final PagingHandler pagingHandler;
     private final String apiEndpoint;
     private final HttpMethod httpMethod;
     private final Set<FilterToRequestMapper> filterMappers;
     private final Class<?> responseFormat;
     private final TotalCountExtractor<BF> totalCountExtractor;
     private final QueryRequestBuilderImpl queryRequestBuilder;
+    private final Integer maxPageSize;
     private final int pageLimit;
 
     public EndpointBasedSearchHandler(EndpointBasedSearchBuilder<BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
         this.objectClass = builder.objectClass;
         this.apiEndpoint = builder.path;
         this.objectExtractor = builder.objectExtractor;
-        this.pagingSupport = builder.pagingSupport;
+        this.pagingHandler = builder.pagingHandler;
         this.httpMethod = builder.httpMethod();
         this.filterMappers = new HashSet<>(filterMappers);
         this.responseFormat = builder.responseFormat;
         this.totalCountExtractor = builder.totalCountExtractor;
         this.queryRequestBuilder = builder.queryRequest;
+        this.maxPageSize = builder.maxPageSize;
         this.pageLimit = builder.pageLimit();
     }
 
@@ -66,23 +69,32 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
         var mapper = maybeMapper.get();
         return RestSearchOperationHandler.<BF,OF>builder()
                 .addRequestUri((request, paging) -> {
-                    request.apiEndpoint(apiEndpoint);
-                    request.httpMethod(httpMethod);
-                    acceptContentTypes.forEach(x->request.header("Accept", x));
-                    if (queryRequestBuilder.contentType != null) {
-                        request.header("Content-Type", queryRequestBuilder.contentType);
+                    handleRequest(request, acceptContentTypes, mapper, filter);
+                    if (pagingHandler != null) {
+                        pagingHandler.handlePaging(request, paging);
                     }
-                    queryRequestBuilder.bodyParameters.forEach(request::bodyParameter);
-                    mapper.mapToRequest(request, filter);
-                    if (pagingSupport != null) {
-                        pagingSupport.handlePaging(request, paging);
-                    }
+                })
+                .addRequestUri((request) ->{
+                    handleRequest(request, acceptContentTypes, mapper, filter);
                 })
                 .remoteObjectExtractor(objectExtractor::extractObjects)
                 .totalCountExtractor(this.totalCountExtractor)
                 .responseFormat(responseFormat)
+                .responsePageLimit(maxPageSize)
                 .pageLimit(pageLimit)
                 .build();
+    }
+
+    public void handleRequest(HttpRequestSpecification request, List<String> acceptContentTypes,
+                              FilterToRequestMapper mapper, Filter filter){
+        request.apiEndpoint(apiEndpoint);
+        request.httpMethod(httpMethod);
+        acceptContentTypes.forEach(x->request.header("Accept", x));
+        if (queryRequestBuilder.contentType != null) {
+            request.header("Content-Type", queryRequestBuilder.contentType);
+        }
+        queryRequestBuilder.bodyParameters.forEach(request::bodyParameter);
+        mapper.mapToRequest(request, filter);
     }
 
     @Override

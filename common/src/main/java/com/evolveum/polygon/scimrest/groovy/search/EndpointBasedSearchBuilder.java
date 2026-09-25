@@ -49,7 +49,8 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         }
         return List.of();
     };
-    PagingHandler pagingSupport;
+    PagingHandler pagingHandler;
+    Integer maxPageSize;
     Integer declarativePageSize;
     List<PagingParameter> declarativePagingParameters = new ArrayList<>();
     Boolean emptyFilterSupported = null;
@@ -81,7 +82,13 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
     @Override
     public EndpointBasedSearchBuilder<BF, OF> pagingSupport(@DelegatesTo(value = PagingSupportBase.class, strategy = Closure.DELEGATE_FIRST) @Script.Runtime Closure<?> closure) {
-        this.pagingSupport = new GroovyPagingSupport(closure);
+        this.pagingHandler = new GroovyPagingSupport(closure);
+        return this;
+    }
+
+    @Override
+    public EndpointBasedSearchBuilder<BF, OF> maxPageSize(int maxPageSize) {
+        this.maxPageSize = maxPageSize;
         return this;
     }
 
@@ -219,7 +226,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
             // declared source location, not on the first search request.
             objectExtractorPath.actual();
         }
-        if (!declarativePagingParameters.isEmpty() && pagingSupport != null) {
+        if (!declarativePagingParameters.isEmpty() && pagingHandler != null) {
             throw new ConfigurationException(
                     "Search endpoint '" + path + "' declares both a pagingSupport closure and declarative paging parameters");
         }
@@ -245,8 +252,8 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
                                     + "' is mapped onto the request body, which requires the endpoint httpOperation to be POST");
                 }
             }
-            if (pagingSupport == null) {
-                pagingSupport = new DeclarativePagingHandler(declarativePagingParameters);
+            if (pagingHandler == null) {
+                pagingHandler = new DeclarativePagingHandler(declarativePagingParameters);
             }
         }
         if (emptyFilterSupported == null && filterMappers.isEmpty()) {

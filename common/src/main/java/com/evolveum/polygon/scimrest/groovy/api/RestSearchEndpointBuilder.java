@@ -74,6 +74,14 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
     RestSearchEndpointBuilder pageSize(int size);
 
     /**
+     * Sets the maximum number of objects the remote returns per real page. Unlike
+     * {@link #pageSize(int)}, which controls how many objects are *requested* per page, this cap
+     * tells the retriever that larger logical pages must be assembled from several real pages
+     * (each real page being requested with at most this many objects).
+     */
+    RestSearchEndpointBuilder maxPageSize(int maxPageSize);
+
+    /**
      * Adds a declarative paging parameter mapped onto the request for every page, with the
      * request parameter named after the token.
      *
@@ -91,7 +99,6 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
      * Like {@link #pagingParameter(String, String)}, with an explicit request parameter name.
      */
     RestSearchEndpointBuilder pagingParameter(String token, String location, String name);
-
 
     @Yaml.Custom(SingleResultHandler.class)
     RestSearchEndpointBuilder singleResult();

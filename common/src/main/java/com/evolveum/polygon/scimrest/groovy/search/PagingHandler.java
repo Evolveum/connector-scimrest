@@ -12,5 +12,4 @@ import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
 public interface PagingHandler {
 
     void handlePaging(HttpRequestSpecification builder, PagingInfo pagingInfo);
-
 }

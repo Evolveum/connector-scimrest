@@ -44,6 +44,9 @@ objectClass("User") {
     }
     attribute("firstName") {
         jsonType "string"
+        connId{
+            type(String.class)
+        }
         readable true
         updateable true
         creatable true

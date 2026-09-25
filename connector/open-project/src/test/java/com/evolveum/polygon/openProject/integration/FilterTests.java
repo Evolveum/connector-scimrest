@@ -37,6 +37,15 @@ public class FilterTests extends BaseTest{
         testSearchAll("Membership");
     }
 
+    @Test(enabled = true)
+    public void test025SearchAllWorkPackages() {
+        testSearchAll("WorkPackage");
+    }
+
+    @Test(enabled = true)
+    public void test025SearchAllWorkPackagesPaging() {
+        testSearchAll("WorkPackage", buildOptions(buildPageEntries(100, 1)));
+    }
 
     ///  Search uid
     @Test(enabled = true)

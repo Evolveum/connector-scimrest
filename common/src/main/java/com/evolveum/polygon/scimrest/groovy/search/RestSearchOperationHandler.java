@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 import java.net.http.HttpResponse;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 // FIXME Find proper name
@@ -26,6 +27,8 @@ public interface RestSearchOperationHandler<BF, OF> {
     Iterable<OF> extractRemoteObject(HttpResponse<BF> response);
 
     void addUriAndPaging(HttpRequestSpecification requestBuilder, int currentPage, int pageLimit);
+
+    void addUriOnly(HttpRequestSpecification requestBuilder);
 
     static <BF,OF> Builder<BF,OF> builder() {
         return new Builder<>();
@@ -42,12 +45,21 @@ public interface RestSearchOperationHandler<BF, OF> {
         return DEFAULT_PAGE_SIZE;
     }
 
+    /**
+     * The maximum number of remote objects the endpoint returns per real page, or {@code null}
+     * when the endpoint has no such cap. Used to assemble larger logical pages from several
+     * real pages.
+     */
+    Integer responsePageLimit();
+
     class Builder<BF, OF> {
 
         private Function<HttpResponse<BF>, Iterable<OF>> extractor = null;
         private BiConsumer<HttpRequestSpecification, PagingInfo> pagingConsumer = (req, resp) -> {};
+        private Consumer<HttpRequestSpecification> uriConsumer = (req) -> {};
         private TotalCountExtractor<BF> totalCountExtractor = TotalCountExtractor.unsupported();
         private Class<?> responseType = JSONObject.class;
+        private Integer responsePageLimit = null;
         private int pageLimit = DEFAULT_PAGE_SIZE;
 
         public Builder<BF, OF> remoteObjectExtractor(Function<HttpResponse<BF>, Iterable<OF>> extractor) {
@@ -59,6 +71,12 @@ public interface RestSearchOperationHandler<BF, OF> {
             this.pagingConsumer = pagingConsumer;
             return this;
         }
+
+        public Builder<BF,OF> addRequestUri(Consumer<HttpRequestSpecification> uriConsumer) {
+            this.uriConsumer = uriConsumer;
+            return this;
+        }
+
         public <T> Builder<T, OF> responseFormat(Class<T> responseFormat) {
             this.responseType = responseFormat;
             return (Builder) this;
@@ -66,6 +84,11 @@ public interface RestSearchOperationHandler<BF, OF> {
 
         public Builder<BF,OF> totalCountExtractor(TotalCountExtractor<BF> totalCountExtractor) {
             this.totalCountExtractor = totalCountExtractor;
+            return this;
+        }
+
+        public Builder<BF, OF> responsePageLimit(Integer responsePageLimit) {
+            this.responsePageLimit = responsePageLimit;
             return this;
         }
 
@@ -91,6 +114,11 @@ public interface RestSearchOperationHandler<BF, OF> {
                 }
 
                 @Override
+                public void addUriOnly(HttpRequestSpecification requestBuilder) {
+                    uriConsumer.accept(requestBuilder);
+                }
+
+                @Override
                 public Integer extractTotalResultCount(HttpResponse<BF> response) {
                     return totalCountExtractor.extractTotalCount(response);
                 }
@@ -101,12 +129,15 @@ public interface RestSearchOperationHandler<BF, OF> {
                 }
 
                 @Override
+                public Integer responsePageLimit() {
+                    return responsePageLimit;
+                }
+
+                @Override
                 public int pageLimit() {
                     return pageLimit;
                 }
             };
         }
-
     }
-
 }

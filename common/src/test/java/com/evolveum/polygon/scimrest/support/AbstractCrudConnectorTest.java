@@ -18,6 +18,7 @@ import org.testng.annotations.BeforeMethod;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -37,6 +38,11 @@ public abstract class AbstractCrudConnectorTest extends WireMockTestSupport {
     protected static final String ACCOUNTS_PATH = "/accounts";
     protected static final String ACCOUNTS_PATTERN = "/accounts/.*";
     protected static final String ACCOUNT_BY_ID_PATH = "/accounts/123";
+
+    private static final Integer defaultPageSizeValue = 20;
+    private static final Integer defaultPageOffset = 1;
+    static Map.Entry<String, Integer> _OP_ENTRY_DEFAULT_PAGE_SIZE = Map.entry(OperationOptions.OP_PAGE_SIZE, defaultPageSizeValue);
+    static Map.Entry<String, Integer> _OP_ENTRY_DEFAULT_PAGED_RESULT_OFFSET = Map.entry(OperationOptions.OP_PAGED_RESULTS_OFFSET, defaultPageOffset);
 
     protected static final String NATIVE_SCHEMA_SCRIPT = """
             objectClass("Account") {
@@ -167,10 +173,14 @@ public abstract class AbstractCrudConnectorTest extends WireMockTestSupport {
     }
 
     protected List<ConnectorObject> search(ClassHandlerConnectorBase connector, Filter filter) {
+        return search(connector, filter, null);
+    }
+
+    protected List<ConnectorObject> search(ClassHandlerConnectorBase connector, Filter filter, OperationOptions oo) {
         var results = new ArrayList<ConnectorObject>();
         connector.executeQuery(new ObjectClass("Account"), filter,
                 o -> { results.add(o); return true; },
-                new OperationOptionsBuilder().build());
+                oo !=null ? oo : new OperationOptionsBuilder().build());
         return results;
     }
 
@@ -185,5 +195,27 @@ public abstract class AbstractCrudConnectorTest extends WireMockTestSupport {
                 new Uid("123"),
                 Set.of(AttributeDeltaBuilder.build(Name.NAME, List.of("updated"))),
                 new OperationOptionsBuilder().build());
+    }
+
+    @SafeVarargs
+    public static OperationOptions buildOptions(Map.Entry<String, ?>... options){
+        return new OperationOptions(Map.ofEntries(options));
+    }
+
+    public static Map.Entry<String, ?> [] buildPageEntries(Integer pageSize, Integer pageOffset){
+
+        return new Map.Entry[] {
+                pageSize != null
+                        ? Map.entry(OperationOptions.OP_PAGE_SIZE, pageSize)
+                        : _OP_ENTRY_DEFAULT_PAGE_SIZE,
+                pageOffset != null
+                        ? Map.entry(OperationOptions.OP_PAGED_RESULTS_OFFSET, pageOffset)
+                        : _OP_ENTRY_DEFAULT_PAGED_RESULT_OFFSET
+        };
+    }
+
+    public static Map.Entry<String, ?> []  buildPageEntries(){
+
+        return buildPageEntries(null,null);
     }
 }

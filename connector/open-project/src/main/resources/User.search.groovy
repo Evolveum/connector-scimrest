@@ -5,8 +5,6 @@
  *
  */
 
-
-import com.evolveum.polygon.scimrest.groovy.api.FilterSpecification
 import org.identityconnectors.common.logging.Log
 import org.identityconnectors.framework.common.objects.ConnectorObject
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter
@@ -45,8 +43,8 @@ objectClass("User") {
         custom {
 
             emptyFilterSupported false
-            supportedFilter(FilterSpecification.attribute("admin").eq().anySingleValue())
-            supportedFilter(FilterSpecification.attribute("language").eq().anySingleValue())
+            supportedFilter(attribute("admin").eq().anySingleValue())
+            supportedFilter(attribute("language").eq().anySingleValue())
 
             implementation {
                 if(LOG.isInfo()){

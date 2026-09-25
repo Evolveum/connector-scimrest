@@ -45,24 +45,12 @@ objectClass("Membership") {
         description "Time of latest update"
     }
 
-//    attribute("principal") {
-//
-//        json {
-//            path attribute("_links").child("principal")
-//        }
-//
-//        complexType "Principal"
-//        readable true
-//        updateable false
-//        creatable true
-//        returnedByDefault true
-//        required true
-//    }
-
     reference("principal") {
         objectClass "Principal"
 
         json {
+            type("string")
+            openApiFormat("uri-reference")
             path attribute("_links").child("principal")
             implementation {
                 deserialize {
@@ -82,8 +70,9 @@ objectClass("Membership") {
 
     reference("roles") {
         objectClass "Role"
-
         json {
+            type ("string")
+            openApiFormat ("uri-reference")
             path attribute("_links").child("roles")
             implementation {
                 deserialize {
@@ -107,6 +96,8 @@ objectClass("Membership") {
 //            object("Project"){}
 //        }
         json {
+            type ("string")
+            openApiFormat ("uri-reference")
             path attribute("_links").child("project")
             implementation {
                 deserialize {

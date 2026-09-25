@@ -7,10 +7,10 @@
 package com.evolveum.polygon.scimrest.impl.rest;
 
 import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
+import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
-import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import groovy.lang.GroovyRuntimeException;
 import tools.jackson.databind.node.ArrayNode;
@@ -24,6 +24,9 @@ import org.identityconnectors.framework.common.objects.filter.Filter;
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 // FIXME: Consider making this JSON agnostic and format / parsing handling will be injected.
@@ -40,18 +43,55 @@ public class RestPagingAwareObjectRetriever {
     public void fetch(ContextLookup lookup, Filter query, ResultsHandler handler, OperationOptions options) {
         var context = lookup.get(RestContext.class);
         var shouldContinue = true;
+        var totalProcessed = 0;
         var currentPage = 1;
         var pageLimit = specification.pageLimit();
-        var totalProcessed = 0;
-        do {
-            // The per-page fetch (request, status check, object extraction, total count) is the
-            // unit that gets the contextual error handling: network/parse/config failures are
-            // mapped to the ICF type that matches the situation. handler.handle/batchFinished
-            // run outside it, so midPoint-side errors propagate untouched.
-            var page = fetchPage(context, currentPage, pageLimit);
+        var responsePageLimit = specification.responsePageLimit();
+
+        // When the operation options carry a full logical page (offset + size), fetch exactly that
+        // window, assembling it from one or more real pages when the endpoint caps the real page
+        // size below the requested window. Otherwise fall back to scanning the result set page by
+        // page until it is exhausted (empty page, total count reached, or a short page).
+        Integer logicalPage = options != null ? options.getPagedResultsOffset() : null;
+        Integer logicalSize = options != null ? options.getPageSize() : null;
+        List<PageRequestInfo> pageRequestInfos = (logicalPage != null && logicalSize != null)
+                ? planPages(logicalPage, logicalSize, responsePageLimit)
+                : List.of();
+        var pageRequestInfoIterator = pageRequestInfos.iterator();
+        var fullScan = pageRequestInfos.isEmpty();
+        // A scan page must not ask for more than the remote returns per real page: a page that is
+        // short only because of the server-side cap would be mistaken for the last page.
+        var scanPageLimit = responsePageLimit != null
+                ? Math.min(pageLimit, responsePageLimit)
+                : pageLimit;
+
+        while (shouldContinue) {
+            HttpRequestSpecification requestBuilder = context.newRequest();
+            PageRequestInfo pageRequestInfo = pageRequestInfoIterator.hasNext()
+                    ? pageRequestInfoIterator.next()
+                    : null;
+
+            if (pageRequestInfo != null) {
+                specification.addUriAndPaging(requestBuilder,
+                        pageRequestInfo.getPageRequest().pageOffset(),
+                        pageRequestInfo.getPageRequest().pageSize());
+                currentPage = pageRequestInfo.getPageRequest().pageOffset();
+            } else if (fullScan) {
+                specification.addUriAndPaging(requestBuilder, currentPage, scanPageLimit);
+            } else {
+                // The planned real pages cover the requested logical window.
+                break;
+            }
+
+            var page = fetchPage(context, requestBuilder, currentPage);
+            var remoteObject = page.objects();
+
+            if (pageRequestInfo != null) {
+                remoteObject = assembleLogicalPage(logicalPage, logicalSize, page.objects(), pageRequestInfo);
+            }
 
             var batchProcessed = 0;
-            for (var remoteObj : page.objects()) {
+            for (var remoteObj : remoteObject) {
                 ConnectorObject obj = deserializeFromRemote(remoteObj, page.endpoint(), currentPage);
                 if (obj != null) {
                     shouldContinue = handler.handle(obj);
@@ -64,31 +104,39 @@ public class RestPagingAwareObjectRetriever {
 
             BatchAwareResultHandler.batchFinished(handler);
             totalProcessed += batchProcessed;
-            // TODO: Add support for cursor-based continuation https://developer.zendesk.com/api-reference/introduction/pagination/#using-offset-pagination
-            // TODO: Maybe paging and cursor API could be merged to being two different implentations of cursor
+
+//            // TODO: Add support for cursor-based continuation https://developer.zendesk.com/api-reference/introduction/pagination/#using-offset-pagination
+//            // TODO: Maybe paging and cursor API could be merged to being two different implentations of cursor
             if (batchProcessed == 0) {
-                shouldContinue = false;
+                break;
             }
             var totalCount = page.totalCount();
             if (totalCount != null && totalProcessed >= totalCount) {
-                shouldContinue = false;
-            } else if (batchProcessed < pageLimit) {
-                // If we do not have access to total count and page contains less results than page limit
-                // we can assume it is last page.
-                shouldContinue = false;
+                break;
+            } else if (pageRequestInfo != null) {
+                if (pageRequestInfo.isResultSetExhausted()) {
+                    break;
+                }
+                // Honor a ResultsHandler that asked to stop: do not fetch the remaining real
+                // pages of the logical window.
+                shouldContinue = shouldContinue && pageRequestInfoIterator.hasNext();
+            } else {
+                // Full scan: a short page means the result set is exhausted.
+                if (batchProcessed < scanPageLimit) {
+                    break;
+                }
+                currentPage++;
             }
-            currentPage++;
-        } while (shouldContinue);
+        }
     }
 
     private record Page(Iterable<?> objects, Integer totalCount, String endpoint) {
     }
 
-    private Page fetchPage(RestContext context, int page, int pageLimit) {
-        HttpRequestSpecification requestBuilder = context.newRequest();
+    private Page fetchPage(RestContext context, HttpRequestSpecification requestBuilder, int page) {
         try {
-            specification.addUriAndPaging(requestBuilder, page, pageLimit);
-            var bodyHandler = bodyHandlerFrom(specification, "endpoint " + endpointOf(requestBuilder) + ", page " + page);
+            var bodyHandler = bodyHandlerFrom(specification,
+                    "endpoint " + endpointOf(requestBuilder) + ", page " + page);
             var response = context.executeRequest(requestBuilder, bodyHandler);
             checkResponseStatus(response);
             var objects = specification.extractRemoteObject(response);
@@ -164,5 +212,85 @@ public class RestPagingAwareObjectRetriever {
                 "Search response at endpoint " + endpoint + " page " + page
                         + " contains an unexpected JSON type: " + (obj == null ? "null" : obj.getClass().getName()));
     }
+
+    public static List<PageRequestInfo> planPages(Integer logicalPage, Integer logicalSize,
+                                              Integer maxPageSize) {
+        if(logicalPage != null && logicalSize !=null){
+            if(maxPageSize == null || maxPageSize < 1 || maxPageSize >= logicalSize){
+
+                return Collections.singletonList(new PageRequestInfo(logicalPage,logicalSize));
+            }
+        } else {
+            return Collections.emptyList();
+        }
+
+        long startIndex =((long) logicalPage - 1) * logicalSize;
+        long endIndex   = startIndex + logicalSize;
+
+        int firstRealPage = (int) (startIndex / maxPageSize) + 1;
+        int lastRealPage  = (int) ((endIndex - 1) / maxPageSize) + 1;
+
+        List<PageRequestInfo> plan = new ArrayList<>();
+        for (int rp = firstRealPage; rp <= lastRealPage; rp++) {
+            plan.add(new PageRequestInfo(rp, maxPageSize));
+        }
+
+        return plan;
+    }
+
+    public static List<?> assembleLogicalPage(
+            int logicalPage, int logicalSize,
+            Iterable<?> realPageItems, PageRequestInfo pageRequestInfo) {
+
+        long startIndex = (long) (logicalPage - 1) * logicalSize;
+        long endIndex = startIndex + logicalSize;
+
+        List<Object> concatenated = new ArrayList<>();
+        for (var item : realPageItems) {
+            concatenated.add(item);
+        }
+        var pageRequest = pageRequestInfo.getPageRequest();
+        if (pageRequest != null) {
+            if (concatenated.size() < pageRequest.pageSize()) {
+
+                pageRequestInfo.setRecordSetExhausted(true);
+            }
+        }
+
+        int currentRealPage = pageRequestInfo.getPageRequest().pageOffset();
+        long currentRealPageStartIndex = (long) (currentRealPage - 1) * pageRequest.pageSize();
+        int fromInclusive = (int) Math.max(0, startIndex - currentRealPageStartIndex);
+        int toExclusive = (int) Math.min(endIndex - currentRealPageStartIndex, concatenated.size());
+
+        if (fromInclusive >= concatenated.size() || fromInclusive < 0) {
+            return List.of();
+        }
+        return concatenated.subList(fromInclusive, toExclusive);
+    }
+
+    private static class PageRequestInfo {
+        private final PageRequest pageRequests;
+        private boolean recordSetExhausted = false;
+
+        public PageRequestInfo(Integer pageOffset, Integer pageSize) {
+            this.pageRequests = new PageRequest(pageOffset, pageSize);
+        }
+
+        public PageRequest getPageRequest() {
+            return pageRequests;
+        }
+
+        public boolean isResultSetExhausted() {
+            return recordSetExhausted;
+        }
+
+        public void setRecordSetExhausted(boolean recordSetExhausted) {
+            this.recordSetExhausted = recordSetExhausted;
+        }
+
+        private record PageRequest(int pageOffset, int pageSize) {
+        }
+    }
+
 
 }
