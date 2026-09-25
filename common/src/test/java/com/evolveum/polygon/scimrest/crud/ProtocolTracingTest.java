@@ -9,7 +9,7 @@ package com.evolveum.polygon.scimrest.crud;
 import com.evolveum.polygon.conndev.devtools.log.ConndevLogFormat;
 import com.evolveum.polygon.conndev.devtools.log.LogSeverity;
 import com.evolveum.polygon.conndev.devtools.log.OperationLogParser;
-import com.evolveum.polygon.scimrest.logging.CapturingLogProvider;
+import com.evolveum.polygon.scimrest.logging.CapturingLogSpi;
 import com.evolveum.polygon.scimrest.support.AbstractCrudConnectorTest;
 import org.testng.annotations.Test;
 
@@ -29,16 +29,16 @@ public class ProtocolTracingTest extends AbstractCrudConnectorTest {
     public void updateEmitsProtocolEventsCorrelatedWithOperationInDevelopmentMode() {
         stubUpdateAccount();
         var connector = initConnectorWithDevelopmentMode();
-        CapturingLogProvider.clear();
+        CapturingLogSpi.clear();
         updateAccount(connector);
 
-        var lines = CapturingLogProvider.lines();
+        var lines = CapturingLogSpi.lines();
         assertTrue(lines.stream().anyMatch(line -> line.logger().equals(REST_CONTEXT_LOGGER)
                         && line.message().contains(ConndevLogFormat.MARKER)),
                 "expected a structured line emitted by the RestContext logger");
 
         var traces = OperationLogParser.parse(lines.stream()
-                .map(CapturingLogProvider.CapturedLine::message).toList());
+                .map(CapturingLogSpi.CapturedLine::message).toList());
         assertEquals(traces.size(), 1);
         var trace = traces.getFirst();
         assertEquals(trace.operation(), "update");
@@ -87,10 +87,10 @@ public class ProtocolTracingTest extends AbstractCrudConnectorTest {
     public void updateEmitsNoStructuredLinesWithoutDevelopmentMode() {
         stubUpdateAccount();
         var connector = initConnector(OPERATION_SCRIPT);
-        CapturingLogProvider.clear();
+        CapturingLogSpi.clear();
         updateAccount(connector);
 
-        assertTrue(CapturingLogProvider.lines().stream()
+        assertTrue(CapturingLogSpi.lines().stream()
                 .noneMatch(line -> line.message().contains(ConndevLogFormat.MARKER)),
                 "expected no structured log lines without development mode");
     }
