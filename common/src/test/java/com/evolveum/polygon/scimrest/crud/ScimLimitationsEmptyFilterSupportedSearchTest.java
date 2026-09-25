@@ -12,7 +12,7 @@ import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
-import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
+import com.evolveum.polygon.scimrest.support.AbstractScimTest;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
@@ -31,12 +31,7 @@ import static org.testng.Assert.assertEquals;
  * {@code User} resource, and a null-filter search is dispatched to it because
  * {@code emptyFilterSupported} marked it as the empty-filter handler.
  */
-public class ScimLimitationsEmptyFilterSupportedSearchTest extends WireMockTestSupport {
-
-    private static final String SCIM_BASE_PATH = "/scim";
-    private static final String SCHEMAS_ENDPOINT = SCIM_BASE_PATH + "/Schemas";
-    private static final String RESOURCE_TYPES_ENDPOINT = SCIM_BASE_PATH + "/ResourceTypes";
-    private static final String USERS_ENDPOINT = SCIM_BASE_PATH + "/Users";
+public class ScimLimitationsEmptyFilterSupportedSearchTest extends AbstractScimTest {
 
     private static final String SCHEMAS_RESPONSE = """
             {
@@ -59,22 +54,6 @@ public class ScimLimitationsEmptyFilterSupportedSearchTest extends WireMockTestS
                       "caseExact": false
                     }
                   ]
-                }
-              ]
-            }
-            """;
-
-    private static final String RESOURCE_TYPES_RESPONSE = """
-            {
-              "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
-              "totalResults": 1,
-              "Resources": [
-                {
-                  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
-                  "id": "User",
-                  "name": "User",
-                  "endpoint": "/Users",
-                  "schema": "urn:ietf:params:scim:schemas:core:2.0:User"
                 }
               ]
             }
@@ -148,14 +127,7 @@ public class ScimLimitationsEmptyFilterSupportedSearchTest extends WireMockTestS
 
     @Test
     public void emptyFilterSupportedUnderScimLimitationsTriggersRealScimSearchRequest() {
-        wireMockServer.stubFor(get(urlEqualTo(SCHEMAS_ENDPOINT))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/scim+json")
-                        .withBody(SCHEMAS_RESPONSE)));
-        wireMockServer.stubFor(get(urlEqualTo(RESOURCE_TYPES_ENDPOINT))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/scim+json")
-                        .withBody(RESOURCE_TYPES_RESPONSE)));
+        stubUserDiscovery(SCHEMAS_RESPONSE);
         wireMockServer.stubFor(get(urlPathEqualTo(USERS_ENDPOINT))
                 .willReturn(aResponse().withStatus(200)
                         .withHeader("Content-Type", "application/scim+json")

@@ -12,7 +12,7 @@ import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
-import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
+import com.evolveum.polygon.scimrest.support.AbstractScimTest;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -33,11 +33,7 @@ import static org.testng.Assert.assertNotNull;
  * returned a {@code Boolean} value - exactly the "does not conform to definition... expected
  * String, actual Boolean" failure reported against a real target.
  */
-public class ScimDiscoveredBooleanTypeTest extends WireMockTestSupport {
-
-    private static final String SCIM_BASE_PATH = "/scim";
-    private static final String SCHEMAS_ENDPOINT = SCIM_BASE_PATH + "/Schemas";
-    private static final String RESOURCE_TYPES_ENDPOINT = SCIM_BASE_PATH + "/ResourceTypes";
+public class ScimDiscoveredBooleanTypeTest extends AbstractScimTest {
 
     private static final String SCHEMAS_RESPONSE = """
             {
@@ -70,22 +66,6 @@ public class ScimDiscoveredBooleanTypeTest extends WireMockTestSupport {
                       "caseExact": false
                     }
                   ]
-                }
-              ]
-            }
-            """;
-
-    private static final String RESOURCE_TYPES_RESPONSE = """
-            {
-              "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
-              "totalResults": 1,
-              "Resources": [
-                {
-                  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
-                  "id": "User",
-                  "name": "User",
-                  "endpoint": "/Users",
-                  "schema": "urn:ietf:params:scim:schemas:core:2.0:User"
                 }
               ]
             }
@@ -156,14 +136,7 @@ public class ScimDiscoveredBooleanTypeTest extends WireMockTestSupport {
 
     @Test
     public void discoveredBooleanAttributeIsExposedAsBooleanNotString() {
-        wireMockServer.stubFor(get(urlEqualTo(SCHEMAS_ENDPOINT))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/scim+json")
-                        .withBody(SCHEMAS_RESPONSE)));
-        wireMockServer.stubFor(get(urlEqualTo(RESOURCE_TYPES_ENDPOINT))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/scim+json")
-                        .withBody(RESOURCE_TYPES_RESPONSE)));
+        stubUserDiscovery(SCHEMAS_RESPONSE);
 
         var connector = new ScriptConnector();
         connector.init(new TestConfiguration(wireMockServer.port()));

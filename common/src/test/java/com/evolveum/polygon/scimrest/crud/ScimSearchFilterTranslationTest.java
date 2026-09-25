@@ -12,7 +12,7 @@ import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
-import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
+import com.evolveum.polygon.scimrest.support.AbstractScimTest;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -34,7 +34,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -47,12 +46,7 @@ import static org.testng.Assert.assertTrue;
  * ({@code and}/{@code or}/{@code not}) are rendered recursively, and filters without a
  * SCIM equivalent fail instead of silently querying the remote without a filter.
  */
-public class ScimSearchFilterTranslationTest extends WireMockTestSupport {
-
-    private static final String SCIM_BASE_PATH = "/scim";
-    private static final String SCHEMAS_ENDPOINT = SCIM_BASE_PATH + "/Schemas";
-    private static final String RESOURCE_TYPES_ENDPOINT = SCIM_BASE_PATH + "/ResourceTypes";
-    private static final String USERS_ENDPOINT = SCIM_BASE_PATH + "/Users";
+public class ScimSearchFilterTranslationTest extends AbstractScimTest {
 
     private static final String SCHEMAS_RESPONSE = """
             {
@@ -97,22 +91,6 @@ public class ScimSearchFilterTranslationTest extends WireMockTestSupport {
                       "multiValued": false
                     }
                   ]
-                }
-              ]
-            }
-            """;
-
-    private static final String RESOURCE_TYPES_RESPONSE = """
-            {
-              "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
-              "totalResults": 1,
-              "Resources": [
-                {
-                  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
-                  "id": "User",
-                  "name": "User",
-                  "endpoint": "/Users",
-                  "schema": "urn:ietf:params:scim:schemas:core:2.0:User"
                 }
               ]
             }
@@ -180,14 +158,7 @@ public class ScimSearchFilterTranslationTest extends WireMockTestSupport {
     @BeforeMethod
     public void setUp() {
         setUpWireMock();
-        wireMockServer.stubFor(get(urlEqualTo(SCHEMAS_ENDPOINT))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/scim+json")
-                        .withBody(SCHEMAS_RESPONSE)));
-        wireMockServer.stubFor(get(urlEqualTo(RESOURCE_TYPES_ENDPOINT))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/scim+json")
-                        .withBody(RESOURCE_TYPES_RESPONSE)));
+        stubUserDiscovery(SCHEMAS_RESPONSE);
         wireMockServer.stubFor(get(urlPathEqualTo(USERS_ENDPOINT))
                 .willReturn(aResponse().withStatus(200)
                         .withHeader("Content-Type", "application/scim+json")

@@ -23,18 +23,24 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.absent;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.testng.Assert.assertEquals;
 
 /**
- * {@code GenericScimObjectDeserializer} (scim2-sdk-common) reads every {@code ListResponse.Resources}
- * element via {@code ObjectReader.readValue(JsonParser)} on a shared, mid-stream parser. Jackson 3's
- * default {@code DeserializationFeature.FAIL_ON_TRAILING_TOKENS} then misfires as soon as more content
- * follows that element in the stream - which is exactly what happens whenever a search response carries
- * more than one resource. This test drives a real two-resource SCIM search response through WireMock and
- * verifies it deserializes cleanly instead of throwing {@code ScimDeserializeException}.
+ * A bare {@code search { scim { } } } block - no {@code emptyFilterSupported}, no
+ * {@code limitations} - still has to serve a filterless ("search all") {@code executeQuery}: its
+ * {@code ScimSearchHandler} never registers as the dispatcher's dedicated empty-filter slot
+ * ({@code emptyFilterSupported()} defaults to {@code false}), so a {@code null} filter only
+ * reaches it via {@link com.evolveum.polygon.conndev.spi.FilterBasedSearchDispatcher}'s
+ * {@code anyFilterHandler} fallback ({@code anyFilterSupported()} defaults to {@code true}).
+ * This pins down the exact request that fallback path produces, since nothing else did.
  */
-public class ScimMultipleSearchResultsTest extends AbstractScimTest {
+public class ScimSearchAllDefaultScimBlockTest extends AbstractScimTest {
 
     private static final String SCHEMAS_RESPONSE = """
             {
@@ -62,35 +68,28 @@ public class ScimMultipleSearchResultsTest extends AbstractScimTest {
             }
             """;
 
-    // Mirrors the report: two resources in one page - the first resource's closing '}' is
-    // immediately followed by a trailing token (the second resource's '{') in the shared parser
-    // stream, which is exactly what trips FAIL_ON_TRAILING_TOKENS.
-    private static final String MULTI_RESULT_SEARCH_RESPONSE = """
+    private static final String SEARCH_RESPONSE = """
             {
               "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
-              "totalResults": 2,
+              "totalResults": 1,
               "startIndex": 1,
-              "itemsPerPage": 2,
+              "itemsPerPage": 1,
               "Resources": [
                 {
                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
                   "id": "jdoe",
                   "userName": "jdoe"
-                },
-                {
-                  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
-                  "id": "asmith",
-                  "userName": "asmith"
                 }
               ]
             }
             """;
 
+    // No emptyFilterSupported, no limitations - the bare block an LLM-generated "empty" script
+    // reduces to.
     private static final String OPERATION_SCRIPT = """
             objectClass("User") {
                 search {
                     scim {
-                        emptyFilterSupported true
                     }
                 }
             }
@@ -139,6 +138,11 @@ public class ScimMultipleSearchResultsTest extends AbstractScimTest {
     @BeforeMethod
     public void setUp() {
         setUpWireMock();
+        stubUserDiscovery(SCHEMAS_RESPONSE);
+        wireMockServer.stubFor(get(urlPathEqualTo(USERS_ENDPOINT))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/scim+json")
+                        .withBody(SEARCH_RESPONSE)));
     }
 
     @AfterMethod
@@ -147,13 +151,7 @@ public class ScimMultipleSearchResultsTest extends AbstractScimTest {
     }
 
     @Test
-    public void searchResponseWithMultipleResourcesDeserializesWithoutTrailingTokenError() {
-        stubUserDiscovery(SCHEMAS_RESPONSE);
-        wireMockServer.stubFor(get(urlPathEqualTo(USERS_ENDPOINT))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/scim+json")
-                        .withBody(MULTI_RESULT_SEARCH_RESPONSE)));
-
+    public void nullFilterFallsThroughToAnyFilterHandlerAndSendsPlainPagedListRequest() {
         var connector = new ScriptConnector(OPERATION_SCRIPT);
         connector.init(new TestConfiguration(wireMockServer.port()));
 
@@ -162,6 +160,13 @@ public class ScimMultipleSearchResultsTest extends AbstractScimTest {
                 o -> { results.add(o); return true; },
                 new OperationOptionsBuilder().build());
 
-        assertEquals(results.size(), 2);
+        assertEquals(results.size(), 1);
+
+        // Exactly one page fetched (totalResults == itemsPerPage == 1), with ConnId's default
+        // page size (25) and no "filter" query param at all - not even filter=null/empty.
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(USERS_ENDPOINT))
+                .withQueryParam("startIndex", equalTo("1"))
+                .withQueryParam("count", equalTo("25"))
+                .withQueryParam("filter", absent())).size(), 1);
     }
 }

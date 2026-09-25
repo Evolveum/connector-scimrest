@@ -12,7 +12,7 @@ import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnector;
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
-import com.evolveum.polygon.scimrest.support.WireMockTestSupport;
+import com.evolveum.polygon.scimrest.support.AbstractScimTest;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.AttributeDeltaBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -34,11 +34,8 @@ import static org.testng.Assert.assertEquals;
  * the request must actually be executed (it previously built the request but never called
  * {@code invoke()}, so nothing was sent and the result was discarded).
  */
-public class ScimPutUpdateTest extends WireMockTestSupport {
+public class ScimPutUpdateTest extends AbstractScimTest {
 
-    private static final String SCIM_BASE_PATH = "/scim";
-    private static final String SCHEMAS_ENDPOINT = SCIM_BASE_PATH + "/Schemas";
-    private static final String RESOURCE_TYPES_ENDPOINT = SCIM_BASE_PATH + "/ResourceTypes";
     private static final String USER_BY_ID_PATH = SCIM_BASE_PATH + "/Users/123";
 
     private static final String SCHEMAS_RESPONSE = """
@@ -54,22 +51,6 @@ public class ScimPutUpdateTest extends WireMockTestSupport {
                     { "name": "userName", "type": "string",  "mutability": "readWrite", "multiValued": false },
                     { "name": "active",   "type": "boolean", "mutability": "readWrite", "multiValued": false }
                   ]
-                }
-              ]
-            }
-            """;
-
-    private static final String RESOURCE_TYPES_RESPONSE = """
-            {
-              "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
-              "totalResults": 1,
-              "Resources": [
-                {
-                  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
-                  "id": "User",
-                  "name": "User",
-                  "endpoint": "/Users",
-                  "schema": "urn:ietf:params:scim:schemas:core:2.0:User"
                 }
               ]
             }
@@ -159,14 +140,7 @@ public class ScimPutUpdateTest extends WireMockTestSupport {
 
     @Test
     public void putBlockSendsFullReplacePut() {
-        wireMockServer.stubFor(get(urlEqualTo(SCHEMAS_ENDPOINT))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/scim+json")
-                        .withBody(SCHEMAS_RESPONSE)));
-        wireMockServer.stubFor(get(urlEqualTo(RESOURCE_TYPES_ENDPOINT))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/scim+json")
-                        .withBody(RESOURCE_TYPES_RESPONSE)));
+        stubUserDiscovery(SCHEMAS_RESPONSE);
         // original state is read first (PUT requires it)
         wireMockServer.stubFor(get(urlEqualTo(USER_BY_ID_PATH))
                 .willReturn(aResponse().withStatus(200)
