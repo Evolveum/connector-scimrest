@@ -180,6 +180,114 @@ public class YamlRestSchemaLoadingTest {
     }
 
     @Test
+    public void scimFlattenBindsThePerObjectClassFlattenList() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  User:
+                    scim:
+                      name: user
+                      flatten:
+                        - name
+                        - emails
+                  Group:
+                    scim:
+                      flatten: name
+                """);
+
+        assertEquals(builder.objectClass("User").scim().flattenAttributes(), List.of("name", "emails"));
+        // the scalar form binds a single attribute
+        assertEquals(builder.objectClass("Group").scim().flattenAttributes(), List.of("name"));
+    }
+
+    @Test
+    public void scimFlattenRejectsAMappingValue() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+
+        var exception = expectThrows(IllegalArgumentException.class, () -> loader.load("""
+                objectClasses:
+                  User:
+                    scim:
+                      flatten:
+                        emails: true
+                """));
+
+        assertTrue(exception.getMessage().contains("flatten"), exception.getMessage());
+    }
+
+    @Test
+    public void scimExtensionsBindTheExtensionFlattenMapping() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  User:
+                    scim:
+                      extensions:
+                        enterprise:
+                          uri: "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+                          flatten:
+                            - photos
+                            - department
+                        slack:
+                          uri: "urn:ietf:params:scim:schemas:extension:slack:profile:2.0:User"
+                          flatten: teamPhotos
+                        costcenter: "urn:test:CostCenter"
+                """);
+
+        var scim = builder.objectClass("User").scim();
+        assertEquals(scim.extensionFlattens().size(), 2, "the URI-only extension carries no flatten list");
+        var enterprise = scim.extensionFlattens().getFirst();
+        assertEquals(enterprise.alias(), "enterprise");
+        assertEquals(enterprise.extensionUri(), "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
+        assertEquals(enterprise.flatten(), List.of("photos", "department"));
+        // the scalar form binds a single attribute
+        assertEquals(scim.extensionFlattens().get(1).flatten(), List.of("teamPhotos"));
+
+        assertEquals(scim.extensionUriFromAlias("enterprise"),
+                "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
+        assertEquals(scim.extensionUriFromAlias("costcenter"), "urn:test:CostCenter");
+    }
+
+    @Test
+    public void scimExtensionsRejectAFlattenSequenceOfMappings() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+
+        var exception = expectThrows(IllegalArgumentException.class, () -> loader.load("""
+                objectClasses:
+                  User:
+                    scim:
+                      extensions:
+                        enterprise:
+                          uri: "urn:test:Enterprise"
+                          flatten:
+                            photos: true
+                """));
+
+        assertTrue(exception.getMessage().contains("flatten"), exception.getMessage());
+    }
+
+    @Test
+    public void scimExtensionsRejectAMissingUri() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+
+        var exception = expectThrows(IllegalArgumentException.class, () -> loader.load("""
+                objectClasses:
+                  User:
+                    scim:
+                      extensions:
+                        enterprise:
+                          flatten: photos
+                """));
+
+        assertTrue(exception.getMessage().contains("uri"), exception.getMessage());
+    }
+
+    @Test
     public void jsonPathIsInheritedFromTheBaseBinding() {
         var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
         var loader = new YamlSchemaLoader(builder);

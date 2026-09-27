@@ -17,7 +17,9 @@ import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionBuilder<
@@ -74,7 +76,9 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
 
     @Override
     protected RestObjectClassDefinition buildImpl(ObjectClassInfo connIdInfo, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs) {
-        var scimMapping = scim != null ? new RestObjectClassDefinition.ObjectClassScimMapping(scim.name(), scim.schemaUri()) : null;
+        var scimMapping = scim != null
+                ? new RestObjectClassDefinition.ObjectClassScimMapping(scim.name(), scim.schemaUri(), scim.flattenAttributes())
+                : null;
         return new RestObjectClassDefinition(connIdInfo, nativeAttrs, connIdAttrs, scimMapping);
     }
 
@@ -97,12 +101,43 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
         private String schemaUri;
         private String name;
         private boolean onlyExplicitlyListed = false;
-        private Map<String, String> aliasToNamespace = new HashMap<>();
+        private Map<String, ExtensionBuilder> extensions = new LinkedHashMap<>();
+        private final List<String> flatten = new ArrayList<>();
 
         @Override
         public ScimMapping extension(String alias, String namespace) {
-            aliasToNamespace.put(alias, namespace);
+            extensions.computeIfAbsent(alias, a -> new ExtensionBuilder(namespace));
             return this;
+        }
+
+        @Override
+        public ExtensionMapping extension(String alias, String namespace, Closure<?> closure) {
+            var extension = extensions.computeIfAbsent(alias, a -> new ExtensionBuilder(namespace));
+            if (closure != null) {
+                GroovyClosures.callAndReturnDelegate(closure, extension);
+            }
+            return extension;
+        }
+
+        @Override
+        public ScimMapping extension(String alias, String namespace, List<String> flattenAttributes) {
+            var extension = extensions.computeIfAbsent(alias, a -> new ExtensionBuilder(namespace));
+            for (var attribute : flattenAttributes) {
+                extension.flatten(attribute);
+            }
+            return this;
+        }
+
+        @Override
+        public List<ExtensionFlattening> extensionFlattens() {
+            var result = new ArrayList<ExtensionFlattening>();
+            for (var entry : extensions.entrySet()) {
+                if (!entry.getValue().flatten.isEmpty()) {
+                    result.add(new ExtensionFlattening(entry.getKey(), entry.getValue().namespace,
+                            entry.getValue().flattenAttributes()));
+                }
+            }
+            return List.copyOf(result);
         }
 
         @Override
@@ -139,11 +174,58 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
         }
 
         @Override
+        public ScimMapping flatten(String attribute) {
+            if (attribute == null || attribute.isBlank()) {
+                throw new IllegalArgumentException("The SCIM attribute to flatten must be a non-blank name");
+            }
+            if (!flatten.contains(attribute)) {
+                flatten.add(attribute);
+            }
+            return this;
+        }
+
+        @Override
+        public List<String> flattenAttributes() {
+            return List.copyOf(flatten);
+        }
+
+        @Override
         public String extensionUriFromAlias(String uriOrAlias) {
             if (uriOrAlias.startsWith("urn:")) {
                 return uriOrAlias;
             }
-            return aliasToNamespace.getOrDefault(uriOrAlias, uriOrAlias);
+            var extension = extensions.get(uriOrAlias);
+            return extension != null ? extension.namespace : uriOrAlias;
+        }
+
+        /**
+         * The per-extension state of the object-class SCIM mapping: the declared schema URI and
+         * the complex attributes configured to be flattened (see {@link ExtensionMapping}).
+         */
+        private static class ExtensionBuilder implements ExtensionMapping {
+
+            private final String namespace;
+            private final List<String> flatten = new ArrayList<>();
+
+            ExtensionBuilder(String namespace) {
+                this.namespace = namespace;
+            }
+
+            @Override
+            public ExtensionMapping flatten(String attribute) {
+                if (attribute == null || attribute.isBlank()) {
+                    throw new IllegalArgumentException("The SCIM attribute to flatten must be a non-blank name");
+                }
+                if (!flatten.contains(attribute)) {
+                    flatten.add(attribute);
+                }
+                return this;
+            }
+
+            @Override
+            public List<String> flattenAttributes() {
+                return List.copyOf(flatten);
+            }
         }
     }
 }

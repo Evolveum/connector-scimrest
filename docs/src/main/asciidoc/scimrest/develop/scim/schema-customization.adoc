@@ -117,7 +117,10 @@ The ConnId framework requires `UID` and `NAME` attributes. Discovery already map
 The `scim` block supports:
 
 `extension(name, uri)`::
-  Define SCIM schema extension — e.g. `extension("enterprise", "urn:...")`
+  Define SCIM schema extension — e.g. `extension("enterprise", "urn:...")`. The block form
+  `extension("enterprise", "urn:...") { flatten "photos" }` additionally flattens the
+  extension's complex attributes into plain, alias-prefixed attributes of the object class —
+  see xref:../attribute-flattening.adoc[flattening SCIM attributes].
 
 `path(path)`::
   Specify SCIM attribute path — e.g. `path attribute("name").child("familyName")`
@@ -171,4 +174,4 @@ objectClass("User") {
 }
 ----
 
-Complex attributes (embedded objects such as `emails` or `addresses`) are exposed as embedded object classes — see xref:complex-attributes.adoc[complex and binary attributes].
+Complex attributes (embedded objects such as `emails` or `addresses`) are exposed as embedded object classes — see xref:complex-attributes.adoc[complex and binary attributes]. Complex attributes can also be flattened into plain attributes — on the primary schema via the `scim { flatten ... }` list, on a mapped extension via its `extension(...) { flatten ... }` block — see xref:../attribute-flattening.adoc[flattening SCIM attributes].

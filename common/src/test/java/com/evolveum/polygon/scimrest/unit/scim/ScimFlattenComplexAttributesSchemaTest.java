@@ -14,7 +14,6 @@ import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.impl.scim.ScimResourceContext;
 import com.evolveum.polygon.scimrest.impl.scim.ScimSchemaTranslator;
-import com.evolveum.polygon.scimrest.impl.scim.flatten.ScimFlattenStrategies;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
@@ -23,6 +22,7 @@ import com.evolveum.polygon.scimrest.schema.ScimAttributeMapping;
 import com.unboundid.scim2.common.types.AttributeDefinition;
 import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.EmbeddedObject;
 import org.identityconnectors.framework.spi.Configuration;
@@ -34,11 +34,14 @@ import tools.jackson.databind.node.ObjectNode;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.expectThrows;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Schema-level behavior of the per-family {@code SCIM Mapping} flatten rules: the single-valued
@@ -74,9 +77,22 @@ public class ScimFlattenComplexAttributesSchemaTest {
 
     private static RestSchema translate(boolean name, boolean emails, boolean phones, boolean addresses,
                                          ScimResourceContext... resources) {
+        return translate(new TestConfig(name, emails, phones, addresses), Map.of(), resources);
+    }
+
+    /**
+     * @param flattenByObjectClass the {@code scim { flatten ... }} list configured per object
+     *        class (the per-object-class extension of the connector-level configuration)
+     */
+    private static RestSchema translate(ScimClientConfiguration configuration,
+                                        Map<String, List<String>> flattenByObjectClass,
+                                        ScimResourceContext... resources) {
         var builder = new RestSchemaBuilderImpl(StubConnector.class, null);
-        var translator = new ScimSchemaTranslator(null,
-                ScimFlattenStrategies.forConfiguration(new TestConfig(name, emails, phones, addresses)));
+        flattenByObjectClass.forEach((objectClass, families) -> {
+            var scim = builder.objectClass(objectClass).scim();
+            families.forEach(scim::flatten);
+        });
+        var translator = new ScimSchemaTranslator(null, configuration);
         for (var resource : resources) {
             translator.correlateObjectClasses(resource, builder);
         }
@@ -87,6 +103,29 @@ public class ScimFlattenComplexAttributesSchemaTest {
             builder.defineObjectClass(info);
         }
         return builder.build();
+    }
+
+    /** A resource carrying non well-known complex attributes: a single-valued one, a
+     *  multi-valued one with a {@code type} discriminator, a multi-valued one without one, and a scalar. */
+    private static ScimResourceContext genericResource() {
+        var manager = complex("manager", List.of(
+                scalar("displayName", AttributeDefinition.Type.STRING, false),
+                scalar("title", AttributeDefinition.Type.STRING, false)
+        ));
+        var photos = complexMulti("photos", List.of(
+                scalar("uri", AttributeDefinition.Type.STRING, false),
+                scalar("value", AttributeDefinition.Type.STRING, false),
+                scalar("type", AttributeDefinition.Type.STRING, false),
+                scalar("primary", AttributeDefinition.Type.BOOLEAN, false)
+        ));
+        var notes = complexMulti("notes", List.of(
+                scalar("value", AttributeDefinition.Type.STRING, false)
+        ));
+        var schema = new SchemaResource("urn:test:Generic", "Generic", "Generic",
+                List.of(manager, photos, notes, scalar("status", AttributeDefinition.Type.STRING, false)));
+        var resourceType = new ResourceTypeResource("Generic", "Generic", "Generic resource",
+                URI.create("http://localhost/Generic"), URI.create("urn:test:Generic"), List.of());
+        return new ScimResourceContext(resourceType, "/Generic", schema, new HashMap<>());
     }
 
     private static ScimResourceContext userResource() {
@@ -185,6 +224,138 @@ public class ScimFlattenComplexAttributesSchemaTest {
         assertNull(user.attributeFromProtocolName("name"), "name flattened");
         assertEquals(findAttr(user, "emails").connId().getType(), EmbeddedObject.class, "emails stays embedded");
         assertEquals(findAttr(user, "addresses").connId().getType(), EmbeddedObject.class, "addresses stays embedded");
+    }
+
+    /*----------------------------------------------------------------------*/
+    /* Per object class configuration (scim { flatten ... })
+    /*----------------------------------------------------------------------*/
+
+    @Test
+    public void perObjectClassFlattenEnablesFamilyGloballyDisabled() {
+        var restSchema = translate(new TestConfig(false, false, false, false),
+                Map.of("User", List.of("emails")), userResource());
+        var user = restSchema.objectClass("User");
+
+        assertNotNull(findAttr(user, "work_email"));
+        assertNull(user.attributeFromProtocolName("emails"), "the complex attribute itself must not exist");
+        assertNull(restSchema.objectClass("User__emails"), "no embedded class for a flattened attribute");
+        assertEquals(findAttr(user, "name").connId().getType(), EmbeddedObject.class, "unlisted families follow the global configuration");
+        assertNotNull(restSchema.objectClass("User__name"));
+    }
+
+    @Test
+    public void perObjectClassFlattenIsAdditiveToGlobalConfiguration() {
+        // global on: the object-class list adds nothing new — every family is flattened
+        var restSchema = translate(new TestConfig(true, true, true, true),
+                Map.of("User", List.of("name")), userResource());
+        var user = restSchema.objectClass("User");
+
+        assertNotNull(findAttr(user, "name_formatted"));
+        assertNotNull(findAttr(user, "work_email"));
+        assertNotNull(findAttr(user, "work_phone"));
+        assertNotNull(findAttr(user, "work_address_locality"));
+
+        // global off: the list enables the listed family only
+        var restSchema2 = translate(new TestConfig(false, false, false, false),
+                Map.of("User", List.of("name")), userResource());
+        var user2 = restSchema2.objectClass("User");
+
+        assertNotNull(findAttr(user2, "name_formatted"));
+        assertEquals(findAttr(user2, "emails").connId().getType(), EmbeddedObject.class,
+                "unlisted families follow the global configuration");
+    }
+
+    @Test
+    public void perObjectClassFlattenAppliesOnlyToItsObjectClass() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, null);
+        builder.objectClass("User").scim().flatten("emails");
+        var translator = new ScimSchemaTranslator(null, new TestConfig(false, false, false, false));
+        var user = userResource();
+        var generic = genericResource();
+        translator.correlateObjectClasses(user, builder);
+        translator.correlateObjectClasses(generic, builder);
+        translator.populateSchema(user, builder);
+        translator.populateSchema(generic, builder);
+        for (var info : ConnDevSchema.objectClassInfos()) {
+            builder.defineObjectClass(info);
+        }
+        var restSchema = builder.build();
+
+        var userClass = restSchema.objectClass("User");
+        assertNotNull(findAttr(userClass, "work_email"));
+        assertEquals(findAttr(userClass, "name").connId().getType(), EmbeddedObject.class);
+
+        var genericClass = restSchema.objectClass("Generic");
+        assertEquals(findAttr(genericClass, "photos").connId().getType(), EmbeddedObject.class,
+                "the User flatten list must not leak into Generic");
+    }
+
+    @Test
+    public void genericSingleValuedComplexAttributeIsFlattened() {
+        var restSchema = translate(new TestConfig(false, false, false, false),
+                Map.of("Generic", List.of("manager")), genericResource());
+        var generic = restSchema.objectClass("Generic");
+
+        assertEquals(findAttr(generic, "manager_displayName").scim().path(),
+                AttributePath.of("manager", "displayName"));
+        assertEquals(findAttr(generic, "manager_title").scim().path(),
+                AttributePath.of("manager", "title"));
+        assertEquals(findAttr(generic, "manager_displayName").connId().getType(), String.class);
+        assertNull(generic.attributeFromProtocolName("manager"), "the complex attribute itself must not exist");
+        assertNull(restSchema.objectClass("Generic__manager"), "no embedded class for a flattened attribute");
+    }
+
+    @Test
+    public void genericMultiValuedComplexAttributeIsFlattenedByType() {
+        var restSchema = translate(new TestConfig(false, false, false, false),
+                Map.of("Generic", List.of("photos")), genericResource());
+        var generic = restSchema.objectClass("Generic");
+
+        // value sub-attribute: <type>_<singular>; other scalar sub-attributes: <type>_<singular>_<sub>
+        assertEquals(findAttr(generic, "work_photo").scim().path(),
+                AttributePath.of("photos").valueFilter("type", "work").child("value"));
+        assertEquals(findAttr(generic, "other_photo_uri").scim().path(),
+                AttributePath.of("photos").valueFilter("type", "other").child("uri"));
+        assertNotNull(findAttr(generic, "home_photo_primary"));
+        assertNull(generic.attributeFromProtocolName("photos"), "the complex attribute itself must not exist");
+        assertNull(restSchema.objectClass("Generic__photos"), "no embedded class for a flattened attribute");
+    }
+
+    @Test
+    public void flatteningAnAttributeMissingFromTheSchemaFails() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, null);
+        builder.objectClass("Generic").scim().flatten("nonexistent");
+        var translator = new ScimSchemaTranslator(null, new TestConfig(false, false, false, false));
+        var resource = genericResource();
+        translator.correlateObjectClasses(resource, builder);
+
+        var exception = expectThrows(ConfigurationException.class, () -> translator.populateSchema(resource, builder));
+        assertTrue(exception.getMessage().contains("nonexistent"), exception.getMessage());
+        assertTrue(exception.getMessage().contains("Generic"), exception.getMessage());
+    }
+
+    @Test
+    public void flatteningANonComplexAttributeFails() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, null);
+        builder.objectClass("Generic").scim().flatten("status");
+        var translator = new ScimSchemaTranslator(null, new TestConfig(false, false, false, false));
+        var resource = genericResource();
+        translator.correlateObjectClasses(resource, builder);
+
+        var exception = expectThrows(ConfigurationException.class, () -> translator.populateSchema(resource, builder));
+        assertTrue(exception.getMessage().contains("not a complex attribute"), exception.getMessage());
+    }
+
+    @Test
+    public void flatteningAMultiValuedAttributeWithoutTypeFails() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, null);
+        builder.objectClass("Generic").scim().flatten("notes");
+        var translator = new ScimSchemaTranslator(null, new TestConfig(false, false, false, false));
+        var resource = genericResource();
+        translator.correlateObjectClasses(resource, builder);
+
+        var exception = expectThrows(ConfigurationException.class, () -> translator.populateSchema(resource, builder));
+        assertTrue(exception.getMessage().contains("'type' sub-attribute"), exception.getMessage());
     }
 
     /*----------------------------------------------------------------------*/

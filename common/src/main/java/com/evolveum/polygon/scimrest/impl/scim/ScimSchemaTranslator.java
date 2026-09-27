@@ -7,7 +7,9 @@
 package com.evolveum.polygon.scimrest.impl.scim;
 
 import com.evolveum.polygon.conndev.api.ContextLookup;
+import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.impl.scim.flatten.ComplexFlattenStrategy;
+import com.evolveum.polygon.scimrest.impl.scim.flatten.ScimFlattenStrategies;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import com.evolveum.polygon.scimrest.schema.RestAttributeBuilderImpl;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinitionBuilder;
@@ -53,7 +55,7 @@ public class ScimSchemaTranslator {
     private Map<String, ScimResourceContext> objectClassToResource = new HashMap<>();
 
     private final ContextLookup contextLookup;
-    private final List<ComplexFlattenStrategy> flattenStrategies;
+    private final ScimClientConfiguration globalConfiguration;
 
     private final List<ScimResourceMappingRule> resourceRules = new ArrayList<>();
     private final List<ScimAttributeMappingRule> attributeRules = new ArrayList<>();
@@ -66,16 +68,18 @@ public class ScimSchemaTranslator {
     private record Correlation(ScimResourceContext resource, boolean onlyListed) {}
 
     public ScimSchemaTranslator(ContextLookup contextLookup) {
-        this(contextLookup, List.of());
+        this(contextLookup, (ScimClientConfiguration) null);
     }
 
     /**
-     * @param flattenStrategies the SCIM mapping strategies that flatten complex attributes into
-     *        plain attributes instead of embedded object classes (see {@link ComplexFlattenStrategy})
+     * @param globalConfiguration the connector-level SCIM mapping configuration: its per-family
+     *        flatten properties are the defaults for every object class, extended per object class
+     *        by the {@code scim { flatten ... }} list (see
+     *        {@link ScimFlattenStrategies#forObjectClass}); {@code null} disables all flattening
      */
-    public ScimSchemaTranslator(ContextLookup contextLookup, List<ComplexFlattenStrategy> flattenStrategies) {
+    public ScimSchemaTranslator(ContextLookup contextLookup, ScimClientConfiguration globalConfiguration) {
         this.contextLookup = contextLookup;
-        this.flattenStrategies = List.copyOf(flattenStrategies);
+        this.globalConfiguration = globalConfiguration;
         registerDefaultRules();
     }
 
@@ -121,10 +125,11 @@ public class ScimSchemaTranslator {
         var objectClassName = resourceToObjectClass.get(scim.resource().getName());
         var objectClass = schema.objectClass(objectClassName);
         var onlyListed = objectClass.scim().isOnlyExplicitlyListed();
+        var strategies = flattenStrategiesFor(objectClass, scim);
 
         for (var scimAttr : scim.primarySchema().getAttributes()) {
             if (isComplexNotMembership(scimAttr, scim.primarySchema())) {
-                var strategy = findFlattenStrategy(scimAttr);
+                var strategy = findFlattenStrategy(scimAttr, strategies);
                 if (strategy != null && !onlyListed && !isAlreadyDefined(scimAttr, objectClass)) {
                     populateFlattenedComplexAttribute(scimAttr, objectClass, strategy);
                 } else if (!onlyListed && !isAlreadyDefined(scimAttr, objectClass)) {
@@ -144,6 +149,11 @@ public class ScimSchemaTranslator {
         // Defer rule dispatch to #applyRules — this resource's metadata must still be reachable
         // then, since it may run long after this resource is processed.
         correlated.put(objectClass, new Correlation(scim, onlyListed));
+
+        // Flattened complex attributes of the declared SCIM extensions (see
+        // #populateFlattenedExtensionAttributes) — before the path-based pass, since the flat
+        // attributes carry SCIM paths that pass must resolve.
+        populateFlattenedExtensionAttributes(scim, objectClass);
 
         // Path-based attributes from Groovy definitions
         populatePathBasedSchema(scim, objectClass);
@@ -235,11 +245,66 @@ public class ScimSchemaTranslator {
     }
 
     /**
-     * The first registered strategy that flattens the given complex attribute, or {@code null}
+     * The flatten strategies effective for the given object class: the connector-level
+     * {@code SCIM Mapping} properties plus the object-class {@code scim { flatten ... }} list
+     * (see {@link ScimFlattenStrategies#forObjectClass}).
+     */
+    private List<ComplexFlattenStrategy> flattenStrategiesFor(RestObjectClassDefinitionBuilder objectClass,
+                                                              ScimResourceContext scim) {
+        if (globalConfiguration == null) {
+            return List.of();
+        }
+        return ScimFlattenStrategies.forObjectClass(globalConfiguration,
+                objectClass.scim().flattenAttributes(), objectClass.name(), scim.primarySchema());
+    }
+
+    /**
+     * Flattens the complex attributes of the SCIM extensions this object class declares with a
+     * flatten list ({@code scim { extension(...) { flatten ... } }}) — the extension counterpart
+     * of the primary-schema flatten loop. The flat attributes are named after the extension alias
+     * (e.g. {@code enterprise_work_photo}) and carry SCIM paths qualified with the extension
+     * schema URI; the extension's attribute metadata is applied later by the path-based pass.
+     *
+     * <p>Unlike the primary-schema flatten, this is not gated by {@code onlyExplicitlyListed}:
+     * the list is explicit user intent, like a {@code scim { path ... }} mapping.
+     */
+    private void populateFlattenedExtensionAttributes(ScimResourceContext scim,
+                                                      RestObjectClassDefinitionBuilder objectClass) {
+        for (var flattening : objectClass.scim().extensionFlattens()) {
+            var extensionSchema = scim.extensions().get(flattening.extensionUri());
+            if (extensionSchema == null) {
+                throw new ConfigurationException(String.format(
+                        "Object class '%s' declares SCIM extension '%s' ('%s'), but it is not part of resource '%s' — check the SCIM schema mapping",
+                        objectClass.name(), flattening.alias(), flattening.extensionUri(), scim.resource().getName()));
+            }
+            var strategies = ScimFlattenStrategies.forExtensionSchema(
+                    objectClass.name(), flattening.alias(), extensionSchema, flattening.flatten());
+            for (var scimAttr : extensionSchema.getAttributes()) {
+                var strategy = findFlattenStrategy(scimAttr, strategies);
+                if (strategy == null) {
+                    continue;
+                }
+                for (var flat : strategy.flatten(scimAttr)) {
+                    if (objectClass.findAttributes(a -> flat.name().equals(a.name())).isEmpty()) {
+                        var attribute = objectClass.attribute(flat.name());
+                        attribute.scim().path(flat.path());
+                    } else {
+                        throw new ConfigurationException(String.format(
+                                "Object class '%s' cannot flatten '%s' from extension '%s' into '%s': an attribute with that name is already defined",
+                                objectClass.name(), scimAttr.getName(), flattening.alias(), flat.name()));
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * The first strategy that flattens the given complex attribute, or {@code null}
      * when none applies (the attribute then keeps its embedded object mapping).
      */
-    private ComplexFlattenStrategy findFlattenStrategy(AttributeDefinition scimAttr) {
-        for (var strategy : flattenStrategies) {
+    private static ComplexFlattenStrategy findFlattenStrategy(AttributeDefinition scimAttr,
+                                                               List<ComplexFlattenStrategy> strategies) {
+        for (var strategy : strategies) {
             if (strategy.supports(scimAttr)) {
                 return strategy;
             }

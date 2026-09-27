@@ -21,7 +21,6 @@ import com.evolveum.polygon.scimrest.impl.scim.dev.ScimObjectClassDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimResourceDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimSchemaDevHandler;
 import com.evolveum.polygon.scimrest.impl.scim.dev.ScimServiceProviderConfigDevHandler;
-import com.evolveum.polygon.scimrest.impl.scim.flatten.ScimFlattenStrategies;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
@@ -288,8 +287,10 @@ public class ScimContext implements RetrievableContext {
      * @return the translator used, so the caller can apply its rules before {@code build()}
      */
     public ScimSchemaTranslator contributeToSchema(RestSchemaBuilderImpl schemaBuilder) {
-        var translator = new ScimSchemaTranslator(contextLookup,
-                ScimFlattenStrategies.forConfiguration(configuration));
+        // The translator resolves the effective flatten strategies per object class: the
+        // connector-level SCIM Mapping properties extended by each object class'
+        // scim { flatten ... } list (see ScimFlattenStrategies#forObjectClass).
+        var translator = new ScimSchemaTranslator(contextLookup, configuration);
         for (var resource : resources.values()) {
             translator.correlateObjectClasses(resource, schemaBuilder);
         }
@@ -321,13 +322,16 @@ public class ScimContext implements RetrievableContext {
     private static final String SCIM_BLOCK_TYPE = ConnDevObjectClass.protocolBlockType(SCIM_BLOCK);
     private static final String SCIM_ATTRIBUTE_BLOCK_TYPE = ConnDevAttribute.attributeProtocolBlockType(SCIM_BLOCK);
 
-    /** The object-class-level {@code scim} block: SCIM resource name and schema URI. */
+    /** The object-class-level {@code scim} block: SCIM resource name, schema URI and the
+     *  per-object-class {@code flatten} list (the complex attributes flattened into plain
+     *  attributes instead of embedded object classes). */
     private static ObjectClassInfo scimObjectClassBlock() {
         var builder = new ObjectClassInfoBuilder();
         builder.setType(SCIM_BLOCK_TYPE);
         builder.setEmbedded(true);
         builder.addAttributeInfo(AttributeInfoBuilder.build("name", String.class));
         builder.addAttributeInfo(AttributeInfoBuilder.build("schemaUri", String.class));
+        builder.addAttributeInfo(new AttributeInfoBuilder("flatten", String.class).setMultiValued(true).build());
         return builder.build();
     }
 

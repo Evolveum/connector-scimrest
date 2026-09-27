@@ -37,7 +37,7 @@ public class RestObjectClassDefinition extends BaseObjectClassDefinition<RestAtt
         }
     }
 
-    public record ObjectClassScimMapping(String name, String schemaUri) {
+    public record ObjectClassScimMapping(String name, String schemaUri, List<String> flatten) {
 
         List<Attribute> exportAttributes() {
             var attributes = new ArrayList<Attribute>();
@@ -46,6 +46,9 @@ public class RestObjectClassDefinition extends BaseObjectClassDefinition<RestAtt
             }
             if (schemaUri != null) {
                 attributes.add(AttributeBuilder.build("schemaUri", schemaUri));
+            }
+            if (flatten != null && !flatten.isEmpty()) {
+                attributes.add(AttributeBuilder.build("flatten", List.copyOf(flatten)));
             }
             return attributes;
         }

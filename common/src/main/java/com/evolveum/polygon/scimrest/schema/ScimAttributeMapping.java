@@ -32,6 +32,35 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
     }
 
     /**
+     * The path components this mapping actually navigates in the wire JSON: for a path qualified
+     * with a SCIM schema extension URI, the leading {@link AttributePath.Extension} component is
+     * dropped — per RFC 7643 the extension's attributes are merged into the resource's top level,
+     * so on the wire they live in the same JSON object as the primary attributes, not under a key
+     * named after the schema URI. Returns {@code null} when no path is configured.
+     */
+    private AttributePath effectivePath() {
+        var path = path();
+        if (path == null || path.components().isEmpty()) {
+            return null;
+        }
+        var components = path.components();
+        if (components.getFirst() instanceof AttributePath.Extension) {
+            var stripped = components.subList(1, components.size());
+            return stripped.isEmpty() ? null : new AttributePath(List.copyOf(stripped));
+        }
+        return path;
+    }
+
+    @Override
+    public JsonNode attributeFromObject(ObjectNode object) {
+        var effective = effectivePath();
+        if (effective == null) {
+            return null;
+        }
+        return effective.resolve(object, NULLABLE_PATH_RESOLVER);
+    }
+
+    /**
      * Serializes this attribute's SCIM path to SCIM attribute-path notation (RFC 7643/7644),
      * e.g. {@code userName}, {@code name.givenName},
      * {@code urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber}.
@@ -63,29 +92,38 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
     /**
      * Converts ConnId attribute values to their SCIM wire (JSON) representation.
      *
-     * <p>For a plain structural path this delegates to the base implementation. For a path that
-     * selects a sub-attribute of an entry of a multi-valued attribute by a value filter (e.g.
-     * {@code emails[type eq "work"].value}), the value is written into the matching entry of the
-     * array — creating the entry (self-describing via the filter keys) when it does not exist yet —
-     * instead of being written as a nested object as the base implementation would. Other paths
-     * containing a value filter (e.g. a terminal {@code emails[type eq "work"]}) also fall back to
-     * the base implementation.
+     * <p>All navigation happens on the wire shape (see {@link #effectivePath()}: a leading SCIM
+     * extension component is not a JSON key — the extension's attributes live at the resource's
+     * top level). For a path that selects a sub-attribute of an entry of a multi-valued attribute
+     * by a value filter (e.g. {@code emails[type eq "work"].value}), the value is written into the
+     * matching entry of the array — creating the entry (self-describing via the filter keys) when
+     * it does not exist yet — instead of being written as a nested object as the base
+     * implementation would. Other paths containing a value filter (e.g. a terminal
+     * {@code emails[type eq "work"]}) fall back to the base implementation.
      */
     @Override
     public void toJsonNode(Attribute attribute, ObjectNode parent) {
-        var filterIndex = indexOfFirstValueFilter(path());
-        if (filterIndex < 0 || !isFilterEntryFieldShape(path(), filterIndex)) {
-            super.toJsonNode(attribute, parent);
+        var effective = effectivePath();
+        if (effective == null) {
             return;
         }
-
-        var values = attribute.getValue().stream()
-                .map(valueMapping::toWireValue)
-                .toList();
-        if (values.isEmpty()) {
+        var filterIndex = indexOfFirstValueFilter(effective);
+        if (filterIndex >= 0 && isFilterEntryFieldShape(effective, filterIndex)) {
+            var values = attribute.getValue().stream()
+                    .map(valueMapping::toWireValue)
+                    .toList();
+            if (!values.isEmpty()) {
+                writeFiltered(parent, effective, filterIndex, values);
+            }
             return;
         }
-        writeFiltered(parent, filterIndex, values);
+        if (path().components().getFirst() instanceof AttributePath.Extension) {
+            // A structural path the base implementation cannot navigate (its traversal stops at
+            // the extension component) — navigate the top-level shape directly.
+            writeStructural(parent, effective, attribute);
+            return;
+        }
+        super.toJsonNode(attribute, parent);
     }
 
     private int indexOfFirstValueFilter(AttributePath path) {
@@ -123,10 +161,11 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
 
     /**
      * Writes the given wire values into the entry of the multi-valued attribute selected by the
-     * value filter at {@code filterIndex} in this mapping's path.
+     * value filter at {@code filterIndex} in the given (wire-shape, see {@link #effectivePath()})
+     * path.
      */
-    private void writeFiltered(ObjectNode root, int filterIndex, List<JsonNode> values) {
-        var components = path().components();
+    private void writeFiltered(ObjectNode root, AttributePath path, int filterIndex, List<JsonNode> values) {
+        var components = path.components();
         var filter = (AttributePath.SimpleValueFilter) components.get(filterIndex);
         var arrayName = ((AttributePath.Attribute) components.get(filterIndex - 1)).name();
         var fieldName = ((AttributePath.Attribute) components.get(filterIndex + 1)).name();
@@ -159,6 +198,38 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
     private static void populateFilterKeys(ObjectNode entry, AttributePath.SimpleValueFilter filter) {
         for (var keyValue : filter.keyValues().entrySet()) {
             entry.put(keyValue.getKey(), keyValue.getValue() instanceof String s ? s : String.valueOf(keyValue.getValue()));
+        }
+    }
+
+    /**
+     * Writes the attribute's wire values along a structural path — the same traversal as the base
+     * implementation, but against the given (wire-shape, see {@link #effectivePath()}) path, which
+     * the base cannot navigate when it carries a leading {@link AttributePath.Extension} component.
+     */
+    private void writeStructural(ObjectNode parent, AttributePath path, Attribute attribute) {
+        var values = attribute.getValue().stream()
+                .map(valueMapping::toWireValue)
+                .toList();
+        if (values.isEmpty()) {
+            return;
+        }
+        var components = path.withoutFilters().components();
+        if (components.isEmpty()) {
+            return;
+        }
+        ObjectNode current = parent;
+        for (int i = 0; i < components.size() - 1; i++) {
+            if (!(components.get(i) instanceof AttributePath.Attribute attr)) {
+                return;
+            }
+            if (!current.has(attr.name()) || !current.get(attr.name()).isObject()) {
+                current.putObject(attr.name());
+            }
+            current = current.withObject(attr.name());
+        }
+        var last = components.getLast();
+        if (last instanceof AttributePath.Attribute attr) {
+            current.set(attr.name(), values.size() == 1 ? values.getFirst() : parent.arrayNode().addAll(values));
         }
     }
 

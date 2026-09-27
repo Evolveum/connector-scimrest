@@ -1,0 +1,239 @@
+= Flattening SCIM Attributes
+
+SCIM complex attributes — `name`, `emails`, `phoneNumbers`, `addresses`, and the like — carry
+structure: a list of entries, each with a `type` discriminator and several sub-attributes.
+ConnId object classes are flat, so the framework offers *flattening* rules that decompose such
+complex attributes into plain attributes of the containing object class.
+
+== How flattening works
+
+When a flatten rule is enabled for a family of attributes, the schema discovery decomposes the
+complex attribute into flat attributes *whose SCIM paths point back into the complex
+attribute*. Reading works through those paths out of the box; the flat attributes are still
+plain `string`/`boolean` attributes on the ConnId side.
+
+The entry types used for the multi-valued families are `work`, `home`, and `other`.
+
+`name` (single-valued complex)::
+  Every scalar sub-attribute `name/<sub>` becomes an attribute `name_<sub>` (e.g.
+  `name.formatted` → `name_formatted`, `name.givenName` → `name_givenName`). Nested complex
+  sub-attributes are skipped.
+
+`emails` (multi-valued)::
+  One attribute per entry type, each mapped to `emails[type eq "<type>"].value`:
+  `work_email`, `home_email`, `other_email`.
+
+`phoneNumbers` (multi-valued)::
+  One attribute per entry type, each mapped to `phoneNumbers[type eq "<type>"].value`:
+  `work_phone`, `home_phone`, `other_phone`.
+
+`addresses` (multi-valued)::
+  One attribute per entry type and per scalar sub-attribute (`formatted`, `streetAddress`,
+  `locality`, `region`, `postalCode`, `country`), mapped to
+  `addresses[type eq "<type>"].<subAttribute>`: `work_address_locality`,
+  `work_address_postalCode`, `home_address_streetAddress`, …
+
+== Enabling flattening
+
+Flattening is off by default and is switched on per family with the connector configuration
+properties of the *SCIM Mapping* group:
+
+`scimFlattenNameAttribute` (Boolean, default `false`)::
+  Flatten the `name` complex attribute.
+
+`scimFlattenEmails` (Boolean, default `false`)::
+  Flatten `emails` into `work_email` / `home_email` / `other_email`.
+
+`scimFlattenPhoneNumbers` (Boolean, default `false`)::
+  Flatten `phoneNumbers` into `work_phone` / `home_phone` / `other_phone`.
+
+`scimFlattenAddresses` (Boolean, default `false`)::
+  Flatten `addresses` into per-type, per-sub-attribute attributes.
+
+These properties apply to every SCIM object class of the connector; a single object class can
+extend the set of flattened attributes — see xref:#per-object-class-configuration[Per object
+class configuration].
+
+== Per object class configuration
+
+The `scim { }` mapping section of the object class builder (Groovy or YAML) carries a
+`flatten` list of complex attributes to flatten for that object class:
+
+[source,groovy]
+----
+objectClass("User") {
+    scim {
+        flatten "name"
+        flatten "emails"
+        flatten "photos"
+    }
+}
+----
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    scim:
+      flatten:
+        - name
+        - emails
+        - photos
+----
+
+A single attribute name may also be written directly: `scim { flatten "name" }` /
+`flatten: name`.
+
+The list is *additive* to the connector configuration: a listed attribute is flattened for
+that object class even when the corresponding `SCIM Mapping` property is off, while unlisted
+attributes still follow the connector properties. The list therefore extends, but never
+restricts, the configured flattening — to turn a family off, set the `SCIM Mapping` property
+itself. The configured list is exported in the development-mode `scim` block of the object
+class (multi-valued `flatten` attribute).
+
+=== Supported attributes
+
+The well-known families `name`, `emails`, `phoneNumbers` and `addresses` are always available
+and produce the attributes described above. Any *other* complex attribute of the resource's
+primary SCIM schema can be listed as well, and is flattened generically from the discovered
+attribute definition:
+
+* a *single-valued* complex attribute `attr` is decomposed into `attr_<subAttribute>` for every
+  scalar sub-attribute (nested complex sub-attributes are skipped) — the `name` rule, applied to
+  the attribute name;
+
+* a *multi-valued* complex attribute `attr` that carries a scalar `type` sub-attribute is
+  decomposed per entry type `work`, `home`, `other` (the same entry types as the well-known
+  families): the `value` sub-attribute becomes `<type>_<attr>` and every other scalar
+  sub-attribute `<type>_<attr>_<subAttribute>` (e.g. `photos` → `work_photo`,
+  `work_photo_uri`). The `type` sub-attribute itself is skipped. The flat names use the
+  singular of the attribute name derived by dropping one trailing `s`
+  (`photos` → `photo`).
+
+Listing an attribute that is missing from the resource's schema, that is not a complex
+attribute, or that is a multi-valued attribute without a scalar `type` sub-attribute fails the
+schema discovery with a message naming the object class and the attribute — in those cases use
+the embedded object class (`Parent__Attribute`) or an explicit `scim { path ... }` mapping
+instead.
+
+== Flattening extension attributes
+
+Complex attributes of a SCIM *extension* schema can be flattened the same way — the extension
+block of the object class SCIM mapping carries a `flatten` list of the extension's complex
+attributes:
+
+[source,groovy]
+----
+objectClass("User") {
+    scim {
+        extension("enterprise", "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User") {
+            flatten "photos"
+            flatten "department"
+        }
+    }
+}
+----
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    scim:
+      extensions:
+        enterprise:
+          uri: "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+          flatten:
+            - photos
+            - department
+        costcenter: "urn:..."   # a URI-only entry declares the extension without flattening
+----
+
+The flat attributes are named after the extension *alias* (prefixed with `<alias>_`), and carry
+SCIM paths qualified with the extension schema URI — the same shape a hand-written
+`scim { path extension("enterprise").child(...) }` mapping produces:
+
+* `photos` → `enterprise_work_photo` (SCIM path
+  `urn:ietf:...:enterprise:2.0:User:photos[type eq "work"].value`),
+  `enterprise_work_photo_uri`, …
+* `department` → `enterprise_department_code`, `enterprise_department_name` (SCIM path
+  `urn:ietf:...:enterprise:2.0:User:department.code`).
+
+The naming rules are the generic ones described above (the alias prefix stands in for the
+attribute-name prefix), and the list is resolved *generically* against the extension's
+discovered schema — the well-known families and the connector-level `SCIM Mapping` properties
+do not apply to extensions. The alias prefix also keeps the flat attributes distinct from
+same-named attributes of the primary schema (a `photos` flattened from both the primary schema
+and the extension yields `work_photo` *and* `enterprise_work_photo`). Listing an attribute that
+is missing from the extension, that is not complex, that is multi-valued without a scalar
+`type` sub-attribute, or that would collide with an already defined attribute of the object
+class fails the schema discovery with a message naming the object class, the extension and the
+attribute. A declared extension that is not part of the resource fails likewise.
+
+Like `scim { path ... }` mappings, the extension flatten list is honored even with
+`onlyExplicitlyListed` enabled. Filters on the flat attributes are not supported (as for the
+primary-schema flatten attributes — value paths cannot be expressed in SCIM filter
+expressions).
+
+== Examples
+
+With `scimFlattenEmails` and `scimFlattenNameAttribute` enabled, a SCIM `User` with
+
+[source,json]
+----
+{
+  "name": { "formatted": "Alice Doe", "givenName": "Alice", "familyName": "Doe" },
+  "emails": [
+    { "value": "alice@example.com", "type": "work", "primary": true },
+    { "value": "alice.private@example.com", "type": "other" }
+  ]
+}
+----
+
+is read through the flat attributes:
+
+[cols="1,1,2",options="header"]
+|===
+| Flat attribute | Value | SCIM path
+
+| `name_formatted`
+| `Alice Doe`
+| `name.formatted`
+
+| `name_givenName`
+| `Alice`
+| `name.givenName`
+
+| `work_email`
+| `alice@example.com`
+| `emails[type eq "work"].value`
+
+| `other_email`
+| `alice.private@example.com`
+| `emails[type eq "other"].value`
+|===
+
+In the schema script the flattened attributes can be used like any other attribute:
+
+[source,groovy]
+----
+attribute("workEmail") {
+    name "work_email"
+}
+----
+
+and mapped to the ConnId attribute of your choice — for example the `__NAME__` of the class if
+the organization identifies people by email.
+
+== When not to flatten
+
+* You need *all* entries of a multi-valued attribute, not just one per type — the flat rules
+  only expose one attribute per `type`.
+* You need the structured value itself (e.g. to write it back or to iterate over it).
+
+In those cases use the alternative representation: the complex attribute is also available as
+an *embedded object class* named `Parent__Attribute` (e.g. `User__emails`), or you can map a
+flat attribute to an arbitrary SCIM path with the `scim { path ... }` DSL — see
+xref:scim/complex-attributes.adoc[SCIM complex and binary attributes].
+
+NOTE: Complex attribute values are read-only from the ConnId side — writing complex attributes
+is not supported yet, regardless of which representation you use.

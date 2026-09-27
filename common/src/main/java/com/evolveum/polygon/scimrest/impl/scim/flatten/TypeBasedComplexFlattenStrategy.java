@@ -11,6 +11,7 @@ import com.unboundid.scim2.common.types.AttributeDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -36,13 +37,23 @@ public class TypeBasedComplexFlattenStrategy implements ComplexFlattenStrategy {
     private final String singular;
     private final List<String> typeSet;
     private final Set<String> includedSubAttributes;
+    private final List<AttributePath.Component> pathPrefix;
+    private final String namePrefix;
 
     public TypeBasedComplexFlattenStrategy(String family, String singular,
                                            List<String> typeSet, Set<String> includedSubAttributes) {
+        this(family, singular, typeSet, includedSubAttributes, List.of(), "");
+    }
+
+    public TypeBasedComplexFlattenStrategy(String family, String singular,
+                                           List<String> typeSet, Set<String> includedSubAttributes,
+                                           List<AttributePath.Component> pathPrefix, String namePrefix) {
         this.family = family;
         this.singular = singular;
         this.typeSet = List.copyOf(typeSet);
         this.includedSubAttributes = includedSubAttributes;
+        this.pathPrefix = List.copyOf(pathPrefix);
+        this.namePrefix = namePrefix;
     }
 
     @Override
@@ -57,11 +68,14 @@ public class TypeBasedComplexFlattenStrategy implements ComplexFlattenStrategy {
         var result = new ArrayList<FlattenedAttribute>();
         for (String type : typeSet) {
             for (String sub : candidateSubAttributes(scimAttr)) {
-                var name = VALUE_SUB_ATTRIBUTE.equals(sub)
+                var name = namePrefix + (VALUE_SUB_ATTRIBUTE.equals(sub)
                         ? type + "_" + singular
-                        : type + "_" + singular + "_" + sub;
-                var path = AttributePath.of(family).valueFilter(TYPE_DISCRIMINATOR, type).child(sub);
-                result.add(new FlattenedAttribute(name, path));
+                        : type + "_" + singular + "_" + sub);
+                var path = new ArrayList<AttributePath.Component>(pathPrefix);
+                path.add(new AttributePath.Attribute(family));
+                path.add(new AttributePath.SimpleValueFilter(Map.of(TYPE_DISCRIMINATOR, type)));
+                path.add(new AttributePath.Attribute(sub));
+                result.add(new FlattenedAttribute(name, new AttributePath(List.copyOf(path))));
             }
         }
         return result;
