@@ -35,7 +35,7 @@ public class RestSchemaBuilderImpl extends BaseSchemaBuilder<
     }
 
     @Override
-    protected RestObjectClassDefinitionBuilder newObjectClass(DefinitionValue<String> name) {
+    protected RestObjectClassDefinitionBuilder newObjectClass(DefinitionValue<ObjectClass> name) {
         return new RestObjectClassDefinitionBuilder(this, name);
     }
 

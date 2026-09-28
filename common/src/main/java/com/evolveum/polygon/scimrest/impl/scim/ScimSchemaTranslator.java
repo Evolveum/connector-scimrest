@@ -27,6 +27,7 @@ import com.unboundid.scim2.common.types.ResourceTypeResource;
 import com.unboundid.scim2.common.types.SchemaResource;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.EmbeddedObject;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 
 import static com.evolveum.polygon.conndev.concepts.DefinitionValue.detected;
 
@@ -109,8 +110,8 @@ public class ScimSchemaTranslator {
 
     public void correlateObjectClasses(ScimResourceContext scim, RestSchemaBuilderImpl schema) {
         var objectClass = findOrCreateObjectClass(scim.resource(), schema);
-        resourceToObjectClass.put(scim.resource().getName(), objectClass.name());
-        objectClassToResource.put(objectClass.name(), scim);
+        resourceToObjectClass.put(scim.resource().getName(), objectClass.objectClass().getObjectClassValue());
+        objectClassToResource.put(objectClass.objectClass().getObjectClassValue(), scim);
 
         if (objectClass.description() == null) {
             objectClass.description(scim.resource().getDescription());
@@ -215,7 +216,7 @@ public class ScimSchemaTranslator {
                                            RestObjectClassDefinitionBuilder parentOc) {
         var complexAttr = parentOc.attribute(scimAttr.getName());
 
-        String embeddedClassName = parentOc.name() + "__" + scimAttr.getName();
+        String embeddedClassName = parentOc.objectClass().getObjectClassValue() + "__" + scimAttr.getName();
         var embeddedBuilder = schema.objectClass(embeddedClassName);
         embeddedBuilder.embedded(true);
 
@@ -234,7 +235,7 @@ public class ScimSchemaTranslator {
                 .implementation(new ScimEmbeddedObjectValueMapping(contextLookup, embeddedClassName));
         complexAttr.connId()
                 .type(EmbeddedObject.class)
-                .referencedObjectClassName(detected(embeddedClassName))
+                .referencedObjectClassName(detected(new ObjectClass(embeddedClassName)))
                 .multiValued(detected(scimAttr.isMultiValued()))
                 .required(detected(scimAttr.isRequired()))
                 .returnedByDefault(detected(
@@ -255,7 +256,7 @@ public class ScimSchemaTranslator {
             return List.of();
         }
         return ScimFlattenStrategies.forObjectClass(globalConfiguration,
-                objectClass.scim().flattenAttributes(), objectClass.name(), scim.primarySchema());
+                objectClass.scim().flattenAttributes(), objectClass.objectClass().getObjectClassValue(), scim.primarySchema());
     }
 
     /**
@@ -275,10 +276,10 @@ public class ScimSchemaTranslator {
             if (extensionSchema == null) {
                 throw new ConfigurationException(String.format(
                         "Object class '%s' declares SCIM extension '%s' ('%s'), but it is not part of resource '%s' — check the SCIM schema mapping",
-                        objectClass.name(), flattening.alias(), flattening.extensionUri(), scim.resource().getName()));
+                        objectClass.objectClass().getObjectClassValue(), flattening.alias(), flattening.extensionUri(), scim.resource().getName()));
             }
             var strategies = ScimFlattenStrategies.forExtensionSchema(
-                    objectClass.name(), flattening.alias(), extensionSchema, flattening.flatten());
+                    objectClass.objectClass().getObjectClassValue(), flattening.alias(), extensionSchema, flattening.flatten());
             for (var scimAttr : extensionSchema.getAttributes()) {
                 var strategy = findFlattenStrategy(scimAttr, strategies);
                 if (strategy == null) {
@@ -291,7 +292,7 @@ public class ScimSchemaTranslator {
                     } else {
                         throw new ConfigurationException(String.format(
                                 "Object class '%s' cannot flatten '%s' from extension '%s' into '%s': an attribute with that name is already defined",
-                                objectClass.name(), scimAttr.getName(), flattening.alias(), flat.name()));
+                                objectClass.objectClass().getObjectClassValue(), scimAttr.getName(), flattening.alias(), flat.name()));
                     }
                 }
             }

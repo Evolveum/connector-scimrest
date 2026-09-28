@@ -15,6 +15,7 @@ import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
 
     private ScimMapping scim;
 
-    public RestObjectClassDefinitionBuilder(RestSchemaBuilderImpl restSchemaBuilder, DefinitionValue<String> name) {
+    public RestObjectClassDefinitionBuilder(RestSchemaBuilderImpl restSchemaBuilder, DefinitionValue<ObjectClass> name) {
         super(restSchemaBuilder, name);
     }
 
@@ -86,7 +87,7 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
     public ScimMapping scim() {
         if (scim == null) {
             this.scim = new ScimBuilder();
-            scim.name(name());
+            scim.name(objectClass().getObjectClassValue());
         }
         return this.scim;
     }

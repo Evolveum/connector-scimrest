@@ -15,6 +15,7 @@ import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 
 public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
 
@@ -60,8 +61,8 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
         return attribute();
     }
 
-    public String objectClass() {
-        return objectClass.name();
+    public ObjectClass objectClass() {
+        return objectClass.objectClass();
     }
 
     static class AttributeBuilder implements RestReferenceAttributeBuilder,
@@ -84,7 +85,7 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
         }
 
         @Override
-        public RestReferenceAttributeBuilder complexType(DefinitionValue<String> objectClass) {
+        public RestReferenceAttributeBuilder complexType(DefinitionValue<ObjectClass> objectClass) {
             return delegate.complexType(objectClass);
         }
 
