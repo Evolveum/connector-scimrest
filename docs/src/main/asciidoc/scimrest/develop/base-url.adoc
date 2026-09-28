@@ -1,0 +1,44 @@
+= Base URL
+
+The *Base URL* screen points the connector at the root of the target system's API. Every request
+the connector makes is resolved against this URL, so it must be reachable from the MidPoint host
+and must be the base of the API you want to integrate with — not a page in a browser.
+
+== Which field to fill
+
+The field shown depends on the integration type:
+
+`Base address` (REST)::
+  The base URL of the REST API (configuration property `baseAddress`). Example:
+  `https://git.example.com/api/v1`.
+
+`SCIM base URL` (SCIM)::
+  The base URL of the SCIM 2.0 service (configuration property `scimBaseUrl`). Example:
+  `https://id.example.com/wsd/ou=SCIM/ou=scim?wsdl` — for most SCIM servers the `.../scim/v2`
+  endpoint of the identity provider.
+
+When both a REST base address and a SCIM base URL are known, you can configure both — the
+connector will use the SCIM API where it is available and the REST API otherwise. The SCIM
+context is initialized only when a SCIM base URL *and* SCIM credentials are present; otherwise
+the connector works REST-only.
+
+== What the URL should look like
+
+* A full, absolute URL including the scheme: `https://host[:port]/path`.
+* Point at the API root, without a trailing slash. The connector appends the endpoint paths
+  (e.g. `/users`, `/groups`) to it.
+* No query string or fragment — those belong to specific endpoints, not to the base.
+
+== What happens next
+
+After you save the base URL, the wizard waits while it probes the system: it discovers the
+application's documentation and (for SCIM/REST) the available endpoints. If the probe fails, the
+most common causes are:
+
+* the URL is not reachable from the MidPoint host (firewall, proxy, wrong port),
+* the TLS certificate is not trusted (see the *trust all certificates* option on the connection
+  screen, or install the certificate properly),
+* the URL points at a web page instead of the API base.
+
+If the connection keeps failing, the *Fix Connection* screen lets you re-test individual parts
+of the setup.

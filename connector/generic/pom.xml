@@ -26,6 +26,14 @@
         <connectorClass>ManifestBasedConnector</connectorClass>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.evolveum.polygon.scimrest</groupId>
+            <artifactId>connector-scimrest-docs</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>

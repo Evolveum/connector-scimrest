@@ -1,0 +1,42 @@
+= Test Endpoint
+
+The *Test Endpoint* screen verifies that the connector can actually talk to the target system
+before the rest of the connector is generated. It does this by sending a small HTTP request to a
+*connectivity endpoint* and checking that the system answers sensibly.
+
+== How it works
+
+The wizard offers two ways to choose the endpoint that will be tested:
+
+* *Detected endpoints* — when the documentation discovery or an earlier probe found candidate
+  URLs (health checks, schema documents, API roots), they are listed as options. Pick the one
+  that best represents a lightweight, always-available GET resource.
+* *Manual* — enter a URL path yourself when nothing suitable was detected.
+
+After you pick (or type) an endpoint and start the test, the connector issues a GET request
+against it using the base URL and the authentication configured so far. A successful answer
+marks the connection as *connected*; a failure shows the response so you can fix the base URL,
+the authentication, or the endpoint.
+
+== Which endpoint is ideal
+
+A good connectivity endpoint is:
+
+* a `GET` that requires no request body,
+* cheap and side-effect-free (a health check, version, or schema document),
+* stable across application versions, and
+* reachable with the authentication you configured (or no authentication at all).
+
+Examples: `/health`, `/status`, `/version`, the SCIM `/Users` collection with an empty result, or
+an OpenAPI document. Avoid endpoints that trigger expensive work, that need a specific object to
+exist, or that are protected by a second factor.
+
+== Notes
+
+* The endpoint used here is stored as the `restTestEndpoint` of the connector — it is the path
+  the connector's `test()` operation uses later, so keep it something the system will keep
+  serving.
+* This screen is about *connectivity*, not about a specific object class. Endpoint selection for
+  the actual object operations (search, create, …) happens later, per object class.
+* If the test fails because of authentication, fix it on the *Authentication* screens and re-test
+  before continuing.

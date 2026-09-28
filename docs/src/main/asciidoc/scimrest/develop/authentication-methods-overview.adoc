@@ -1,0 +1,38 @@
+== Supported methods
+
+Nine authentication methods are implemented per protocol namespace. The most common ones first:
+
+`basic { ... }`::
+  HTTP Basic authentication — `Authorization: Basic base64(user:pass)`. The workhorse for
+  internal systems and many SaaS APIs.
+
+`bearer { ... }`::
+  A static bearer token — `Authorization: <tokenName> <tokenValue>` (the token name defaults to
+  `Bearer`). Typical for API-token based systems.
+
+`apiKey { ... }`::
+  An API key — sent as a header (`<name>: <key>`, e.g. `X-API-Key`) or as a query parameter.
+
+`oauth2ClientCredentials { ... }`::
+  OAuth 2.0 client credentials (RFC 6749 §4.4) — the standard machine-to-machine grant: the
+  connector obtains an access token from a token endpoint and attaches it to the requests.
+
+`jwtBearer { ... }`::
+  A self-signed JWT (HS/RS/PS/ES families) placed in the `Authorization` header by default, or
+  as a query parameter.
+
+`oauth2Password { ... }`::
+  OAuth 2.0 resource owner password grant (RFC 6749 §4.3).
+
+`oauth2JwtBearer { ... }`::
+  OAuth 2.0 client JWT assertion (RFC 7523) — the client authenticates to the token endpoint
+  with a signed JWT.
+
+`oauth2Saml { ... }`::
+  OAuth 2.0 with a SAML assertion to the token endpoint.
+
+`awsSignature { ... }`::
+  AWS Signature Version 4 — for AWS-style APIs (e.g. API Gateway, S3).
+
+NOTE: `digest`, `hawk`, and `ntlm` have configuration properties but are **not implemented
+yet** — configuring them has no effect on requests.

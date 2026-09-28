@@ -1,0 +1,174 @@
+= Schema Script Basics
+
+The *schema script* of an object class defines what the connector sees on the target system:
+the object class name, its attributes, their wire types and locations, and which ConnId
+attribute each of them maps to. The wizard generates a first version of the script for you;
+this screen shows it so you can review and adjust it before the connector is built.
+
+A schema script has two front-ends — Groovy and declarative YAML — that drive the *same*
+builders, so both forms can be mixed per connector.
+
+== What a schema script must contain
+
+Every object class needs at least:
+
+* the class name and its attributes (the native shape of the object on the target system),
+* the mapping of the attributes to ConnId attribute names and types,
+* and the mapping of the two *built-in* ConnId attributes:
+
+`__UID__` (required)::
+  The stable unique identifier of the object on the target system (a database key, a UUID, a
+  natural key). Without a UID mapping the object class cannot be managed at all — searches,
+  updates, and deletes all address objects by it.
+
+`__NAME__` (required, derivable)::
+  The human-readable name of the object (a display name, a username, an email address). When
+  `__NAME__` is not mapped explicitly, the framework derives it from the `__UID__` mapping —
+  the same underlying attribute serves as both.
+
+In Groovy the built-ins are bound with `connIdAttribute` (which accepts only the built-in
+names):
+
+[source,groovy]
+----
+objectClass("User") {
+    attribute("id") {
+        jsonType "string"
+    }
+    attribute("displayName") {
+        jsonType "string"
+    }
+    connIdAttribute("UID", "id")
+    connIdAttribute("NAME", "displayName")   // optional — derived from UID when omitted
+}
+----
+
+In declarative YAML the same bindings are the `connId` alias map and the per-attribute
+`connId.name` key:
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    connId:
+      UID: id
+      NAME: displayName
+    attributes:
+      id:
+        jsonType: string
+      displayName:
+        jsonType: string
+----
+
+== Groovy form
+
+A Groovy schema script configures the schema builders with closures — the *native* part declares
+what the system has, the *ConnId* part declares what MidPoint should see:
+
+[source,groovy]
+----
+objectClass("Project") {
+    description "A project on the target system"
+
+    attribute("id") {
+        jsonType "string"
+        openApiFormat "uuid"
+    }
+    attribute("name") {
+        json {
+            name "project_name"      // the wire name may differ from the attribute name
+            type "string"
+        }
+    }
+    attribute("ownerEmail") {
+        json {
+            path {
+                type JSON_PATH
+                value "$.owner.email"  // nested wire locations are addressed by path
+            }
+            type "string"
+            openApiFormat "email"
+        }
+    }
+
+    connIdAttribute("UID", "id")
+}
+----
+
+The essentials:
+
+`objectClass("...")`::
+  declares (or continues) an object class; multiple scripts may contribute to the same class.
+
+`attribute("...") { ... }`::
+  one attribute; inside it you set the wire mapping (`jsonType`, `json { ... }`, `scim { ... }`)
+  and the ConnId mapping (`connId { ... }`, flags such as `required`, `readable`).
+
+`scim { path ... }`::
+  SCIM-only: addresses a (possibly nested, filtered, or extended) SCIM attribute — see
+  xref:scim/complex-attributes.adoc[SCIM attribute paths].
+
+`connIdAttribute(builtIn, attribute)`::
+  binds a built-in ConnId name (`UID`, `NAME`) to an attribute of the class.
+
+## YAML form
+
+The declarative YAML form describes the same builders literally — no closures, no runtime
+context. A schema document uses the `objectClasses` root (one entry per class; documents naming
+the same class merge):
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    description: "A user account"
+    connId:
+      UID: id
+    attributes:
+      id:
+        jsonType: string
+        openApiFormat: uuid
+      displayName:
+        json:
+          name: name
+          type: string
+      primaryEmail:
+        json:
+          path:
+            type: JSON_PATH
+            value: "$.emails[?(@.primary == true)].value"
+          type: string
+          openApiFormat: email
+      updatedAt:
+        json:
+          type: string
+          openApiFormat: date-time
+----
+
+The attribute keys you will meet: `description`, `required`, `multiValued`, `creatable`,
+`updateable`, `readable`, `returnedByDefault`, `emulated`; `jsonType`, `openApiFormat`,
+`complexType`; the `json: { name, type, openApiFormat, path }` wire block; the
+`connId: { name, type }` ConnId block (including the `__UID__` / `__NAME__` built-ins); and, in
+the SCIM wizard, the `scim: { name, type, path }` block. See
+xref:declarative-yaml.adoc[declarative YAML] for the full reference, including the path syntax
+(JSONPath / JSON Pointer / SCIM paths) and the Groovy-to-YAML fallback rules.
+
+## SCIM vs REST
+
+In the *SCIM* wizard the attributes describe a SCIM schema: the wire mapping is the `scim`
+block (SCIM attribute paths, extensions), and SCIM *complex* attributes can additionally be
+flattened into plain attributes — see xref:attribute-flattening.adoc[flattening SCIM
+attributes]. In the *REST* wizard the attributes describe a plain JSON API: the wire mapping is
+the `json` block (JSONPath / JSON Pointer locations).
+
+== References
+
+* *ConnId Built-in Attributes* — the full catalog of the built-in (special) ConnId attributes,
+  their required value types, and how to handle them (chapter shown together with this page).
+* *JSON Types and Formats* — the base JSON types and the OpenAPI formats an attribute can use
+  (chapter shown together with this page).
+* xref:declarative-yaml.adoc[Declarative YAML] — the complete YAML reference.
+* xref:scim/schema-customization.adoc[SCIM schema customization] / xref:rest/user-schema.adoc[REST user schema] —
+  the protocol-specific attribute details.
+* xref:scim/complex-attributes.adoc[SCIM complex and binary attributes] — embedded object
+  classes and SCIM attribute paths.

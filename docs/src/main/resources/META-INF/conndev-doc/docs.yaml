@@ -27,6 +27,36 @@ topics:
     title: SCIMREST framework design and functionality overview
     resource: scimrest/functionality-overview.html
     order: 20
+  - key: base-url
+    protocol: scim
+    title: Base URL
+    resource: scimrest/develop/base-url.html
+    order: 10
+  - key: base-url
+    protocol: rest
+    title: Base URL
+    resource: scimrest/develop/base-url.html
+    order: 10
+  - key: connectivity-endpoint
+    protocol: scim
+    title: Test Endpoint
+    resource: scimrest/develop/test-endpoint.html
+    order: 10
+  - key: connectivity-endpoint
+    protocol: rest
+    title: Test Endpoint
+    resource: scimrest/develop/test-endpoint.html
+    order: 10
+  - key: endpoint-selection
+    protocol: scim
+    title: Choosing Endpoints
+    resource: scimrest/develop/endpoint-selection.html
+    order: 10
+  - key: endpoint-selection
+    protocol: rest
+    title: Choosing Endpoints
+    resource: scimrest/develop/endpoint-selection.html
+    order: 10
   - key: authentication
     protocol: scim
     title: Authentication & authorization
@@ -36,6 +66,16 @@ topics:
     protocol: rest
     title: Authentication & authorization
     resource: scimrest/develop/authentication.html
+    order: 10
+  - key: authentication-scripts
+    protocol: scim
+    title: Authentication Script
+    resource: scimrest/develop/authentication-script.html
+    order: 10
+  - key: authentication-scripts
+    protocol: rest
+    title: Authentication Script
+    resource: scimrest/develop/authentication-script.html
     order: 10
   - key: credentials
     protocol: scim
@@ -67,6 +107,26 @@ topics:
     title: Shipped and sample connectors
     resource: scimrest/develop/generic-connectors.html
     order: 20
+  - key: native-schema
+    protocol: scim
+    title: Schema Script Basics
+    resource: scimrest/develop/schema-script.html
+    order: 5
+  - key: native-schema
+    protocol: rest
+    title: Schema Script Basics
+    resource: scimrest/develop/schema-script.html
+    order: 5
+  - key: native-schema
+    protocol: scim
+    title: Flattening SCIM Attributes
+    resource: scimrest/develop/attribute-flattening.html
+    order: 15
+  - key: native-schema
+    protocol: rest
+    title: Flattening SCIM Attributes
+    resource: scimrest/develop/attribute-flattening.html
+    order: 15
   - key: native-schema
     protocol: scim
     title: Declarative YAML
@@ -102,12 +162,12 @@ topics:
     protocol: rest
     title: Describe user schema
     resource: scimrest/develop/rest/user-schema.html
-    order: 10
+    order: 20
   - key: native-schema
     protocol: rest
     title: Map SCIM attributes to ConnID attributes
     resource: scimrest/develop/rest/attribute-to-connid-attributes.html
-    order: 20
+    order: 30
   - key: search-all
     protocol: rest
     title: Implement basic user search
@@ -213,12 +273,12 @@ topics:
     protocol: scim
     title: SCIM Schema customization
     resource: scimrest/develop/scim/schema-customization.html
-    order: 10
+    order: 20
   - key: native-schema
     protocol: scim
     title: SCIM complex and binary attributes
     resource: scimrest/develop/scim/complex-attributes.html
-    order: 20
+    order: 30
   - key: search-all
     protocol: scim
     title: SCIM search operation customization

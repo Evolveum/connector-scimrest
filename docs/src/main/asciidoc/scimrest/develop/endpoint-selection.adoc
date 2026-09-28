@@ -1,0 +1,36 @@
+= Choosing Endpoints
+
+The endpoint screens of the object-class flow show the HTTP endpoints the connector will use for
+an operation — for example the endpoints from which the objects of a class are *listed* (search
+all), read by id, or created. The list is a starting point, not a fixed set: the AI that analyzes
+the target system's API and documentation may detect additional suitable endpoints, and you can
+always add or adjust endpoints manually.
+
+== Which endpoints are ideal for listing objects
+
+For the *search all* operation (listing the objects of a class) the ideal endpoint is:
+
+* a `GET` on the *collection* path of the object type (e.g. `/users`, `/projects`, `/groups`),
+* returning a JSON array, or a single object carrying the items plus paging information
+  (`totalResults` / `startIndex` / `count` …) that the connector can follow,
+* accepting (or at least not breaking under) common query parameters such as paging
+  (`startIndex`, `count`, `limit`, `offset`) and simple filters (`filter`, `q`, `status` …),
+* reachable with the connector's normal authentication — no extra scopes or factors.
+
+A collection endpoint that returns everything without paging is usable but usually not a good
+choice for large systems — prefer one that pages.
+
+== What to check when picking an endpoint
+
+* The resource returned is the object type of the class being configured (users for the `User`
+  class, not, say, user *profiles*).
+* The response items carry the attributes the object class needs — at minimum the attribute that
+  will serve as `__UID__` and the one mapped to `__NAME__`.
+* The endpoint is stable: part of the documented API, not an internal or debug route.
+
+== When no endpoint fits
+
+If none of the detected endpoints is suitable (the API is not paginated, uses a different shape,
+or the objects live behind an action call), pick the closest endpoint and refine the mapping in
+the operation script of the object class — a custom implementation can use any HTTP exchange the
+target system supports.
