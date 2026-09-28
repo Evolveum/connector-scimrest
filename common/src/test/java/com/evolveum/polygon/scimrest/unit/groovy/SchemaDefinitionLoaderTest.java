@@ -70,7 +70,7 @@ public class SchemaDefinitionLoaderTest {
                 .toList();
         assertEquals(1, testUserClasses.size());
 
-        var nativeNames = testUserClasses.get(0).getAttributeInfo().stream()
+        var nativeNames = testUserClasses.getFirst().getAttributeInfo().stream()
                 .map(AttributeInfo::getNativeName)
                 .toList();
         assertTrue(nativeNames.contains("email"));
