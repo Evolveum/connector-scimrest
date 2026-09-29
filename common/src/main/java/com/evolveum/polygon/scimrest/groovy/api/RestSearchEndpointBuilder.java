@@ -16,7 +16,6 @@ import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.search.RestSearchOperationHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.ObjectExtractorHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.PagingSupportHandler;
-import com.evolveum.polygon.scimrest.yaml.binding.ResponseFormatCoercer;
 import com.evolveum.polygon.scimrest.yaml.binding.SingleResultHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.SupportedFiltersHandler;
 import tools.jackson.databind.node.ArrayNode;
@@ -42,7 +41,7 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
      * @param responseFormat The Class object representing the desired response format.
      */
     @Yaml.Key
-    @Yaml.ValueParser(ResponseFormatCoercer.class)
+    @Yaml.Shortcut({"JSON_ARRAY", "JSON_OBJECT"})
     void responseFormat(Class<?> responseFormat);
 
 

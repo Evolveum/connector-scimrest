@@ -43,7 +43,7 @@ objectClasses:
         - method: PATCH
           path: /users/{id}
           request:
-            contentType: APPLICATION_JSON
+            contentType: application/json
 ----
 
 See xref:../declarative-yaml.adoc[declarative YAML] for the full reference.
@@ -108,7 +108,7 @@ objectClasses:
         - method: PATCH
           path: /users/{id}
           request:
-            contentType: APPLICATION_JSON
+            contentType: application/json
           supportedAttributes:
             - externalId
             - displayName

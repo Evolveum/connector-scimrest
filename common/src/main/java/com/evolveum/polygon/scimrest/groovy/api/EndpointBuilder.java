@@ -72,9 +72,13 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
 
         @Override
         @Yaml.Key
+        @Yaml.Shortcut({"APPLICATION_JSON", "APPLICATION_XML", "APPLICATION_YAML", "APPLICATION_HAL_JSON"})
         RequestBuilder<I> contentType(String contentType);
 
+
         @Override
+        @Yaml.Key
+        @Yaml.Shortcut({"EMPTY"})
         RequestBuilder<I> body(Function<? super I, byte[]> bodyTransformer);
 
         @Override

@@ -205,13 +205,13 @@ objectClasses:
         - method: POST
           path: users
           request:
-            contentType: APPLICATION_JSON
+            contentType: application/json
     update:
       endpoints:
         - method: PATCH
           path: /users/{id}
           request:
-            contentType: APPLICATION_JSON
+            contentType: application/json
           supportedAttributes:
             - firstName
             - lastName
@@ -243,7 +243,9 @@ objectClasses:
   The endpoint path (required); `{name}` path parameters are replaced from the object
 
 `endpoints[].request.contentType`::
-  The request content type
+  The request content type — a literal media type (`application/json`) or one of the built-in
+  constant names (`APPLICATION_JSON`, `APPLICATION_XML`, `APPLICATION_YAML`, `APPLICATION_HAL_JSON`),
+  which resolve to the corresponding media type the same way as in the Groovy DSL
 
 `endpoints[].request.body`::
   Groovy block producing the request body, or `EMPTY` for no body; the default serializes the `creatable` / `updateable` attributes into a JSON body
