@@ -1,0 +1,8 @@
+objectClasses:
+  workpackage:
+    search:
+      endpoints:
+        - path: work_packages
+          emptyFilterSupported: true
+          objectExtractor: |
+            response.body().get("_embedded").get("elements")

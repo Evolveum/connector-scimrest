@@ -1,0 +1,9 @@
+objectClasses:
+  workpackage:
+    attributes:
+      id:
+        connId:
+          name: UID
+      subject:
+        connId:
+          name: NAME

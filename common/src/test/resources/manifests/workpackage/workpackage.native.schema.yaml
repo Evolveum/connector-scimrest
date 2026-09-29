@@ -1,0 +1,17 @@
+objectClasses:
+  workpackage:
+    attributes:
+      id:
+        jsonType: string
+        readable: true
+        updateable: false
+        creatable: false
+        returnedByDefault: true
+        description: "Work package id"
+      subject:
+        jsonType: string
+        readable: true
+        updateable: true
+        creatable: true
+        returnedByDefault: true
+        description: "Work package subject"

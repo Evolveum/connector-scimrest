@@ -1,0 +1,8 @@
+application:
+  name: WorkPackage Case-Insensitivity Test
+connector:
+  schema:
+    - script: /manifests/workpackage/workpackage.native.schema.yaml
+    - script: /manifests/workpackage/workpackage.connid.schema.yaml
+  operation:
+    - script: /manifests/workpackage/workpackage.list.yaml
