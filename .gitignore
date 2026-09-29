@@ -8,3 +8,5 @@ local
 .classpath
 **/.settings
 **/.project
+.opencode
+.vscode
