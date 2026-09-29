@@ -23,6 +23,7 @@ import com.evolveum.polygon.scimrest.groovy.api.ResponseWrapper;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.evolveum.polygon.scimrest.spi.TotalCountExtractor;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
@@ -178,9 +179,29 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
 
     public record GroovyObjectExtractor<BF, OF>(Closure<?> prototype) implements ResponseObjectExtractor<BF, OF> {
 
+        @SuppressWarnings("unchecked")
         @Override
         public Iterable<OF> extractObjects(HttpResponse<BF> response) {
-            return GroovyClosures.copyAndCall((Closure<Iterable<OF>>) prototype, new ResponseWrapper<BF>(response));
+            var objects =  GroovyClosures.copyAndCall(prototype, new ResponseWrapper<BF>(response));
+            // The extractor (a Groovy closure or a plain function) is not contractually
+            // limited to returning an Iterable: it may also return null or a single
+            // object. Coalesce every shape into an Iterable so the caller can always
+            // iterate it. A single (non-array) JSON node is handled explicitly because
+            // JsonNode itself is Iterable — iterating a single ObjectNode would yield
+            // its field values instead of the object itself.
+            if (objects == null) {
+                return List.of();
+            }
+            if (objects instanceof ArrayNode array) {
+                return (Iterable<OF>) array;
+            }
+            if (objects instanceof JsonNode json) {
+                return List.of((OF) json);
+            }
+            if (objects instanceof Iterable<?> iterable) {
+               return (Iterable<OF>) iterable;
+            }
+            return List.of((OF) objects);
         }
     }
 
