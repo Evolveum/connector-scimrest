@@ -10,7 +10,9 @@ import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 public abstract class DeclarativeRequestBuilder<T> implements EndpointBuilder.RequestBuilder<T> {
@@ -18,6 +20,7 @@ public abstract class DeclarativeRequestBuilder<T> implements EndpointBuilder.Re
     public String contentType;
     protected List<String> acceptContentTypes = new ArrayList<>();
     public Function<? super T, byte[]> bodyTransformer;
+    public final Map<String, Object> queryParameters = new LinkedHashMap<>();
 
     @Override
     public EndpointBuilder.RequestBuilder<T> contentType(String contentType) {
@@ -34,6 +37,14 @@ public abstract class DeclarativeRequestBuilder<T> implements EndpointBuilder.Re
     @Override
     public EndpointBuilder.RequestBuilder<T> body(Function<? super T, byte[]> bodyTransformer) {
         this.bodyTransformer = bodyTransformer;
+        return this;
+    }
+
+    @Override
+    public EndpointBuilder.RequestBuilder<T> queryParameter(String name, Object value) {
+        if (value != null) {
+            queryParameters.put(name, value);
+        }
         return this;
     }
 

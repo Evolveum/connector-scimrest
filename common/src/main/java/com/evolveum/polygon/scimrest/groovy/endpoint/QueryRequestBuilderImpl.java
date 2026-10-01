@@ -15,6 +15,7 @@ public class QueryRequestBuilderImpl extends DeclarativeAcceptContentTypesBuilde
 
     public String contentType;
     public final Map<String, Object> bodyParameters = new LinkedHashMap<>();
+    public final Map<String, Object> queryParameters = new LinkedHashMap<>();
 
     @Override
     public EndpointBuilder.QueryRequestBuilder contentType(String contentType) {
@@ -26,6 +27,14 @@ public class QueryRequestBuilderImpl extends DeclarativeAcceptContentTypesBuilde
     public EndpointBuilder.QueryRequestBuilder bodyParameter(String name, Object value) {
         if (value != null) {
             bodyParameters.put(name, value);
+        }
+        return this;
+    }
+
+    @Override
+    public EndpointBuilder.QueryRequestBuilder queryParameter(String name, Object value) {
+        if (value != null) {
+            queryParameters.put(name, value);
         }
         return this;
     }

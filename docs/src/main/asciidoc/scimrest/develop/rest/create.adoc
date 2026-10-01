@@ -27,7 +27,7 @@ Where:
 
 * this simplest script heavily relies on the default behavior of the connector framework.
 * The `endpoint` method specifies the endpoint to be used for the create operation. The HTTP method is given as the first argument (`endpoint(POST, "/users")`) or set with the `httpOperation` method inside the closure (constants `GET`, `POST`, `PUT`, `DELETE`, `PATCH`).
-* The `request` block customizes the request: `accept(...)`, `contentType(...)`, and `body { ... }` (a closure producing the request body as bytes).
+* The `request` block customizes the request: `accept(...)`, `contentType(...)`, `body { ... }` (a closure producing the request body as bytes), and `queryParameter(name, value)` — a static query parameter added to the request URL (in YAML: `request: { queryParameters: { name: value } }`).
 ** If no body is specified, the default implementation serializes all `creatable` attributes of the object class into a JSON body.
 ** If no `response { ... }` is specified, the response is handled by the default implementation, which expects the created object to be returned in the response body in JSON format.
 ** Attributes that are `updatable` but not `creatable` are handled automatically by the framework after the object is created — it issues an `update` operation (if implemented) immediately after the `create` operation.

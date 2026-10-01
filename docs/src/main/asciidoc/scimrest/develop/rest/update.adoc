@@ -29,6 +29,7 @@ Where:
 * The `httpOperation` is set to `PATCH`, so by default `absolute`  mode is automatically set to `false`, which allows a partial update of the object.
 * The `request` block allows to customize the request. In this case
    we specify that the content type of the request is JSON.
+   `queryParameter(name, value)` adds a static query parameter to the request URL.
 ** If no body `implementation` is specified, the default implementation
     will be used which will serialize only changed `updateable` attributes from the `objectClass` into JSON body.
 
@@ -73,6 +74,7 @@ Where:
 * The `httpOperation` is set to `PUT`, so by default `absolute` mode is automatically set to `true`.
 ** The `request` block allows to customize the request. In this case
    we specify that the content type of the request is JSON.
+   `queryParameter(name, value)` adds a static query parameter to the request URL.
 ** If no body `implementation` is specified, the default implementation
     will be used which will serialize all `updateable` attributes
     from the `objectClass` into JSON body.

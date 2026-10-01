@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuilder<RestObjectClassDefinition>
         implements RestDeleteOperationBuilder {
@@ -111,7 +112,7 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
         }
 
         DeleteOperationHandler build() {
-            return new EndpointHandler((RestConnectorContext) parent.context, path, httpMethod);
+            return new EndpointHandler((RestConnectorContext) parent.context, path, httpMethod, request.queryParameters);
         }
     }
 
@@ -126,13 +127,15 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
     private static class ResponseBuilderImpl extends DeclarativeResponseBuilder<Void> implements EndpointBuilder.ResponseBuilder<Void> {
     }
 
-    record EndpointHandler(RestConnectorContext context, String path, HttpMethod method) implements DeleteOperationHandler {
+    record EndpointHandler(RestConnectorContext context, String path, HttpMethod method,
+                           Map<String, Object> queryParameters) implements DeleteOperationHandler {
         @Override
         public void delete(Uid uid, OperationOptions options, ContextLookup operationContext) {
             var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method != null ? method : HttpMethod.DELETE);
             request.pathParameter("id", uid.getUidValue());
+            queryParameters.forEach(request::queryParameter);
             try {
                 var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class, "endpoint " + path));
                 int status = response.statusCode();

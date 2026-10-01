@@ -21,6 +21,7 @@ Where:
 * The `endpoint` method specifies the endpoint to be used for the delete operation. The HTTP method is given as the first argument (`endpoint(DELETE, "/users/{id}")`) or set with the `httpOperation` method inside the closure.
 * In this case we use the path parameter `{id}`, which is replaced with the UID value of the object being deleted.
 * By default no request body is sent and no response body is expected.
+* The `request` block can customize the request — e.g. `request { queryParameter(name, value) }` adds a static query parameter to the request URL.
 
 == The same delete in YAML
 

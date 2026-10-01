@@ -135,7 +135,8 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                     httpMethod,
                     request.bodyTransformer,
                     responseHandler,
-                    supportedAttrs
+                    supportedAttrs,
+                    request.queryParameters
             );
         }
 
@@ -173,7 +174,8 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                            HttpMethod method,
                            Function<? super Set<Attribute>, byte[]> requestBody,
                            Function<HttpResponse<?>, ConnectorObject> responseHandler,
-                           Map<String, AttributeSupport> supportedAttributes) implements CreateOperationHandler {
+                           Map<String, AttributeSupport> supportedAttributes,
+                           Map<String, Object> queryParameters) implements CreateOperationHandler {
 
         @Override
         public Result create(
@@ -181,6 +183,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
             var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method);
+            queryParameters.forEach(request::queryParameter);
             if (contentType != null ) {
                 request.header("Content-Type", contentType);
                 request.body(requestBody.apply(createAttributes));

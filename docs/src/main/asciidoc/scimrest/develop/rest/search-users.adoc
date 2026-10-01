@@ -33,7 +33,7 @@ Where:
 ** `pageOffset` — the page to be returned (the framework pages through the results starting with the first page)
 +
 Instead of a closure, paging can be declared with `pagingParameter(token, location)` (or `pagingParameter(token, location, name)` to name the request parameter explicitly), which maps a paging token onto the request per page: the token is `pageSize`, `page` (the page number, starting with 1), or `offset` (the zero-based object offset, `(page - 1) * pageSize`), and `location` is `query`, `header`, or `body` (a request body; requires `httpOperation POST`). E.g. `pagingParameter("pageSize", "query", "size")` and `pagingParameter("page", "query")`. `pageSize(size)` sets the requested page size (default 25).
-* `request` — the object used to customize the request. Use `queryParameter(name, value)` to add HTTP query parameters to the request.
+* `request` — the object used to customize every request the endpoint issues. Use `queryParameter(name, value)` to add a static HTTP query parameter to the request URL — e.g. for a JIRA-style search endpoint `request { queryParameter("jql", "created >= 1970-01-01 ORDER BY created ASC"); queryParameter("fields", "summary,status,project,created") }`; `bodyParameter(name, value)` adds a static JSON field to the (usually POST) request body. In YAML the query parameters are declared as a mapping: `request: { queryParameters: { jql: ..., fields: ... } }`.
 
 == The same search in YAML
 
@@ -55,6 +55,11 @@ objectClasses:
                 name: size
               page:
                 in: query
+          request:
+            # static query parameters sent with every request
+            # (e.g. a fixed JQL on a JIRA-style search/jql endpoint)
+            queryParameters:
+              fields: id,login,name
 ----
 
 See xref:../declarative-yaml.adoc[declarative YAML] for the full reference.

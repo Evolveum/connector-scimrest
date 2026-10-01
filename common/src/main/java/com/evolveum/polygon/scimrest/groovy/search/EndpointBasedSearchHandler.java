@@ -94,6 +94,7 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
             request.header("Content-Type", queryRequestBuilder.contentType);
         }
         queryRequestBuilder.bodyParameters.forEach(request::bodyParameter);
+        queryRequestBuilder.queryParameters.forEach(request::queryParameter);
         mapper.mapToRequest(request, filter);
     }
 

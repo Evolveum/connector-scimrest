@@ -135,6 +135,11 @@ objectClasses:
                  in: query
            # pagingSupport: |
            #   request.queryParameter("size", paging.pageSize)  # Groovy alternative
+           request:
+             queryParameters:            # static query parameters sent with every request
+               jql: created >= 1970-01-01 ORDER BY created ASC   # (e.g. a fixed JQL on JIRA's search/jql endpoint)
+               fields: summary,status,project,created
+             # contentType: APPLICATION_JSON  # Content-Type of the (usually POST) request body
            supportedFilters:
             - spec: attribute("login").eq().anySingleValue()
               request: |
@@ -172,6 +177,15 @@ objectClasses:
 
 `search.endpoints[].pagingSupport`::
   How paging information is mapped onto the request, in one of two forms. A *mapping* declares the paging declaratively: `pageSize` (the requested page size, default 25) and/or `parameters` — a mapping of paging tokens to where they are sent. Each token entry takes `in` — `query`, `header`, or `body` (a request body; requires `method: POST`) — and an optional `name` (the request parameter name, defaulting to the token). The tokens are `pageSize` (the requested page size), `page` (the page number, starting with 1), and `offset` (the zero-based object offset, `(page - 1) * pageSize`). Example: `parameters: { pageSize: { in: query, name: size }, page: { in: query } }`. A *Groovy block* (variables `request`, `paging` with `pageSize` and `pageOffset`) keeps arbitrary mapping logic. The two forms are mutually exclusive; `pageSize` alone (without `parameters`) composes with the Groovy form by feeding its `paging.pageSize`
+
+`search.endpoints[].request`::
+  Customizes every request the endpoint issues (the YAML counterpart of the Groovy `request { ... }` block)
+
+`search.endpoints[].request.queryParameters`::
+  A mapping of query parameter name to scalar value — added to the query string of every request the endpoint issues (e.g. a fixed `jql` / `fields` on a JIRA-style `search/jql` endpoint); a `null` entry adds nothing
+
+`search.endpoints[].request.contentType`::
+  The Content-Type of the (usually POST) search request body — a literal media type (`application/json`) or one of the built-in constant names (`APPLICATION_JSON`, `APPLICATION_XML`, `APPLICATION_YAML`, `APPLICATION_HAL_JSON`)
 
 `search.endpoints[].singleResult`::
   The endpoint returns exactly one object
@@ -249,6 +263,9 @@ objectClasses:
 
 `endpoints[].request.body`::
   Groovy block producing the request body, or `EMPTY` for no body; the default serializes the `creatable` / `updateable` attributes into a JSON body
+
+`endpoints[].request.queryParameters`::
+  A mapping of query parameter name to scalar value — added to the query string of every request the endpoint issues; a `null` entry adds nothing
 
 `endpoints[].supportedAttributes`::
   Plain attribute names, a fixed value (`{ name, value }`), or a value transition (`{ name, transition: { from, to } }` — accepted but not enforced yet; a transition-only entry matches no requests)

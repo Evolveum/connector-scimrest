@@ -10,6 +10,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Yaml;
+import com.evolveum.polygon.scimrest.yaml.binding.QueryParametersHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -56,6 +57,7 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
 
     interface QueryEndpoint<I> extends EndpointBuilder {
 
+        @Yaml.Sub
         QueryRequestBuilder<I> request();
 
         default QueryRequestBuilder<I> request(@DelegatesTo(value = QueryRequestBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
@@ -83,6 +85,24 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
 
         @Override
         RequestBuilder<I> body(@Script.Runtime Closure<byte[]> bodyTransformer);
+
+        /**
+         * Adds a static query parameter to every request the endpoint issues.
+         *
+         * @param name the query parameter name
+         * @param value the parameter value (stringified into the URL; {@code null} adds nothing)
+         */
+        RequestBuilder<I> queryParameter(String name, Object value);
+
+        /**
+         * Marker for the YAML front-end: the {@code queryParameters:} mapping (parameter name to
+         * scalar value) under {@code request:} is bound by
+         * {@link com.evolveum.polygon.scimrest.yaml.binding.QueryParametersHandler}; the method
+         * body is unused.
+         */
+        @Yaml.Custom(QueryParametersHandler.class)
+        default void queryParameters() {
+        }
     }
 
     interface QueryRequestBuilder<I> extends RequestHeadersBuilder<I>{
@@ -93,6 +113,8 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
         /**
          * Sets the {@code Content-Type} of the (usually POST) search request.
          */
+        @Yaml.Key
+        @Yaml.Shortcut({"APPLICATION_JSON", "APPLICATION_XML", "APPLICATION_YAML", "APPLICATION_HAL_JSON"})
         QueryRequestBuilder<I> contentType(String contentType);
 
         /**
@@ -102,6 +124,24 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
          * @param value the field value ({@code null} adds nothing)
          */
         QueryRequestBuilder<I> bodyParameter(String name, Object value);
+
+        /**
+         * Adds a static query parameter to every request the search endpoint issues.
+         *
+         * @param name the query parameter name
+         * @param value the parameter value (stringified into the URL; {@code null} adds nothing)
+         */
+        QueryRequestBuilder<I> queryParameter(String name, Object value);
+
+        /**
+         * Marker for the YAML front-end: the {@code queryParameters:} mapping (parameter name to
+         * scalar value) under {@code request:} is bound by
+         * {@link com.evolveum.polygon.scimrest.yaml.binding.QueryParametersHandler}; the method
+         * body is unused.
+         */
+        @Yaml.Custom(QueryParametersHandler.class)
+        default void queryParameters() {
+        }
     }
 
     interface RequestHeadersBuilder<I> extends GroovyContentTypeMixin {

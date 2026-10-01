@@ -185,7 +185,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                     request.bodyTransformer,
                     responseHandler,
                     supportedAttrs,
-                    true
+                    true,
+                    request.queryParameters
             );
         }
     }
@@ -208,7 +209,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                            Function<? super UpdateRequest, byte[]> requestBody,
                            Function<HttpResponse<?>, ConnectorObject> responseHandler,
                            Map<String, AttributeSupport> supportedAttributes,
-                           boolean requiresOriginalState) implements UpdateOperationHandler {
+                           boolean requiresOriginalState,
+                           Map<String, Object> queryParameters) implements UpdateOperationHandler {
 
         @Override
         public void update(
@@ -218,6 +220,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
             request.httpMethod(method);
             // FIXME: Use proper path parameter computation
             request.pathParameter("id", updateRequest.uid().getUidValue());
+            queryParameters.forEach(request::queryParameter);
 
             if (contentType != null) {
                 request.header("Content-Type", contentType);
