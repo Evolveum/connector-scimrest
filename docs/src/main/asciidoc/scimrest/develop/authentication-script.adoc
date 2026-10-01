@@ -1,6 +1,6 @@
 = Authentication Script
 
-The *Authentication Script* screen customizes how the connector authenticates. The methods
+The *Authentication Script* customizes how the connector authenticates. The methods
 chosen on the previous screen are already implemented by the framework, so a script is an
 *optional refinement* on top of the built-in behavior — not a requirement. You need it when the
 target system deviates from the standard: extra headers, non-standard token handling, custom

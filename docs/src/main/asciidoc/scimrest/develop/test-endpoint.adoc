@@ -1,6 +1,6 @@
 = Test Endpoint
 
-The *Test Endpoint* screen verifies that the connector can actually talk to the target system
+The *Test Endpoint* verifies that the connector can actually talk to the target system
 before the rest of the connector is generated. It does this by sending a small HTTP request to a
 *connectivity endpoint* and checking that the system answers sensibly.
 
@@ -25,10 +25,9 @@ A good connectivity endpoint is:
 * a `GET` that requires no request body,
 * cheap and side-effect-free (a health check, version, or schema document),
 * stable across application versions, and
-* reachable with the authentication you configured (or no authentication at all).
+* reachable with the authentication you configured (to verify credentials).
 
-Examples: `/health`, `/status`, `/version`, the SCIM `/Users` collection with an empty result, or
-an OpenAPI document. Avoid endpoints that trigger expensive work, that need a specific object to
+Examples: `/user/me`, `/my_preferences`. Avoid endpoints that trigger expensive work, that need a specific object to
 exist, or that are protected by a second factor.
 
 == Notes

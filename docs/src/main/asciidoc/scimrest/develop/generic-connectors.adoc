@@ -6,7 +6,7 @@ This document is part of the SCIMREST connector tutorial. See xref:../index.adoc
 
 == connector/scim-generic — SCIM2 Generic Connector
 
-The same `ManifestBasedConnector`, but `configurationOverride.properties` hides all 47 `rest*` authentication properties (each line is `<property> = ignore`), leaving only the SCIM-facing configuration: `scimBaseUrl`, the `scim*` authentication properties, `baseAddress`, `trustAllCertificates`, `timeoutSeconds`, and `developmentMode`.
+The same `ManifestBasedConnector` with  only the SCIM-facing configuration: `scimBaseUrl`, the `scim*` authentication properties, `trustAllCertificates`, `timeoutSeconds`, and `developmentMode`.
 The shipped manifest is *empty*; a SCIM 2.0 compliant server is enough to work with the built-in discovery and operations.
 
 == Sample connectors

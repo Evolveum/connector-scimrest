@@ -6,7 +6,7 @@ and must be the base of the API you want to integrate with — not a page in a b
 
 == Which field to fill
 
-The field shown depends on the integration type:
+The field shown depends on the implementation type:
 
 `Base address` (REST)::
   The base URL of the REST API (configuration property `baseAddress`). Example:
