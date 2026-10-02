@@ -13,6 +13,7 @@ import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.conndev.spi.FilterAwareExecuteQueryProcessor;
 import com.evolveum.polygon.conndev.groovy.FilterAwareSearchProcessorBuilder;
 import com.evolveum.polygon.conndev.api.FilterSpecification;
+import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
@@ -44,6 +45,10 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
     }
 
     public void performSearch(ScimContext context, Filter query, ResultsHandler handler, OperationOptions options) {
+        var converter = context.contextLookup().get(RestConnectorContext.class).lookupConverter();
+        ResultsHandler effectiveHandler = converter == null
+                ? handler
+                : obj -> handler.handle(converter.toUserFacing(objectClass.objectClass(), obj));
         var shouldContinue = true;
         var currentPage = 1;
         var pageLimit = 25; // FIXME: Make this configurable from builders.
@@ -65,10 +70,10 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
                 for (var remoteObj : remoteObjs) {
                     ConnectorObject obj = deserializeFromRemote(remoteObj);
-                    handler.handle(obj);
+                    effectiveHandler.handle(obj);
                     batchProcessed++;
                 }
-                BatchAwareResultHandler.batchFinished(handler);
+                BatchAwareResultHandler.batchFinished(effectiveHandler);
                 totalProcessed += batchProcessed;
                 // TODO: Add support for cursor-based continuation https://developer.zendesk.com/api-reference/introduction/pagination/#using-offset-pagination
                 // TODO: Maybe paging and cursor API could be merged to being two different implentations of cursor

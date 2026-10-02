@@ -108,6 +108,10 @@ public class ScimCreateHandler implements CreateOperationHandler {
     }
 
     private GenericScimResource buildScimResource(Set<Attribute> attributes, RestObjectClassDefinition objectClass) {
+        var converter = context.contextLookup().get(RestConnectorContext.class).lookupConverter();
+        if (converter != null) {
+            attributes = converter.toNative(this.objectClass, attributes);
+        }
         var scimResource = new GenericScimResource();
 
         for (var attribute : attributes) {

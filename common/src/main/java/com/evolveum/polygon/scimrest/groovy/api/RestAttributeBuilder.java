@@ -117,4 +117,91 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
         AttributePathFormat<String> SCIM = ScimPathFormat.INSTANCE;
     }
 
+    /**
+     * Value lookup from this attribute to a {@code cached} object class.
+     *
+     * <p>During serialization (create/update) the human-facing value is resolved to the
+     * cached class's {@code serialize} attribute value, during deserialization (search)
+     * the cached class's {@code serialize} value is resolved back to the
+     * {@code deserialize} attribute value.
+     *
+     * @return the lookup builder
+     */
+    @Yaml.Sub
+    Lookup lookup();
+
+    Lookup lookup(@DelegatesTo(value = Lookup.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+
+    /**
+     * Lookup declaration mapping this attribute's values to a cached object class's values.
+     */
+    interface Lookup {
+
+//        /**
+//         * @return the name of the cached object class this lookup resolves against
+//         */
+//        String objectClass();
+
+        /**
+         * Returns the sub-builder for the cached object class mapping.
+         * In YAML this is the {@code objectClass:} nested block, in Groovy it is the
+         * target of the trailing-closure form {@code objectClass("Person") { ... }}.
+         */
+        @Yaml.Sub
+        ObjectClassLookup objectClass();
+
+        /**
+         * Groovy trailing-closure form: names the cached class and configures its
+         * attribute mapping in the closure.
+         *
+         * <pre>
+         * lookup {
+         *     objectClass("Person") {
+         *         serialize "href"
+         *         deserialize "name"
+         *     }
+         * }
+         * </pre>
+         *
+         * @param name    the cached object class name
+         * @param closure configuration for the attribute mapping
+         * @return the object-class-scoped lookup builder
+         */
+        ObjectClassLookup objectClass(String name,
+                                      @DelegatesTo(value = ObjectClassLookup.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
+
+        interface ObjectClassLookup {
+
+            /** @return the cached object class name */
+            String name();
+
+            /**
+             * @param name the cached object class name
+             * @return this builder
+             */
+            @Yaml.Key
+            ObjectClassLookup name(String name);
+
+            /** @return the cached-class attribute holding the native (wire) value */
+            String serialize();
+
+            /**
+             * @param name cached-class attribute name
+             * @return this builder
+             */
+            @Yaml.Key
+            ObjectClassLookup serialize(String name);
+
+            /** @return the cached-class attribute holding the human-facing value */
+            String deserialize();
+
+            /**
+             * @param name cached-class attribute name
+             * @return this builder
+             */
+            @Yaml.Key
+            ObjectClassLookup deserialize(String name);
+        }
+    }
+
 }

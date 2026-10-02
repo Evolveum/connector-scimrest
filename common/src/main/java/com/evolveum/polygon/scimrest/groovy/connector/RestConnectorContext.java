@@ -17,6 +17,7 @@ import com.evolveum.polygon.scimrest.config.RestClientConfiguration;
 import com.evolveum.polygon.scimrest.config.ScimClientConfiguration;
 import com.evolveum.polygon.scimrest.api.AuthorizationCustomizer;
 import com.evolveum.polygon.scimrest.impl.rest.RestContext;
+import com.evolveum.polygon.scimrest.lookup.LookupValueConverter;
 import com.evolveum.polygon.scimrest.schema.RestSchema;
 import com.evolveum.polygon.scimrest.impl.scim.ScimContext;
 import org.identityconnectors.common.logging.Log;
@@ -34,6 +35,7 @@ public class RestConnectorContext implements ConnectorContext {
     private RestSchema schema;
     private RestContext rest;
     private ScimContext scim;
+    private LookupValueConverter lookupConverter;
 
     public RestConnectorContext(BaseGroovyConnectorConfiguration groovyConf) {
         this.configuration = groovyConf;
@@ -45,6 +47,7 @@ public class RestConnectorContext implements ConnectorContext {
 
     public void schema(RestSchema build) {
         this.schema = build;
+        this.lookupConverter = null;
     }
 
     public void handlers(Map<ObjectClass, ? extends ObjectClassHandler> build) {
@@ -87,6 +90,14 @@ public class RestConnectorContext implements ConnectorContext {
                 LOG.ok("SCIM context not initialized: no SCIM credentials configured");
             }
         }
+    }
+
+    public LookupValueConverter lookupConverter() {
+        return lookupConverter;
+    }
+
+    public void lookupConverter(LookupValueConverter converter) {
+        this.lookupConverter = converter;
     }
 
     @Override

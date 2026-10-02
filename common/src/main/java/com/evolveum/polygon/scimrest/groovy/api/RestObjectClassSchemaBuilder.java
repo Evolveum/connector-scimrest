@@ -19,6 +19,22 @@ public interface RestObjectClassSchemaBuilder extends ObjectClassSchemaBuilder<
         RestObjectClassSchemaBuilder, RestAttributeBuilder<RestReferenceAttributeBuilder>, RestReferenceAttributeBuilder> {
 
     /**
+     * @return {@code true} if this object class is declared as cached.
+     */
+    boolean isCached();
+
+    /**
+     * Declares this object class as cached: it is loaded lazily through its declared
+     * search operation, and the resulting objects are stored per connector instance
+     * for use by {@code lookup} value resolution of other object classes.
+     *
+     * @param value {@code true} to mark the object class as cached
+     * @return this object class builder
+     */
+    @Yaml.Key
+    RestObjectClassSchemaBuilder cached(boolean value);
+
+    /**
      * Returns the SCIM mapping configuration for this object class.
      *
      * @return an instance of {@link ScimMapping} representing the SCIM schema mappings
