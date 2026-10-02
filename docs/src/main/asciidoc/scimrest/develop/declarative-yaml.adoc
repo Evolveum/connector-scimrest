@@ -4,7 +4,7 @@ The SCIMREST framework supports a declarative YAML form for schema definitions, 
 
 YAML documents and Groovy scripts are two front-ends over the *same* builders — a YAML document drives the same live builders the Groovy DSL does, so both forms can be mixed per connector and a connector can migrate a script to YAML without changing the manifest.
 
-This document is part of the SCIMREST connector tutorial. See xref:../index.adoc[] for other topics.
+This document is part of the SCIMREST connector tutorial. See the framework introduction for other topics.
 
 == Groovy to YAML fallback
 
@@ -41,7 +41,7 @@ objectClasses:
           name: NAME
 ----
 
-NOTE: `scim.extensions` in the example is shown for the target shape — that key is not bindable in YAML yet (it fails fast), the rest of the example is fully supported.
+The `scim.extensions` mapping binds each extension alias to its SCIM schema URI (or to a mapping with a required `uri` and an optional `flatten` list).
 
 Keys:
 
@@ -55,7 +55,7 @@ Keys:
   Built-in attribute aliases, e.g. `connId: { UID: user_id }` binds `__UID__` to the `user_id` attribute
 
 `scim` (object-class level)::
-  `schemaUri`, `name` (the SCIM resource name), `onlyExplicitlyListed`; `extensions` (alias → SCIM schema URI) is not supported in YAML yet — declare it in Groovy
+  `schemaUri`, `name` (the SCIM resource name), `onlyExplicitlyListed`, `flatten` (a list of complex attribute names to flatten, or a single name), and `extensions` (alias → SCIM schema URI, or a mapping with a required `uri` and an optional `flatten` list)
 
 `attributes.<name>`::
   One attribute — see the attribute keys below
@@ -63,13 +63,12 @@ Keys:
 `references.<name>`::
   A reference attribute (memberships, foreign keys): `objectClass`, `role` (`subject` / `object`), `subtype`
 
-`relationships.<name>`::
-  An association between object classes: `subject` / `object` participants, each with `class` and `attribute` (including `resolver: { resolution: PER_OBJECT, search: <attribute> eq $value }`)
+(`relationships` is not available in YAML — declare associations in a Groovy schema script; see the REST relationship topic.)
 
 Attribute keys (all optional — only present keys are applied, so the defaults stay untouched):
 
 `description`, `required`, `multiValued`, `creatable`, `updateable` / `updatable`, `readable`, `returnedByDefault`, `emulated`::
-  The regular attribute settings (see xref:rest/user-schema.adoc[user schema])
+  The regular attribute settings (see user schema)
 
 `jsonType`, `openApiFormat`, `complexType`::
   JSON wire type, OpenAPI format, and the embedded object class for structured attributes
@@ -78,13 +77,12 @@ Attribute keys (all optional — only present keys are applied, so the defaults 
   The JSON wire mapping block; `path` maps the attribute to a (nested) JSON location — see the attribute paths below
 
 `connId: { name, type }`::
-  The ConnId-side name (including the `__UID__` / `__NAME__` built-ins) and value type (`string`, `integer`, `long`, `boolean`, `double`, `bigdecimal`, `binary`)
+  The ConnId-side name (including the `__UID__` / `__NAME__` built-ins) and value type — a capitalized, case-sensitive Java type name (`String`, `Integer`, `Long`, `Boolean`, `Double`, `BigDecimal`, `Binary`, `GuardedString`, …)
 
 `scim: { name, type, path }`::
   The SCIM wire name, SCIM type, and SCIM attribute path (a path string such as `name.givenName`, `emails[0].value`, `emails[primary eq true].value`, or a full extension URI) — see the attribute paths below
 
-`scim.implementation: { deserialize: |, serialize: | }`::
-  Groovy blocks for custom value mapping
+(Custom SCIM value mapping — `scim { implementation { deserialize { … } serialize { … } } }` — is Groovy-only and is not available in YAML.)
 
 A bare `attr:` (no keys) declares the attribute with defaults — the counterpart of `attribute("x")` with an empty closure.
 
@@ -98,7 +96,7 @@ attributes:
   primaryEmail:
     json:
       path:
-        type: JSON_POINTER   # JSON_PATH | JSON_POINTER | SCIM
+        type: JSON_POINTER   # JSON_PATH | JSON_POINTER
         value: /emails/0/value
 ----
 
@@ -124,6 +122,7 @@ objectClasses:
            emptyFilterSupported: true
            objectExtractor:
              value: $.users
+           # objectsPath: $.users                      # the same, as the plain path form
            # objectExtractor: |
            #   response.body().get("users")  # Groovy alternative for arbitrary logic
            pagingSupport:
@@ -173,7 +172,10 @@ objectClasses:
   Whether the response is a JSON array or a JSON object: `JSON_ARRAY` / `JSON_OBJECT`; default `JSON_OBJECT`
 
 `search.endpoints[].objectExtractor`::
-  How the list of objects is extracted from the response, in one of two forms. A *path mapping* `{ type, value }` (the same `{ type, value }` shape as the attribute `path` keys) resolves a JSON Pointer (`/_embedded/elements`) or a basic JSONPath (`$._embedded.elements`) against the response body — a resolved array yields its elements, a resolved object yields the single object, and a missing path yields no objects; `type` is case-insensitive and defaults to `JSON_PATH` (so `value:` alone is a JSONPath expression). A *Groovy block* (variable `response`) keeps arbitrary extraction logic. The default (no `objectExtractor`) handles a JSON array or a single object
+  How the list of objects is extracted from the response, in one of two forms. A *path mapping* `{ type, value }` (the same `{ type, value }` shape as the attribute `path` keys) resolves a JSON Pointer (`/_embedded/elements`) or a basic JSONPath (`$._embedded.elements`) against the response body — a resolved array yields its elements, a resolved object yields the single object, and a missing path yields no objects; `type` is case-insensitive and defaults to `JSON_PATH` (so `value:` alone is a JSONPath expression). A *string or block scalar* (plain or `|`) is compiled as a *Groovy closure* with the variable `response` — so `objectExtractor: $.data` is Groovy code, not a JSONPath expression (in the Groovy DSL, `objectExtractor("…")` with a plain string is a path expression instead). For a plain path, use `objectsPath` instead. The default (no `objectExtractor`) handles a JSON array or a single object
+
+`search.endpoints[].objectsPath`::
+  The path to the list of objects in the response — the unambiguous path form of `objectExtractor`: a scalar is a basic JSONPath expression (`$._embedded.elements`) and a `{ type, value }` mapping selects an explicit format (`JSON_PATH` or `JSON_POINTER`, case-insensitive, default `JSON_PATH`) — the same shape as the attribute `path` keys. A resolved array yields its elements, a resolved object yields the single object, a missing path yields no objects. Groovy counterpart: `objectsPath("$._embedded.elements")` (or with an explicit `AttributePathDeclaration`)
 
 `search.endpoints[].pagingSupport`::
   How paging information is mapped onto the request, in one of two forms. A *mapping* declares the paging declaratively: `pageSize` (the requested page size, default 25) and/or `parameters` — a mapping of paging tokens to where they are sent. Each token entry takes `in` — `query`, `header`, or `body` (a request body; requires `method: POST`) — and an optional `name` (the request parameter name, defaulting to the token). The tokens are `pageSize` (the requested page size), `page` (the page number, starting with 1), and `offset` (the zero-based object offset, `(page - 1) * pageSize`). Example: `parameters: { pageSize: { in: query, name: size }, page: { in: query } }`. A *Groovy block* (variables `request`, `paging` with `pageSize` and `pageOffset`) keeps arbitrary mapping logic. The two forms are mutually exclusive; `pageSize` alone (without `parameters`) composes with the Groovy form by feeding its `paging.pageSize`
@@ -194,7 +196,7 @@ objectClasses:
   The endpoint supports the empty (list-all) filter
 
 `search.endpoints[].supportedFilters[].spec`::
-  A filter specification as a build-time Groovy expression, e.g. `attribute("id").eq().anySingleValue()` (see the xref:scim/advanced-filters.adoc[filter specification API])
+  A filter specification as a build-time Groovy expression, e.g. `attribute("id").eq().anySingleValue()` (see the filter specification API)
 
 `search.endpoints[].supportedFilters[].request`::
   Groovy block mapping the filter onto the request (variables `request`, `value`)
@@ -206,7 +208,7 @@ objectClasses:
   One resolver per entry: `attribute`, `resolutionType` (`PER_OBJECT` / `BATCH`), and the `implementation` Groovy block
 
 `search.custom`::
-  Custom search: `supportedFilters` (each a `spec` expression), `emptyFilterSupported`, and the `implementation` Groovy block (see xref:implement-custom-search/[custom search])
+  Custom search: `supportedFilters` (each a `spec` expression), `emptyFilterSupported`, and the `implementation` Groovy block (see custom search)
 
 === Create / update / delete
 
@@ -262,7 +264,7 @@ objectClasses:
   which resolve to the corresponding media type the same way as in the Groovy DSL
 
 `endpoints[].request.body`::
-  Groovy block producing the request body, or `EMPTY` for no body; the default serializes the `creatable` / `updateable` attributes into a JSON body
+  `EMPTY` for no body; the default serializes the supported `creatable` / `updateable` attributes into a JSON body. (A custom Groovy body block is not supported for create/update/delete — the body is built from the supported attributes.)
 
 `endpoints[].request.queryParameters`::
   A mapping of query parameter name to scalar value — added to the query string of every request the endpoint issues; a `null` entry adds nothing
@@ -270,7 +272,7 @@ objectClasses:
 `endpoints[].supportedAttributes`::
   Plain attribute names, a fixed value (`{ name, value }`), or a value transition (`{ name, transition: { from, to } }` — accepted but not enforced yet; a transition-only entry matches no requests)
 
-See xref:rest/create.adoc[create], xref:rest/update.adoc[update], and xref:rest/delete.adoc[delete] for the operation semantics.
+See create, update, and delete for the operation semantics.
 
 == Authentication
 
@@ -303,4 +305,4 @@ authentication:
 `preference`::
   Ordered list of method names (`apiKey`, `basic`, `bearer`, `jwtBearer`, the `oauth2*` flavors, `awsSignature`)
 
-See xref:authentication.adoc[authentication & authorization] for the properties each method consumes.
+See authentication & authorization for the properties each method consumes.

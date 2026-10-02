@@ -2,8 +2,8 @@
 
 The SCIMREST framework authenticates against the target system per *protocol namespace*:
 
-* `rest` — the REST API (properties `rest*`, scripts `authorization { rest { ... } }`)
-* `scim` — the SCIM API (properties `scim*`, scripts `authorization { scim { ... } }`)
+* `rest` — the REST API (properties `rest*`, scripts `authentication { rest { ... } }`)
+* `scim` — the SCIM API (properties `scim*`, scripts `authentication { scim { ... } }`)
 
 The two namespaces are independent: you can authenticate the SCIM API with one method and the
 REST API with another.

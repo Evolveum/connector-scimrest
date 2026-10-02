@@ -12,9 +12,9 @@ import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 
 /**
- * Binds a {@code supportedAttributes:} block onto an update endpoint. Each list item is either a
- * bare attribute name (the short form, e.g. {@code - displayName}) or a mapping with a {@code name}
- * and optional {@code value}/{@code transition} ({@code from}/{@code to}) selectors.
+ * Binds a {@code supportedAttributes:} block onto a create or update endpoint. Each list item is
+ * either a bare attribute name (the short form, e.g. {@code - displayName}) or a mapping with a
+ * {@code name} and optional {@code value}/{@code transition} ({@code from}/{@code to}) selectors.
  */
 public class SupportedAttributesHandler implements CustomYamlHandler {
 

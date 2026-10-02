@@ -35,4 +35,4 @@ objectClasses:
           path: /users/{id}
 ----
 
-See xref:../declarative-yaml.adoc[declarative YAML] for the full reference.
+See declarative YAML for the full reference.

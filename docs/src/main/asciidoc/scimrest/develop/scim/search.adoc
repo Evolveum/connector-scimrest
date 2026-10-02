@@ -2,7 +2,7 @@
 
 The SCIM 2.0 framework provides automatic search for discovered object classes.
 
-This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
+This document is part of the SCIM 2.0 connector tutorial. See the framework introduction for other topics.
 
 == Built-in search
 
@@ -71,7 +71,7 @@ objectClass("User") {
 * The `attribute(name)` names are the protocol (SCIM) attribute names; the specification is matched against the ConnId filter.
 * Filters are translated to the SCIM `filter` expression automatically — there is no per-filter request-mapping hook. The closure form `supportedFilter(spec) { ... }` is accepted, but the closure carries no mapping behavior.
 
-The filter specification API reference is in xref:advanced-filters.adoc[].
+The filter specification API reference is in the "SCIM filter specification" topic.
 
 == Custom search implementation
 
@@ -89,4 +89,4 @@ search {
 }
 ----
 
-See xref:../implement-custom-search/[] for the script context and details.
+See the custom search topic for the script context and details.

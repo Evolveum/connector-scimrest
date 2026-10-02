@@ -2,7 +2,7 @@
 
 SCIM 2.0 supports relationships through multi-valued reference attributes like `groups` (User) and `members` (Group).
 
-This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
+This document is part of the SCIM 2.0 connector tutorial. See the framework introduction for other topics.
 
 == Automatic relationship support
 
@@ -90,11 +90,11 @@ The `search` / `implementation` closures expose `value()` (the object being reso
 When the SCIM representation of the reference values does not match the default handling, provide a custom `deserialize` / `serialize` implementation on the attribute (see the `object("Office")` side of the example above):
 
 * `deserialize { ... }` — receives the raw JSON value and must return a `ConnectorObjectReference`
-* `serialize { ... }` — the reverse direction (write support for complex values is limited — see xref:complex-attributes.adoc[])
+* `serialize { ... }` — the reverse direction (write support for complex values is limited — see the "SCIM complex and binary attributes" topic)
 
 == Search support for relationships
 
-Declare which filters on relationship attributes the server supports (single-attribute specifications only — see xref:advanced-filters.adoc[filter specification]):
+Declare which filters on relationship attributes the server supports (single-attribute specifications only — see filter specification):
 
 [source,groovy]
 ----
@@ -109,4 +109,4 @@ objectClass("User") {
 }
 ----
 
-Accepted filters are translated to the SCIM `filter` query parameter and sent to the server (see xref:search.adoc[built-in search]).
+Accepted filters are translated to the SCIM `filter` query parameter and sent to the server (see built-in search).

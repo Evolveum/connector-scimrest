@@ -51,8 +51,7 @@ properties of the *SCIM Mapping* group:
   Flatten `addresses` into per-type, per-sub-attribute attributes.
 
 These properties apply to every SCIM object class of the connector; a single object class can
-extend the set of flattened attributes — see xref:#per-object-class-configuration[Per object
-class configuration].
+extend the set of flattened attributes (see the "Per object class configuration" section below).
 
 == Per object class configuration
 
@@ -233,7 +232,7 @@ the organization identifies people by email.
 In those cases use the alternative representation: the complex attribute is also available as
 an *embedded object class* named `Parent__Attribute` (e.g. `User__emails`), or you can map a
 flat attribute to an arbitrary SCIM path with the `scim { path ... }` DSL — see
-xref:scim/complex-attributes.adoc[SCIM complex and binary attributes].
+SCIM complex and binary attributes.
 
 NOTE: Complex attribute values are read-only from the ConnId side — writing complex attributes
 is not supported yet, regardless of which representation you use.

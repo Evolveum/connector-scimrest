@@ -2,10 +2,9 @@
 
 SCIM 2.0 create operations use HTTP POST to create new resources.
 
-This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
+This document is part of the SCIM 2.0 connector tutorial. See the framework introduction for other topics.
 
-IMPORTANT: The built-in SCIM create handler and the `create { scim { ... } }` customization block are *in development*.
-The examples on this page describe the intended behavior; until the wiring lands, object classes that need a create operation can use a REST-style create endpoint (`create { endpoint(POST, ...) { ... } }`, see xref:../rest/create.adoc[create objects]) instead.
+IMPORTANT: The built-in SCIM create handler works for well-behaved servers (see below). The `create { scim { ... } }` customization block (`supportedAttributes`, `supportedAttribute`, `limitations`) is *not yet implemented* — it is currently a no-op. Until that DSL lands, object classes that need per-attribute restrictions on create can use a REST-style create endpoint (`create { endpoint(POST, ...) { ... } }`, see create objects) instead.
 
 == Built-in create
 

@@ -3,8 +3,6 @@
 SCIM 2.0 update operations change the state of a resource.
 For a well-behaved SCIM 2.0 server, update works out of the box — no operation script is required.
 
-This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
-
 The built-in SCIM update uses the *SCIM `PATCH`* operation (RFC 7644 section 3.5.2) by default: the changed attributes are sent as partial-update operations, and the original resource state is *not* read first.
 Use the `scim { put { ... } }` block to opt into a *full `PUT`* (full replacement) instead.
 
@@ -45,7 +43,7 @@ With the `put` strategy the framework:
 . Serializes the resulting attributes that the SCIM resource supports into the request body
 . Issues a `PUT` to `{resource endpoint}/{id}` with the replacement
 
-NOTE: The `put` and `patch` strategies are mutually exclusive — declaring a `put` block selects full replacement; otherwise the default `PATCH` strategy applies.
+NOTE: Declaring a `put` block selects full `PUT` replacement; a `patch` block (or neither block) selects the default `PATCH` strategy. If both are declared, `put` takes precedence.
 
 == Restricting to a supported subset of attributes
 
@@ -105,4 +103,4 @@ SCIM PATCH operations: `ADD` (add value(s) to a multi-valued attribute), `REPLAC
 
 == Disabling update
 
-Use the generic operation enablement (see xref:../rest/update.adoc[] for the REST-side DSL) when a resource type does not support updates at all.
+Use the operation's `enabled` switch (`update { scim { enabled(false) } }`) when a resource type does not support updates at all.

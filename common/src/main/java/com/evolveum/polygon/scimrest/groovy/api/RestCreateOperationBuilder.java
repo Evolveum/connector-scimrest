@@ -10,7 +10,9 @@ import com.evolveum.polygon.conndev.build.api.CreateOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Script;
+import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimCreateBuilder;
+import com.evolveum.polygon.scimrest.yaml.binding.SupportedAttributesHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -55,6 +57,25 @@ public interface RestCreateOperationBuilder extends RestOperationBuilder<RestCre
                                                             @Script.Initialization
                                                             Closure<?> closure) {
             return GroovyClosures.callAndReturnDelegate(closure, supportedAttribute(attributeName));
+        }
+
+        /**
+         * Restricts the endpoint to the given attributes, e.g.
+         * {@code supportedAttributes "externalId", "displayName"}.
+         */
+        default Endpoint supportedAttributes(String... attributes) {
+            for (String attribute : attributes) {
+                supportedAttribute(attribute);
+            }
+            return this;
+        }
+
+        /**
+         * Marker for the YAML front-end: the {@code supportedAttributes:} block is bound by
+         * {@link SupportedAttributesHandler}; the method body is unused.
+         */
+        @Yaml.Custom(SupportedAttributesHandler.class)
+        default void supportedAttributes() {
         }
     }
 

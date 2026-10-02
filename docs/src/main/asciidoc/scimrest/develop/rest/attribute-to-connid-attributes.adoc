@@ -31,7 +31,7 @@ objectClass("User") {
 
 In this example, we are mapping the `id` attribute of the object class to the built-in `UID` attribute, and the `name` attribute to the `NAME` attribute.
 
-The `connIdAttribute` method takes two parameters: the first is the name of the built-in ConnID attribute (e.g., `UID`, `NAME`), and the second is the *native* name of the corresponding attribute of the object class (e.g., `id`, `name`). For SCIM-based object classes the native name is the attribute as declared in the schema script — the SCIM wire path is described separately (see the `scim { path ... }` / `scim { name ... }` blocks in xref:../scim/schema-customization.adoc[SCIM schema customization]). The `connIdAttribute` method accepts only the built-in ConnID attributes as the first parameter.
+The `connIdAttribute` method takes two parameters: the first is the name of the built-in ConnID attribute (e.g., `UID`, `NAME`), and the second is the *native* name of the corresponding attribute of the object class (e.g., `id`, `name`). For SCIM-based object classes the native name is the attribute as declared in the schema script — the SCIM wire path is described separately (see the `scim { path ... }` / `scim { name ... }` blocks in SCIM schema customization). The `connIdAttribute` method accepts only the built-in ConnID attributes as the first parameter.
 
 NOTE: If `NAME` is not explicitly mapped, it is derived from the `UID` mapping by default (the same underlying attribute).
 
@@ -39,7 +39,7 @@ NOTE: If `NAME` is not explicitly mapped, it is derived from the `UID` mapping b
 
 The following attributes are not required by the ConnID framework, but they are commonly used in connectors and can be very helpful for various operations. You should consider mapping these attributes if they are available in your target resource.
 
-IMPORTANT: Currently these attributes have no built-in mapping and no special framework handling — only `UID` and `NAME` are mapped automatically (see xref:../scim/schema-discovery.adoc[SCIM schema discovery]). You can still map a resource attribute to one of these names explicitly, but no default behavior is provided for them; map them only if the target semantics match.
+IMPORTANT: Currently these attributes have no built-in mapping and no special framework handling — only `UID` and `NAME` are mapped automatically (see SCIM schema discovery). You can still map a resource attribute to one of these names explicitly, but no default behavior is provided for them; map them only if the target semantics match.
 
 `ENABLE`::
 Gets/ sets the enable status of an object.

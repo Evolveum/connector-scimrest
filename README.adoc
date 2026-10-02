@@ -2,20 +2,20 @@
 
 Framework and set of connectors for various services using SCIM 2 and REST.
 
-The intent of SCIMREST framework is to simplify building customized connectors using declarative approach, set of prebuilt components and strategies, with option to custimize behaviour using Java or Groovy code.
+The intent of the SCIMREST framework is to simplify building customized connectors using a declarative approach, a set of prebuilt components and strategies, with the option to customize behaviour using Java or Groovy code.
 
 == Structure
 
 * link:common/[`common`]:
 Common base Java framework for implementing SCIM & REST based ConnId connectors.
 ** Supports custom Java lambdas / classes for behavior customization
-** Supports custom Groovy scripts (using DSL and lambdas0) for behavior customizations
+** Supports custom Groovy scripts (using a DSL and lambdas) for behavior customization
 
 * link:connector/[`connector`]:
-Contains hand-crafted implementation of generic and application specific connectors, created to common connector framework.
-** link:connector/forgejo/[`forgejo`]: Forgejo Connector implemented using Groovy DSL and base Java classes for loading Groovy scripts from classpath.
-** link:connector/generic/[`generic`]: Generic connector supporting Groovy DSL and custom scripts presented on file system.
+Contains hand-crafted implementations of generic and application-specific connectors, created on top of the common connector framework.
+** link:connector/forgejo/[`forgejo`]: Forgejo connector implemented with Groovy scripts and a `connector.manifest.json` that loads them from the classpath.
+** link:connector/generic/[`generic`]: Fully generic, configuration-driven connector (REST + SCIM) with an empty manifest — no bundled scripts; behaviour comes from the configuration and the framework defaults.
 
-* link:docs/[`docs`]: Documentation of connector framework.
-** link:docs/rest/[`rest`]: Documentation regarding implementation of REST connectors using this connector framework
-*** link:docs/rest/steps/[`steps`]: Step by step description of neccessary steps to implement connector.
+* link:docs/[`docs`]: Documentation of the connector framework (AsciiDoc under `src/main/asciidoc/scimrest/`).
+** link:docs/src/main/asciidoc/scimrest/develop/[`develop`]: Development guides — REST, SCIM 2.0, authentication, declarative YAML, and custom search.
+*** link:docs/src/main/asciidoc/scimrest/develop/rest/index.adoc[`rest`]: Step-by-step description of the necessary steps to implement a REST connector.

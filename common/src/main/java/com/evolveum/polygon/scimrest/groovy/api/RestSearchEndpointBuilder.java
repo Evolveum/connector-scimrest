@@ -131,6 +131,28 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
         return objectExtractor(AttributePathDeclaration.of(BasicJsonPathFormat.INSTANCE, pathExpression));
     }
 
+    /**
+     * Sets the declarative objects path: the location of the list of objects in the response, as
+     * an attribute path (JSON Pointer or basic JSONPath, the same formats as the attribute
+     * {@code path} keys) resolved against the response body. A resolved array yields its
+     * elements, a resolved object yields the single object, a missing path yields no objects.
+     *
+     * <p>Unlike {@code objectExtractor}, this accepts the path form only — a YAML scalar or
+     * {@code { type, value }} mapping is always a path expression, never Groovy code.
+     */
+    @Yaml.Path
+    default RestSearchEndpointBuilder objectsPath(AttributePathDeclaration<?, ?> declaration) {
+        return objectExtractor(declaration);
+    }
+
+    /**
+     * Like {@link #objectsPath(AttributePathDeclaration)}, with the expression written in the
+     * default (basic JSONPath) format, e.g. {@code objectsPath("$._embedded.elements")}.
+     */
+    default RestSearchEndpointBuilder objectsPath(String pathExpression) {
+        return objectsPath(AttributePathDeclaration.of(BasicJsonPathFormat.INSTANCE, pathExpression));
+    }
+
     RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec, @DelegatesTo(value = FilterSupportBase.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     /**

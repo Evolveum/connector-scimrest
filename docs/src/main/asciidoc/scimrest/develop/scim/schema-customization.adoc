@@ -2,7 +2,7 @@
 
 While the framework provides automatic schema discovery, you often need to customize it for your specific use case.
 
-This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
+This document is part of the SCIM 2.0 connector tutorial. See the framework introduction for other topics.
 
 == Schema customization blocks
 
@@ -110,7 +110,7 @@ objectClass("User") {
 }
 ----
 
-The ConnId framework requires `UID` and `NAME` attributes. Discovery already maps them by default (UID ← `id`, NAME ← `userName` on User / `displayName` on Group — see xref:schema-discovery.adoc[built-in mappings]); use `connIdAttribute` to override the mapping when the server deviates.
+The ConnId framework requires `UID` and `NAME` attributes. Discovery already maps them by default (UID ← `id`, NAME ← `userName` on User / `displayName` on Group — see built-in mappings); use `connIdAttribute` to override the mapping when the server deviates.
 
 == SCIM-specific schema blocks
 
@@ -120,7 +120,7 @@ The `scim` block supports:
   Define SCIM schema extension — e.g. `extension("enterprise", "urn:...")`. The block form
   `extension("enterprise", "urn:...") { flatten "photos" }` additionally flattens the
   extension's complex attributes into plain, alias-prefixed attributes of the object class —
-  see xref:../attribute-flattening.adoc[flattening SCIM attributes].
+  see flattening SCIM attributes.
 
 `path(path)`::
   Specify SCIM attribute path — e.g. `path attribute("name").child("familyName")`
@@ -132,9 +132,9 @@ The `scim` block supports:
   Only include explicitly listed attributes — e.g. `onlyExplicitlyListed()`
 
 `implementation { deserialize { ... } serialize { ... } }`::
-  Custom value mapping for the attribute (e.g. reference values — see xref:relationship-support.adoc[])
+  Custom value mapping for the attribute (e.g. reference values — see the "SCIM Relationship support" topic)
 
-The path grammar (attribute names, `child(...)`, `valueFilter(...)`, extension URIs) is the SCIM attribute path format — see xref:complex-attributes.adoc[SCIM paths] for the full reference.
+The path grammar (attribute names, `child(...)`, `valueFilter(...)`, extension URIs) is the SCIM attribute path format — see SCIM paths for the full reference.
 
 == Complete example
 
@@ -174,4 +174,4 @@ objectClass("User") {
 }
 ----
 
-Complex attributes (embedded objects such as `emails` or `addresses`) are exposed as embedded object classes — see xref:complex-attributes.adoc[complex and binary attributes]. Complex attributes can also be flattened into plain attributes — on the primary schema via the `scim { flatten ... }` list, on a mapped extension via its `extension(...) { flatten ... }` block — see xref:../attribute-flattening.adoc[flattening SCIM attributes].
+Complex attributes (embedded objects such as `emails` or `addresses`) are exposed as embedded object classes — see complex and binary attributes. Complex attributes can also be flattened into plain attributes — on the primary schema via the `scim { flatten ... }` list, on a mapped extension via its `extension(...) { flatten ... }` block — see flattening SCIM attributes.

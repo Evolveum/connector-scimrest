@@ -253,4 +253,4 @@ objectClass("YourObjectClass") {
 ----
 
 For detailed information about custom search implementation, including
-configuration options, available objects and methods, and examples, see xref:index.adoc[].
+configuration options, available objects and methods, and examples, see the "Implement custom search" topic.

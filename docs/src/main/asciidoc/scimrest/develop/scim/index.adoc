@@ -6,15 +6,15 @@ This is a reference for developing SCIM 2.0 connectors using the SCIMREST framew
 
 The SCIM 2.0 connector tutorial is organized as progressive steps:
 
-* xref:schema-discovery.adoc[Schema discovery] - Automatic SCIM schema discovery from the server
-* xref:schema-customization.adoc[Schema customization] - Customizing discovered schema with Groovy scripts
-* xref:complex-attributes.adoc[Complex and binary attributes] - SCIM path mappings and embedded object classes
-* xref:search.adoc[Search operations] - Built-in search (UID retrieval, list-all, server-side filtering) and filter declarations
-* xref:create.adoc[Create operations] - Creating resources via SCIM POST
-* xref:update.adoc[Update operations] - Updating resources via full PUT
-* xref:delete.adoc[Delete operations] - Deleting resources via SCIM DELETE
-* xref:advanced-filters.adoc[Advanced filters] - Filter specifications
-* xref:relationship-support.adoc[Relationship support] - Handling SCIM relationships
+* Schema discovery - Automatic SCIM schema discovery from the server
+* Schema customization - Customizing discovered schema with Groovy scripts
+* Complex and binary attributes - SCIM path mappings and embedded object classes
+* Search operations - Built-in search (UID retrieval, list-all, server-side filtering) and filter declarations
+* Create operations - Creating resources via SCIM POST
+* Update operations - Updating resources (default SCIM `PATCH` for partial updates; optional full `PUT` for full replacement)
+* Delete operations - Deleting resources via SCIM DELETE
+* Advanced filters - Filter specifications
+* Relationship support - Handling SCIM relationships
 
 == Get started with SCIM 2.0 framework
 
@@ -36,21 +36,21 @@ The framework includes:
 === Read-only connector
 
 . Obtain the documentation for the service/application
-. Determine connection & authentication parameters (see xref:../authentication.adoc[])
+. Determine connection & authentication parameters (see the Authentication & authorization topic)
 . Implement test connection
 . Determine object classes and their attributes
 . Schema discovery is automatic - verify the discovered schema in development mode
-. xref:search.adoc[Verify search and UID retrieval for each object class] (built-in; customize or replace with a custom implementation if the server deviates)
+. Verify search and UID retrieval for each object class (built-in; customize or replace with a custom implementation if the server deviates)
 . Determine relationships between object classes
-. xref:relationship-support.adoc[Verify relationship support] (standardized `groups`/`members` relationships are detected automatically)
+. Verify relationship support (standardized `groups`/`members` relationships are detected automatically)
 
 === Read-Write Connector
 
 In addition to read-only steps:
 
-. xref:create.adoc[Verify the create operation] (built-in for well-behaved servers)
-. xref:update.adoc[Verify the update operation] (built-in full PUT)
-. xref:delete.adoc[Verify the delete operation] (built-in)
+. Verify the create operation (built-in for well-behaved servers)
+. Verify the update operation (built-in; default SCIM `PATCH`, optional full `PUT`)
+. Verify the delete operation (built-in)
 
 
 == SCIM 2.0 protocol references
@@ -62,4 +62,4 @@ In addition to read-only steps:
 == See also
 
 * link:https://docs.evolveum.com/connectors/connid/[ConnID architecture and terminology]
-* xref:../rest/[Develop REST connector using Groovy DSLs]
+* Develop REST connector using Groovy DSLs

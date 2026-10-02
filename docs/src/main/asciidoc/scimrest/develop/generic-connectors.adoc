@@ -1,12 +1,12 @@
 = Shipped and sample connectors
 
-Besides building connectors from scratch (see xref:rest/index.adoc[REST guide] and xref:scim/index.adoc[SCIM 2.0 guide]), the repository ships generic, low-code connectors you can use as-is or as a starting point.
+Besides building connectors from scratch (see REST guide and SCIM 2.0 guide), the repository ships generic, low-code connectors you can use as-is or as a starting point.
 
-This document is part of the SCIMREST connector tutorial. See xref:../index.adoc[] for other topics.
+This document is part of the SCIMREST connector tutorial. See the framework introduction for other topics.
 
 == connector/scim-generic — SCIM2 Generic Connector
 
-The same `ManifestBasedConnector` with  only the SCIM-facing configuration: `scimBaseUrl`, the `scim*` authentication properties, `trustAllCertificates`, `timeoutSeconds`, and `developmentMode`.
+A variant of the manifest-based connector exposing only the SCIM-facing configuration: `scimBaseUrl`, the `scim*` authentication properties, the `scimFlatten*` SCIM-mapping flags, `trustAllCertificates`, `timeoutSeconds`, and `developmentMode`. The REST-side properties are hidden via `configurationOverride.properties`.
 The shipped manifest is *empty*; a SCIM 2.0 compliant server is enough to work with the built-in discovery and operations.
 
 == Sample connectors
@@ -49,7 +49,7 @@ Connectors bundle a `connector.manifest.json` (or `.yaml` / `.yml` — exactly o
 * an entry may carry `"disabled": true` — the script is then skipped in both loading and validation, as if it were not bundled
 * a missing section means an empty list
 
-The `application` block is informational (display name/description for tooling).
+The `application` block is not used by the framework; it is free-form metadata (display name/description) for humans and external tooling.
 
 == configurationOverride.properties
 
@@ -61,7 +61,7 @@ restUsername=ignore
 restPassword=ignore
 ----
 
-A property whose value is exactly `ignore` is excluded from the connector's configuration definition (it no longer appears in the connector form). Keys are the Java property names (e.g. `restUsername`, not the display key). Empty values do nothing — the value must literally be `ignore`.
+A property whose value is exactly `ignore` is excluded from the connector's configuration definition (it no longer appears in the connector form); a value of `required` marks the property as required. Keys are the Java property names (e.g. `restUsername`, not the display key). Any other value (including an empty value) has no effect.
 
 == Messages.properties
 

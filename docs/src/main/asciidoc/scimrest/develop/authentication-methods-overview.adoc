@@ -7,8 +7,8 @@ Nine authentication methods are implemented per protocol namespace. The most com
   internal systems and many SaaS APIs.
 
 `bearer { ... }`::
-  A static bearer token — `Authorization: <tokenName> <tokenValue>` (the token name defaults to
-  `Bearer`). Typical for API-token based systems.
+  A static bearer token — `Authorization: Bearer <tokenValue>`. Typical for API-token based
+  systems.
 
 `apiKey { ... }`::
   An API key — sent as a header (`<name>: <key>`, e.g. `X-API-Key`) or as a query parameter.

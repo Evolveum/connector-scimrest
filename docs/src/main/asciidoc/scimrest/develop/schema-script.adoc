@@ -106,12 +106,12 @@ The essentials:
 
 `scim { path ... }`::
   SCIM-only: addresses a (possibly nested, filtered, or extended) SCIM attribute — see
-  xref:scim/complex-attributes.adoc[SCIM attribute paths].
+  SCIM attribute paths.
 
 `connIdAttribute(builtIn, attribute)`::
   binds a built-in ConnId name (`UID`, `NAME`) to an attribute of the class.
 
-## YAML form
+== YAML form
 
 The declarative YAML form describes the same builders literally — no closures, no runtime
 context. A schema document uses the `objectClasses` root (one entry per class; documents naming
@@ -150,15 +150,15 @@ The attribute keys you will meet: `description`, `required`, `multiValued`, `cre
 `complexType`; the `json: { name, type, openApiFormat, path }` wire block; the
 `connId: { name, type }` ConnId block (including the `__UID__` / `__NAME__` built-ins); and, in
 the SCIM wizard, the `scim: { name, type, path }` block. See
-xref:declarative-yaml.adoc[declarative YAML] for the full reference, including the path syntax
+declarative YAML for the full reference, including the path syntax
 (JSONPath / JSON Pointer / SCIM paths) and the Groovy-to-YAML fallback rules.
 
-## SCIM vs REST
+== SCIM vs REST
 
 In the *SCIM* wizard the attributes describe a SCIM schema: the wire mapping is the `scim`
 block (SCIM attribute paths, extensions), and SCIM *complex* attributes can additionally be
-flattened into plain attributes — see xref:attribute-flattening.adoc[flattening SCIM
-attributes]. In the *REST* wizard the attributes describe a plain JSON API: the wire mapping is
+flattened into plain attributes — see flattening SCIM
+attributes. In the *REST* wizard the attributes describe a plain JSON API: the wire mapping is
 the `json` block (JSONPath / JSON Pointer locations).
 
 == References
@@ -167,8 +167,8 @@ the `json` block (JSONPath / JSON Pointer locations).
   their required value types, and how to handle them (chapter shown together with this page).
 * *JSON Types and Formats* — the base JSON types and the OpenAPI formats an attribute can use
   (chapter shown together with this page).
-* xref:declarative-yaml.adoc[Declarative YAML] — the complete YAML reference.
-* xref:scim/schema-customization.adoc[SCIM schema customization] / xref:rest/user-schema.adoc[REST user schema] —
+* Declarative YAML — the complete YAML reference.
+* SCIM schema customization / REST user schema —
   the protocol-specific attribute details.
-* xref:scim/complex-attributes.adoc[SCIM complex and binary attributes] — embedded object
+* SCIM complex and binary attributes — embedded object
   classes and SCIM attribute paths.

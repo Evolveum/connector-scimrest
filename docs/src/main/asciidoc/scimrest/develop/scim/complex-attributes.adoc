@@ -1,6 +1,6 @@
 = SCIM complex and binary attributes
 
-This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
+This document is part of the SCIM 2.0 connector tutorial. See the framework introduction for other topics.
 
 == Complex attributes
 
@@ -42,10 +42,10 @@ The `scim { path ... }` DSL builds a SCIM *attribute path* — the wire format d
   A schema-extension prefix — the URI (identified by the last `:`) followed by attribute names (e.g. `urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber`)
 
 `[index]`::
-  Select the value at a positive-integer index of a multi-valued attribute
+  Select the value at a zero-based (non-negative) integer index of a multi-valued attribute
 
-`[attr = value, ...]`::
-  A value filter on a multi-valued attribute (only the `=` operator is accepted)
+`[attr eq value and …]`::
+  A value filter on a multi-valued attribute (only the `eq` operator is accepted; multiple terms are joined with `and`, e.g. `[price eq 100 and currency eq "USD"]`)
 
 The Groovy DSL that builds these paths:
 
@@ -56,7 +56,7 @@ The Groovy DSL that builds these paths:
   child attribute / extension attribute (appends to the path)
 
 `.valueFilter("primary", true)`::
-  value filter `[primary = true]` (multiple key/value pairs allowed)
+  value filter `[primary eq true]` (multiple key/value pairs are joined with `and`)
 
 `.firstValue()`::
   index filter `[0]`
@@ -72,7 +72,7 @@ Examples:
 [source,groovy]
 ----
 path attribute("emails").valueFilter("primary", true).child("value")
-// emails[primary = true].value
+// emails[primary eq true].value
 
 path extension("enterprise").child("employeeNumber")
 // <enterprise extension URI>:employeeNumber
@@ -105,7 +105,7 @@ objectClasses:
           path: urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber
 ----
 
-See xref:../declarative-yaml.adoc[declarative YAML] for the full schema YAML reference.
+See declarative YAML for the full schema YAML reference.
 
 The same path model is used internally when the framework resolves attribute values from SCIM resources, so scripts and the built-in handlers agree on where values live.
 
@@ -130,4 +130,4 @@ attribute("employees") {
 }
 ----
 
-See xref:relationship-support.adoc[relationship support] for a complete example.
+See relationship support for a complete example.

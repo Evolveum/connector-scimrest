@@ -18,7 +18,7 @@ Schema Mapping & Schema Builder APIs::
 Authentication & Authorization::
 ** Common configuration model for authentication mechanisms per protocol namespace (`rest*` / `scim*` properties): HTTP basic, bearer token, self-signed JWT, API key, four OAuth 2.0 grant types (client credentials, password, JWT bearer, SAML), and AWS Signature Version 4; Digest, Hawk, and NTLM are configurable but not implemented yet.
 ** Custom implementations per method (Groovy `implementation` blocks, OAuth 2.0 hooks such as `onResponse`), and a per-protocol method `preference`.
-** The initialized client adds the authentication headers/tokens to every REST and SCIM request — see xref:develop/authentication.adoc[authentication & authorization].
+** The initialized client adds the authentication headers/tokens to every REST and SCIM request — see authentication & authorization.
 
 ConnId Support & Operation Builders::
 ** Support for ConnId operations using strategy design pattern, where based on ConnId request, the appropriate strategies are selected to handle the request.
@@ -38,7 +38,7 @@ SCIM Support::
 Scripting Support::
 ** Custom Groovy DSL for configuring & defining custom schema mappings, logic, strategies, and operations.
 ** Scripting support is intended to implement custom connectors using Groovy with the intent to minimize boilerplate code.
-** A declarative YAML front-end for schema, operations, and authentication is available (WIP) — see xref:develop/declarative-yaml.adoc[declarative YAML].
+** A declarative YAML front-end for schema, operations, and authentication is available (WIP) — see declarative YAML.
 
 == SCIM 2.0 & REST connector design
 
@@ -58,8 +58,8 @@ The base connector framework is based heavily on the `Strategy` & `Delegation` p
 * retrieving additional attributes
 ** multi-valued attributes (references) using another search strategy
 
-The operation handlers are context-aware: every handler receives the operation context (`ContextLookup`), and multi-step operations can run inside an `OperationTransaction`. Java connector authors can register custom handlers for any operation — see the SPI handler interfaces (`CreateOperationHandler`, `UpdateOperationHandler`, `DeleteOperationHandler`, `ObjectSearchOperation`) for the signatures.
-There is no separate "read" operation in the SPI — retrieving an object by UID is implemented as a search with a UID equality filter.
+The operation layer is strategy-based and context-aware: the framework selects the strategy that matches the incoming request, and multi-step operations run inside a single transaction. Customization happens in the operation scripts (`search { … }`, `create { … }`, `update { … }`, `delete { … }`) or in declarative YAML — see the development guides.
+There is no separate "read" operation: retrieving an object by UID is implemented as a search with a UID equality filter.
 
 === Groovy Builder API
 
@@ -68,6 +68,6 @@ Most of the Groovy scripts are not full-blown scripts, but small declarative blo
 * schema scripts delegate to a per-object-class *schema builder* (`objectClass { ... }`), which in turn delegates to attribute builders for `attribute { ... }` blocks;
 * operation handler scripts delegate to a per-object-class *operation support builder* with `search { ... }`, `create { ... }`, `update { ... }`, and `delete { ... }` blocks.
 
-Because the scripts run in a shared Groovy shell, helper functions defined in one script can be reused by later scripts of the same kind (schema or handler).
+Because the scripts run in a shared Groovy shell, helper closures and top-level variables assigned in one script are available to later scripts of the same kind (schema or handler).
 
-See xref:develop/index.adoc[] for the development guides.
+See the "How to develop connectors using SCIMREST framework" topic for the development guides.

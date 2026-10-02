@@ -14,8 +14,8 @@ The field shown depends on the implementation type:
 
 `SCIM base URL` (SCIM)::
   The base URL of the SCIM 2.0 service (configuration property `scimBaseUrl`). Example:
-  `https://id.example.com/wsd/ou=SCIM/ou=scim?wsdl` — for most SCIM servers the `.../scim/v2`
-  endpoint of the identity provider.
+  `https://id.example.com/scim/v2` — for most SCIM servers this is the `.../scim/v2` endpoint of
+  the identity provider.
 
 When both a REST base address and a SCIM base URL are known, you can configure both — the
 connector will use the SCIM API where it is available and the REST API otherwise. The SCIM

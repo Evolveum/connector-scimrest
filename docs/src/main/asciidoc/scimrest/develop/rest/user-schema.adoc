@@ -28,8 +28,8 @@ objectClass("User") {
 
 The `json { ... }` block describes how the attribute value is represented in the JSON wire format:
 
-* `json.type` — the JSON type used to represent the data (`string`, `number`, `integer`, `boolean`, `array`, …)
-* `json.openapiFormat` — the OpenAPI format (from the https://spec.openapis.org/registry/format/[format registry]) that describes the data formatting and allowed values (e.g. `date-time`, `int64`)
+* `json.type` — the JSON type used to represent the data (`string`, `integer`, `boolean`, `number`, `binary`)
+* `json.openApiFormat` — the OpenAPI format (from the https://spec.openapis.org/registry/format/[format registry]) that describes the data formatting and allowed values (e.g. `date-time`, `int64`)
 
 The following attribute properties are available on the attribute itself:
 
@@ -64,4 +64,4 @@ objectClasses:
           openApiFormat: int64
 ----
 
-See xref:../declarative-yaml.adoc[declarative YAML] for the full reference.
+See declarative YAML for the full reference.

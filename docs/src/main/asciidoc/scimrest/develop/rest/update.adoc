@@ -24,9 +24,8 @@ Where:
 
 * The `endpoint` method specifies the endpoint to be used for
    update operation. In this case we use path parameter `{id}` which
-   will be replaced with the value of the `id` attribute of the object
-   being updated.
-* The `httpOperation` is set to `PATCH`, so by default `absolute`  mode is automatically set to `false`, which allows a partial update of the object.
+   will be replaced with the UID of the object being updated.
+* The `httpOperation` is set to `PATCH`, so the update is a partial update of the object.
 * The `request` block allows to customize the request. In this case
    we specify that the content type of the request is JSON.
    `queryParameter(name, value)` adds a static query parameter to the request URL.
@@ -47,7 +46,7 @@ objectClasses:
             contentType: application/json
 ----
 
-See xref:../declarative-yaml.adoc[declarative YAML] for the full reference.
+See declarative YAML for the full reference.
 
 == Basic update script using PUT
 
@@ -69,16 +68,13 @@ Where:
 * This simplest script heavily relies on default behavior of connector framework.
 * The `endpoint` method specifies the endpoint to be used for
    update operation. In this case we use path parameter `{id}` which
-   will be replaced with the value of the `id` attribute of the object
-   being updated.
-* The `httpOperation` is set to `PUT`, so by default `absolute` mode is automatically set to `true`.
+   will be replaced with the UID of the object being updated.
+* The `httpOperation` is set to `PUT`, so the update replaces the object.
 ** The `request` block allows to customize the request. In this case
    we specify that the content type of the request is JSON.
    `queryParameter(name, value)` adds a static query parameter to the request URL.
-** If no body `implementation` is specified, the default implementation
-    will be used which will serialize all `updateable` attributes
-    from the `objectClass` into JSON body.
-** The framework will retrieve original state if necessary to build a full representation of the object for replacement.
+** If no body `implementation` is specified, the default implementation serializes the changed attributes (deltas applied on top of the original values) into the JSON body.
+** The framework reads the original state when necessary to apply the deltas.
 
 == Limiting update to a supported subset of attributes
 

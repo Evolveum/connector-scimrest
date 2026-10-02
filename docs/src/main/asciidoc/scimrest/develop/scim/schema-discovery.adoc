@@ -2,11 +2,11 @@
 
 The SCIM 2.0 framework automatically discovers schemas from the server using the SCIM protocol's schema endpoint.
 
-This document is part of the SCIM 2.0 connector tutorial. See xref:../../index.adoc[] for other topics.
+This document is part of the SCIM 2.0 connector tutorial. See the framework introduction for other topics.
 
 == Automatic schema discovery
 
-When a SCIM connector is configured (SCIM is enabled when a `scimBaseUrl` and SCIM credentials are present — see xref:../authentication.adoc[]), the framework:
+When a SCIM connector is configured (SCIM is enabled when a `scimBaseUrl` and SCIM credentials are present — see the "Authentication & authorization" topic), the framework:
 
 1. Fetches the schema definitions via the `/Schemas` endpoint
 2. Retrieves the resource types via the `/ResourceTypes` endpoint (each resource type is keyed by its *name*; the SCIM `id` is optional and not every server provides it)
@@ -30,8 +30,8 @@ Built-in attribute mappings (applied by the mapping rules, overridable in script
 * `NAME` ← SCIM `userName` on the User schema, `displayName` on the Group schema
 * `User.groups` → multi-valued reference to the Group object class; `Group.members` → multi-valued reference to the User object class
 * SCIM `mutability` → write flags: `IMMUTABLE` → creatable (not updatable), `READ_ONLY` → readable only, `READ_WRITE` → creatable + updatable, `WRITE_ONLY` → creatable + updatable (not readable)
-* SCIM complex attributes → embedded object classes named `Parent__Attribute` (e.g. `User__emails`) — see xref:complex-attributes.adoc[]
-* SCIM `binary` attributes → `byte[]` (base64 on the wire) — see xref:complex-attributes.adoc[]
+* SCIM complex attributes → embedded object classes named `Parent__Attribute` (e.g. `User__emails`) — see the "SCIM complex and binary attributes" topic
+* SCIM `binary` attributes → `byte[]` (base64 on the wire) — see the "SCIM complex and binary attributes" topic
 
 No other ConnId built-in attributes (`ENABLE`, `PASSWORD`, …) are mapped automatically.
 
@@ -44,4 +44,4 @@ After discovery, you can customize the schema:
 * Define SCIM path mappings for attributes and complex attributes
 * Add schema extensions
 
-See xref:schema-customization.adoc[] for details.
+See the "SCIM Schema customization" topic for details.
