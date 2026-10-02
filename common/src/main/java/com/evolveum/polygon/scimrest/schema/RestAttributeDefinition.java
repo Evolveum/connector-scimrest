@@ -15,15 +15,24 @@ import java.util.List;
 public class RestAttributeDefinition extends BaseAttributeDefinition {
 
     private final String nativeType;
+    private final RestLookupMapping lookup;
 
     public RestAttributeDefinition(RestAttributeBuilderImpl builder) {
         super(builder);
         this.nativeType = builder.nativeType;
+        this.lookup = builder.lookup != null ? builder.lookup.build() : null;
     }
 
     @Override
     public String nativeType() {
         return nativeType;
+    }
+
+    /**
+     * @return the declared value lookup for this attribute, or {@code null} if none
+     */
+    public RestLookupMapping lookup() {
+        return lookup;
     }
 
     public ScimAttributeMapping scim() {

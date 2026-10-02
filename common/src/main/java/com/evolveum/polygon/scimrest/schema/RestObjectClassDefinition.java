@@ -19,15 +19,22 @@ import java.util.Map;
 public class RestObjectClassDefinition extends BaseObjectClassDefinition<RestAttributeDefinition> {
 
     private final ObjectClassScimMapping scim;
+    private final boolean cached;
 
     public RestObjectClassDefinition(ObjectClassInfo connId, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs) {
-        this(connId, nativeAttrs, connIdAttrs, null);
+        this(connId, nativeAttrs, connIdAttrs, null, false);
     }
 
     public RestObjectClassDefinition(ObjectClassInfo connId, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs,
-            ObjectClassScimMapping scim) {
+                                     ObjectClassScimMapping scim) {
+        this(connId, nativeAttrs, connIdAttrs, scim, false);
+    }
+
+    public RestObjectClassDefinition(ObjectClassInfo connId, Map<String, RestAttributeDefinition> nativeAttrs, Map<String, RestAttributeDefinition> connIdAttrs,
+                                     ObjectClassScimMapping scim, boolean cached) {
         super(connId, nativeAttrs, connIdAttrs);
         this.scim = scim;
+        this.cached = cached;
     }
 
     @Override
@@ -35,6 +42,9 @@ public class RestObjectClassDefinition extends BaseObjectClassDefinition<RestAtt
         if (scim != null) {
             target.protocolSpecific("scim", scim.exportAttributes());
         }
+    }
+    public boolean isCached() {
+        return cached;
     }
 
     public record ObjectClassScimMapping(String name, String schemaUri, List<String> flatten) {

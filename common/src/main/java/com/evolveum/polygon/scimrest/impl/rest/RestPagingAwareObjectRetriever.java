@@ -11,6 +11,7 @@ import com.evolveum.polygon.conndev.spi.BatchAwareResultHandler;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
+import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import groovy.lang.GroovyRuntimeException;
 import tools.jackson.databind.node.ArrayNode;
@@ -42,6 +43,11 @@ public class RestPagingAwareObjectRetriever {
 
     public void fetch(ContextLookup lookup, Filter query, ResultsHandler handler, OperationOptions options) {
         var context = lookup.get(RestContext.class);
+        var converter = lookup.get(RestConnectorContext.class).lookupConverter();
+        ResultsHandler effectiveHandler = converter == null
+                ? handler
+                : obj -> handler.handle(converter.toUserFacing(objectClass.objectClass(), obj));
+
         var shouldContinue = true;
         var totalProcessed = 0;
         var currentPage = 1;
@@ -94,7 +100,7 @@ public class RestPagingAwareObjectRetriever {
             for (var remoteObj : remoteObject) {
                 ConnectorObject obj = deserializeFromRemote(remoteObj, page.endpoint(), currentPage);
                 if (obj != null) {
-                    shouldContinue = handler.handle(obj);
+                    shouldContinue = effectiveHandler.handle(obj);
                     if (!shouldContinue) {
                         break;
                     }
@@ -102,7 +108,7 @@ public class RestPagingAwareObjectRetriever {
                 }
             }
 
-            BatchAwareResultHandler.batchFinished(handler);
+            BatchAwareResultHandler.batchFinished(effectiveHandler);
             totalProcessed += batchProcessed;
 
 //            // TODO: Add support for cursor-based continuation https://developer.zendesk.com/api-reference/introduction/pagination/#using-offset-pagination

@@ -42,6 +42,20 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
 
     String nativeType;
     ScimBuilder scim;
+    LookupBuilder lookup;
+
+    @Override
+    public Lookup lookup() {
+        if (lookup == null) {
+            lookup = new LookupBuilder();
+        }
+        return lookup;
+    }
+
+    @Override
+    public Lookup lookup(@DelegatesTo(value = Lookup.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, lookup());
+    }
 
     public RestAttributeBuilderImpl(RestObjectClassDefinitionBuilder parent, DefinitionValue<String> name) {
         super(parent, name);
@@ -238,5 +252,75 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
 
     private static class PathBuilder extends BasePathBuilder implements ScimPathBuilder {
 
+    }
+
+    class LookupBuilder implements Lookup {
+        private ObjectClassLookupBuilder objectClassBuilder;
+
+        @Override
+        public ObjectClassLookup objectClass() {
+            if (objectClassBuilder == null) {
+                objectClassBuilder = new ObjectClassLookupBuilder();
+            }
+            return objectClassBuilder;
+        }
+
+        @Override
+        public ObjectClassLookup objectClass(String name,
+                                             @DelegatesTo(value = ObjectClassLookup.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+            var builder = objectClass();
+            builder.name(name);
+            GroovyClosures.callAndReturnDelegate(closure, builder);
+            return builder;
+        }
+
+        RestLookupMapping build() {
+            if (objectClassBuilder == null) {
+                return null;
+            }
+            return new RestLookupMapping(
+                    objectClassBuilder.name(),
+                    objectClassBuilder.serialize(),
+                    objectClassBuilder.deserialize());
+        }
+
+        class ObjectClassLookupBuilder implements ObjectClassLookup {
+            private String name;
+            private String serialize;
+            private String deserialize;
+
+            @Override
+            public String name() {
+                return name;
+            }
+
+            @Override
+            public ObjectClassLookup name(String name) {
+                this.name = name;
+                return this;
+            }
+
+            @Override
+            public String serialize() {
+                return serialize;
+            }
+
+            @Override
+            public ObjectClassLookup serialize(String name) {
+                this.serialize = name;
+                return this;
+            }
+
+            @Override
+            public String deserialize() {
+                return deserialize;
+            }
+
+            @Override
+            public ObjectClassLookup deserialize(String name) {
+                this.deserialize = name;
+                return this;
+            }
+        }
     }
 }

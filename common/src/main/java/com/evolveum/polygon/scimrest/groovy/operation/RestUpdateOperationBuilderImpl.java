@@ -30,6 +30,7 @@ import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimPatchOperations;
 import com.evolveum.polygon.scimrest.impl.scim.ScimPatchUpdateHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimPutUpdateHandler;
+import com.evolveum.polygon.scimrest.lookup.LookupValueConverter;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
 import com.unboundid.scim2.common.messages.PatchOpType;
@@ -169,7 +170,9 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
             // FIXME: Add support for headers
 
             if (GroovyContentTypeMixin.APPLICATION_JSON.equals(request.contentType) && request.bodyTransformer == null) {
-                request.bodyTransformer = new DefaultSerializationTransformer(parent.getObjectClass(), supportedAttrs);
+                request.bodyTransformer = new DefaultSerializationTransformer(
+                        parent.getObjectClass(), supportedAttrs,
+                        ((RestConnectorContext) parent.context).lookupConverter());
             }
 
             if (request.contentType != null && request.bodyTransformer == null) {
@@ -270,7 +273,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
     }
 
     private record DefaultSerializationTransformer(RestObjectClassDefinition schema,
-                                                   HashMap<String, AttributeSupport> supportedAttrs) implements Function<UpdateRequest, byte[]> {
+                                                   HashMap<String, AttributeSupport> supportedAttrs,
+                                                   LookupValueConverter lookupConverter) implements Function<UpdateRequest, byte[]> {
 
         public static final JsonNodeFactory FACTORY = new JsonNodeFactory();
 
@@ -292,6 +296,12 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                     attr = AttributeBuilder.build(delta.getName());
                 }
                 var updated = delta.applyTo(attr);
+                if (lookupConverter != null) {
+                    var converted = lookupConverter.toNative(request.clazz(), Set.of(updated));
+                    if (!converted.isEmpty()) {
+                        updated = converted.iterator().next();
+                    }
+                }
                 definition.json().toJsonNode(updated, obj);
             }
             return obj.toPrettyString().getBytes(StandardCharsets.UTF_8);
