@@ -23,6 +23,11 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
  * included in parse error messages: the JDK's {@link HttpResponse.ResponseInfo} passed to the
  * body handler does not expose the request URI.</p>
  *
+ * <p>A 2xx response with an empty body (e.g. {@code 202 Accepted} for a delete, or a
+ * {@code 200}/{@code 201} without a response body) carries no JSON: the response body is
+ * {@code null} in that case. A non-empty 2xx body that is not the expected JSON node type is
+ * a {@link ConnectorException}.</p>
+ *
  * @param responseType Supported Response Type one of {@link JSONObject} or {@link JSONArray}
  * @param <T> Body Response Type
  */
@@ -46,6 +51,12 @@ public record JacksonBodyHandler<T>(Class<T> responseType, String context) imple
         if (responseInfo.statusCode() >= 200 && responseInfo.statusCode() < 204) {
                 var upstream = HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8);
                 return HttpResponse.BodySubscribers.mapping(upstream, m -> {
+                    if (m == null || m.isBlank()) {
+                        // A 2xx response with an empty body (e.g. 202 Accepted, or a
+                        // 200/201 without a body) carries no JSON — surface it as an absent
+                        // (null) body instead of parsing/casting the empty input.
+                        return null;
+                    }
                     try {
                         var treeNode = mapper.readTree(m);
                         return responseType.cast(treeNode);

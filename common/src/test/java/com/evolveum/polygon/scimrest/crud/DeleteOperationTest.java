@@ -43,4 +43,32 @@ public class DeleteOperationTest extends AbstractCrudConnectorTest {
 
         assertEquals(wireMockServer.findAll(deleteRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH))).size(), 1);
     }
+
+    /**
+     * A 2xx response with an empty body (e.g. OpenProject's {@code 202 Accepted} for a delete)
+     * is a successful delete — the empty body must not be parsed as JSON.
+     */
+    @Test
+    public void deleteSucceedsWhenServerReturns202WithEmptyBody() {
+        wireMockServer.stubFor(delete(urlEqualTo(ACCOUNT_BY_ID_PATH))
+                .willReturn(aResponse().withStatus(202)));
+
+        initConnector(SCRIPT).delete(new ObjectClass("Account"),
+                new Uid("123"),
+                new OperationOptionsBuilder().build());
+
+        assertEquals(wireMockServer.findAll(deleteRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH))).size(), 1);
+    }
+
+    @Test
+    public void deleteSucceedsWhenServerReturns200WithEmptyBody() {
+        wireMockServer.stubFor(delete(urlEqualTo(ACCOUNT_BY_ID_PATH))
+                .willReturn(aResponse().withStatus(200)));
+
+        initConnector(SCRIPT).delete(new ObjectClass("Account"),
+                new Uid("123"),
+                new OperationOptionsBuilder().build());
+
+        assertEquals(wireMockServer.findAll(deleteRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH))).size(), 1);
+    }
 }
