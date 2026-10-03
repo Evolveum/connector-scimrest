@@ -5,6 +5,9 @@
 objectClasses:
   Membership:
     embedded: true
+    connId:
+      UID: id
+      NAME: id
     attributes:
       id:
         jsonType: integer
@@ -12,14 +15,6 @@ objectClasses:
         returnedByDefault: true
         required: true
         description: "Membership id"
-      name:
-        json:
-          type: integer
-          name: id
-        readable: true
-        returnedByDefault: true
-        required: true
-        description: "Membership name (copy of id)"
       createdAt:
         jsonType: string
         openApiFormat: date-time

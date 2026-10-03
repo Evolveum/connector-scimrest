@@ -57,14 +57,15 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
      * {@code NameDefaultsToUidRule}): the default {@code __NAME__} attribute copies the UID's
      * SCIM path and wire type, so it reads the same resource property (the resource {@code id})
      * that {@code __UID__} reads. Only plain path+type copies are made — a custom value-mapping
-     * implementation on the UID is not inherited; if the UID has no SCIM path or wire type
-     * there is nothing to copy.
+     * implementation on the UID is not inherited. For native (non-SCIM) JSON schemas the
+     * {@code __UID__} attribute has no SCIM mapping to copy, so the base JSON derivation
+     * applies instead (the copy reads the same wire field as the UID).
      */
     @Override
     public RestAttributeBuilderImpl deriveDefaultNameFromUid(RestAttributeBuilderImpl uidAttribute) {
         var uidScim = uidAttribute.scim;
         if (uidScim == null || uidScim.path() == null || uidScim.type() == null) {
-            return null;
+            return super.deriveDefaultNameFromUid(uidAttribute);
         }
         if (!findAttributes(a -> Name.NAME.equals(a.name())).isEmpty()) {
             return null;

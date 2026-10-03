@@ -18,16 +18,9 @@ objectClass("Membership") {
         required true
         description "Membership id"
     }
-    attribute("name") {
-        json {
-            type "integer"
-            name "id"
-        }
-        readable true
-        returnedByDefault true
-        required true
-        description "Membership name (copy of id)"
-    }
+
+    connIdAttribute("UID", "id")
+    connIdAttribute("NAME", "id")
 
     attribute("createdAt") {
         jsonType "string"

@@ -418,4 +418,39 @@ public class YamlRestSchemaLoadingTest {
                 new AttributePath.Attribute("address"),
                 new AttributePath.Attribute("city")));
     }
+
+    /**
+     * WP #12419: the ticket's native JSON shape — the same attribute mapped to both {@code UID}
+     * and {@code NAME} in the class-level alias map. The attribute keeps {@code __UID__} and the
+     * default {@code __NAME__} (derived via the base JSON derivation, since a native JSON UID has
+     * no SCIM mapping to copy) reads the same wire field.
+     */
+    @Test
+    public void uidAndNameMayShareOneAttributeInNativeJsonSchema() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  Membership:
+                    embedded: true
+                    connId:
+                      UID: id
+                      NAME: id
+                    attributes:
+                      id:
+                        required: true
+                        json:
+                          type: integer
+                """);
+
+        var membership = loader.build().objectClass("Membership");
+
+        assertEquals(membership.attributeFromConnIdName(Uid.NAME).remoteName(), "id");
+        assertEquals(membership.attributeFromConnIdName(Uid.NAME).connId().getType(), String.class);
+        var nameMapping = membership.attributeFromConnIdName(Name.NAME).json();
+        assertEquals(nameMapping.path().onlyAttribute().name(), "id");
+        var sample = JsonNodeFactory.instance.objectNode().set("id", JsonNodeFactory.instance.numberNode(42));
+        assertEquals(nameMapping.singleValueFromAttribute(nameMapping.attributeFromObject(sample)), "42");
+        assertEquals(membership.attributeFromConnIdName(Name.NAME).connId().getType(), String.class);
+    }
 }
