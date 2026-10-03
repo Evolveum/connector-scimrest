@@ -73,8 +73,8 @@ Attribute keys (all optional — only present keys are applied, so the defaults 
 `jsonType`, `openApiFormat`, `complexType`::
   JSON wire type, OpenAPI format, and the embedded object class for structured attributes
 
-`json: { name, type, openApiFormat, path }`::
-  The JSON wire mapping block; `path` maps the attribute to a (nested) JSON location — see the attribute paths below
+`json: { name, type, openApiFormat, path, implementation }`::
+  The JSON wire mapping block; `path` maps the attribute to a (nested) JSON location — see the attribute paths below. `implementation` is a block with `deserialize` and/or `serialize` Groovy fragments — the declarative counterpart of the Groovy DSL `json { implementation { deserialize { … } serialize { … } } }`; the fragment receives the wire value as `value` (deserialize) / the ConnId value as `value` (serialize) and must return the converted value. A fragment may carry its own `import` lines as its leading lines — they are hoisted out of the compiled closure, so `new ConnectorObjectReference(...)` and friends work without any implicit imports. Key order within the block is free: `type` / `openApiFormat` are resolved lazily, so `implementation` may come before or after them
 
 `connId: { name, type }`::
   The ConnId-side name (including the `__UID__` / `__NAME__` built-ins) and value type — a capitalized, case-sensitive Java type name (`String`, `Integer`, `Long`, `Boolean`, `Double`, `BigDecimal`, `Binary`, `GuardedString`, …)

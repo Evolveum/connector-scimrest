@@ -39,6 +39,54 @@ public class YamlScriptValidationTest {
                   id:
             """;
 
+    /**
+     * The MID #12495 shape: a reference attribute with a {@code json: implementation:
+     * deserialize: |} block whose fragment carries its own imports. Must pass the full
+     * {@code validate} {@code build} path (syntax check, load onto the live builder, schema build).
+     */
+    private static final String SCHEMA_SCRIPT_WITH_JSON_IMPLEMENTATION = """
+            objectClasses:
+              Membership:
+                embedded: true
+                references:
+                  project:
+                    objectClass: Project
+                    json:
+                      type: string
+                      openApiFormat: uri-reference
+                      path: $._links.project
+                      implementation:
+                        deserialize: |
+                          import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
+                          import org.identityconnectors.framework.common.objects.ConnectorObjectReference
+                          import org.identityconnectors.framework.common.objects.ObjectClass
+                          var href = value.get("href")?.asText()
+                          var pid = href.substring(href.lastIndexOf("/") + 1)
+                          var obj = new ConnectorObjectBuilder()
+                                  .setObjectClass(new ObjectClass("Project"))
+                                  .setUid(pid)
+                                  .setName(value.get("title")?.asText())
+                          return new ConnectorObjectReference(obj.build())
+            """;
+
+    /**
+     * Same envelope as {@link #SCHEMA_SCRIPT_WITH_JSON_IMPLEMENTATION} with a syntax error inside the
+     * {@code deserialize} fragment — a compile-phase failure with a precise dotted source.
+     */
+    private static final String SCHEMA_SCRIPT_WITH_BROKEN_JSON_IMPLEMENTATION = """
+            objectClasses:
+              Membership:
+                embedded: true
+                references:
+                  project:
+                    objectClass: Project
+                    json:
+                      type: string
+                      implementation:
+                        deserialize: |
+                          return (
+            """;
+
     private static final String VALID_OPERATION_SCRIPT = """
             objectClasses:
               User:
@@ -205,6 +253,20 @@ public class YamlScriptValidationTest {
         var result = validate(SCHEMA_SCRIPT, "schema", ScriptValidationRequest.SCRIPT_OPERATION_BUILD);
 
         assertEquals(result.get("status"), "ok", "Unexpected result: " + result);
+    }
+
+    @Test
+    public void validYamlSchemaWithJsonImplementationBlockPassesValidation() {
+        var result = validate(SCHEMA_SCRIPT_WITH_JSON_IMPLEMENTATION, "schema", ScriptValidationRequest.SCRIPT_OPERATION_BUILD);
+
+        assertEquals(result.get("status"), "ok", "Unexpected result: " + result);
+    }
+
+    @Test
+    public void brokenJsonImplementationFragmentIsCaughtAtCompile() {
+        var result = validate(SCHEMA_SCRIPT_WITH_BROKEN_JSON_IMPLEMENTATION, "schema", ScriptValidationRequest.SCRIPT_OPERATION_COMPILE);
+
+        assertFirstErrorPhaseAndSource(result, "compile", "objectClasses.Membership.references.project.json.implementation.deserialize");
     }
 
     @Test

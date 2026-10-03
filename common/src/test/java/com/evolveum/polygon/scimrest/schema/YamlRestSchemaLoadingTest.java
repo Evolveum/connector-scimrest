@@ -11,9 +11,14 @@ import com.evolveum.polygon.conndev.api.BasicJsonPathFormat;
 import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.api.ParsingException;
 import com.evolveum.polygon.conndev.yaml.YamlSchemaLoader;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.testng.annotations.Test;
+import tools.jackson.databind.node.JsonNodeFactory;
 
 import java.util.List;
 
@@ -285,6 +290,110 @@ public class YamlRestSchemaLoadingTest {
                 """));
 
         assertTrue(exception.getMessage().contains("uri"), exception.getMessage());
+    }
+
+    /**
+     * The issue shape (MID #12495): a reference attribute with a {@code json: implementation:
+     * deserialize: |} block — the declarative counterpart of the Groovy
+     * {@code json { implementation { deserialize { ... } } }} DSL. The fragment carries its own
+     * imports (hoisted out of the compiled closure), and the built mapping converts the wire node
+     * through the closure into a {@code ConnectorObjectReference}.
+     */
+    @Test
+    public void referenceJsonImplementationBlockBindsAndBuilds() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  Membership:
+                    embedded: true
+                    references:
+                      project:
+                        objectClass: Project
+                        json:
+                          type: string
+                          openApiFormat: uri-reference
+                          path: $._links.project
+                          implementation:
+                            deserialize: |
+                              import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder
+                              import org.identityconnectors.framework.common.objects.ConnectorObjectReference
+                              import org.identityconnectors.framework.common.objects.ObjectClass
+                              var href = value.get("href")?.asText()
+                              var pid = href.substring(href.lastIndexOf("/") + 1)
+                              var obj = new ConnectorObjectBuilder()
+                                      .setObjectClass(new ObjectClass("Project"))
+                                      .setUid(pid)
+                                      .setName(value.get("title")?.asText())
+                              return new ConnectorObjectReference(obj.build())
+                """);
+
+        var schema = loader.build();
+        var mapping = schema.objectClass("Membership").attributeFromProtocolName("project").json();
+        var sample = JsonNodeFactory.instance.objectNode()
+                .set("_links", JsonNodeFactory.instance.objectNode()
+                        .set("project", JsonNodeFactory.instance.objectNode()
+                                .set("href", JsonNodeFactory.instance.textNode("https://op.example.org/api/v3/projects/123"))
+                                .set("title", JsonNodeFactory.instance.textNode("Proj"))));
+
+        var connId = mapping.singleValueFromAttribute(mapping.attributeFromObject(sample));
+
+        assertTrue(connId instanceof ConnectorObjectReference,
+                "expected a ConnectorObjectReference, got " + connId);
+        var ref = (ConnectorObject) ((ConnectorObjectReference) connId).getValue();
+        assertEquals(ref.getUid(), new Uid("123"));
+        assertEquals(ref.getName(), new Name("Proj"));
+        // a reference attribute is presented to ConnId as a ConnectorObjectReference
+        assertEquals(schema.objectClass("Membership").attributeFromProtocolName("project").connId().getType(),
+                ConnectorObjectReference.class);
+    }
+
+    /**
+     * A {@code type} declared after the {@code implementation} block in document order still feeds
+     * the lazy base mapping — the Groovy DSL is order-independent the same way.
+     */
+    @Test
+    public void jsonImplementationBeforeTypeStillResolvesTheBase() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+        loader.load("""
+                objectClasses:
+                  Widget:
+                    attributes:
+                      label:
+                        json:
+                          implementation:
+                            deserialize: |
+                              return "d:" + value.asText()
+                            serialize: |
+                              return "s:" + value
+                          type: string
+                """);
+
+        var mapping = loader.build().objectClass("Widget").attributeFromProtocolName("label").json();
+
+        assertEquals(mapping.singleValueFromAttribute(JsonNodeFactory.instance.stringNode("x")), "d:x");
+    }
+
+    /** A typo'd sub-key inside the {@code implementation} block fails fast, naming the key. */
+    @Test
+    public void unknownKeyInsideJsonImplementationFailsFast() {
+        var builder = new RestSchemaBuilderImpl(StubConnector.class, ContextLookup.none());
+        var loader = new YamlSchemaLoader(builder);
+
+        var exception = expectThrows(IllegalArgumentException.class, () -> loader.load("""
+                objectClasses:
+                  Widget:
+                    attributes:
+                      label:
+                        json:
+                          type: string
+                          implementation:
+                            deserialise: |
+                              return value
+                """));
+
+        assertTrue(exception.getMessage().contains("deserialise"), exception.getMessage());
     }
 
     @Test

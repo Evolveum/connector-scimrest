@@ -11,12 +11,15 @@ import com.evolveum.polygon.conndev.api.AttributePath;
 import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.api.AttributePathFormat;
 import com.evolveum.polygon.conndev.build.api.AttributeBuilder;
+import com.evolveum.polygon.conndev.build.api.ValueMappingBuilder;
 import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.conndev.concepts.DefinitionValue;
+import com.evolveum.polygon.conndev.spi.ValueMapping;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.ScimPathFormat;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+import tools.jackson.databind.JsonNode;
 
 public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends AttributeBuilder<F, RestAttributeDefinition> {
 
@@ -110,6 +113,26 @@ public interface RestAttributeBuilder<F extends RestAttributeBuilder<F>> extends
         ScimMapping path(
                 @DelegatesTo(value = ScimPathBuilder.class, strategy = Closure.DELEGATE_ONLY)
                 @Script.Initialization
+                Closure<?> closure);
+
+        /**
+         * Sets a custom value mapping implementation for SCIM serialization/deserialization.
+         *
+         * @param mapping the value mapping to use
+         * @return this SCIM mapping instance
+         */
+        ScimMapping implementation(ValueMapping<?, JsonNode> mapping);
+
+        /**
+         * Sets a custom value mapping implementation via a closure. Groovy-only — unlike the
+         * JSON sub-mapping there is no declarative YAML {@code implementation} block on SCIM.
+         *
+         * @param closure a closure that configures the value mapping
+         * @return this SCIM mapping instance
+         */
+        ScimMapping implementation(
+                @Script.Initialization
+                @DelegatesTo(value = ValueMappingBuilder.class, strategy = Closure.DELEGATE_ONLY)
                 Closure<?> closure);
     }
 
