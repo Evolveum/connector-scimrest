@@ -155,10 +155,17 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     }
 
     @Override
-    public RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec) {
-        // FIXME: implement builder here
-        throw new UnsupportedOperationException(
-                "supportedFilter without a mapping closure is not implemented on search endpoints (endpoint '" + path + "')");
+    public EndpointBasedSearchBuilder<BF, OF> supportedFilter(FilterSpecification filterSpec) {
+        // A concrete-value filter without a mapping closure: the endpoint itself is the filter
+        // (e.g. users/disabled returns only the disabled users), so the matching search is
+        // routed here as-is and the request is left untouched.
+        filterMappers.add(FilterToRequestMapper.from(filterSpec, (request, filter) -> { }));
+        if (emptyFilterSupported == null) {
+            // If empty filter support was not specified explicitly, we assume that it is not supported
+            // when adding explicit filtering
+            emptyFilterSupported = false;
+        }
+        return this;
     }
 
     @Override

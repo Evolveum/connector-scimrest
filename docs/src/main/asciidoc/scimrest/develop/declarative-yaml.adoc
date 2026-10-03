@@ -149,6 +149,9 @@ objectClasses:
              - spec: attribute("id").eq().anySingleValue()
                request: |
                  request.pathParameter("id", value)
+         - path: /users/disabled   # concrete-value filter: the endpoint serves the filter itself
+           supportedFilters:
+             - spec: attribute("enabled").eq(false)   # no request block - the search is routed here as-is
       attributeResolvers:
         - attribute: team
           resolutionType: PER_OBJECT
@@ -199,7 +202,7 @@ objectClasses:
   A filter specification as a build-time Groovy expression, e.g. `attribute("id").eq().anySingleValue()` (see the filter specification API)
 
 `search.endpoints[].supportedFilters[].request`::
-  Groovy block mapping the filter onto the request (variables `request`, `value`)
+  Optional Groovy block mapping the filter onto the request (variables `request`, `value`). When omitted, the entry declares a concrete-value filter the endpoint serves on its own: a search whose filter matches the `spec` is routed to the endpoint with the request left unmodified (e.g. `spec: attribute("enabled").eq(false)` on a `users/disabled` endpoint that already returns only the disabled users)
 
 `search.normalize`::
   UID/NAME rewriting for reference attributes: `toSingleValue` (attribute name) plus the `rewriteUid`, `rewriteName`, `restoreUid`, `restoreName` Groovy blocks (variables `original`, `value`)

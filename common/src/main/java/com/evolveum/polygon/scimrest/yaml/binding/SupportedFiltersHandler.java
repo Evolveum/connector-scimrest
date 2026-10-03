@@ -15,9 +15,10 @@ import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
 
 /**
  * Binds a search endpoint's {@code supportedFilters:} block. Each entry's {@code spec} is a build-time
- * Groovy expression (evaluated against the endpoint, yielding a {@link FilterSpecification}) and its
- * {@code request} is a runtime Groovy block (compiled to a closure that maps the filter onto the HTTP
- * request).
+ * Groovy expression (evaluated against the endpoint, yielding a {@link FilterSpecification}); its
+ * {@code request} (a runtime Groovy block compiled to a closure that maps the filter onto the HTTP
+ * request) is optional — without it the entry declares a concrete-value filter the endpoint serves
+ * on its own, so a matching search is routed to the endpoint with the request left unmodified.
  */
 public class SupportedFiltersHandler implements CustomYamlHandler {
 
@@ -29,9 +30,13 @@ public class SupportedFiltersHandler implements CustomYamlHandler {
         }
         for (var item : value.elements()) {
             var spec = requireScalar(item, "spec");
-            var request = requireScalar(item, "request");
+            var request = optionalScalar(item, "request");
             var filterSpec = (FilterSpecification) binder.evaluate(spec, endpoint);
-            endpoint.supportedFilter(filterSpec, binder.compileClosure(request));
+            if (request == null) {
+                endpoint.supportedFilter(filterSpec);
+            } else {
+                endpoint.supportedFilter(filterSpec, binder.compileClosure(request));
+            }
         }
     }
 
@@ -63,5 +68,10 @@ public class SupportedFiltersHandler implements CustomYamlHandler {
                     + map.line() + ":" + map.col());
         }
         return node.text();
+    }
+
+    private static String optionalScalar(LocatedNode map, String key) {
+        var node = map.get(key);
+        return (node != null && node.isValue()) ? node.text() : null;
     }
 }

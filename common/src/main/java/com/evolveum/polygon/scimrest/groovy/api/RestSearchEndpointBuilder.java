@@ -153,6 +153,15 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
         return objectsPath(AttributePathDeclaration.of(BasicJsonPathFormat.INSTANCE, pathExpression));
     }
 
+    /**
+     * Declares a concrete-value filter that this endpoint serves on its own, without a mapping
+     * closure. When a search carries a filter matching {@code filterSpec} (e.g.
+     * {@code attribute("enabled").eq(false)}), the search is routed to this endpoint and the
+     * request is sent unmodified — the endpoint path itself carries the filter (e.g.
+     * {@code users/disabled} already returns only the disabled users).
+     */
+    RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec);
+
     RestSearchEndpointBuilder supportedFilter(FilterSpecification filterSpec, @DelegatesTo(value = FilterSupportBase.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);
 
     /**

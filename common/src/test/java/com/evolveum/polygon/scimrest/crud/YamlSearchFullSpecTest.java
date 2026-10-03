@@ -194,6 +194,47 @@ public class YamlSearchFullSpecTest extends AbstractCrudConnectorTest {
     }
 
     // ----------------------------------------------------------------------------------------------
+    // concrete-value filter, spec only without request  (mirrors SearchConcreteValueFilterRoutingTest)
+    // ----------------------------------------------------------------------------------------------
+
+    private static final String SCHEMA_WITH_ENABLED = """
+            objectClass("Account") {
+                attribute("id") { jsonType "string" }
+                attribute("name") { jsonType "string" }
+                attribute("enabled") { jsonType "boolean" }
+            }
+            """;
+
+    private static final String CONCRETE_VALUE_YAML = """
+            objectClasses:
+              Account:
+                search:
+                  endpoints:
+                    - path: accounts
+                      responseFormat: JSON_ARRAY
+                      emptyFilterSupported: true
+                    - path: accounts/disabled
+                      responseFormat: JSON_ARRAY
+                      supportedFilters:
+                        - spec: attribute("enabled").eq(false)
+            """;
+
+    @Test
+    public void concreteValueFilterFromYamlRoutesToDedicatedEndpoint() {
+        wireMockServer.stubFor(get(urlPathEqualTo("/accounts/disabled"))
+                .willReturn(okJson("[{\"id\":\"1\",\"name\":\"alice\",\"enabled\":false}]")));
+
+        var filter = FilterBuilder.equalTo(AttributeBuilder.build("enabled", false));
+        var results = search(initYaml(SCHEMA_WITH_ENABLED, CONCRETE_VALUE_YAML), filter);
+
+        assertEquals(results.size(), 1);
+        assertEquals(results.getFirst().getName().getNameValue(), "alice");
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo("/accounts/disabled"))).size(), 1);
+        // The generic endpoint must not be consulted at all.
+        assertEquals(wireMockServer.findAll(getRequestedFor(urlPathEqualTo(ACCOUNTS_PATH))).size(), 0);
+    }
+
+    // ----------------------------------------------------------------------------------------------
 
     private ClassHandlerConnectorBase initYaml(String yaml) {
         var connector = YamlOperationsConnector.fromStrings(yaml);

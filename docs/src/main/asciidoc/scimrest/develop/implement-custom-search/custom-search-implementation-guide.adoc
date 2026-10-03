@@ -163,12 +163,40 @@ original filter object - `value` - The first value from the filter
 Available filter operations:
 
 * `eq()` - Equals
+* `eq(value)` - Equals the given concrete value, e.g. `eq(false)`
 * `contains()` - Contains substring
 * `chain(spec)` - Combine two attribute specifications
 
 Value types:
 
 * `anySingleValue()` - Any single value (alias: `anyValue()`)
+
+===== Concrete value filters
+
+Instead of mapping a filter onto the request, an endpoint can serve a
+concrete-value filter on its own: declare the filter without a closure
+and a search whose filter matches the specification is routed to that
+endpoint with the request left unmodified. Use this when the endpoint
+path already carries the filter — e.g. a `users/disabled` endpoint that
+returns only the disabled users:
+
+[source,groovy]
+----
+endpoint("users/disabled") {
+    pagingSupport {
+        request.queryParameter("limit", paging.pageSize)
+               .queryParameter("offset", paging.pageOffset)
+    }
+    supportedFilter(attribute("enabled").eq(false))
+}
+----
+
+`eq(value)` matches only an equals filter on that attribute with exactly
+one value equal to `value` (so `enabled = false` matches, but
+`enabled = true` and `enabled != false` do not). A filter that does not
+match is not routed to the endpoint and is handled by whatever other
+search support declares it (for example the `scim` fallback). Declare
+each concrete value filter on a single endpoint only.
 
 ==== Request customization
 
