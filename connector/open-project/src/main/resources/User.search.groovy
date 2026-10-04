@@ -67,6 +67,7 @@ objectClass("User") {
 
         endpoint("users/{id}") {
             singleResult()
+            notFoundIsNoResult()
             supportedFilter(attribute("id").eq().anySingleValue()) {
                 request.pathParameter("id", value)
             }

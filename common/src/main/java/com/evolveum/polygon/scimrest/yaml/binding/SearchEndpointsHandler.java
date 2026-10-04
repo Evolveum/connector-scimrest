@@ -20,9 +20,9 @@ import java.util.ArrayList;
  * Binds a search {@code endpoints:} block. Each list item names an endpoint by its required
  * {@code path} (and optional {@code method} — {@code GET} by default, {@code POST} for
  * body-based search APIs); the item's remaining keys ({@code responseFormat},
- * {@code objectExtractor}, {@code pagingSupport}, {@code singleResult}, {@code emptyFilterSupported},
- * {@code supportedFilters}) are bound onto the {@code RestSearchEndpointBuilder} returned by
- * {@code endpoint(path)}.
+ * {@code objectExtractor}, {@code pagingSupport}, {@code singleResult}, {@code notFoundIsNoResult},
+ * {@code emptyFilterSupported}, {@code supportedFilters}) are bound onto the
+ * {@code RestSearchEndpointBuilder} returned by {@code endpoint(path)}.
  */
 public class SearchEndpointsHandler implements CustomYamlHandler {
 

@@ -10,6 +10,7 @@ objectClasses:
       endpoints:
         - path: users/
           objectExtractor: |
+            import org.json.JSONArray;
             if (response.body() == null) {
                 return new JSONArray()
             }
@@ -20,26 +21,30 @@ objectClasses:
                     .queryParameter("offset", paging.pageOffset)
           emptyFilterSupported: true
           supportedFilters:
-            - spec: name eq ?
+            - spec: attribute("name").eq().anySingleValue()
               request: |
                 String filter = "[{ \"name\": { \"operator\": \"=\", \"values\": [\"${value}\"] } }]"
                 request.queryParameter("filters", filter)
-            - spec: name contains ?
+            - spec: attribute("name").contains().anySingleValue()
               request: |
                 String filter = "[{ \"name\": { \"operator\": \"~\", \"values\": [\"${value}\"] } }]"
                 request.queryParameter("filters", filter)
         - path: users/{id}
           singleResult: true
+          notFoundIsNoResult: true
           supportedFilters:
-            - spec: id eq ?
+            - spec: attribute("id").eq().anySingleValue()
               request: |
                 request.pathParameter("id", value)
       custom:
         emptyFilterSupported: false
         supportedFilters:
-          - admin eq ?
-          - language eq ?
+          - spec: attribute("admin").eq().anySingleValue()
+          - spec: attribute("language").eq().anySingleValue()
         implementation: |
+          import org.identityconnectors.common.logging.Log;
+          import org.identityconnectors.framework.common.objects.ConnectorObject;
+          import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
           // hoisted from the top of the original script:
           var LOG = Log.getLog(this.getClass())
 

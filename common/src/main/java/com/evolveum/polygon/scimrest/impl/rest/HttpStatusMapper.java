@@ -24,7 +24,9 @@ import org.identityconnectors.framework.common.exceptions.UnknownUidException;
  *   <li>401 — {@link InvalidCredentialException} (retried login, resource {@code DOWN})</li>
  *   <li>403 — {@link PermissionDeniedException} (hard security failure)</li>
  *   <li>404 — {@link UnknownUidException} for get/update/delete (tombstone + idempotent delete);
- *       {@link ConfigurationException} for search (the endpoint path is misconfigured)</li>
+ *       {@link ConfigurationException} for search (the endpoint path is misconfigured) — unless
+ *       the search endpoint declared {@code notFoundIsNoResult}, in which case the retriever
+ *       turns the 404 into an empty result set and it never reaches this mapper</li>
  *   <li>409 — {@link AlreadyExistsException} (conflicting-object discovery)</li>
  *   <li>429 — {@link RetryableException} (rate limited, retryable)</li>
  *   <li>5xx — {@link ConnectionFailedException} (server-side problem, transient)</li>

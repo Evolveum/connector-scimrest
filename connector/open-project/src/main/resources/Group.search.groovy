@@ -22,6 +22,7 @@ objectClass("Group") {
         }
         endpoint("groups/{id}") {
             singleResult()
+            notFoundIsNoResult()
             supportedFilter(attribute("id").eq().anySingleValue()) {
                 request.pathParameter("id", value)
             }

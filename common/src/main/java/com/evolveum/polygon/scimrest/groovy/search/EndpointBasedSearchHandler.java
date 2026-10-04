@@ -39,6 +39,7 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
     private final QueryRequestBuilderImpl queryRequestBuilder;
     private final Integer maxPageSize;
     private final int pageLimit;
+    private final boolean notFoundIsNoResult;
 
     public EndpointBasedSearchHandler(EndpointBasedSearchBuilder<BF, OF> builder, Set<FilterToRequestMapper> filterMappers) {
         this.objectClass = builder.objectClass;
@@ -52,6 +53,7 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
         this.queryRequestBuilder = builder.queryRequest;
         this.maxPageSize = builder.maxPageSize;
         this.pageLimit = builder.pageLimit();
+        this.notFoundIsNoResult = builder.notFoundIsNoResult;
     }
 
     @Override
@@ -82,6 +84,7 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
                 .responseFormat(responseFormat)
                 .responsePageLimit(maxPageSize)
                 .pageLimit(pageLimit)
+                .notFoundIsNoResult(notFoundIsNoResult)
                 .build();
     }
 

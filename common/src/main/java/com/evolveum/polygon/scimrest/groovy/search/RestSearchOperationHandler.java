@@ -52,6 +52,14 @@ public interface RestSearchOperationHandler<BF, OF> {
      */
     Integer responsePageLimit();
 
+    /**
+     * Whether an HTTP 404 from the endpoint means "no matching objects" (the search completes
+     * with an empty result set) instead of a misconfigured endpoint path.
+     */
+    default boolean notFoundIsNoResult() {
+        return false;
+    }
+
     class Builder<BF, OF> {
 
         private Function<HttpResponse<BF>, Iterable<OF>> extractor = null;
@@ -61,6 +69,7 @@ public interface RestSearchOperationHandler<BF, OF> {
         private Class<?> responseType = JSONObject.class;
         private Integer responsePageLimit = null;
         private int pageLimit = DEFAULT_PAGE_SIZE;
+        private boolean notFoundIsNoResult = false;
 
         public Builder<BF, OF> remoteObjectExtractor(Function<HttpResponse<BF>, Iterable<OF>> extractor) {
             this.extractor = extractor;
@@ -100,6 +109,11 @@ public interface RestSearchOperationHandler<BF, OF> {
             return this;
         }
 
+        public Builder<BF, OF> notFoundIsNoResult(boolean notFoundIsNoResult) {
+            this.notFoundIsNoResult = notFoundIsNoResult;
+            return this;
+        }
+
         public RestSearchOperationHandler<BF,OF> build() {
             return new RestSearchOperationHandler<BF,OF>() {
 
@@ -136,6 +150,11 @@ public interface RestSearchOperationHandler<BF, OF> {
                 @Override
                 public int pageLimit() {
                     return pageLimit;
+                }
+
+                @Override
+                public boolean notFoundIsNoResult() {
+                    return notFoundIsNoResult;
                 }
             };
         }

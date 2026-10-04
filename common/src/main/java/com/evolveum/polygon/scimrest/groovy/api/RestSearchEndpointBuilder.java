@@ -14,6 +14,7 @@ import com.evolveum.polygon.conndev.build.api.SearchHandlerBuilder;
 import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.search.RestSearchOperationHandler;
+import com.evolveum.polygon.scimrest.yaml.binding.NotFoundIsNoResultHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.ObjectExtractorHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.PagingSupportHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.SingleResultHandler;
@@ -101,6 +102,18 @@ public interface RestSearchEndpointBuilder extends EndpointBuilder, SearchHandle
 
     @Yaml.Custom(SingleResultHandler.class)
     RestSearchEndpointBuilder singleResult();
+
+    /**
+     * Declares that an HTTP 404 from this endpoint means "no matching objects" — the search
+     * completes with an empty result set instead of reporting a
+     * {@code ConfigurationException} ("Search endpoint returned 404 (check the endpoint path)").
+     *
+     * <p>Use it for by-id endpoints (e.g. {@code users/{id}}) whose remote answers 404 when the
+     * object does not exist. A 404 from an unflagged endpoint is still reported as a
+     * misconfiguration, which catches a wrong endpoint path.</p>
+     */
+    @Yaml.Custom(NotFoundIsNoResultHandler.class)
+    RestSearchEndpointBuilder notFoundIsNoResult();
 
 
     RestSearchEndpointBuilder objectExtractor(@Script.Runtime @DelegatesTo(value = ResponseWrapper.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure);

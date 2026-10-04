@@ -138,6 +138,11 @@ public class RestPagingAwareObjectRetriever {
             var bodyHandler = bodyHandlerFrom(specification,
                     "endpoint " + endpointOf(requestBuilder) + ", page " + page);
             var response = context.executeRequest(requestBuilder, bodyHandler);
+            if (response.statusCode() == 404 && specification.notFoundIsNoResult()) {
+                // The endpoint declares a 404 as "no result" (e.g. a by-id lookup of a
+                // nonexistent object): the search is simply empty, not an error.
+                return new Page(List.of(), 0, endpointOf(requestBuilder));
+            }
             checkResponseStatus(response);
             var objects = specification.extractRemoteObject(response);
             var totalCount = specification.extractTotalResultCount(response);
@@ -169,6 +174,9 @@ public class RestPagingAwareObjectRetriever {
     /**
      * A non-2xx response from the search endpoint is an error, not an empty result: without this
      * check a 404/500 would silently terminate the scan as a successful zero-result search.
+     *
+     * <p>An exception: a 404 from an endpoint that declares {@code notFoundIsNoResult} is
+     * handled by {@link #fetchPage} as an empty result set and never reaches this check.</p>
      */
     private static void checkResponseStatus(HttpResponse<?> response) {
         int status = response.statusCode();

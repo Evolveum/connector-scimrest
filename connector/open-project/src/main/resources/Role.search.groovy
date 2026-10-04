@@ -24,6 +24,7 @@ objectClass("Role") {
 
         endpoint("roles/{id}") {
             singleResult()
+            notFoundIsNoResult()
             supportedFilter(attribute("id").eq().anySingleValue()) {
                 request.pathParameter("id", value)
             }

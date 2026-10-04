@@ -8,6 +8,7 @@ objectClasses:
       normalize:
         toSingleValue: roles
         rewriteUid: |
+          import org.identityconnectors.framework.common.objects.ConnectorObject;
           if(value == null
           ){
               return original;
@@ -15,6 +16,7 @@ objectClasses:
           def ref = (ConnectorObject) value.getValue()
           return original + ":" + ref.uid.uidValue
         rewriteName: |
+          import org.identityconnectors.framework.common.objects.ConnectorObject;
           if(value == null
           ){
               return original
@@ -28,6 +30,7 @@ objectClasses:
       endpoints:
         - path: memberships
           objectExtractor: |
+            import org.json.JSONArray;
             if(response.body()==null){
                 return new JSONArray();
             }
@@ -39,7 +42,7 @@ objectClasses:
                     .queryParameter("offset", paging.pageOffset)
           emptyFilterSupported: true
           supportedFilters:
-            - spec: principal eq ?
+            - spec: attribute("principal").eq().anySingleValue()
               request: |
                 var valList = value.value.uid.getValue();
 
@@ -60,7 +63,8 @@ objectClasses:
                 request.queryParameter("filters", filter)
         - path: memberships/{id}
           singleResult: true
+          notFoundIsNoResult: true
           supportedFilters:
-            - spec: id eq ?
+            - spec: attribute("id").eq().anySingleValue()
               request: |
                 request.pathParameter("id", value)

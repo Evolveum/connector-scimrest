@@ -79,6 +79,7 @@ objectClass("Membership") {
         }
         endpoint("memberships/{id}") {
             singleResult()
+            notFoundIsNoResult()
             supportedFilter(attribute("id").eq().anySingleValue()) {
                 request.pathParameter("id", value)
             }

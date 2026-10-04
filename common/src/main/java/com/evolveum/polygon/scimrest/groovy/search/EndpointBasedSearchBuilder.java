@@ -55,6 +55,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     Integer declarativePageSize;
     List<PagingParameter> declarativePagingParameters = new ArrayList<>();
     Boolean emptyFilterSupported = null;
+    boolean notFoundIsNoResult = false;
     final String path;
     Set<FilterToRequestMapper> filterMappers = new HashSet<>();
     Class<?> responseFormat = JSON_OBJECT;
@@ -121,6 +122,12 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
     @Override
     public EndpointBasedSearchBuilder<BF, OF>  singleResult() {
         this.totalCountExtractor = TotalCountExtractor.singleObject();
+        return this;
+    }
+
+    @Override
+    public EndpointBasedSearchBuilder<BF, OF>  notFoundIsNoResult() {
+        this.notFoundIsNoResult = true;
         return this;
     }
 

@@ -5,6 +5,7 @@ objectClasses:
       endpoints:
         - path: roles/
           objectExtractor: |
+            import org.json.JSONArray;
             if(response.body()==null){
                 return new JSONArray();
             }
@@ -14,7 +15,8 @@ objectClasses:
           emptyFilterSupported: true
         - path: roles/{id}
           singleResult: true
+          notFoundIsNoResult: true
           supportedFilters:
-            - spec: id eq ?
+            - spec: attribute("id").eq().anySingleValue()
               request: |
                 request.pathParameter("id", value)

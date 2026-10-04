@@ -143,12 +143,13 @@ objectClasses:
             - spec: attribute("login").eq().anySingleValue()
               request: |
                 request.queryParameter("login", value)
-         - path: /users/{id}
-           singleResult: true
-           supportedFilters:
-             - spec: attribute("id").eq().anySingleValue()
-               request: |
-                 request.pathParameter("id", value)
+          - path: /users/{id}
+            singleResult: true
+            notFoundIsNoResult: true
+            supportedFilters:
+              - spec: attribute("id").eq().anySingleValue()
+                request: |
+                  request.pathParameter("id", value)
          - path: /users/disabled   # concrete-value filter: the endpoint serves the filter itself
            supportedFilters:
              - spec: attribute("enabled").eq(false)   # no request block - the search is routed here as-is
@@ -194,6 +195,9 @@ objectClasses:
 
 `search.endpoints[].singleResult`::
   The endpoint returns exactly one object
+
+`search.endpoints[].notFoundIsNoResult`::
+  An HTTP 404 from the endpoint means "no matching objects" — the search completes with an empty result set instead of reporting a `ConfigurationException`. Use it for by-id endpoints whose remote answers 404 for a nonexistent object (e.g. `GET /users/{id}`); only 404 is affected, every other error status is still reported, and endpoints without the flag keep the default misconfiguration signal
 
 `search.endpoints[].emptyFilterSupported`::
   The endpoint supports the empty (list-all) filter

@@ -126,6 +126,25 @@ response.
 singleResult()
 ----
 
+==== 404 means no result
+
+By default, an HTTP 404 from a search endpoint is reported as a
+`ConfigurationException` ("Search endpoint returned 404 (check the
+endpoint path)") — a 404 usually means the endpoint path is
+misconfigured. For by-id endpoints whose remote answers 404 when the
+object does not exist (e.g. `GET users/{id}`), declare instead that a
+404 means "no matching objects" — the search completes with an empty
+result set.
+
+[source,groovy]
+----
+notFoundIsNoResult()
+----
+
+The flag only affects HTTP 404; every other error status (401, 403,
+5xx, …) is still reported as an error. Endpoints without the flag keep
+the default misconfiguration signal.
+
 ==== Filter support
 
 ===== Attribute references
