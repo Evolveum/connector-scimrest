@@ -19,17 +19,19 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.source.version>17</project.source.version>
-        <project.target.version>17</project.target.version>
+        <project.source.version>21</project.source.version>
+        <project.target.version>21</project.target.version>
         <polygon.version>1.5.3.0-M3</polygon.version>
-        <connId.version>1.7.0.0-SNAPSHOT</connId.version>
+        <connId.version>1.7.0.0-M0</connId.version>
+        <connId.minVersion>1.7.0.0</connId.minVersion>
+
         <unboundid-scim2.version>6.0.0</unboundid-scim2.version>
-        <conndev.version>0.1-SNAPSHOT</conndev.version>
+        <conndev.version>0.2.0-SNAPSHOT</conndev.version>
 
         <surefire.version>3.5.2</surefire.version>
         <failsafe.version>3.5.2</failsafe.version>
         <testng.version>7.10.2</testng.version>
-        <groovy.version>4.0.25</groovy.version>
+        <groovy.version>6.0.0</groovy.version>
     </properties>
 
     <repositories>

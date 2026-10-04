@@ -29,6 +29,7 @@
     </properties>
 
     <modules>
+        <module>template</module>
         <module>forgejo</module>
         <module>sample-scimdev</module>
         <module>generic</module>
@@ -51,7 +52,7 @@
                         <archive>
                             <index>true</index>
                             <manifestEntries>
-                                <ConnectorBundle-FrameworkVersion>${connId.version}</ConnectorBundle-FrameworkVersion>
+                                <ConnectorBundle-FrameworkVersion>${connId.minVersion}</ConnectorBundle-FrameworkVersion>
                                 <ConnectorBundle-Name>${bundle.name}</ConnectorBundle-Name>
                                 <ConnectorBundle-Version>${bundle.version}</ConnectorBundle-Version>
                             </manifestEntries>
