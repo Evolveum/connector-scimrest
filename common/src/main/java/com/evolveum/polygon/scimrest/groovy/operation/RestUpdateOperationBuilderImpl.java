@@ -19,7 +19,6 @@ import com.evolveum.polygon.conndev.api.ContextLookup;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder;
 import com.evolveum.polygon.conndev.build.api.UpdateOperationBuilder.UpdateRequest;
 import com.evolveum.polygon.conndev.groovy.AbstractUpdateOperationBuilder;
-import com.evolveum.polygon.conndev.json.JsonAttributeMapping;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
@@ -44,7 +43,6 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 
 import java.io.IOException;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
@@ -179,14 +177,12 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 throw new ConnectorException("Content type was specified, but missing implementation of body method");
             }
 
-            var responseHandler = new DefaultResponseHandler(parent.getObjectClass());
-
             return new EndpointHandler((RestConnectorContext) parent.context,
                     path,
                     request.contentType,
                     httpMethod,
                     request.bodyTransformer,
-                    responseHandler,
+                    parent.getObjectClass(),
                     supportedAttrs,
                     true,
                     request.queryParameters
@@ -210,13 +206,13 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
     record EndpointHandler(RestConnectorContext context, String path, String contentType,
                            HttpMethod method,
                            Function<? super UpdateRequest, byte[]> requestBody,
-                           Function<HttpResponse<?>, ConnectorObject> responseHandler,
+                           RestObjectClassDefinition objectClass,
                            Map<String, AttributeSupport> supportedAttributes,
                            boolean requiresOriginalState,
                            Map<String, Object> queryParameters) implements UpdateOperationHandler {
 
         @Override
-        public void update(
+        public UpdateOperationHandler.UpdateResponse update(
                 UpdateRequest updateRequest, OperationOptions options, ContextLookup operationContext) {
             var request = context.rest().newRequest();
             request.apiEndpoint(path);
@@ -229,12 +225,22 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 request.header("Content-Type", contentType);
                 request.body(requestBody.apply(updateRequest));
             }
+            var uid = updateRequest.uid();
             try {
                 var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class, "endpoint " + path));
-                var result = responseHandler.apply(response);
-                // Here we should compute changed deltas?
-
-                // return new Result(result.getObjectClass(), result.getUid(), result);
+                int status = response.statusCode();
+                if (status >= 200 && status < 300) {
+                    // A 2xx without a JSON object body (204 No Content, or a 200/201 without a
+                    // response body) confirms exactly the changes that were sent — report them
+                    // as applied. When the body carries the updated object, the values the
+                    // remote actually holds replace the sent ones.
+                    var body = response.body() instanceof ObjectNode node && !node.isEmpty() ? node : null;
+                    return new UpdateOperationHandler.UpdateResponse(
+                            uid, AppliedChangeResolver.resolve(objectClass, updateRequest.attributeDeltaSet(), body));
+                }
+                throw HttpStatusMapper.map(status, HttpStatusMapper.OperationKind.UPDATE,
+                        String.valueOf(response.request().uri()), uid.getUidValue(),
+                        ErrorDetail.extract(response.body()));
             } catch (ConnectorException e) {
                 // ICF type was already set at the boundary (mapped status error, parse error,
                 // mapped network failure) — never re-wrap or relabel it.
@@ -251,7 +257,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 throw HttpExceptionMapper.map(e, request.getBaseUri() + path);
             } catch (Exception e) {
                 throw new ConnectorException(
-                        "Cannot update object with UID " + updateRequest.uid().getUidValue() + " at endpoint " + path
+                        "Cannot update object with UID " + uid.getUidValue() + " at endpoint " + path
                                 + ": " + HttpExceptionMapper.causeMessage(e), e);
             }
         }
@@ -269,6 +275,47 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 }
             }
             return new Capability<>(this, handled);
+        }
+    }
+
+    /**
+     * Computes the set of changes an endpoint confirmed as applied.
+     *
+     * <p>Without a response body (HTTP 204, or a 200/201 without a body) the remote system
+     * accepted exactly the changes that were sent, so the sent deltas are reported as applied.
+     * When the body carries the updated object, each sent delta is replaced by the value the
+     * remote actually holds (resolved through the attribute's JSON mapping); attributes the
+     * body does not carry are reported with the sent delta unchanged.</p>
+     */
+    private static final class AppliedChangeResolver {
+
+        private AppliedChangeResolver() {
+        }
+
+        static Set<AttributeDelta> resolve(RestObjectClassDefinition objectClass,
+                                           Collection<AttributeDelta> sent, ObjectNode body) {
+            if (body == null) {
+                return Set.copyOf(sent);
+            }
+            var applied = new LinkedHashSet<AttributeDelta>();
+            for (var delta : sent) {
+                var definition = objectClass.attributeFromConnIdName(delta.getName());
+                var values = (definition != null && definition.json() != null)
+                        ? definition.json().valuesFromObject(body) : null;
+                if (values != null) {
+                    var nonNull = values.stream().filter(Objects::nonNull).toList();
+                    if (!nonNull.isEmpty()) {
+                        var appliedDelta = new AttributeDeltaBuilder().setName(delta.getName());
+                        for (var value : nonNull) {
+                            appliedDelta.addValueToReplace(value);
+                        }
+                        applied.add(appliedDelta.build());
+                        continue;
+                    }
+                }
+                applied.add(delta);
+            }
+            return applied;
         }
     }
 
@@ -305,35 +352,6 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 definition.json().toJsonNode(updated, obj);
             }
             return obj.toPrettyString().getBytes(StandardCharsets.UTF_8);
-        }
-    }
-
-    private record DefaultResponseHandler(
-            RestObjectClassDefinition objectClass) implements Function<HttpResponse<?>, ConnectorObject> {
-
-        @Override
-        public ConnectorObject apply(HttpResponse<?> httpResponse) {
-            int status = httpResponse.statusCode();
-            if (status >= 200 && status < 300) {
-                var obj = httpResponse.body();
-                if (obj instanceof ObjectNode remoteObj && !remoteObj.isEmpty()) {
-                    var builder = objectClass.newObjectBuilder();
-                    for (var attributeDef : objectClass.attributes()) {
-                        var valueMapping = attributeDef.mapping(JsonAttributeMapping.class);
-                        if (valueMapping != null) {
-                            Object connIdValues = valueMapping.valuesFromObject(remoteObj);
-                            if (connIdValues != null) {
-                                builder.addAttribute(attributeDef.attributeOf(connIdValues));
-                            }
-                        }
-                    }
-                    return builder.build();
-                }
-                // A 2xx with an empty or absent body is a successful update — not an error.
-                return objectClass.newObjectBuilder().build();
-            }
-            throw HttpStatusMapper.map(status, HttpStatusMapper.OperationKind.UPDATE,
-                    String.valueOf(httpResponse.request().uri()), null, ErrorDetail.extract(httpResponse.body()));
         }
     }
 

@@ -37,8 +37,10 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.Uid;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -130,15 +132,13 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                 throw new ConnectorException("Content type was specified, but missing implementation of body method");
             }
 
-            var responseHandler = new DefaultResponseHandler(parent.getObjectClass());
-
             return new EndpointHandler((RestConnectorContext) parent.context,
                     objectClass,
                     path,
                     request.contentType,
                     httpMethod,
                     request.bodyTransformer,
-                    responseHandler,
+                    parent.getObjectClass(),
                     supportedAttrs,
                     request.queryParameters
             );
@@ -177,7 +177,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
     record EndpointHandler(RestConnectorContext context,ObjectClass objectClass, String path, String contentType,
                            HttpMethod method,
                            Function<? super Set<Attribute>, byte[]> requestBody,
-                           Function<HttpResponse<?>, ConnectorObject> responseHandler,
+                           RestObjectClassDefinition objectClass,
                            Map<String, AttributeSupport> supportedAttributes,
                            Map<String, Object> queryParameters) implements CreateOperationHandler {
 
@@ -196,8 +196,51 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
             }
             try {
                 var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class, "endpoint " + path));
-                var result = responseHandler.apply(response);
-                return new Result(result.getObjectClass(), result.getUid(), result);
+                int status = response.statusCode();
+                if (status < 200 || status >= 300) {
+                    throw HttpStatusMapper.map(status, HttpStatusMapper.OperationKind.CREATE,
+                            String.valueOf(response.request().uri()), null, ErrorDetail.extract(response.body()));
+                }
+                var body = response.body() instanceof ObjectNode node && !node.isEmpty() ? node : null;
+                if (body != null) {
+                    var builder = objectClass.newObjectBuilder();
+                    for (var attributeDef : objectClass.attributes()) {
+                        var valueMapping = attributeDef.mapping(JsonAttributeMapping.class);
+                        if (valueMapping != null) {
+                            Object connIdValues = valueMapping.valuesFromObject(body);
+                            if (connIdValues != null) {
+                                builder.addAttribute(attributeDef.attributeOf(connIdValues));
+                            }
+                        }
+                    }
+                    var created = builder.build();
+                    Uid createdUid;
+                    try {
+                        createdUid = created.getUid();
+                    } catch (IllegalArgumentException e) {
+                        // The body has attributes but no UID — the created object cannot be
+                        // identified, which breaks the ICF create contract.
+                        throw new ConnectorException("Create response at endpoint " + path
+                                + " (HTTP " + status + ") does not contain a UID");
+                    }
+                    return new Result(objectClass.objectClass(), createdUid, created);
+                }
+                // A 2xx without a JSON body (201/204 without a body) — the object was created
+                // but the response does not carry it; the new UID can only come from the
+                // Location header.
+                var createdUid = uidFromLocationHeader(response);
+                if (createdUid == null) {
+                    throw new ConnectorException("Create at endpoint " + path
+                            + " succeeded (HTTP " + status + ") but the response contains neither"
+                            + " an object body nor a Location header; cannot determine the UID"
+                            + " of the created object");
+                }
+                var builder = objectClass.newObjectBuilder();
+                for (var attribute : createAttributes) {
+                    builder.addAttribute(attribute);
+                }
+                builder.setUid(createdUid);
+                return new Result(objectClass.objectClass(), createdUid, builder.build());
             } catch (ConnectorException e) {
                 // ICF type was already set at the boundary (mapped status error, parse error,
                 // mapped network failure) — never re-wrap or relabel it.
@@ -215,6 +258,26 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
             } catch (Exception e) {
                 throw new ConnectorException(
                         "Cannot create object at endpoint " + path + ": " + HttpExceptionMapper.causeMessage(e), e);
+            }
+        }
+
+        /** Extracts the new UID from the {@code Location} response header, or {@code null}. */
+        private static Uid uidFromLocationHeader(HttpResponse<?> response) {
+            var location = response.headers().firstValue("Location").orElse(null);
+            if (location == null || location.isBlank()) {
+                return null;
+            }
+            try {
+                var path = URI.create(location.trim()).getPath();
+                if (path == null) {
+                    return null;
+                }
+                var segments = path.endsWith("/") ? path.substring(0, path.length() - 1).split("/")
+                        : path.split("/");
+                var last = segments[segments.length - 1];
+                return last.isBlank() ? null : new Uid(last);
+            } catch (IllegalArgumentException e) {
+                return null;
             }
         }
 
@@ -250,35 +313,6 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                 definition.json().toJsonNode(attr, obj);
             }
             return obj.toPrettyString().getBytes(StandardCharsets.UTF_8);
-        }
-    }
-
-    private record DefaultResponseHandler(RestObjectClassDefinition objectClass) implements Function<HttpResponse<?>, ConnectorObject> {
-
-        @Override
-        public ConnectorObject apply(HttpResponse<?> httpResponse) {
-            int status = httpResponse.statusCode();
-            if (status >= 200 && status < 300) {
-                var obj = httpResponse.body();
-                if (obj instanceof ObjectNode remoteObj && !remoteObj.isEmpty()) {
-                    var builder = objectClass.newObjectBuilder();
-                    for (var attributeDef : objectClass.attributes()) {
-                        var valueMapping = attributeDef.mapping(JsonAttributeMapping.class);
-                        if (valueMapping != null) {
-                            Object connIdValues = valueMapping.valuesFromObject(remoteObj);
-                            if (connIdValues != null) {
-                                builder.addAttribute(attributeDef.attributeOf(connIdValues));
-                            }
-                        }
-                    }
-                    return builder.build();
-                }
-                // A 2xx with an empty or absent body (204, or a 201 without a response body) is a
-                // successful create with unknown state — not an error. The UID is unknown.
-                return objectClass.newObjectBuilder().build();
-            }
-            throw HttpStatusMapper.map(status, HttpStatusMapper.OperationKind.CREATE,
-                    String.valueOf(httpResponse.request().uri()), null, ErrorDetail.extract(httpResponse.body()));
         }
     }
 

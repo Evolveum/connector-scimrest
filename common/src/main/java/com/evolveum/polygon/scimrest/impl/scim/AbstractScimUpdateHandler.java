@@ -46,7 +46,7 @@ public abstract class AbstractScimUpdateHandler implements UpdateOperationHandle
     }
 
     @Override
-    public void update(UpdateRequest request, OperationOptions options, ContextLookup operationContext) {
+    public UpdateOperationHandler.UpdateResponse update(UpdateRequest request, OperationOptions options, ContextLookup operationContext) {
         ScimResourceContext resource = context.resourceForObjectClass(objectClass);
         if (resource == null) {
             throw new ConfigurationException("No SCIM resource mapping for object class: " + objectClass.getObjectClassValue());
@@ -66,8 +66,9 @@ public abstract class AbstractScimUpdateHandler implements UpdateOperationHandle
                             + HttpExceptionMapper.causeMessage(e), e);
         }
 
+        Set<AttributeDelta> deltas = toDeltaSet(request);
         try {
-            doUpdate(request, toDeltaSet(request), objectClassDef, resourceUri);
+            doUpdate(request, deltas, objectClassDef, resourceUri);
         } catch (ScimHttpErrorException e) {
             // HTTP 404 is a read-then-write race (object gone on the resource) -> UnknownUidException,
             // 409 is a unique-key conflict -> AlreadyExistsException; the server's detail is
@@ -82,6 +83,9 @@ public abstract class AbstractScimUpdateHandler implements UpdateOperationHandle
                     "Failed to update SCIM resource with UID " + uid + " at " + resource.relativeEndpoint()
                             + ": " + HttpExceptionMapper.causeMessage(e), e);
         }
+        // SCIM either applies exactly the sent changes or answers with an error (200 with an
+        // empty body for PATCH per RFC 7644), so the sent deltas are the applied changes.
+        return new UpdateOperationHandler.UpdateResponse(request.uid(), deltas);
     }
 
     @Override
