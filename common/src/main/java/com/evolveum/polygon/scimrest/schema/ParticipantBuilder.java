@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.schema;
 
+import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
 import com.evolveum.polygon.conndev.build.api.ReferenceAttributeBuilder;
 import com.evolveum.polygon.conndev.concepts.DefinitionValue;
@@ -118,6 +119,17 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
         @Override
         public ScimMapping scim(Closure<?> closure) {
             return delegate.scim(closure);
+        }
+
+        @Yaml.Sub
+        @Override
+        public Lookup lookup() {
+            throw new UnsupportedOperationException("lookup is not supported on this attribute builder");
+        }
+
+        @Override
+        public Lookup lookup(Closure<?> closure) {
+            return lookup();
         }
 
         @Override

@@ -32,6 +32,7 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
         RestAttributeDefinition> implements RestObjectClassSchemaBuilder {
 
     private ScimMapping scim;
+    private boolean cached;
 
     public RestObjectClassDefinitionBuilder(RestSchemaBuilderImpl restSchemaBuilder, DefinitionValue<ObjectClass> name) {
         super(restSchemaBuilder, name);
@@ -81,7 +82,7 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
         var scimMapping = scim != null
                 ? new RestObjectClassDefinition.ObjectClassScimMapping(scim.name(), scim.schemaUri(), scim.flattenAttributes())
                 : null;
-        return new RestObjectClassDefinition(connIdInfo, nativeAttrs, connIdAttrs, scimMapping);
+        return new RestObjectClassDefinition(connIdInfo, nativeAttrs, connIdAttrs, scimMapping, cached);
     }
 
     @Override
@@ -96,6 +97,17 @@ public class RestObjectClassDefinitionBuilder extends BaseObjectClassDefinitionB
     @Override
     public ScimMapping scim(@DelegatesTo(ScimMapping.class) Closure<?> closure) {
         return GroovyClosures.callAndReturnDelegate(closure, scim());
+    }
+
+    @Override
+    public RestObjectClassSchemaBuilder cached(boolean value) {
+        this.cached = value;
+        return this;
+    }
+
+    @Override
+    public boolean isCached() {
+        return cached;
     }
 
     private static class ScimBuilder implements ScimMapping {

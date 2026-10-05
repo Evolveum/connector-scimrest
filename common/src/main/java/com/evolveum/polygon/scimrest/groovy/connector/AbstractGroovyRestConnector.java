@@ -12,6 +12,7 @@ import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.handler.RestHandlerBuilder;
 import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.groovy.schema.SchemaDefinitionLoader;
+import com.evolveum.polygon.scimrest.lookup.LookupValueConverter;
 import com.evolveum.polygon.scimrest.yaml.YamlRestHandlerLoader;
 
 import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
@@ -41,20 +42,15 @@ import org.identityconnectors.framework.common.exceptions.ConnectionBrokenExcept
 import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeDelta;
-import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.Filter;
-import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
-import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.SyncResultsHandler;
-import org.identityconnectors.framework.common.objects.SyncToken;
-import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.Configuration;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -287,6 +283,7 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
 
             schemaBuilder.applyStructuralRules();
             context.schema(schemaBuilder.build());
+            context.lookupConverter(new LookupValueConverter(context.schema(), this::searchAllCachedClass));
         } catch (ConnectorException e) {
             // ICF type was already set at the boundary (network failure, bad credentials,
             // SCIM discovery) — never re-wrap or relabel it.
@@ -420,6 +417,7 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
     private ScriptValidationResult validateOperationsAgainstCandidateSchema(RestSchema candidateSchema) {
         var candidateContext = new RestConnectorContext(context.configuration());
         candidateContext.schema(candidateSchema);
+        candidateContext.lookupConverter(new LookupValueConverter(candidateSchema, this::searchAllCachedClass));
         var checks = operationResources(null).stream()
                 .<Callable<ScriptValidationResult>>map(resource -> () -> {
                     var handlerBuilder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), candidateContext);
@@ -427,5 +425,15 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
                 })
                 .toList();
         return GroovyScriptValidator.combine(checks);
+    }
+  private List<ConnectorObject> searchAllCachedClass(String objectClassName) {
+        var results = new ArrayList<ConnectorObject>();
+        try {
+            executeQuery(new ObjectClass(objectClassName), null, results::add, new OperationOptions(Map.of()));
+        } catch (UnsupportedOperationException e) {
+            throw new ConfigurationException("Cached object class '" + objectClassName
+                    + "' has no search operation declared. Lookup cannot be initialized!", e);
+        }
+        return List.copyOf(results);
     }
 }
