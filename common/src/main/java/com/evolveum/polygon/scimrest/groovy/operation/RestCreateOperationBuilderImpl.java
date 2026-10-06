@@ -26,7 +26,6 @@ import com.evolveum.polygon.conndev.spi.CreateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimCreateHandler;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
-import org.identityconnectors.framework.common.objects.ObjectClass;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 import com.evolveum.polygon.scimrest.impl.rest.ErrorDetail;
@@ -63,7 +62,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                 return endpoint;
             }
         }
-        var endpoint = new EndpointImpl(path, parent.getObjectClass().objectClass());
+        var endpoint = new EndpointImpl(path);
         endpoint.httpOperation(method);
         endpoints.add(endpoint);
         return endpoint;
@@ -95,11 +94,8 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
         private RequestBuilderImpl request = new RequestBuilderImpl();
         private ResponseBuilderImpl response = new ResponseBuilderImpl();
         private AttributeSupport.SupportBuilder<Endpoint> supportedAttributes = new AttributeSupport.SupportBuilder<Endpoint>(this);
-        private final ObjectClass objectClass;
-
-        EndpointImpl(String path, ObjectClass objectClass) {
+        EndpointImpl(String path) {
             super(path);
-            this.objectClass = objectClass;
         }
 
         @Override
@@ -133,7 +129,6 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
             }
 
             return new EndpointHandler((RestConnectorContext) parent.context,
-                    objectClass,
                     path,
                     request.contentType,
                     httpMethod,
@@ -174,7 +169,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                 key, "when defining supported attributes for create endpoint '" + endpointPath + "'");
     }
 
-    record EndpointHandler(RestConnectorContext context,ObjectClass objectClass, String path, String contentType,
+    record EndpointHandler(RestConnectorContext context, String path, String contentType,
                            HttpMethod method,
                            Function<? super Set<Attribute>, byte[]> requestBody,
                            RestObjectClassDefinition objectClass,
@@ -185,7 +180,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
         public Result create(
                 Set<Attribute> createAttributes, OperationOptions options, ContextLookup operationContext) {
             var converter = context.lookupConverter();
-            var effective = converter != null ? converter.toNative(objectClass, createAttributes) : createAttributes;
+            var effective = converter != null ? converter.toNative(objectClass.objectClass(), createAttributes) : createAttributes;
             var request = context.rest().newRequest();
             request.apiEndpoint(path);
             request.httpMethod(method);
