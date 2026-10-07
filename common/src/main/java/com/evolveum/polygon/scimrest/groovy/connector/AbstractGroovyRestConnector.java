@@ -17,7 +17,9 @@ import com.evolveum.polygon.scimrest.yaml.YamlRestHandlerLoader;
 
 import com.evolveum.polygon.conndev.spi.ClassHandlerConnectorBase;
 import com.evolveum.polygon.conndev.groovy.BaseGroovyConnectorConfiguration;
+import com.evolveum.polygon.conndev.groovy.GroovyExceptionSanitizer;
 import com.evolveum.polygon.conndev.groovy.GroovyScriptValidator;
+import com.evolveum.polygon.conndev.groovy.ScriptError;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationRequest;
 import com.evolveum.polygon.conndev.groovy.ScriptValidationResult;
 import com.evolveum.polygon.conndev.spi.ObjectClassHandler;
@@ -228,16 +230,17 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
             }
             var builder = new RestSchemaBuilderImpl(getClass(), context);
             var loader = new SchemaDefinitionLoader(context.configuration().groovyContext(), builder);
-            schemaResources(request.filename()).forEach(loader::loadFromResource);
+            var siblingsResult = loadSchemaSiblings(loader, request);
             RestSchema[] candidateSchema = new RestSchema[1];
             var schemaResult = GroovyScriptValidator.validate(
                     loader::parse, () -> {
                         builder.applyStructuralRules();
                         candidateSchema[0] = builder.build();
                     }, request.scriptText(), request.operation());
-            if (schemaResult.status() != ScriptValidationResult.Status.OK
+            var combinedSchemaResult = combine(siblingsResult, schemaResult);
+            if (combinedSchemaResult.status() != ScriptValidationResult.Status.OK
                     || !ScriptValidationRequest.SCRIPT_OPERATION_BUILD.equals(request.operation())) {
-                return schemaResult;
+                return combinedSchemaResult;
             }
             return validateOperationsAgainstCandidateSchema(candidateSchema[0]);
         }
@@ -246,8 +249,61 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
         }
         initializeCore();
         var builder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), context);
-        operationResources(request.filename()).forEach(builder::loadFromResource);
-        return GroovyScriptValidator.validate(builder::parse, builder::build, request.scriptText(), request.operation());
+        var siblingsResult = loadOperationSiblings(builder, request);
+        var primaryResult = GroovyScriptValidator.validate(builder::parse, builder::build, request.scriptText(), request.operation());
+        return combine(siblingsResult, primaryResult);
+    }
+
+    /**
+     * Loads every currently deployed schema sibling (minus {@link ScriptValidationRequest#allOverrides}),
+     * then each {@link ScriptValidationRequest#overrides} entry as in-memory candidate content instead of
+     * its still-deployed (possibly broken) version — attributing any override's own load failure to its
+     * {@code source} filename, and collecting one per broken override instead of aborting on the first.
+     */
+    private ScriptValidationResult loadSchemaSiblings(SchemaDefinitionLoader loader, ScriptValidationRequest request) {
+        schemaResources(request.allOverrides().keySet()).forEach(loader::loadFromResource);
+        var errors = new ArrayList<ScriptError>();
+        request.overrides().forEach((resource, content) -> {
+            try {
+                loader.loadFromString(resource, content);
+            } catch (Exception e) {
+                errors.add(overrideLoadError(resource, e));
+            }
+        });
+        return ScriptValidationResult.combined(errors);
+    }
+
+    /** Same as {@link #loadSchemaSiblings}, for operation/handler scripts. */
+    private ScriptValidationResult loadOperationSiblings(RestHandlerBuilder builder, ScriptValidationRequest request) {
+        for (String resource : operationResources(request.allOverrides().keySet())) {
+            loadOperationSibling(builder, resource);
+        }
+        var errors = new ArrayList<ScriptError>();
+        request.overrides().forEach((resource, content) -> {
+            try {
+                loadOperationSiblingFromString(builder, resource, content);
+            } catch (Exception e) {
+                errors.add(overrideLoadError(resource, e));
+            }
+        });
+        return ScriptValidationResult.combined(errors);
+    }
+
+    /** Merges the leaf errors of two validation results into one combined-shape result. */
+    private static ScriptValidationResult combine(ScriptValidationResult first, ScriptValidationResult second) {
+        var errors = new ArrayList<ScriptError>(first.errors());
+        errors.addAll(second.errors());
+        return ScriptValidationResult.combined(errors);
+    }
+
+    /**
+     * Formats an override's load failure, re-attributing {@code source} to its real filename —
+     * Groovy's own stack-frame-based detection ({@link GroovyScriptValidator#error}) can't identify
+     * an unnamed/synthetic script, since the override content was never loaded from a named resource.
+     */
+    private static ScriptError overrideLoadError(String resource, Exception e) {
+        var detected = GroovyScriptValidator.error(ScriptError.Phase.EVALUATE, GroovyExceptionSanitizer.sanitize(e)).errors().getFirst();
+        return new ScriptError(detected.phase(), detected.message(), detected.line(), detected.column(), resource);
     }
 
     private void initializeCore() {
@@ -367,7 +423,7 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
     private ScriptValidationResult validateYamlSchema(ScriptValidationRequest request) {
         var builder = new RestSchemaBuilderImpl(getClass(), context);
         var loader = new SchemaDefinitionLoader(context.configuration().groovyContext(), builder);
-        schemaResources(request.filename()).forEach(loader::loadFromResource);
+        var siblingsResult = loadSchemaSiblings(loader, request);
 
         RestSchema[] candidateSchema = new RestSchema[1];
         var result = YamlScriptValidator.validate(
@@ -379,9 +435,10 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
                     builder.applyStructuralRules();
                     candidateSchema[0] = builder.build();
                 });
-        if (result.status() != ScriptValidationResult.Status.OK
+        var combinedResult = combine(siblingsResult, result);
+        if (combinedResult.status() != ScriptValidationResult.Status.OK
                 || !ScriptValidationRequest.SCRIPT_OPERATION_BUILD.equals(request.operation())) {
-            return result;
+            return combinedResult;
         }
         return validateOperationsAgainstCandidateSchema(candidateSchema[0]);
     }
@@ -394,15 +451,14 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
     private ScriptValidationResult validateYamlOperations(ScriptValidationRequest request) {
         initializeCore();
         var builder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), context);
-        for (String resource : operationResources(request.filename())) {
-            loadOperationSibling(builder, resource);
-        }
-        return YamlScriptValidator.validate(
+        var siblingsResult = loadOperationSiblings(builder, request);
+        var primaryResult = YamlScriptValidator.validate(
                 request,
                 document -> GroovySyntaxChecker.checkOperations(document, BaseOperationSupportBuilder.class,
                         AuthenticationCustomizationBuilder.class, new GroovyScriptCompiler(context.configuration().groovyContext())),
                 () -> new YamlRestHandlerLoader(builder, context.configuration().groovyContext()).loadFromString(request.scriptText()),
                 builder::build);
+        return combine(siblingsResult, primaryResult);
     }
 
     private void loadOperationSibling(RestHandlerBuilder builder, String resource) {
@@ -414,11 +470,20 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
         }
     }
 
+    /** Same dispatch as {@link #loadOperationSibling}, for an override's in-memory candidate content. */
+    private void loadOperationSiblingFromString(RestHandlerBuilder builder, String resource, String content) {
+        if (ScriptResources.isYaml(resource)) {
+            new YamlRestHandlerLoader(builder, context.configuration().groovyContext()).loadFromString(content);
+        } else {
+            ((GroovyRestHandlerBuilder) builder).loadFromString(content);
+        }
+    }
+
     private ScriptValidationResult validateOperationsAgainstCandidateSchema(RestSchema candidateSchema) {
         var candidateContext = new RestConnectorContext(context.configuration());
         candidateContext.schema(candidateSchema);
         candidateContext.lookupConverter(new LookupValueConverter(candidateSchema, this::searchAllCachedClass));
-        var checks = operationResources(null).stream()
+        var checks = operationResources(List.<String>of()).stream()
                 .<Callable<ScriptValidationResult>>map(resource -> () -> {
                     var handlerBuilder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), candidateContext);
                     return GroovyScriptValidator.validateResource(() -> loadOperationSibling(handlerBuilder, resource), handlerBuilder::build);

@@ -14,6 +14,7 @@ import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
+import java.util.Collection;
 import java.util.List;
 
 @ConnectorClass(displayNameKey = "manifest.connector.display", configurationClass = ReadOnlyConfiguration.class, messageCatalogPaths = "Messages")
@@ -53,12 +54,12 @@ public class ManifestBasedConnector extends AbstractGroovyRestConnector {
     }
 
     @Override
-    protected List<String> schemaResources(String excludedResource) {
-        return manifest.schemaScripts(excludedResource);
+    protected List<String> schemaResources(Collection<String> excludedResources) {
+        return manifest.schemaScripts(excludedResources);
     }
 
     @Override
-    protected List<String> operationResources(String excludedResource) {
-        return manifest.operationScripts(excludedResource);
+    protected List<String> operationResources(Collection<String> excludedResources) {
+        return manifest.operationScripts(excludedResources);
     }
 }

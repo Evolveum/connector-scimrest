@@ -314,7 +314,8 @@ public class YamlScriptValidationTest {
                 OPERATION_SCRIPT_WITH_UNKNOWN_FILTER_ATTRIBUTE, "operation", ScriptValidationRequest.SCRIPT_OPERATION_BUILD);
 
         assertEquals(result.get("status"), "error", "Unexpected result: " + result);
-        var message = String.valueOf(result.get("message"));
+        var errors = (List<Map<String, Object>>) result.get("errors");
+        var message = String.valueOf(errors.getFirst().get("message"));
         assertTrue(message.contains("Attribute 'missing' not found in object class 'User'"),
                 "Unexpected message: " + message);
         assertTrue(message.contains("Available attributes"));

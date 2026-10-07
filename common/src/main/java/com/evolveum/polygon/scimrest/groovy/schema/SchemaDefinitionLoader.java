@@ -54,6 +54,19 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
         }
     }
 
+    /**
+     * Same dispatch as {@link #loadFromResource}, but for already-in-memory candidate content
+     * instead of a classpath resource — {@code resource} is only used to pick the front-end by
+     * its extension.
+     */
+    public void loadFromString(String resource, String content) {
+        if (ScriptResources.isYaml(resource)) {
+            new YamlSchemaLoader(schemaBuilder).load(content);
+        } else {
+            load(content);
+        }
+    }
+
     private void loadYamlFromResource(String resource) {
         var stream = getClass().getResourceAsStream(resource);
         if (stream == null) {
