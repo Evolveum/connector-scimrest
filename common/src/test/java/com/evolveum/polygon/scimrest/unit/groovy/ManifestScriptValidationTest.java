@@ -18,12 +18,17 @@ import java.util.Comparator;
 import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Script validation against a real {@link ManifestBasedConnector}, with sibling scripts actually
  * deployed on the classpath and reloaded around the candidate (exclusion itself is covered by
  * conndev's {@code ConnectorManifestTest}). Request/response are written as JSON trees, compared
  * structurally rather than as raw strings, so the expected JSON can stay naturally formatted.
+ * Error entries are compared without {@code message}/{@code line}/{@code column} - Groovy's
+ * compile-error rendering is version-specific (e.g. "Missing ')'" in Groovy 6 vs
+ * "Unexpected input: ..." in 4/5, plus the sample-window truncation) - while the message is
+ * still required to be present and non-blank.
  */
 public class ManifestScriptValidationTest {
 
@@ -117,20 +122,18 @@ public class ManifestScriptValidationTest {
                 }
                 """);
 
-        assertEquals(result, json("""
+        assertEquals(withoutVersionSpecifics(result), json("""
                 {
                   "status": "error",
                   "errors": [
                     {
                       "status": "error",
-                      "phase": "compile",
-                      "message": "startup failed:\\nScript1.groovy: 1: Missing ')' @ line 1, column 51.\\n   objectClass('Group') { search { endpoint('/groups'\\n                                                     ^\\n\\n1 error\\n",
-                      "line": 1,
-                      "column": 51
+                      "phase": "compile"
                     }
                   ]
                 }
                 """));
+        assertNonBlankMessages(result);
     }
 
     @Test
@@ -207,20 +210,18 @@ public class ManifestScriptValidationTest {
                 }
                 """.formatted(MULTI_OVERRIDE_ACCOUNT_RESOURCE));
 
-        assertEquals(result, json("""
+        assertEquals(withoutVersionSpecifics(result), json("""
                 {
                   "status": "error",
                   "errors": [
                     {
                       "status": "error",
-                      "phase": "initialization",
-                      "message": "startup failed:\\n/manifests/script-validation-multi-override/Group.schema.groovy: 3: Missing ')' @ line 3, column 19.\\n       attribute(\\"id\\"\\n                     ^\\n\\n1 error\\n",
-                      "line": 3,
-                      "column": 19
+                      "phase": "initialization"
                     }
                   ]
                 }
                 """));
+        assertNonBlankMessages(result);
     }
 
     /**
@@ -246,29 +247,24 @@ public class ManifestScriptValidationTest {
                 """.formatted(MULTI_OVERRIDE_ACCOUNT_RESOURCE, MULTI_OVERRIDE_GROUP_RESOURCE));
 
         // overrides map iteration order isn't guaranteed, so errors are compared sorted by source
-        assertEquals(sortedBySource(result), sortedBySource(json("""
+        assertEquals(sortedBySource(withoutVersionSpecifics(result)), sortedBySource(json("""
                 {
                   "status": "error",
                   "errors": [
                     {
                       "status": "error",
                       "phase": "evaluate",
-                      "message": "startup failed:\\nScript2.groovy: 1: Missing ')' @ line 1, column 38.\\n   objectClass('Group') { attribute('id'\\n                                        ^\\n\\n1 error\\n",
-                      "line": 1,
-                      "column": 38,
                       "source": "%s"
                     },
                     {
                       "status": "error",
                       "phase": "evaluate",
-                      "message": "startup failed:\\nScript1.groovy: 1: Missing ')' @ line 1, column 37.\\n   objectClass('Role') { attribute('id'\\n                                       ^\\n\\n1 error\\n",
-                      "line": 1,
-                      "column": 37,
                       "source": "/manifests/script-validation-multi-override/Role.schema.groovy"
                     }
                   ]
                 }
                 """.formatted(MULTI_OVERRIDE_GROUP_RESOURCE))));
+        assertNonBlankMessages(result);
     }
 
     /**
@@ -290,25 +286,48 @@ public class ManifestScriptValidationTest {
                 }
                 """.formatted(OPERATION_SCRIPT_RESOURCE));
 
-        assertEquals(result, json("""
+        assertEquals(withoutVersionSpecifics(result), json("""
                 {
                   "status": "error",
                   "errors": [
                     {
                       "status": "error",
                       "phase": "evaluate",
-                      "message": "startup failed:\\nScript1.groovy: 1: Missing ')' @ line 1, column 51.\\n   objectClass('Group') { create { endpoint('/groups'\\n                                                     ^\\n\\n1 error\\n",
-                      "line": 1,
-                      "column": 51,
                       "source": "/manifests/script-validation/Group.create.op.groovy"
                     }
                   ]
                 }
                 """));
+        assertNonBlankMessages(result);
     }
 
     private static JsonNode json(String json) {
         return MAPPER.readTree(json);
+    }
+
+    /** Drops the Groovy-version-specific parts ({@code message}, {@code line}, {@code column}) of each error entry. */
+    private static JsonNode withoutVersionSpecifics(JsonNode node) {
+        var copy = (tools.jackson.databind.node.ObjectNode) node.deepCopy();
+        if (!copy.has("errors")) {
+            return copy;
+        }
+        var array = MAPPER.createArrayNode();
+        copy.get("errors").forEach(error -> {
+            var entry = (tools.jackson.databind.node.ObjectNode) error.deepCopy();
+            entry.remove("message");
+            entry.remove("line");
+            entry.remove("column");
+            array.add(entry);
+        });
+        copy.set("errors", array);
+        return copy;
+    }
+
+    /** Every error entry must still carry some (version-specific) diagnostic text. */
+    private static void assertNonBlankMessages(JsonNode result) {
+        result.get("errors").forEach(error -> assertTrue(
+                error.get("message").isTextual() && !error.get("message").textValue().isBlank(),
+                "Blank error message in " + result));
     }
 
     /** Overrides load in an unspecified order - sort the "errors" array by "source" so comparisons don't depend on it. */
