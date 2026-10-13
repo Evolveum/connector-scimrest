@@ -11,10 +11,12 @@ import com.evolveum.polygon.conndev.build.api.AttributeResolverBuilder;
 import com.evolveum.polygon.conndev.build.api.ReferenceAttributeBuilder;
 import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import com.evolveum.polygon.conndev.concepts.SourceLocation;
 import com.evolveum.polygon.scimrest.groovy.api.RestAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RestRelationshipBuilder;
 import groovy.lang.Closure;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
@@ -23,13 +25,27 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
     private final RestObjectClassDefinitionBuilder objectClass;
     private final RelationshipBuilderImpl parent;
 
+    /** The script location of the participant's {@code subject(...)} / {@code object(...)} declaration. */
+    private final SourceLocation location;
+
     private AttributeBuilder attribute;
     /** Unused by scimrest today (no .schema.groovy script calls owner(...)); tracked only to satisfy the interface. */
     private boolean owner = false;
 
-    public ParticipantBuilder(RelationshipBuilderImpl relationshipBuilder, RestObjectClassDefinitionBuilder targetClass) {
+    public ParticipantBuilder(RelationshipBuilderImpl relationshipBuilder, RestObjectClassDefinitionBuilder targetClass,
+            SourceLocation location) {
         this.parent = relationshipBuilder;
         this.objectClass = targetClass;
+        this.location = location != null ? location : SourceLocation.UNKNOWN;
+    }
+
+    /**
+     * Returns the script location of the participant declaration (never {@code null}).
+     *
+     * @return the captured location, or {@link SourceLocation#UNKNOWN}
+     */
+    public SourceLocation location() {
+        return location;
     }
 
     AttributeBuilder attribute() {
@@ -59,7 +75,22 @@ public class ParticipantBuilder implements RestRelationshipBuilder.Participant {
     @Override
     public RestReferenceAttributeBuilder owner(boolean owner) {
         this.owner = owner;
-        return attribute();
+        if (attribute == null) {
+            throw new ConfigurationException(ownerRequiresAttributeMessage());
+        }
+        return attribute;
+    }
+
+    /**
+     * Builds the configuration error message for {@link #owner(boolean)} called before the
+     * participant's reference attribute is declared.
+     *
+     * @return the message, including the participant's source location when known
+     */
+    private String ownerRequiresAttributeMessage() {
+        return "owner() requires the reference attribute to be declared first: declare attribute('<name>') "
+                + "in the " + objectClass.objectClass().getObjectClassValue() + " participant before owner(...)"
+                + (location != SourceLocation.UNKNOWN ? " [at " + location + "]" : "");
     }
 
     public ObjectClass objectClass() {
