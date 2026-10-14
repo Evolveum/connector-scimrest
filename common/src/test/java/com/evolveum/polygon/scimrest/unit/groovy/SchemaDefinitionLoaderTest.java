@@ -10,7 +10,9 @@ import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnecto
 import com.evolveum.polygon.conndev.groovy.GroovyContext;
 import com.evolveum.polygon.scimrest.groovy.schema.SchemaDefinitionLoader;
 import com.evolveum.polygon.scimrest.schema.RestSchemaBuilderImpl;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.testng.AssertJUnit.assertEquals;
@@ -50,6 +52,19 @@ public class SchemaDefinitionLoaderTest {
         var objectClass = loader.build().objectClass("TestUser");
         assertNotNull(objectClass);
         assertTrue(objectClass.attributeFromProtocolName("login").connId().isRequired());
+    }
+
+    /**
+     * A disabled Groovy context (a {@code groovyDisabled} connector configuration) rejects any
+     * use of the loader - Groovy or YAML front-end - with a {@link ConfigurationException} before
+     * any script could be loaded.
+     */
+    @Test
+    public void disabledGroovyContextRejectsLoading() {
+        var exception = Assert.expectThrows(ConfigurationException.class,
+                () -> new SchemaDefinitionLoader(new GroovyContext(true),
+                        new RestSchemaBuilderImpl(AbstractGroovyRestConnector.class, null)));
+        assertTrue(exception.getMessage().contains("Groovy is disabled"));
     }
 
     /**

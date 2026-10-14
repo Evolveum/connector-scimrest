@@ -37,10 +37,12 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
     // GroovySchemaLoader's own schemaBuilder field is package-private (conndev's package), so it's
     // not visible here even though we extend it - keep our own reference to the same instance
     // instead, for binding the YAML loader onto it below.
+    private final GroovyContext context;
     private final RestSchemaBuilderImpl schemaBuilder;
 
     public SchemaDefinitionLoader(GroovyContext context, RestSchemaBuilderImpl schemaBuilder) {
         super(context, schemaBuilder);
+        this.context = context;
         this.schemaBuilder = schemaBuilder;
     }
 
@@ -61,7 +63,7 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
      */
     public void loadFromString(String resource, String content) {
         if (ScriptResources.isYaml(resource)) {
-            new YamlSchemaLoader(schemaBuilder).load(content);
+            new YamlSchemaLoader(schemaBuilder, context).load(content);
         } else {
             load(content);
         }
@@ -75,7 +77,7 @@ public class SchemaDefinitionLoader extends GroovySchemaLoader {
             throw new ConfigurationException("YAML schema definition resource not found: " + resource);
         }
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
-            new YamlSchemaLoader(schemaBuilder).load(reader, resource);
+            new YamlSchemaLoader(schemaBuilder, context).load(reader, resource);
         } catch (IOException e) {
             throw new ConfigurationException("Couldn't read YAML schema definition " + resource + ": " + e.getMessage(), e);
         }

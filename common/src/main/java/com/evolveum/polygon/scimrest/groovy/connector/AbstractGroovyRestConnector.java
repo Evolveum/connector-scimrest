@@ -430,7 +430,7 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
                 request,
                 document -> GroovySyntaxChecker.checkObjectClasses(document, RestObjectClassSchemaBuilder.class,
                         new GroovyScriptCompiler(context.configuration().groovyContext())),
-                () -> new YamlSchemaLoader(builder).load(request.scriptText()),
+                () -> new YamlSchemaLoader(builder, context.configuration().groovyContext()).load(request.scriptText()),
                 () -> {
                     builder.applyStructuralRules();
                     candidateSchema[0] = builder.build();
