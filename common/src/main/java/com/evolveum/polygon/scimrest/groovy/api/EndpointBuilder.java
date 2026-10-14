@@ -10,6 +10,7 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Yaml;
+import com.evolveum.polygon.scimrest.yaml.binding.HeadersHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.QueryParametersHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -73,6 +74,9 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
         RequestBuilder<I> accept(String... contentType);
 
         @Override
+        RequestBuilder<I> header(String name, String value);
+
+        @Override
         @Yaml.Key
         @Yaml.Shortcut({"APPLICATION_JSON", "APPLICATION_XML", "APPLICATION_YAML", "APPLICATION_HAL_JSON"})
         RequestBuilder<I> contentType(String contentType);
@@ -103,12 +107,25 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
         @Yaml.Custom(QueryParametersHandler.class)
         default void queryParameters() {
         }
+
+        /**
+         * Marker for the YAML front-end: the {@code headers:} mapping (header name to scalar
+         * value) under {@code request:} is bound by
+         * {@link com.evolveum.polygon.scimrest.yaml.binding.HeadersHandler}; the method body
+         * is unused.
+         */
+        @Yaml.Custom(HeadersHandler.class)
+        default void headers() {
+        }
     }
 
     interface QueryRequestBuilder<I> extends RequestHeadersBuilder<I>{
 
         @Override
         QueryRequestBuilder<I> accept(String... contentType);
+
+        @Override
+        QueryRequestBuilder<I> header(String name, String value);
 
         /**
          * Sets the {@code Content-Type} of the (usually POST) search request.
@@ -142,10 +159,28 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
         @Yaml.Custom(QueryParametersHandler.class)
         default void queryParameters() {
         }
+
+        /**
+         * Marker for the YAML front-end: the {@code headers:} mapping (header name to scalar
+         * value) under {@code request:} is bound by
+         * {@link com.evolveum.polygon.scimrest.yaml.binding.HeadersHandler}; the method body
+         * is unused.
+         */
+        @Yaml.Custom(HeadersHandler.class)
+        default void headers() {
+        }
     }
 
     interface RequestHeadersBuilder<I> extends GroovyContentTypeMixin {
         RequestHeadersBuilder<I> accept(String... contentType);
+
+        /**
+         * Adds a static header to every request the endpoint issues.
+         *
+         * @param name the header name
+         * @param value the header value ({@code null} adds nothing)
+         */
+        RequestHeadersBuilder<I> header(String name, String value);
     }
 
     interface RequestEntityBuilder<I> extends GroovyContentTypeMixin {

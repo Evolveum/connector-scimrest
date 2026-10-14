@@ -92,6 +92,7 @@ public class EndpointBasedSearchHandler<BF, OF> implements SearchEndpointHandler
                               FilterToRequestMapper mapper, Filter filter){
         request.apiEndpoint(apiEndpoint);
         request.httpMethod(httpMethod);
+        queryRequestBuilder.headers.forEach(request::header);
         acceptContentTypes.forEach(x->request.header("Accept", x));
         if (queryRequestBuilder.contentType != null) {
             request.header("Content-Type", queryRequestBuilder.contentType);

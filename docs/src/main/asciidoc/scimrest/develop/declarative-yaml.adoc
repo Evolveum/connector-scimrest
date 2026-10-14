@@ -138,6 +138,8 @@ objectClasses:
              queryParameters:            # static query parameters sent with every request
                jql: created >= 1970-01-01 ORDER BY created ASC   # (e.g. a fixed JQL on JIRA's search/jql endpoint)
                fields: summary,status,project,created
+             # headers:                                 # static headers sent with every request
+             #   X-Api-Version: "2025-01-01"
              # contentType: APPLICATION_JSON  # Content-Type of the (usually POST) request body
            supportedFilters:
             - spec: attribute("login").eq().anySingleValue()
@@ -189,6 +191,9 @@ objectClasses:
 
 `search.endpoints[].request.queryParameters`::
   A mapping of query parameter name to scalar value — added to the query string of every request the endpoint issues (e.g. a fixed `jql` / `fields` on a JIRA-style `search/jql` endpoint); a `null` entry adds nothing
+
+`search.endpoints[].request.headers`::
+  A mapping of header name to scalar value — sent with every request the endpoint issues (e.g. a fixed API version or tenant id); a `null` entry adds nothing
 
 `search.endpoints[].request.contentType`::
   The Content-Type of the (usually POST) search request body — a literal media type (`application/json`) or one of the built-in constant names (`APPLICATION_JSON`, `APPLICATION_XML`, `APPLICATION_YAML`, `APPLICATION_HAL_JSON`)
@@ -275,6 +280,9 @@ objectClasses:
 
 `endpoints[].request.queryParameters`::
   A mapping of query parameter name to scalar value — added to the query string of every request the endpoint issues; a `null` entry adds nothing
+
+`endpoints[].request.headers`::
+  A mapping of header name to scalar value — sent with every request the endpoint issues; a `null` entry adds nothing
 
 `endpoints[].supportedAttributes`::
   Plain attribute names, a fixed value (`{ name, value }`), or a value transition (`{ name, transition: { from, to } }` — accepted but not enforced yet; a transition-only entry matches no requests)

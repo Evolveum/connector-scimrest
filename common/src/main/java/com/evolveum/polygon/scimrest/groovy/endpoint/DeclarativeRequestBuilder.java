@@ -21,6 +21,7 @@ public abstract class DeclarativeRequestBuilder<T> implements EndpointBuilder.Re
     protected List<String> acceptContentTypes = new ArrayList<>();
     public Function<? super T, byte[]> bodyTransformer;
     public final Map<String, Object> queryParameters = new LinkedHashMap<>();
+    public final Map<String, String> headers = new LinkedHashMap<>();
 
     @Override
     public EndpointBuilder.RequestBuilder<T> contentType(String contentType) {
@@ -44,6 +45,14 @@ public abstract class DeclarativeRequestBuilder<T> implements EndpointBuilder.Re
     public EndpointBuilder.RequestBuilder<T> queryParameter(String name, Object value) {
         if (value != null) {
             queryParameters.put(name, value);
+        }
+        return this;
+    }
+
+    @Override
+    public EndpointBuilder.RequestBuilder<T> header(String name, String value) {
+        if (value != null) {
+            headers.put(name, value);
         }
         return this;
     }

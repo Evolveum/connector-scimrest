@@ -118,8 +118,6 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                 supportedAttrs.put(attr.connId().getName(), supported.getValue().build(attr));
             }
 
-            // FIXME: Add support for headers
-
             if (GroovyContentTypeMixin.APPLICATION_JSON.equals(request.contentType) && request.bodyTransformer == null) {
                 request.bodyTransformer = new DefaultSerializationTransformer(parent.getObjectClass(), supportedAttrs);
             }
@@ -135,7 +133,8 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                     request.bodyTransformer,
                     parent.getObjectClass(),
                     supportedAttrs,
-                    request.queryParameters
+                    request.queryParameters,
+                    request.headers
             );
         }
 
@@ -174,7 +173,8 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                            Function<? super Set<Attribute>, byte[]> requestBody,
                            RestObjectClassDefinition objectClass,
                            Map<String, AttributeSupport> supportedAttributes,
-                           Map<String, Object> queryParameters) implements CreateOperationHandler {
+                           Map<String, Object> queryParameters,
+                           Map<String, String> headers) implements CreateOperationHandler {
 
         @Override
         public Result create(
@@ -185,6 +185,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
             request.apiEndpoint(path);
             request.httpMethod(method);
             queryParameters.forEach(request::queryParameter);
+            headers.forEach(request::header);
             if (contentType != null ) {
                 request.header("Content-Type", contentType);
                 request.body(requestBody.apply(effective));

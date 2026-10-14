@@ -165,8 +165,6 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 supportedAttrs.put(attr.connId().getName(), supported.getValue().build(attr));
             }
 
-            // FIXME: Add support for headers
-
             if (GroovyContentTypeMixin.APPLICATION_JSON.equals(request.contentType) && request.bodyTransformer == null) {
                 request.bodyTransformer = new DefaultSerializationTransformer(
                         parent.getObjectClass(), supportedAttrs,
@@ -185,7 +183,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                     parent.getObjectClass(),
                     supportedAttrs,
                     true,
-                    request.queryParameters
+                    request.queryParameters,
+                    request.headers
             );
         }
     }
@@ -208,8 +207,9 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                            Function<? super UpdateRequest, byte[]> requestBody,
                            RestObjectClassDefinition objectClass,
                            Map<String, AttributeSupport> supportedAttributes,
-                           boolean requiresOriginalState,
-                           Map<String, Object> queryParameters) implements UpdateOperationHandler {
+                            boolean requiresOriginalState,
+                            Map<String, Object> queryParameters,
+                            Map<String, String> headers) implements UpdateOperationHandler {
 
         @Override
         public UpdateOperationHandler.UpdateResponse update(
@@ -220,6 +220,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
             // FIXME: Use proper path parameter computation
             request.pathParameter("id", updateRequest.uid().getUidValue());
             queryParameters.forEach(request::queryParameter);
+            headers.forEach(request::header);
 
             if (contentType != null) {
                 request.header("Content-Type", contentType);

@@ -112,7 +112,8 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
         }
 
         DeleteOperationHandler build() {
-            return new EndpointHandler((RestConnectorContext) parent.context, path, httpMethod, request.queryParameters);
+            return new EndpointHandler((RestConnectorContext) parent.context, path, httpMethod,
+                    request.queryParameters, request.headers);
         }
     }
 
@@ -128,7 +129,8 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
     }
 
     record EndpointHandler(RestConnectorContext context, String path, HttpMethod method,
-                           Map<String, Object> queryParameters) implements DeleteOperationHandler {
+                           Map<String, Object> queryParameters,
+                           Map<String, String> headers) implements DeleteOperationHandler {
         @Override
         public void delete(Uid uid, OperationOptions options, ContextLookup operationContext) {
             var request = context.rest().newRequest();
@@ -136,6 +138,7 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
             request.httpMethod(method != null ? method : HttpMethod.DELETE);
             request.pathParameter("id", uid.getUidValue());
             queryParameters.forEach(request::queryParameter);
+            headers.forEach(request::header);
             try {
                 var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class, "endpoint " + path));
                 int status = response.statusCode();
