@@ -94,6 +94,9 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
     public void init(Configuration cfg) {
         if (cfg instanceof BaseGroovyConnectorConfiguration groovyConf) {
             context = new RestConnectorContext(groovyConf);
+            coreInitialized = false;
+            fullyInitialized = false;
+            disposed.set(false);
         } else {
             throw new ConfigurationException(
                     "Configuration must be an instance of AbstractGroovyConnectorConfiguration, got: "
@@ -104,8 +107,9 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
     @Override
     public void test() {
         initializeCore();
-        // SCIM Test connection is done automatically during schema discovery
-        // FIXME: But makes sense to do again, if connector is poolable (in future)
+        // SCIM Test connection is done automatically during schema discovery; the explicit
+        // test-endpoint probe below still runs on every test() call, so a pooled (reused)
+        // connector is re-probed each time it is checked.
         var restClientConfig = getConfiguration().configuration(RestClientConfiguration.class);
         if (restClientConfig == null || restClientConfig.getRestTestEndpoint() == null) {
             // Nothing to verify: preference-based auth falls back to its first method without
@@ -201,7 +205,7 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
 
     @Override
     public void dispose() {
-        // Dispose of connector
+        disposed.set(true);
     }
 
     protected abstract void initializeAuthorizationHandler(GroovyRestHandlerBuilder builder);
@@ -307,7 +311,10 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
     }
 
     private void initializeCore() {
-        if (reinitializeOnEachCall || !coreInitialized) {
+        if (disposed.get()) {
+            return;
+        }
+        if (shouldReinitialize() || !coreInitialized) {
             initializeCore0();
             coreInitialized = true;
             fullyInitialized = false;
@@ -315,7 +322,10 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
     }
 
     private void initializeHandlers() {
-        if (reinitializeOnEachCall || !fullyInitialized) {
+        if (disposed.get()) {
+            return;
+        }
+        if (shouldReinitialize() || !fullyInitialized) {
             initializeHandlers0();
             fullyInitialized = true;
         }

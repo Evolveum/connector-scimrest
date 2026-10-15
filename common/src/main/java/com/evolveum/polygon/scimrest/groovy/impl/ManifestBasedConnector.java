@@ -11,7 +11,6 @@ import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnecto
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
-import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.ConnectorClass;
 
 import java.util.Collection;
@@ -31,11 +30,6 @@ public class ManifestBasedConnector extends AbstractGroovyRestConnector {
     protected ManifestBasedConnector(String manifestBaseName) {
         super(false);
         this.manifest = ConnectorManifest.load(getClass(), manifestBaseName);
-    }
-
-    @Override
-    public void init(Configuration cfg) {
-        super.init(cfg);
     }
 
     @Override

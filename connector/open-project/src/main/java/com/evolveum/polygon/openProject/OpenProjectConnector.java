@@ -10,13 +10,10 @@ import com.evolveum.polygon.scimrest.groovy.connector.AbstractGroovyRestConnecto
 import com.evolveum.polygon.scimrest.groovy.handler.GroovyRestHandlerBuilder;
 import com.evolveum.polygon.conndev.groovy.GroovyScriptLoader;
 import com.evolveum.polygon.conndev.groovy.GroovySchemaLoader;
-import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.spi.ConnectorClass;
-import org.identityconnectors.framework.spi.PoolableConnector;
 
 @ConnectorClass(displayNameKey = "openProject.rest.display", configurationClass = OpenProjectConfiguration.class,  messageCatalogPaths = "Messages")
-public class OpenProjectConnector extends AbstractGroovyRestConnector
-        implements PoolableConnector {
+public class OpenProjectConnector extends AbstractGroovyRestConnector {
 
     public OpenProjectConnector() {
         super(false);
@@ -56,10 +53,6 @@ public class OpenProjectConnector extends AbstractGroovyRestConnector
         builder.loadFromResource("/WorkPackage.create.op.groovy");
         builder.loadFromResource("/WorkPackage.get.groovy");
         builder.loadFromResource("/WorkPackage.list.groovy");
-//        builder.loadFromResource("/User.delete.op.groovy");
-    }
-
-    @Override
-    public void checkAlive() throws ConnectionBrokenException {
+        //        builder.loadFromResource("/User.delete.op.groovy");
     }
 }
