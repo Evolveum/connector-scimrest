@@ -11,6 +11,7 @@ import com.evolveum.polygon.conndev.annotations.Script;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.scimrest.yaml.binding.HeadersHandler;
+import com.evolveum.polygon.scimrest.yaml.binding.PathParametersHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.QueryParametersHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -20,6 +21,10 @@ import java.util.function.Function;
 public interface EndpointBuilder extends GroovyHttpOperationMixin {
 
     void httpOperation(HttpMethod method);
+
+    @Yaml.Custom(PathParametersHandler.class)
+    default void pathParameters() {
+    }
 
     interface SingleObject<I,O> extends EndpointBuilder {
 
