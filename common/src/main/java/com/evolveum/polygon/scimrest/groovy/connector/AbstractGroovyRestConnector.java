@@ -155,6 +155,14 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
                 Thread.currentThread().interrupt();
                 throw new ConnectionBrokenException("Test request to " + testUrl + " was interrupted", e);
             }
+        } else {
+            // Neither REST nor SCIM could be initialized (missing base URL/SCIM base URL, or
+            // missing credentials) - there is nothing to probe, so this must fail loudly
+            // instead of silently reporting success.
+            throw new ConfigurationException(
+                    "Cannot test connectivity: neither a REST nor a SCIM client could be initialized. "
+                            + "Check that the base URL/SCIM base URL and the required authentication "
+                            + "credentials are configured.");
         }
     }
 

@@ -83,12 +83,13 @@ public class RestConnectorContext implements ConnectorContext {
     }
 
     public void initializeScim(AuthorizationCustomizer<ScimClientConfiguration> authentication) {
+        // No credentials check here on purpose: a SCIM API may be anonymously accessible, and
+        // the dispatching customizer is safe to call with no configured auth method - it just
+        // adds no auth header, so the request goes out unauthenticated.
         if (configuration instanceof ScimClientConfiguration scimConf && scimConf.getScimBaseUrl() != null) {
-            if (ScimClientConfiguration.hasCredentials(scimConf)) {
-                scim = new ScimContext(this, scimConf, getDevelopmentMode(), authentication);
-            } else {
-                LOG.ok("SCIM context not initialized: no SCIM credentials configured");
-            }
+            scim = new ScimContext(this, scimConf, getDevelopmentMode(), authentication);
+        } else {
+            LOG.ok("SCIM context not initialized: no scimBaseUrl configured");
         }
     }
 
