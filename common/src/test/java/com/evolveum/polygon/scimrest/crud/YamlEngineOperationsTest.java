@@ -101,6 +101,51 @@ public class YamlEngineOperationsTest extends AbstractCrudConnectorTest {
                             request.pathParameter("id", value)
             """;
 
+
+    /** Read-by-id search — the update flow reads the object first, which the extractor path parameter needs. */
+    private static final String SEARCH_BY_ID_FOR_UPDATE_YAML = """
+            objectClasses:
+              Account:
+                search:
+                  endpoints:
+                    - path: accounts/{id}
+                      singleResult: true
+                      supportedFilters:
+                        - spec: |
+                            attribute("id").eq().anySingleValue()
+                          request: |
+                            request.pathParameter("id", value)
+            """;
+
+
+    /** The {@code {attribute}} placeholder is not resolved: the implicit identity fills it from the UID. */
+    private static final String UPDATE_YAML_PATH_PARAM_IDENTITY = """
+            objectClasses:
+              Account:
+                update:
+                  endpoints:
+                    - method: PATCH
+                      path: accounts/{attribute}
+                      pathParameters:
+                        attribute:
+                      request:
+                        contentType: application/json
+            """;
+
+    /** The {@code {attribute}} placeholder is filled from the object's {@code name} attribute. */
+    private static final String UPDATE_YAML_PATH_PARAM_EXTRACTOR = """
+            objectClasses:
+              Account:
+                update:
+                  endpoints:
+                    - method: PATCH
+                      path: accounts/{attribute}
+                      pathParameters:
+                        attribute: __NAME__
+                      request:
+                        contentType: application/json
+            """;
+
     @Test
     public void searchListsAccountsFromYamlEngine() {
         wireMockServer.stubFor(get(urlEqualTo(ACCOUNTS_PATH))
@@ -182,6 +227,30 @@ public class YamlEngineOperationsTest extends AbstractCrudConnectorTest {
     }
 
     @Test
+    public void updateFromYamlEnginePathParameterImplicitIdentity() {
+        wireMockServer.stubFor(get(urlEqualTo(ACCOUNT_BY_ID_PATH))
+                .willReturn(okJson("{\"id\":\"123\",\"name\":\"old-name\"}")));
+        wireMockServer.stubFor(patch(urlPathMatching(ACCOUNTS_PATTERN))
+                .willReturn(okJson("{\"id\":\"123\",\"name\":\"new-name\"}")));
+
+        updateAsPatch(initYaml(SEARCH_BY_ID_FOR_UPDATE_YAML, UPDATE_YAML_PATH_PARAM_IDENTITY), ACCOUNT_BY_ID_PATH);
+
+        assertEquals(wireMockServer.findAll(patchRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH))).size(), 1);
+    }
+
+    @Test
+    public void updateFromYamlEnginePathParameterAttributeExtractor() {
+        wireMockServer.stubFor(get(urlEqualTo(ACCOUNT_BY_ID_PATH))
+                .willReturn(okJson("{\"id\":\"123\",\"name\":\"old-name\"}")));
+        wireMockServer.stubFor(patch(urlPathMatching(ACCOUNTS_PATTERN))
+                .willReturn(okJson("{\"id\":\"123\",\"name\":\"new-name\"}")));
+
+        updateAsPatch(initYaml(SEARCH_BY_ID_FOR_UPDATE_YAML, UPDATE_YAML_PATH_PARAM_EXTRACTOR), ACCOUNT_BY_OLD_NAME_PATH);
+
+        assertEquals(wireMockServer.findAll(patchRequestedFor(urlEqualTo(ACCOUNT_BY_OLD_NAME_PATH))).size(), 1);
+    }
+
+    @Test
     public void deleteFromYamlEngine() {
         wireMockServer.stubFor(delete(urlEqualTo(ACCOUNT_BY_ID_PATH))
                 .willReturn(aResponse().withStatus(204)));
@@ -210,5 +279,25 @@ public class YamlEngineOperationsTest extends AbstractCrudConnectorTest {
         var connector = YamlOperationsConnector.fromStrings(yamlDocuments);
         connector.init(new SimpleConfig(wireMockServer.port()));
         return connector;
+    }
+
+    private void updateAsPatch(ClassHandlerConnectorBase connector, String expectedPath) {
+        wireMockServer.stubFor(get(urlEqualTo(ACCOUNT_BY_ID_PATH))
+                .willReturn(okJson("{\"id\":\"123\",\"name\":\"old-name\"}")));
+        wireMockServer.stubFor(patch(urlPathMatching(ACCOUNTS_PATTERN))
+                .willReturn(okJson("{\"id\":\"123\",\"name\":\"new-name\"}")));
+
+        updateAsPatch(connector, expectedPath, connector);
+    }
+
+    private void updateAsPatch(ClassHandlerConnectorBase searchConnector, String expectedPath, ClassHandlerConnectorBase updateConnector) {
+        searchConnector.updateDelta(new ObjectClass("Account"),
+                new Uid("123"),
+                Set.of(AttributeDeltaBuilder.build(Name.NAME, List.of("new-name"))),
+                new OperationOptionsBuilder().build());
+
+        assertEquals(wireMockServer.findAll(patchRequestedFor(urlEqualTo(expectedPath))
+                .withHeader("Content-Type", equalTo("application/json"))
+                .withRequestBody(matchingJsonPath("$.name", equalTo("new-name")))).size(), 1);
     }
 }
