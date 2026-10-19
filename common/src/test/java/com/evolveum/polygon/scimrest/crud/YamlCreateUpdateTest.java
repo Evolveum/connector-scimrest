@@ -277,7 +277,7 @@ public class YamlCreateUpdateTest extends AbstractCrudConnectorTest {
     private void updateDelta(ClassHandlerConnectorBase connector, String attribute, String value) {
         connector.updateDelta(new ObjectClass("Account"),
                 new Uid("123"),
-                Set.of(AttributeDeltaBuilder.build(attribute, List.of(value), null)),
+                Set.of(AttributeDeltaBuilder.build(attribute, List.of(value))),
                 new OperationOptionsBuilder().build());
     }
 

@@ -66,7 +66,7 @@ public class UpdateSupportedAttributesTest extends AbstractCrudConnectorTest {
     private void update(String attribute, String value) {
         initConnector(SCHEMA, CONNID_SCHEMA_SCRIPT, SCRIPT).updateDelta(new ObjectClass("Account"),
                 new Uid("123"),
-                Set.of(AttributeDeltaBuilder.build(attribute, List.of(value), null)),
+                Set.of(AttributeDeltaBuilder.build(attribute, List.of(value))),
                 new OperationOptionsBuilder().build());
     }
 
