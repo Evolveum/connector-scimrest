@@ -23,7 +23,11 @@ import java.util.List;
 public class ScimAttributeMapping extends JsonAttributeMapping {
 
     public ScimAttributeMapping(AttributePathDeclaration<?,?> path, ValueMapping<Object, JsonNode> mapping) {
-        super(path, mapping);
+        this(path, mapping, false);
+    }
+
+    public ScimAttributeMapping(AttributePathDeclaration<?,?> path, ValueMapping<Object, JsonNode> mapping, boolean multiValued) {
+        super(path, mapping, multiValued);
         if (mapping == null) {
             // Without a value mapping every read/write of this attribute would NPE at runtime.
             throw new ConfigurationException(
@@ -229,7 +233,7 @@ public class ScimAttributeMapping extends JsonAttributeMapping {
         }
         var last = components.getLast();
         if (last instanceof AttributePath.Attribute attr) {
-            current.set(attr.name(), values.size() == 1 ? values.getFirst() : parent.arrayNode().addAll(values));
+            current.set(attr.name(), singleOrArrayNode(attribute.getName(), values, parent));
         }
     }
 

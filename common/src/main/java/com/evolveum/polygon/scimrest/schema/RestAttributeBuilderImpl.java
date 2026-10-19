@@ -233,7 +233,7 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
                 if (connIdTypeOverride != null) {
                     implementation = ValueTypeOverrideMapping.of(connIdTypeOverride, implementation);
                 }
-                return new ScimAttributeMapping(path, implementation);
+                return new ScimAttributeMapping(path, implementation, isMultiValued());
             }
             return null;
         }
