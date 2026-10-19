@@ -6,6 +6,7 @@
  */
 package com.evolveum.polygon.scimrest.yaml.binding;
 
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
@@ -37,7 +38,9 @@ public class PathParametersHandler implements CustomYamlHandler {
             if (attribute.isNull()) {
                 single.pathParameter(entry.key());
             } else if (attribute.isValue()) {
-                single.pathParameter(entry.key(), attribute.text());
+                single.pathParameter(entry.key(),
+                        DefinitionValue.from(attribute.text(),
+                                binder.document().location(attribute.line(), attribute.col())));
             } else {
                 throw new IllegalArgumentException("The path parameter '" + entry.key()
                         + "' requires a scalar attribute name or a null value at "
