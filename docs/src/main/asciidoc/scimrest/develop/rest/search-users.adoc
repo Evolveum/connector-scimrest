@@ -1,4 +1,4 @@
-= Implement basic user search
+= Implement list script
 
 How to implement basic user search in a SCIMREST connector using a Groovy script, including endpoint configuration, object extraction, and paging support.
 

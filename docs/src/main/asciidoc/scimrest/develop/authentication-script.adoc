@@ -244,14 +244,14 @@ and `iss` / `sub` default to the client ID.
 (GuardedString) — temporary session token; `restAwsRegion` (String), `restAwsService` (String)
 — service name used in the signature scope (e.g. `execute-api`, `s3`).
 
-=== Digest, Hawk, NTLM (configuration only, not implemented)
-
-`restDigestUsername`, `restDigestPassword`, `restDigestAutoChallenge`, `restDigestMaxRetries`,
-`restDigestPreemptiveAuth`, `restDigestAlgorithmPreference`, `restDigestStateCacheEnabled`;
-`restHawkId`, `restHawkKey`, `restHawkAlgorithm` (`sha1` / `sha256` / `sha384` / `sha512`),
-`restHawkIncludePayloadHash`, `restHawkOffset`, `restHawkExt`;
-`restNtlmUsername`, `restNtlmPassword`, `restNtlmDomain`, `restNtlmWorkstation`,
-`restNtlmVersion` (`NTLMv1` / `NTLMv2`).
+// === Digest, Hawk, NTLM (configuration only, not implemented)
+//
+//`restDigestUsername`, `restDigestPassword`, `restDigestAutoChallenge`, `restDigestMaxRetries`,
+//`restDigestPreemptiveAuth`, `restDigestAlgorithmPreference`, `restDigestStateCacheEnabled`;
+//`restHawkId`, `restHawkKey`, `restHawkAlgorithm` (`sha1` / `sha256` / `sha384` / `sha512`),
+//`restHawkIncludePayloadHash`, `restHawkOffset`, `restHawkExt`;
+//`restNtlmUsername`, `restNtlmPassword`, `restNtlmDomain`, `restNtlmWorkstation`,
+//`restNtlmVersion` (`NTLMv1` / `NTLMv2`).
 
 == No credentials
 

@@ -43,6 +43,10 @@
                              TOC is only emitted via a [[toc]] macro, which these documents do not use.
                              Locked (API) attribute: document headers cannot override it. -->
                         <toc-placement>macro</toc-placement>
+                        <!-- Shift heading levels by 3 so fragments embed into deeper document structure:
+                             h1 -> h4, h2 -> h5, h3 -> h6 (deeper levels clamp at h6).
+                             Locked (API) attribute: document headers cannot override it. -->
+                        <leveloffset>3</leveloffset>
                     </attributes>
                 </configuration>
                 <executions>

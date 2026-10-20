@@ -1,4 +1,4 @@
-= Describe user schema
+= Describe object schema
 
 How to define a user object class schema in a SCIMREST connector using a Groovy builder script, including attribute types, formats, and access flags.
 

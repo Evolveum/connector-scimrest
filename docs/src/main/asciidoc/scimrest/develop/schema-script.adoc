@@ -145,11 +145,9 @@ objectClasses:
           openApiFormat: date-time
 ----
 
-The attribute keys you will meet: `description`, `required`, `multiValued`, `creatable`,
-`updateable`, `readable`, `returnedByDefault`, `emulated`; `jsonType`, `openApiFormat`,
-`complexType`; the `json: { name, type, openApiFormat, path }` wire block; the
-`connId: { name, type }` ConnId block (including the `__UID__` / `__NAME__` built-ins); and, in
-the SCIM wizard, the `scim: { name, type, path }` block. See
+// The attribute keys you will meet: `description`, `required`, `multiValued`, `creatable`, `updateable`, `readable`, `returnedByDefault`, `emulated`; `jsonType`, `openApiFormat`, `complexType`; the `json: { name, type, openApiFormat, path }` wire block; the `connId: { name, type }` ConnId block (including the `__UID__` / `__NAME__` built-ins); and, in the SCIM wizard, the `scim: { name, type, path }` block. 
+
+See
 declarative YAML for the full reference, including the path syntax
 (JSONPath / JSON Pointer / SCIM paths) and the Groovy-to-YAML fallback rules.
 
@@ -167,8 +165,8 @@ the `json` block (JSONPath / JSON Pointer locations).
   their required value types, and how to handle them (chapter shown together with this page).
 * *JSON Types and Formats* — the base JSON types and the OpenAPI formats an attribute can use
   (chapter shown together with this page).
-* Declarative YAML — the complete YAML reference.
-* SCIM schema customization / REST user schema —
+* *Declarative YAML* — the complete YAML reference.
+* *SCIM schema customization / REST user schema* —
   the protocol-specific attribute details.
-* SCIM complex and binary attributes — embedded object
+* *SCIM complex and binary attributes* — embedded object
   classes and SCIM attribute paths.

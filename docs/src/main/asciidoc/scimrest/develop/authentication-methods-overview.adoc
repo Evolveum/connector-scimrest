@@ -34,5 +34,4 @@ Nine authentication methods are implemented per protocol namespace. The most com
 `awsSignature { ... }`::
   AWS Signature Version 4 — for AWS-style APIs (e.g. API Gateway, S3).
 
-NOTE: `digest`, `hawk`, and `ntlm` have configuration properties but are **not implemented
-yet** — configuring them has no effect on requests.
+// NOTE: `digest`, `hawk`, and `ntlm` have configuration properties but are **not implemented yet** — configuring them has no effect on requests.
