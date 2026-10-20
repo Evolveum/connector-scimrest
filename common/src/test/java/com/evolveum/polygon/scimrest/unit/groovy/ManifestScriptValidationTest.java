@@ -12,6 +12,7 @@ import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.testng.annotations.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -307,13 +308,13 @@ public class ManifestScriptValidationTest {
 
     /** Drops the Groovy-version-specific parts ({@code message}, {@code line}, {@code column}) of each error entry. */
     private static JsonNode withoutVersionSpecifics(JsonNode node) {
-        var copy = (tools.jackson.databind.node.ObjectNode) node.deepCopy();
+        var copy = (ObjectNode) node.deepCopy();
         if (!copy.has("errors")) {
             return copy;
         }
         var array = MAPPER.createArrayNode();
         copy.get("errors").forEach(error -> {
-            var entry = (tools.jackson.databind.node.ObjectNode) error.deepCopy();
+            var entry = (ObjectNode) error.deepCopy();
             entry.remove("message");
             entry.remove("line");
             entry.remove("column");
@@ -338,7 +339,7 @@ public class ManifestScriptValidationTest {
         var errors = new ArrayList<JsonNode>();
         node.get("errors").forEach(errors::add);
         errors.sort(Comparator.comparing(e -> e.get("source").asString()));
-        var sorted = ((tools.jackson.databind.node.ObjectNode) node.deepCopy());
+        var sorted = ((ObjectNode) node.deepCopy());
         var array = MAPPER.createArrayNode();
         errors.forEach(array::add);
         sorted.set("errors", array);

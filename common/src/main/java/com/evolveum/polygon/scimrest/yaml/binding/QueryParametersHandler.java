@@ -26,12 +26,10 @@ public class QueryParametersHandler implements CustomYamlHandler {
         }
         EndpointBuilder.RequestBuilder<?> requestBuilder = null;
         EndpointBuilder.QueryRequestBuilder<?> queryRequestBuilder = null;
-        if (target instanceof EndpointBuilder.RequestBuilder<?> rb) {
-            requestBuilder = rb;
-        } else if (target instanceof EndpointBuilder.QueryRequestBuilder<?> qrb) {
-            queryRequestBuilder = qrb;
-        } else {
-            throw new IllegalArgumentException("The 'queryParameters' key requires a request builder, got: "
+        switch (target) {
+            case EndpointBuilder.RequestBuilder<?> rb -> requestBuilder = rb;
+            case EndpointBuilder.QueryRequestBuilder<?> qrb -> queryRequestBuilder = qrb;
+            case null, default -> throw new IllegalArgumentException("The 'queryParameters' key requires a request builder, got: "
                     + target.getClass().getName());
         }
         if (value.kind() != LocatedNode.Kind.OBJECT) {

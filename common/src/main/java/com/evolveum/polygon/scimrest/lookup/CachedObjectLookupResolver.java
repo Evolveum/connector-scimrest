@@ -132,7 +132,7 @@ public final class CachedObjectLookupResolver {
     private static String singleStringValue(ConnectorObject co, String name) {
         for (var attr : co.getAttributes()) {
             if (name.equals(attr.getName()) && attr.getValue().size() == 1) {
-                return String.valueOf(attr.getValue().get(0));
+                return String.valueOf(attr.getValue().getFirst());
             }
         }
         return null;

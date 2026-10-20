@@ -87,7 +87,7 @@ public class YamlOperationsBindingTest extends AbstractCrudConnectorTest {
         var results = searchAll(initConnectorWithYamlSearch(SEARCH_YAML_OBJECTS_PATH_SCALAR));
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "123");
+        assertEquals(results.getFirst().getUid().getUidValue(), "123");
     }
 
     @Test
@@ -97,7 +97,7 @@ public class YamlOperationsBindingTest extends AbstractCrudConnectorTest {
         var results = searchAll(initConnectorWithYamlSearch(SEARCH_YAML_OBJECTS_PATH_MAPPING));
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getUid().getUidValue(), "123");
+        assertEquals(results.getFirst().getUid().getUidValue(), "123");
     }
 
     @Test

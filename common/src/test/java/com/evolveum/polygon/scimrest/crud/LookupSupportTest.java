@@ -130,8 +130,8 @@ public class LookupSupportTest extends AbstractCrudConnectorTest {
         var results = searchWorkPackages(connector());
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getAttributeByName("subject").getValue().get(0), "first");
-        assertEquals(results.get(0).getAttributeByName("status").getValue().get(0), "To Do");
+        assertEquals(results.getFirst().getAttributeByName("subject").getValue().getFirst(), "first");
+        assertEquals(results.getFirst().getAttributeByName("status").getValue().getFirst(), "To Do");
         assertEquals(wireMockServer.findAll(getRequestedFor(urlEqualTo(STATUSES_PATH))).size(), 1);
     }
 
@@ -146,7 +146,7 @@ public class LookupSupportTest extends AbstractCrudConnectorTest {
         var results = searchWorkPackages(connector());
 
         assertEquals(results.size(), 1);
-        assertEquals(results.get(0).getAttributeByName("status").getValue().get(0), UNKNOWN_STATUS_HREF);
+        assertEquals(results.getFirst().getAttributeByName("status").getValue().getFirst(), UNKNOWN_STATUS_HREF);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class LookupSupportTest extends AbstractCrudConnectorTest {
 
         var requests = wireMockServer.findAll(postRequestedFor(urlEqualTo(WORKPACKAGES_PATH)));
         assertEquals(requests.size(), 1);
-        var body = requests.get(0).getBodyAsString();
+        var body = requests.getFirst().getBodyAsString();
         assertTrue(body.contains(STATUS_IN_PROGRESS_HREF),
                 "Expected the native href in the request body, but was: " + body);
         assertFalse(body.contains("In Progress"),
@@ -225,7 +225,7 @@ public class LookupSupportTest extends AbstractCrudConnectorTest {
 
         var requests = wireMockServer.findAll(putRequestedFor(urlEqualTo("/workpackages/1")));
         assertEquals(requests.size(), 1);
-        var body = requests.get(0).getBodyAsString();
+        var body = requests.getFirst().getBodyAsString();
         assertTrue(body.contains(STATUS_IN_PROGRESS_HREF),
                 "Expected the native href in the PUT body, but was: " + body);
         assertFalse(body.contains("In Progress"),
