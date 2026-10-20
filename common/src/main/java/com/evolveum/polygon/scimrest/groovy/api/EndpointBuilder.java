@@ -8,27 +8,39 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 
 import com.evolveum.polygon.conndev.annotations.Script;
+import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Yaml;
+import com.evolveum.polygon.conndev.concepts.SourceLocation;
 import com.evolveum.polygon.scimrest.yaml.binding.HeadersHandler;
+import com.evolveum.polygon.scimrest.yaml.binding.PathParametersHandler;
 import com.evolveum.polygon.scimrest.yaml.binding.QueryParametersHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
-
 import java.util.function.Function;
 
 public interface EndpointBuilder extends GroovyHttpOperationMixin {
 
     void httpOperation(HttpMethod method);
 
+    @Yaml.Custom(PathParametersHandler.class)
+    default void pathParameters() {
+    }
+
     interface SingleObject<I,O> extends EndpointBuilder {
 
         default Function<ConnectorObject,Object> attribute(String name) {
+            return attribute(DefinitionValue.from(name, SourceLocation.capture()));
+        }
+
+        default Function<ConnectorObject,Object> attribute(DefinitionValue<String> name) {
             return connObj -> {
-                var attr = connObj.getAttributeByName(name);
+                var attr = connObj.getAttributeByName(name.value());
                 if (attr == null) {
-                    return null;
+                    throw new IllegalArgumentException(
+                            "Attribute '" + name.value() + "' not found in connector object."
+                                    + " (Path parameter mapping declared at " + name.location() + ")");
                 }
                 if (attr.getValue().isEmpty()) {
                     return null;
@@ -36,9 +48,19 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
                 if (attr.getValue().size() == 1) {
                     return attr.getValue().getFirst();
                 }
-                throw new IllegalArgumentException("Multiple values found for attribute " + name);
+                throw new IllegalArgumentException("Multiple values found for attribute " + name.value());
             };
         }
+
+        default void pathParameter(String pathParameterName, String attributeName) {
+            pathParameter(pathParameterName, attribute(attributeName));
+        }
+
+        default void pathParameter(String pathParameterName, DefinitionValue<String> attributeName) {
+            pathParameter(pathParameterName, attribute(attributeName));
+        }
+
+        void pathParameter(String name);
 
         void pathParameter(String name, Function<ConnectorObject, Object> extractor);
 

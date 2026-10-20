@@ -118,6 +118,58 @@ A `supportedAttribute(name)` block with `value(...)` further restricts an attrib
 
 NOTE: `supportedAttribute(name) { transition(from, to) }` is accepted by the DSL, but value-transition filtering is *not enforced yet* — a transition-only endpoint does not handle the attribute.
 
+== Custom path parameter resolution
+
+By default, a `{name}` path placeholder is filled with the object's UID when the placeholder corresponds to the UID attribute (e.g. `{id}` on `/users/{id}`). When the server addresses the object by a different value, `pathParameter` customizes how a placeholder is resolved:
+
+[source,groovy]
+----
+objectClass("User") {
+    update {
+        // {identifier} is filled from the object's UID
+        endpoint(PATCH, "/users/{identifier}") {
+            pathParameter("identifier")
+            request {
+                contentType APPLICATION_JSON
+            }
+        }
+        // {username} is filled from the object's userName attribute
+        endpoint(PATCH, "/users/by-username/{username}") {
+            pathParameter("username", "userName")
+            request {
+                contentType APPLICATION_JSON
+            }
+        }
+    }
+}
+----
+
+Where:
+* `pathParameter(name)` fills the placeholder from the object's UID — use it when the placeholder name does not correspond to the UID attribute, so the automatic resolution would not kick in.
+* `pathParameter(name, attributeName)` fills the placeholder from the value of `attributeName` in the object's current state. The object is read first, so a by-UID search endpoint must be available (e.g. `GET /users/{id}`); the update fails with `IllegalArgumentException` when the attribute is absent on the object (the message carries the location of the mapping in the script).
+
+The same in YAML — a `pathParameters` mapping of placeholder name to attribute name, or a `null` entry for the UID:
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    update:
+      endpoints:
+        - method: PATCH
+          path: /users/{identifier}
+          pathParameters:
+            identifier:          # null — fill from the object's UID
+          request:
+            contentType: application/json
+        - method: PATCH
+          path: /users/by-username/{username}
+          pathParameters:
+            username: userName   # fill from the object's userName attribute
+          request:
+            contentType: application/json
+----
+
 == Complex update script examples
 
 === Multiple endpoints needed for update

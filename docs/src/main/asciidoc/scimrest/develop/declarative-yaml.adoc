@@ -238,6 +238,9 @@ objectClasses:
       endpoints:
         - method: PATCH
           path: /users/{id}
+          # pathParameters:                         # how the path placeholders are resolved
+          #   byUsername: userName                  # from the object's userName attribute
+          #   byUid:                                # null — from the object's UID
           request:
             contentType: application/json
           supportedAttributes:
@@ -269,6 +272,9 @@ objectClasses:
 
 `endpoints[].path`::
   The endpoint path (required); `{name}` path parameters are replaced from the object
+
+`endpoints[].pathParameters`::
+  A mapping of path placeholder name (the `{name}` segment of the endpoint path) to attribute name — how the placeholder is resolved on update endpoints. Placeholders whose attribute is the object's UID need no entry (the UID value is used automatically); a `null` entry fills the placeholder from the UID; a scalar entry fills it from the named attribute of the object's current state (the object must be readable, e.g. via a by-UID search endpoint)
 
 `endpoints[].request.contentType`::
   The request content type — a literal media type (`application/json`) or one of the built-in

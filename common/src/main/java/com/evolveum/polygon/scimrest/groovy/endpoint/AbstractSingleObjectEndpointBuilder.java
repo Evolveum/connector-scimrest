@@ -35,6 +35,24 @@ public abstract class AbstractSingleObjectEndpointBuilder<I, O, E extends Abstra
 
     public void pathParameter(String name, Function<ConnectorObject, Object> extractor) {
 
+        if (pathParameters.containsKey(name)) {
+            pathParameters.get(name).extractor = extractor;
+        } else {
+            throw new IllegalArgumentException(
+                    "Unknown path parameter: '" + name + "'. Expected one of: " + pathParameters.keySet());
+        }
+
+    }
+
+    public void pathParameter(String name) {
+
+        if (pathParameters.containsKey(name)) {
+            pathParameters.get(name).identity = Function.identity();
+        } else {
+            throw new IllegalArgumentException(
+                    "Unknown path parameter: '" + name + "'. Expected one of: " + pathParameters.keySet());
+        }
+
     }
 
     public abstract E self();
@@ -52,14 +70,20 @@ public abstract class AbstractSingleObjectEndpointBuilder<I, O, E extends Abstra
     public boolean matches(HttpMethod method, String path) {
         return Objects.equals(this.httpMethod, method) && Objects.equals(this.path, path);
     }
-
-    static class PathParameter {
+    public static class PathParameter {
 
         private final String name;
         private Function<ConnectorObject, Object> extractor;
+        private Function<Object, Object> identity;
 
         public PathParameter(String name) {
             this.name = name;
+        }
+        public Function<ConnectorObject, Object> getExtractor() {
+            return extractor;
+        }
+        public Function<Object, Object> getIdentity() {
+            return identity;
         }
     }
 }
