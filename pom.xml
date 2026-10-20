@@ -12,7 +12,7 @@
 
     <groupId>com.evolveum.polygon.scimrest</groupId>
     <artifactId>connector-scimrest-parent</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Polygon SCIMREST Connector - Root</name>
@@ -26,7 +26,7 @@
         <connId.minVersion>1.7.0.0</connId.minVersion>
 
         <unboundid-scim2.version>6.0.0</unboundid-scim2.version>
-        <conndev.version>0.2.0</conndev.version>
+        <conndev.version>0.2.1-SNAPSHOT</conndev.version>
 
         <surefire.version>3.5.2</surefire.version>
         <failsafe.version>3.5.2</failsafe.version>
