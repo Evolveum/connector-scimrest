@@ -275,25 +275,23 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 }
 
                 var pathParameter = entry.getValue();
-                if (pathParameter != null) {
-                    var extractor = pathParameter.getExtractor();
-                    var identity = pathParameter.getIdentity();
+                var extractor = pathParameter.getExtractor();
+                var identity = pathParameter.getIdentity();
 
-                    if (identity != null) {
+                if (identity != null) {
 
-                        request.pathParameter(entry.getKey(), identity.apply(updateRequest.uid().getUidValue()));
+                    request.pathParameter(entry.getKey(), identity.apply(updateRequest.uid().getUidValue()));
+                    continue;
+                } else if (extractor != null) {
+
+                    var oldObject = updateRequest.before();
+                    if (oldObject != null) {
+                        request.pathParameter(entry.getKey(), extractor.apply(oldObject));
                         continue;
-                    } else if (extractor != null) {
+                    } else {
 
-                        var oldObject = updateRequest.before();
-                        if (oldObject != null) {
-                            request.pathParameter(entry.getKey(), extractor.apply(oldObject));
-                            continue;
-                        } else {
-
-                            throw new ConnectorException("Cannot resolve path parameter '" + entry.getKey() +
-                                    "': connector object is required.");
-                        }
+                        throw new ConnectorException("Cannot resolve path parameter '" + entry.getKey() +
+                                "': connector object is required.");
                     }
                 }
 

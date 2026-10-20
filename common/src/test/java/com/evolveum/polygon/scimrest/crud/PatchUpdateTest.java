@@ -87,9 +87,7 @@ public class PatchUpdateTest extends AbstractCrudConnectorTest {
         updateAsPatchWithJsonBody(SCRIPT_TEMPLATE.formatted(SCRIPT_UPDATE_W_PATH_PARAM_INCORRECT), ACCOUNT_BY_ID_PATH);
     }
 
-    public void updateAsPatchWithJsonBody(String script, String path){
-        wireMockServer.stubFor(get(urlEqualTo(path))
-                .willReturn(okJson("{\"id\":\"123\",\"name\":\"old-name\"}")));
+    private void updateAsPatchWithJsonBody(String script, String path){
         wireMockServer.stubFor(get(urlEqualTo(ACCOUNT_BY_ID_PATH))
                 .willReturn(okJson("{\"id\":\"123\",\"name\":\"old-name\"}")));
         wireMockServer.stubFor(patch(urlPathMatching(ACCOUNTS_PATTERN))

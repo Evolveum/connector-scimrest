@@ -23,7 +23,7 @@ public class PathParametersHandler implements CustomYamlHandler {
     @Override
     public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
         if (value == null || value.isNull()) {
-            return; 
+            return;
         }
         if (!(target instanceof EndpointBuilder.SingleObject<?, ?> single)) {
             throw new IllegalArgumentException("The 'pathParameters' key requires a single-object endpoint, got: "
