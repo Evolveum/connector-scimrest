@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.net.http.HttpResponse;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
@@ -54,14 +53,17 @@ public class RestPagingAwareObjectRetriever {
         var pageLimit = specification.pageLimit();
         var responsePageLimit = specification.responsePageLimit();
 
-        // When the operation options carry a full logical page (offset + size), fetch exactly that
-        // window, assembling it from one or more real pages when the endpoint caps the real page
-        // size below the requested window. Otherwise fall back to scanning the result set page by
-        // page until it is exhausted (empty page, total count reached, or a short page).
-        Integer logicalPage = options != null ? options.getPagedResultsOffset() : null;
-        Integer logicalSize = options != null ? options.getPageSize() : null;
-        List<PageRequestInfo> pageRequestInfos = (logicalPage != null && logicalSize != null)
-                ? planPages(logicalPage, logicalSize, responsePageLimit)
+        // When the operation options carry a full window (ConnId 1-based record offset + size), fetch
+        // exactly that window, assembling it from one or more real pages. Otherwise fall back to
+        // scanning the result set page by page until it is exhausted (empty page, total count
+        // reached, or a short page).
+        Integer pagedOffset = options != null ? options.getPagedResultsOffset() : null;
+        Integer pagedSize = options != null ? options.getPageSize() : null;
+        var windowRequested = pagedOffset != null && pagedOffset >= 1 && pagedSize != null && pagedSize >= 1;
+        long windowStart = windowRequested ? (long) pagedOffset - 1 : 0;
+        long windowEnd = windowRequested ? windowStart + pagedSize : 0;
+        List<PageRequestInfo> pageRequestInfos = windowRequested
+                ? planPages(windowStart, windowEnd, responsePageLimit)
                 : List.of();
         var pageRequestInfoIterator = pageRequestInfos.iterator();
         var fullScan = pageRequestInfos.isEmpty();
@@ -93,7 +95,7 @@ public class RestPagingAwareObjectRetriever {
             var remoteObject = page.objects();
 
             if (pageRequestInfo != null) {
-                remoteObject = assembleLogicalPage(logicalPage, logicalSize, page.objects(), pageRequestInfo);
+                remoteObject = assembleLogicalPage(windowStart, windowEnd, page.objects(), pageRequestInfo);
             }
 
             var batchProcessed = 0;
@@ -227,56 +229,40 @@ public class RestPagingAwareObjectRetriever {
                         + " contains an unexpected JSON type: " + (obj == null ? "null" : obj.getClass().getName()));
     }
 
-    public static List<PageRequestInfo> planPages(Integer logicalPage, Integer logicalSize,
-                                              Integer maxPageSize) {
-        if(logicalPage != null && logicalSize !=null){
-            if(maxPageSize == null || maxPageSize < 1 || maxPageSize >= logicalSize){
+    public static List<PageRequestInfo> planPages(long windowStart, long windowEnd, Integer maxPageSize) {
+        long windowSize = windowEnd - windowStart;
+        int realPageSize = maxPageSize == null || maxPageSize < 1
+                ? (int) windowSize
+                : (int) Math.min(windowSize, maxPageSize);
 
-                return Collections.singletonList(new PageRequestInfo(logicalPage,logicalSize));
-            }
-        } else {
-            return Collections.emptyList();
-        }
-
-        long startIndex =((long) logicalPage - 1) * logicalSize;
-        long endIndex   = startIndex + logicalSize;
-
-        int firstRealPage = (int) (startIndex / maxPageSize) + 1;
-        int lastRealPage  = (int) ((endIndex - 1) / maxPageSize) + 1;
+        int firstRealPage = (int) (windowStart / realPageSize) + 1;
+        int lastRealPage = (int) ((windowEnd - 1) / realPageSize) + 1;
 
         List<PageRequestInfo> plan = new ArrayList<>();
         for (int rp = firstRealPage; rp <= lastRealPage; rp++) {
-            plan.add(new PageRequestInfo(rp, maxPageSize));
+            plan.add(new PageRequestInfo(rp, realPageSize));
         }
-
         return plan;
     }
 
     public static List<?> assembleLogicalPage(
-            int logicalPage, int logicalSize,
+            long windowStart, long windowEnd,
             Iterable<?> realPageItems, PageRequestInfo pageRequestInfo) {
-
-        long startIndex = (long) (logicalPage - 1) * logicalSize;
-        long endIndex = startIndex + logicalSize;
 
         List<Object> concatenated = new ArrayList<>();
         for (var item : realPageItems) {
             concatenated.add(item);
         }
         var pageRequest = pageRequestInfo.getPageRequest();
-        if (pageRequest != null) {
-            if (concatenated.size() < pageRequest.pageSize()) {
-
-                pageRequestInfo.setRecordSetExhausted(true);
-            }
+        if (concatenated.size() < pageRequest.pageSize()) {
+            pageRequestInfo.setRecordSetExhausted(true);
         }
 
-        int currentRealPage = pageRequestInfo.getPageRequest().pageOffset();
-        long currentRealPageStartIndex = (long) (currentRealPage - 1) * pageRequest.pageSize();
-        int fromInclusive = (int) Math.max(0, startIndex - currentRealPageStartIndex);
-        int toExclusive = (int) Math.min(endIndex - currentRealPageStartIndex, concatenated.size());
+        long currentRealPageStartIndex = (long) (pageRequest.pageOffset() - 1) * pageRequest.pageSize();
+        int fromInclusive = (int) Math.max(0, windowStart - currentRealPageStartIndex);
+        int toExclusive = (int) Math.min(windowEnd - currentRealPageStartIndex, concatenated.size());
 
-        if (fromInclusive >= concatenated.size() || fromInclusive < 0) {
+        if (fromInclusive >= toExclusive) {
             return List.of();
         }
         return concatenated.subList(fromInclusive, toExclusive);
