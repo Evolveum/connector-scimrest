@@ -8,6 +8,8 @@ package com.evolveum.polygon.scimrest.groovy.api;
 
 
 import com.evolveum.polygon.conndev.annotations.Script;
+import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
+import com.evolveum.polygon.conndev.api.BasicJsonPathFormat;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
 import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.scimrest.yaml.binding.HeadersHandler;
@@ -49,9 +51,10 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
             return GroovyClosures.callAndReturnDelegate(closure, request());
         }
 
+        @Yaml.Sub
         ResponseBuilder<O> response();
 
-        default ResponseBuilder<O> response(@DelegatesTo(value = RequestBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        default ResponseBuilder<O> response(@DelegatesTo(value = ResponseBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
             return GroovyClosures.callAndReturnDelegate(closure, response());
         }
     }
@@ -193,7 +196,20 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
 
     interface ResponseBuilder<O> extends GroovyContentTypeMixin {
 
+        /**
+         * Selects the resource object in a create/update response before applying the normal
+         * attribute mappings. Accepts the same JSON Pointer/basic JSONPath declarations as
+         * search {@code objectsPath}; the response root is used when omitted.
+         *
+         * <p>In a non-empty response, the path must resolve to a JSON object. Responses without
+         * a body retain the existing Location-header (create) and sent-delta (update) fallbacks.</p>
+         */
+        @Yaml.Path
+        ResponseBuilder<O> objectPath(AttributePathDeclaration<?, ?> declaration);
 
-
+        /** Selects the resource using basic JSONPath, e.g. {@code objectPath("$.result")}. */
+        default ResponseBuilder<O> objectPath(String pathExpression) {
+            return objectPath(AttributePathDeclaration.of(BasicJsonPathFormat.INSTANCE, pathExpression));
+        }
     }
 }
