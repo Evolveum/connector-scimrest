@@ -184,7 +184,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                     supportedAttrs,
                     true,
                     request.queryParameters,
-                    request.headers
+                    request.headers,
+                    response.buildObjectExtractor(path)
             );
         }
     }
@@ -209,7 +210,8 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                            Map<String, AttributeSupport> supportedAttributes,
                             boolean requiresOriginalState,
                             Map<String, Object> queryParameters,
-                            Map<String, String> headers) implements UpdateOperationHandler {
+                            Map<String, String> headers,
+                            Function<Object, ObjectNode> responseObject) implements UpdateOperationHandler {
 
         @Override
         public UpdateOperationHandler.UpdateResponse update(
@@ -235,7 +237,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                     // response body) confirms exactly the changes that were sent — report them
                     // as applied. When the body carries the updated object, the values the
                     // remote actually holds replace the sent ones.
-                    var body = response.body() instanceof ObjectNode node && !node.isEmpty() ? node : null;
+                    var body = responseObject.apply(response.body());
                     return new UpdateOperationHandler.UpdateResponse(
                             uid, AppliedChangeResolver.resolve(objectClass, updateRequest.attributeDeltaSet(), body));
                 }
