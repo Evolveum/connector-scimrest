@@ -134,7 +134,8 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                     parent.getObjectClass(),
                     supportedAttrs,
                     request.queryParameters,
-                    request.headers
+                    request.headers,
+                    response.buildObjectExtractor(path)
             );
         }
 
@@ -174,7 +175,8 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                            RestObjectClassDefinition objectClass,
                            Map<String, AttributeSupport> supportedAttributes,
                            Map<String, Object> queryParameters,
-                           Map<String, String> headers) implements CreateOperationHandler {
+                           Map<String, String> headers,
+                           Function<Object, ObjectNode> responseObject) implements CreateOperationHandler {
 
         @Override
         public Result create(
@@ -197,7 +199,7 @@ public class RestCreateOperationBuilderImpl extends AbstractCreateOperationBuild
                     throw HttpStatusMapper.map(status, HttpStatusMapper.OperationKind.CREATE,
                             String.valueOf(response.request().uri()), null, ErrorDetail.extract(response.body()));
                 }
-                var body = response.body() instanceof ObjectNode node && !node.isEmpty() ? node : null;
+                var body = responseObject.apply(response.body());
                 if (body != null) {
                     var builder = objectClass.newObjectBuilder();
                     for (var attributeDef : objectClass.attributes()) {
