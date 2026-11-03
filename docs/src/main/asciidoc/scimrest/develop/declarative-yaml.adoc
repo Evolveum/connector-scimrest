@@ -289,6 +289,64 @@ objectClasses:
 
 See create, update, and delete for the operation semantics.
 
+=== Relationship records in updates
+
+`update.relationshipRecords` translates membership deltas into `GET`, `POST`, and `DELETE` operations on separate relationship records.
+Its keys name existing multivalued attributes in the object-class schema.
+This update configuration is separate from schema association metadata.
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    update:
+      relationshipRecords:
+        groups:
+          endpoint: /memberships
+          sourceField: userId
+          targetField: groupId
+          idField: id
+          sourceParameter: userId
+          recordsPath: $.items
+          pageSize: 100
+          offsetParameter: offset
+          limitParameter: limit
+          initialOffset: 0
+          maxPages: 1000
+----
+
+The required keys are `endpoint`, `sourceField`, `targetField`, and `idField`.
+`endpoint` serves collection reads and record creation; `deleteEndpoint` defaults to that endpoint followed by `/{id}`.
+The deletion identifier comes from each membership record's `idField`.
+Both endpoint paths may include `{source}`, replaced with the encoded source UID.
+`sourceField`, `targetField`, and `idField` are basic JSONPath strings; the source and target paths must identify structural object fields.
+The source is the updated object's UID; target values may be scalar identifiers or ConnId references carrying a UID.
+Use native target identifiers; lookup mappings are not supported for these attributes.
+Optional `sourceType` and `targetType` select `string` (default) or `integer` JSON identifiers.
+
+`sourceParameter` optionally filters collection reads using a query parameter.
+Every returned record is also checked locally to protect other sources' memberships.
+`recordsPath` selects an array inside a JSON response envelope; omit it when the response is an array.
+
+`pageSize` defaults to `0`, requiring a complete collection in one response.
+A positive size enables record-offset pagination with `offsetParameter` (default `offset`), `limitParameter` (default `limit`), and `initialOffset` (default `0`).
+Offsets advance by the count of returned records.
+Reads continue until an empty page, with at most `maxPages` requests (default `1000`, including the empty page).
+Repeated record identifiers or exhausting the page limit fail before writes.
+Cursor and page-number pagination are not supported here.
+
+Add creates only missing memberships, remove deletes all matching records for the requested targets, replace retains unchanged targets, and an empty replacement clears the source's memberships.
+Duplicate input targets are collapsed; existing duplicate records for retained targets are preserved.
+All records are read and validated before mutation.
+These handlers run before catch-all REST and SCIM handlers, so a mixed update routes each membership attribute to its record endpoint.
+
+This feature applies only to update deltas, not parent creation/deletion or membership reads exposed through search.
+REST writes are not transactional: failures propagate and earlier writes may remain applied.
+Collection reads require HTTP `200`; writes must complete synchronously, so HTTP `202`, `206`, and `207` fail.
+HTTP `404` on deletion of a previously read record is accepted as already absent.
+A retry reads current records again; concurrent writers require remote source/target uniqueness constraints to prevent duplicate creation.
+See the REST update guide for the matching Groovy DSL, delta examples, and configuration details.
+
 == Authentication
 
 An `authentication` block (top-level, not per object class) configures the authentication methods of the `rest` and/or `scim` namespace:

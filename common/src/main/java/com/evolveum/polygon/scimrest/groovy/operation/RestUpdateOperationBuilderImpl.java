@@ -24,6 +24,7 @@ import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.RelationshipRecordsBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimPatchOperations;
@@ -40,6 +41,7 @@ import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.*;
 
 import java.io.IOException;
@@ -51,6 +53,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
         implements RestUpdateOperationBuilder {
 
     private final List<EndpointImpl> endpoints = new ArrayList<>();
+    private final Map<String, RecordUpdateBuilder> relationships = new LinkedHashMap<>();
     private ScimUpdateBuilderImpl scim;
 
     public RestUpdateOperationBuilderImpl(BaseOperationSupportBuilder parent) {
@@ -71,6 +74,20 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
     }
 
     @Override
+    public RelationshipRecordsBuilder relationshipRecords(String attribute) {
+        return relationships.computeIfAbsent(attribute, name -> {
+            var definition = parent.getObjectClass().attributeFromProtocolName(name);
+            if (definition == null) {
+                definition = parent.getObjectClass().attributeFromConnIdName(name);
+            }
+            if (definition == null) {
+                definition = parent.getObjectClass().requireAttribute(name, "when defining relationship record updates");
+            }
+            return new RecordUpdateBuilder((RestConnectorContext) parent.context, definition);
+        });
+    }
+
+    @Override
     public ScimUpdateBuilder scim() {
         if (this.scim == null) {
             this.scim = new ScimUpdateBuilderImpl((RestConnectorContext) parent.context);
@@ -80,12 +97,19 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
 
     @Override
     protected boolean isEmpty() {
-        return endpoints.isEmpty() && scimNotUsed();
+        return relationships.isEmpty() && endpoints.isEmpty() && scimNotUsed();
     }
 
     @Override
     protected Collection<UpdateOperationHandler> collectHandlers() {
         var handlers = new ArrayList<UpdateOperationHandler>();
+        var attributes = new HashSet<String>();
+        for (var relationship : relationships.values()) {
+            if (!attributes.add(relationship.attributeName())) {
+                throw new ConfigurationException("Multiple relationship record declarations resolve to attribute '" + relationship.attributeName() + "'");
+            }
+            handlers.add(relationship.build());
+        }
         handlers.addAll(endpoints.stream().map(EndpointImpl::build).toList());
 
         // Add SCIM handler if configured
@@ -342,10 +366,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 if (request.before() != null) {
                     attr = request.before().getAttributeByName(delta.getName());
                 }
-                if (attr == null) {
-                    attr = AttributeBuilder.build(delta.getName());
-                }
-                var updated = delta.applyTo(attr);
+                var updated = delta.applyTo(attr != null && attr.getValue() != null ? attr : null);
                 if (lookupConverter != null) {
                     var converted = lookupConverter.toNative(request.clazz(), Set.of(updated));
                     if (!converted.isEmpty()) {
