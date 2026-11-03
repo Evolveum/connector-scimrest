@@ -22,6 +22,17 @@ public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<R
 
     ScimUpdateBuilder scim();
 
+    /**
+    Routes one membership attribute to CRUD of separate relationship records before regular update endpoints.
+    */
+    @Yaml.Map("relationshipRecords")
+    RelationshipRecordsBuilder relationshipRecords(String attribute);
+
+    default RelationshipRecordsBuilder relationshipRecords(String attribute,
+            @DelegatesTo(value = RelationshipRecordsBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> declaration) {
+        return GroovyClosures.callAndReturnDelegate(declaration, relationshipRecords(attribute));
+    }
+
     default ScimUpdateBuilder scim(@DelegatesTo(value = ScimUpdateBuilder.class, strategy = Closure.DELEGATE_ONLY)
                               @Script.Initialization
                               Closure<?> value) {
