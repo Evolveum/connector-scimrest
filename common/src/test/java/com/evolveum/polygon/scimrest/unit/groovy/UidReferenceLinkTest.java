@@ -47,7 +47,7 @@ public class UidReferenceLinkTest {
                     multiValued true
                     json {
                         path attribute('_links').child('members')
-                        referenceBy('uid') {
+                        referenceBy {
                             uidFrom 'href'
                             template '/api/v3/users/{uid}'
                             nameFrom 'title'
