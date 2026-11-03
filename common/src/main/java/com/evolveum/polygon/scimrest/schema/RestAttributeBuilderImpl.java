@@ -13,6 +13,7 @@ import com.evolveum.polygon.conndev.api.JavaPathFormat;
 import com.evolveum.polygon.conndev.build.api.ValueMappingBuilder;
 import com.evolveum.polygon.conndev.concepts.DefinitionValue;
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import com.evolveum.polygon.conndev.json.JsonUidReferenceMapping;
 import com.evolveum.polygon.conndev.json.OpenApiValueMapping;
 import com.evolveum.polygon.conndev.schema.AttributeProtocolMappingBuilder;
 import com.evolveum.polygon.conndev.schema.BaseAttributeBuilder;
@@ -26,6 +27,8 @@ import com.evolveum.polygon.scimrest.groovy.api.RestReferenceAttributeBuilder;
 import tools.jackson.databind.JsonNode;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+
+import java.util.function.Supplier;
 
 public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
         RestAttributeBuilderImpl,
@@ -60,6 +63,11 @@ public class RestAttributeBuilderImpl extends BaseAttributeBuilder<
     public RestAttributeBuilderImpl(RestObjectClassDefinitionBuilder parent, DefinitionValue<String> name) {
         super(parent, name);
         this.mappedObjectClass = parent;
+    }
+
+    @Override
+    protected Supplier<JsonUidReferenceMapping.Options> uidReferenceOptionsFactory() {
+        return RestUidReferenceMapping.optionsFor(contextLookup());
     }
 
     @Override
