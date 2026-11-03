@@ -63,7 +63,7 @@ public class ScimSearchHandler implements FilterAwareExecuteQueryProcessor {
 
                 var response = scim.searchRequest(resource.relativeEndpoint())
                         .filter(scimFilter)
-                        .page(currentPage,pageLimit)
+                        .page((currentPage - 1) * pageLimit + 1, pageLimit)
                         .invoke(GenericScimResource.class);
 
                 var remoteObjs = response.getResources();
