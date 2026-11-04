@@ -85,6 +85,7 @@ public interface RelationshipRecordsBuilder {
 
     /**
     Sets target JSON representation to {@code string} (default) or {@code integer}.
+    Integer targets use canonical decimal identifiers in applied deltas, preserving value types and reference metadata.
     */
     @Yaml.Key
     RelationshipRecordsBuilder targetType(String type);
