@@ -16,16 +16,19 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
 import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
 import org.identityconnectors.framework.common.exceptions.RetryableException;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
 import org.identityconnectors.framework.common.objects.AttributeDeltaBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
@@ -66,6 +70,8 @@ public class RelationshipRecordsTest extends AbstractCrudConnectorTest {
              {"id":"M2","userId":"123","groupId":"B"},
              {"id":"M3","userId":"other","groupId":"A"}]
             """;
+
+    private static final String INTEGER_OPERATIONS = OPERATIONS + "          targetType: integer\n";
 
     private static final String GROOVY_OPERATIONS = """
             objectClass("Account") {
@@ -287,6 +293,222 @@ public class RelationshipRecordsTest extends AbstractCrudConnectorTest {
         // Then: Serialize configured numeric nested fields
         assertRequests("GET /memberships", "POST /memberships");
         verifyCreate("{\"user\":{\"id\":123},\"group\":{\"id\":5}}");
+    }
+
+    @Test
+    public void testCanonicalRemoval() {
+        // Given: Numeric membership and equivalent removal identifiers
+        stubRecords("[{\"id\":\"M4\",\"userId\":\"123\",\"groupId\":4}]");
+        stubDelete("M4");
+        var original = AttributeBuilder.build("groups", List.of("4"));
+        var delta = new AttributeDeltaBuilder().setName("groups").addValueToRemove("0004", "+4").build();
+
+        // When: Remove through noncanonical numeric identifiers
+        var applied = update(initYaml(INTEGER_OPERATIONS), delta);
+
+        // Then: Report the actual canonical membership removal
+        var expected = new AttributeDeltaBuilder().setName("groups").addValueToRemove("4").build();
+        assertEquals(applied, Set.of(expected));
+        assertEquals(applied.iterator().next().applyTo(original).getValue(), List.of());
+        assertEquals(delta.getValuesToRemove(), List.of("0004", "+4"));
+        assertRequests("GET /memberships", "DELETE /memberships/M4");
+    }
+
+    @Test
+    public void testCanonicalReplacement() {
+        // Given: Existing membership and duplicate numeric aliases
+        stubRecords("[{\"id\":\"M4\",\"userId\":\"123\",\"groupId\":4}]");
+        stubCreate("{\"userId\":\"123\",\"groupId\":5}");
+        var delta = AttributeDeltaBuilder.build("groups", List.of("0004", "+4", "0005"));
+
+        // When: Replace with existing and new memberships
+        var applied = update(initYaml(INTEGER_OPERATIONS), delta);
+
+        // Then: Report canonical values without duplicate memberships
+        assertEquals(applied, Set.of(AttributeDeltaBuilder.build("groups", List.of("4", "5"))));
+        assertEquals(delta.getValuesToReplace(), List.of("0004", "+4", "0005"));
+        assertRequests("GET /memberships", "POST /memberships");
+        verifyCreate("{\"userId\":\"123\",\"groupId\":5}");
+    }
+
+    @Test
+    public void testCanonicalAddition() {
+        // Given: Duplicate aliases for one missing membership
+        stubRecords("[]");
+        stubCreate("{\"userId\":\"123\",\"groupId\":5}");
+        var delta = new AttributeDeltaBuilder().setName("groups").addValueToAdd("+0005", "5").build();
+
+        // When: Add the equivalent numeric identifiers
+        var applied = update(initYaml(INTEGER_OPERATIONS), delta);
+
+        // Then: Report one canonical addition
+        assertEquals(applied, Set.of(new AttributeDeltaBuilder().setName("groups").addValueToAdd("5").build()));
+        assertRequests("GET /memberships", "POST /memberships");
+        verifyCreate("{\"userId\":\"123\",\"groupId\":5}");
+    }
+
+    @Test
+    public void testCanonicalCombined() {
+        // Given: Equivalent removal and addition identifiers
+        stubRecords("[{\"id\":\"M4\",\"userId\":\"123\",\"groupId\":4}]");
+        stubCreate("{\"userId\":\"123\",\"groupId\":5}");
+        var original = AttributeBuilder.build("groups", List.of("4"));
+        var delta = new AttributeDeltaBuilder().setName("groups").addValueToRemove("0004").addValueToAdd("+0004", "0005").build();
+
+        // When: Remove and add within one delta
+        var applied = update(initYaml(INTEGER_OPERATIONS), delta);
+
+        // Then: Preserve addition precedence and retained records
+        var expected = new AttributeDeltaBuilder().setName("groups").addValueToRemove("4").addValueToAdd("4", "5").build();
+        assertEquals(applied, Set.of(expected));
+        assertEquals(applied.iterator().next().applyTo(original).getValue(), List.of("4", "5"));
+        assertRequests("GET /memberships", "POST /memberships");
+        verifyCreate("{\"userId\":\"123\",\"groupId\":5}");
+    }
+
+    @Test
+    public void testCanonicalClear() {
+        // Given: Numeric membership and empty replacement
+        stubRecords("[{\"id\":\"M4\",\"userId\":\"123\",\"groupId\":4}]");
+        stubDelete("M4");
+        var original = AttributeBuilder.build("groups", List.of("4"));
+        var delta = AttributeDeltaBuilder.build("groups", List.of());
+
+        // When: Clear all numeric memberships
+        var applied = update(initYaml(INTEGER_OPERATIONS), delta);
+
+        // Then: Preserve explicit empty replacement semantics
+        assertEquals(applied, Set.of(delta));
+        assertEquals(applied.iterator().next().getValuesToReplace(), List.of());
+        assertEquals(applied.iterator().next().applyTo(original).getValue(), List.of());
+        assertRequests("GET /memberships", "DELETE /memberships/M4");
+    }
+
+    @DataProvider
+    public Object[][] numericIdentifiers() {
+        return new Object[][] {
+                {(byte) 4, "integer", "int8"}, {4, "integer", "int32"}, {4294967296L, "integer", "int64"},
+                {new BigInteger("9007199254740991"), "number", "double-int"}
+        };
+    }
+
+    @Test(dataProvider = "numericIdentifiers")
+    public void testNumericResults(Object identifier, String type, String format) {
+        // Given: Membership uses its declared numeric type
+        var schema = SCHEMA.replace("jsonType \"string\"; multiValued true",
+                "jsonType \"" + type + "\"; openApiFormat \"" + format + "\"; multiValued true");
+        var connector = YamlOperationsConnector.fromStrings(INTEGER_OPERATIONS).withSchema(schema, CONNID_SCHEMA_SCRIPT);
+        connector.init(new SimpleConfig(wireMockServer.port()));
+        stubRecords("[]");
+        var body = "{\"userId\":\"123\",\"groupId\":" + identifier + "}";
+        stubCreate(body);
+        var delta = AttributeDeltaBuilder.build("groups", List.of(identifier));
+
+        // When: Replace with a numeric membership value
+        var applied = update(connector, delta);
+
+        // Then: Preserve numeric value and Java type
+        assertEquals(applied, Set.of(delta));
+        assertEquals(applied.iterator().next().getValuesToReplace().getFirst().getClass(), identifier.getClass());
+        assertRequests("GET /memberships", "POST /memberships");
+        verifyCreate(body);
+    }
+
+    @DataProvider
+    public Object[][] referenceKinds() {
+        return new Object[][] {{false}, {true}};
+    }
+
+    @Test(dataProvider = "referenceKinds")
+    public void testCanonicalReferences(boolean fullObject) {
+        // Given: Reference includes noncanonical UID and metadata
+        var schema = referenceSchema();
+        var connector = YamlOperationsConnector.fromStrings(INTEGER_OPERATIONS).withSchema(schema, CONNID_SCHEMA_SCRIPT);
+        connector.init(new SimpleConfig(wireMockServer.port()));
+        var nameHint = new Name("Group four hint");
+        var originalUid = new Uid("0004", "revision-7", nameHint);
+        var builder = new ConnectorObjectBuilder().setObjectClass(new ObjectClass("Group")).setUid(originalUid).setName("group-4")
+                .addAttribute("displayName", "Group four");
+        var reference = new ConnectorObjectReference(fullObject ? builder.build() : builder.buildIdentification());
+        var alias = new ConnectorObjectReference(new ConnectorObjectBuilder().setObjectClass(new ObjectClass("Group")).setUid("4").buildIdentification());
+        var delta = new AttributeDeltaBuilder().setName("groups").addValueToRemove(reference, alias).build();
+        stubRecords("[{\"id\":\"M4\",\"userId\":\"123\",\"groupId\":4}]");
+        stubDelete("M4");
+
+        // When: Remove using equivalent reference identifiers
+        var applied = update(connector, delta);
+
+        // Then: Canonicalize UID while preserving reference metadata
+        assertEquals(applied.size(), 1);
+        var result = applied.iterator().next();
+        assertEquals(result.getName(), "groups");
+        assertTrue(result.getValuesToAdd() == null || result.getValuesToAdd().isEmpty());
+        assertEquals(result.getValuesToReplace(), null);
+        assertEquals(result.getValuesToRemove().size(), 1);
+        var normalized = (ConnectorObjectReference) result.getValuesToRemove().getFirst();
+        assertEquals(normalized.hasObject(), fullObject);
+        assertEquals(normalized.getValue().getObjectClass(), new ObjectClass("Group"));
+        assertEquals(normalized.getValue().getAttributes(), Set.of(new Uid("4", "revision-7", nameHint), new Name("group-4"),
+                AttributeBuilder.build("displayName", "Group four")));
+        var normalizedUid = (Uid) normalized.getValue().getAttributeByName(Uid.NAME);
+        assertEquals(normalizedUid.getUidValue(), "4");
+        assertEquals(normalizedUid.getRevision(), "revision-7");
+        assertEquals(normalizedUid.getNameHint(), nameHint);
+        assertSame(reference.getValue().getAttributeByName(Uid.NAME), originalUid);
+        assertEquals(originalUid.getUidValue(), "0004");
+        assertRequests("GET /memberships", "DELETE /memberships/M4");
+    }
+
+    @Test
+    public void testReferenceReuse() {
+        // Given: Reference already contains a canonical UID
+        var connector = YamlOperationsConnector.fromStrings(INTEGER_OPERATIONS).withSchema(referenceSchema(), CONNID_SCHEMA_SCRIPT);
+        connector.init(new SimpleConfig(wireMockServer.port()));
+        var reference = new ConnectorObjectReference(new ConnectorObjectBuilder().setObjectClass(new ObjectClass("Group")).setUid("4").buildIdentification());
+        var delta = AttributeDeltaBuilder.build("groups", List.of(reference));
+        stubRecords("[{\"id\":\"M4\",\"userId\":\"123\",\"groupId\":4}]");
+
+        // When: Retain the canonical reference membership
+        var applied = update(connector, delta);
+
+        // Then: Preserve reference identity without REST writes
+        assertEquals(applied, Set.of(delta));
+        assertSame(applied.iterator().next().getValuesToReplace().getFirst(), reference);
+        assertRequests("GET /memberships");
+    }
+
+    @Test
+    public void testStringIdentifiers() {
+        // Given: String identifiers preserve significant leading zeros
+        stubRecords("[]");
+        stubCreate("{\"userId\":\"123\",\"groupId\":\"0004\"}");
+        var delta = AttributeDeltaBuilder.build("groups", List.of("0004"));
+
+        // When: Add a string membership identifier
+        var applied = update(initYaml(OPERATIONS), delta);
+
+        // Then: Preserve the exact reported string identifier
+        assertEquals(applied, Set.of(delta));
+        assertRequests("GET /memberships", "POST /memberships");
+        verifyCreate("{\"userId\":\"123\",\"groupId\":\"0004\"}");
+    }
+
+    @Test
+    public void testCanonicalAlias() {
+        // Given: Canonicalization uses a differently cased alias
+        var schema = SCHEMA.replace("multiValued true", "multiValued true; connId { name \"memberships\" }");
+        var connector = YamlOperationsConnector.fromStrings(INTEGER_OPERATIONS).withSchema(schema, CONNID_SCHEMA_SCRIPT);
+        connector.init(new SimpleConfig(wireMockServer.port()));
+        stubRecords("[{\"id\":\"M4\",\"userId\":\"123\",\"groupId\":4}]");
+        var delta = AttributeDeltaBuilder.build("MEMBERSHIPS", List.of("0004"));
+
+        // When: Replace using the caller attribute name
+        var applied = update(connector, delta);
+
+        // Then: Preserve exact name and canonical values
+        assertEquals(applied, Set.of(AttributeDeltaBuilder.build("MEMBERSHIPS", List.of("4"))));
+        assertEquals(applied.iterator().next().getName(), "MEMBERSHIPS");
+        assertRequests("GET /memberships");
     }
 
     @Test
@@ -574,6 +796,12 @@ public class RelationshipRecordsTest extends AbstractCrudConnectorTest {
             assertEquals(second.get(10, TimeUnit.SECONDS), Set.of(delta));
         }
         assertRequests("GET /memberships", "POST /memberships", "GET /memberships");
+    }
+
+    private String referenceSchema() {
+        return SCHEMA.replace("attribute(\"groups\") { jsonType \"string\"; multiValued true }",
+                "reference(\"groups\") { objectClass \"Group\"; multiValued true }")
+                + "objectClass(\"Group\") { attribute(\"id\") { jsonType \"string\" } }";
     }
 
     private ClassHandlerConnectorBase initYaml(String operations) {

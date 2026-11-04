@@ -22,6 +22,7 @@ import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueE
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeDelta;
 import org.identityconnectors.framework.common.objects.AttributeDeltaBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -109,12 +110,66 @@ final class RelationshipHandler implements UpdateOperationHandler {
             throw new InvalidAttributeValueException("Expected one relationship delta for " + attribute);
         }
         var source = identifier(request.uid().getUidValue(), sourceType);
-        var delta = normalize(request.attributeDeltaSet().iterator().next());
+        var applied = appliedDelta(request.attributeDeltaSet().iterator().next());
+        var delta = normalize(applied);
         // Serialize updates for the same source within this handler, with bounded lock storage.
         synchronized (locks[Math.floorMod(source.hashCode(), locks.length)]) {
             reconcile(source, delta);
         }
-        return new UpdateResponse(request.uid(), Set.copyOf(request.attributeDeltaSet()));
+        return new UpdateResponse(request.uid(), Set.of(applied));
+    }
+
+    /**
+    Prepares canonical applied identifiers before I/O, preserving input types and reference metadata.
+    */
+    private AttributeDelta appliedDelta(AttributeDelta delta) {
+        if (!"integer".equals(targetType)) {
+            return delta;
+        }
+        var builder = new AttributeDeltaBuilder().setName(delta.getName());
+        if (delta.getValuesToReplace() != null) {
+            builder.addValueToReplace(appliedValues(delta.getValuesToReplace()));
+        } else {
+            if (delta.getValuesToAdd() != null) {
+                builder.addValueToAdd(appliedValues(delta.getValuesToAdd()));
+            }
+            if (delta.getValuesToRemove() != null) {
+                builder.addValueToRemove(appliedValues(delta.getValuesToRemove()));
+            }
+        }
+        return builder.build();
+    }
+
+    private List<Object> appliedValues(List<Object> values) {
+        var applied = new LinkedHashMap<String, Object>();
+        for (var value : values) {
+            var target = identifier(value, targetType);
+            applied.putIfAbsent(target, appliedValue(value, target));
+        }
+        return new ArrayList<>(applied.values());
+    }
+
+    private Object appliedValue(Object value, String target) {
+        if (value instanceof String) {
+            return target;
+        }
+        if (value instanceof ConnectorObjectReference reference) {
+            var referenced = reference.getValue();
+            var original = referenced.getAttributeByName(Uid.NAME);
+            if (target.equals(original.getValue().getFirst())) {
+                return reference;
+            }
+            var uid = original instanceof Uid previous ? new Uid(target, previous.getRevision(), previous.getNameHint()) : new Uid(target);
+            var builder = new ConnectorObjectBuilder().setObjectClass(referenced.getObjectClass());
+            for (var field : referenced.getAttributes()) {
+                if (!field.is(Uid.NAME)) {
+                    builder.addAttribute(field);
+                }
+            }
+            builder.setUid(uid);
+            return new ConnectorObjectReference(reference.hasObject() ? builder.build() : builder.buildIdentification());
+        }
+        return value;
     }
 
     private AttributeDelta normalize(AttributeDelta delta) {
@@ -226,7 +281,7 @@ final class RelationshipHandler implements UpdateOperationHandler {
         if (value instanceof ConnectorObjectReference reference) {
             var identification = reference.getValue();
             var uid = identification != null ? identification.getAttributeByName(Uid.NAME) : null;
-            value = uid != null && uid.getValue().size() == 1 ? uid.getValue().getFirst() : null;
+            value = uid != null && uid.getValue() != null && uid.getValue().size() == 1 ? uid.getValue().getFirst() : null;
         }
         if (!(value instanceof String || value instanceof Byte || value instanceof Short || value instanceof Integer
                 || value instanceof Long || value instanceof BigInteger)) {
