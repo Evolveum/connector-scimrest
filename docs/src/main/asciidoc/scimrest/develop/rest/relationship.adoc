@@ -2,6 +2,52 @@
 
 How to define and implement relationships between object classes in a SCIMREST connector using the relationship builder and virtual reference attributes.
 
+== Mapping resource links to references
+
+For an array of link objects, declare the field that carries the UID and an
+optional display name. This example reads `{"href":"/api/v3/users/42","title":"Alice"}`
+as a reference to User `42` named `Alice`. Writing the reference produces
+`{"href":"/api/v3/users/42"}`. A missing title defaults to the UID.
+
+[source,groovy]
+----
+reference('members') {
+    objectClass 'User'
+    multiValued true
+    json {
+        path attribute('_links').child('members')
+        referenceBy {
+            uidFrom 'href'
+            template '/api/v3/users/{uid}'
+            nameFrom 'title'
+        }
+    }
+}
+----
+
+The template matches the declared link prefix and one final UID path segment.
+SCIMREST decodes that segment on read and percent-encodes the UID on write.
+The UIDs `.` and `..` are reserved path segments. A UID such as `alice.smith` is valid.
+Relative templates also accept absolute links from the configured instance with
+the same scheme, host and port. Writes use the form declared in the template.
+An explicit `{"href":null}` represents an absent link and is omitted from a
+list of references. A missing `href` field or a bare `null` list item is invalid.
+If an object field already contains the full identifier, use `uidFrom 'id'`
+without a template.
+
+The same link mapping in YAML goes inside the reference attribute's `json` block:
+
+[source,yaml]
+----
+path: $._links.members
+referenceBy:
+  uidFrom: href
+  template: /api/v3/users/{uid}
+  nameFrom: title
+----
+
+== Defining relationships
+
 ConnID & schema for Connector allows you to specify some attributes as
 `reference` to other objects.
 
