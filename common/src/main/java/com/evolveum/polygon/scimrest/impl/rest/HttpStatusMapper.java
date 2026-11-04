@@ -27,7 +27,8 @@ import org.identityconnectors.framework.common.exceptions.UnknownUidException;
  *       {@link ConfigurationException} for search (the endpoint path is misconfigured) — unless
  *       the search endpoint declared {@code notFoundIsNoResult}, in which case the retriever
  *       turns the 404 into an empty result set and it never reaches this mapper</li>
- *   <li>409 — {@link AlreadyExistsException} (conflicting-object discovery)</li>
+ *   <li>409 — {@link AlreadyExistsException} for create (conflicting-object discovery);
+ *       {@link ConnectorException} for other operations (a version or state conflict, not a duplicate)</li>
  *   <li>429 — {@link RetryableException} (rate limited, retryable)</li>
  *   <li>5xx — {@link ConnectionFailedException} (server-side problem, transient)</li>
  *   <li>other 4xx — {@link ConnectorException} (retries will not help)</li>
@@ -72,7 +73,10 @@ public final class HttpStatusMapper {
                 String subject = (uid == null || uid.isBlank()) ? "Object" : "Object " + uid;
                 return new UnknownUidException(subject + " not found: " + base + tail);
             case 409:
-                return new AlreadyExistsException("Object already exists: " + base + tail);
+                if (kind == OperationKind.CREATE) {
+                    return new AlreadyExistsException("Object already exists: " + base + tail);
+                }
+                return new ConnectorException("Conflicting modification: " + base + tail);
             case 429:
                 return RetryableException.wrap("Rate limited by the server: " + base + tail, (Throwable) null);
             default:
