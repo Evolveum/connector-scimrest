@@ -7,13 +7,21 @@
 package com.evolveum.polygon.scimrest.crud;
 
 import com.evolveum.polygon.scimrest.support.AbstractCrudConnectorTest;
+import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.InvalidCredentialException;
+import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 /**
  * Verifies the REST {@code delete { }} directive: a DELETE request is sent to the configured endpoint
@@ -32,10 +40,23 @@ public class DeleteOperationTest extends AbstractCrudConnectorTest {
             }
             """;
 
-    @Test
-    public void deleteSendsDeleteRequestToEndpoint() {
+    @DataProvider
+    public Object[][] successfulResponses() {
+        return new Object[][] {
+                {200, ""},
+                {202, ""},
+                {204, ""},
+                {202, "null"},
+                {200, "{\"deleted\":true}"}
+        };
+    }
+
+    @Test(dataProvider = "successfulResponses")
+    public void deleteAcceptsSuccessfulResponse(int status, String body) {
         wireMockServer.stubFor(delete(urlEqualTo(ACCOUNT_BY_ID_PATH))
-                .willReturn(aResponse().withStatus(204)));
+                .willReturn(aResponse().withStatus(status)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(body)));
 
         initConnector(SCRIPT).delete(new ObjectClass("Account"),
                 new Uid("123"),
@@ -44,31 +65,30 @@ public class DeleteOperationTest extends AbstractCrudConnectorTest {
         assertEquals(wireMockServer.findAll(deleteRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH))).size(), 1);
     }
 
-    /**
-     * A 2xx response with an empty body (e.g. OpenProject's {@code 202 Accepted} for a delete)
-     * is a successful delete — the empty body must not be parsed as JSON.
-     */
-    @Test
-    public void deleteSucceedsWhenServerReturns202WithEmptyBody() {
-        wireMockServer.stubFor(delete(urlEqualTo(ACCOUNT_BY_ID_PATH))
-                .willReturn(aResponse().withStatus(202)));
-
-        initConnector(SCRIPT).delete(new ObjectClass("Account"),
-                new Uid("123"),
-                new OperationOptionsBuilder().build());
-
-        assertEquals(wireMockServer.findAll(deleteRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH))).size(), 1);
+    @DataProvider
+    public Object[][] failedResponses() {
+        return new Object[][] {
+                {401, InvalidCredentialException.class},
+                {403, PermissionDeniedException.class},
+                {404, UnknownUidException.class},
+                {500, ConnectionFailedException.class}
+        };
     }
 
-    @Test
-    public void deleteSucceedsWhenServerReturns200WithEmptyBody() {
+    @Test(dataProvider = "failedResponses")
+    public void deletePreservesErrorTypeAndDetail(int status, Class<? extends ConnectorException> exceptionType) {
         wireMockServer.stubFor(delete(urlEqualTo(ACCOUNT_BY_ID_PATH))
-                .willReturn(aResponse().withStatus(200)));
+                .willReturn(aResponse().withStatus(status)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"detail\":\"Cannot delete account\"}")));
 
-        initConnector(SCRIPT).delete(new ObjectClass("Account"),
+        var connector = initConnector(SCRIPT);
+        var exception = expectThrows(exceptionType, () -> connector.delete(new ObjectClass("Account"),
                 new Uid("123"),
-                new OperationOptionsBuilder().build());
+                new OperationOptionsBuilder().build()));
 
-        assertEquals(wireMockServer.findAll(deleteRequestedFor(urlEqualTo(ACCOUNT_BY_ID_PATH))).size(), 1);
+        assertTrue(exception.getMessage().contains("HTTP " + status), exception.getMessage());
+        assertTrue(exception.getMessage().contains(ACCOUNT_BY_ID_PATH), exception.getMessage());
+        assertTrue(exception.getMessage().contains("Cannot delete account"), exception.getMessage());
     }
 }
