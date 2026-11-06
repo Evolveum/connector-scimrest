@@ -14,7 +14,6 @@ import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 
 import com.evolveum.polygon.conndev.groovy.AbstractDeleteOperationBuilder;
-import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestDeleteOperationBuilder;
@@ -24,13 +23,13 @@ import com.evolveum.polygon.scimrest.impl.rest.ErrorDetail;
 import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
 import com.evolveum.polygon.scimrest.schema.RestObjectClassDefinition;
-import tools.jackson.databind.node.ObjectNode;
 import groovy.lang.Closure;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.Uid;
 
 import java.io.IOException;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -140,7 +139,7 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
             queryParameters.forEach(request::queryParameter);
             headers.forEach(request::header);
             try {
-                var response = context.rest().executeRequest(request, new JacksonBodyHandler<>(ObjectNode.class, "endpoint " + path));
+                var response = context.rest().executeRequest(request, HttpResponse.BodyHandlers.ofByteArray());
                 int status = response.statusCode();
                 if (status < 200 || status >= 300) {
                     // A 404 becomes UnknownUidException, so deleting an already-deleted object
@@ -155,8 +154,7 @@ public class RestDeleteOperationBuilderImpl extends AbstractDeleteOperationBuild
             } catch (InterruptedException e) {
                 throw HttpExceptionMapper.map(e, request.getBaseUri() + path);
             } catch (IOException e) {
-                // The JDK wraps body-handler errors (e.g. a JSON parse error) into an IOException —
-                // surface the original ICF type instead of relabeling it a transient I/O failure.
+                // Preserve any original ICF exception wrapped by the HTTP client.
                 var icf = HttpExceptionMapper.unwrapIcf(e);
                 if (icf != null) {
                     throw icf;
