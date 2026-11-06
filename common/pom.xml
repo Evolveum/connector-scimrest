@@ -106,6 +106,18 @@
             <groupId>org.glassfish.jersey.security</groupId>
             <artifactId>oauth2-client</artifactId>
             <version>3.1.10</version>
+            <exclusions>
+                <!-- JSON-B (Yasson) is auto-registered by Jersey and binds GenericScimResource bean-style, dropping
+                     every SCIM field but id and meta. The SCIM SDK's Jackson provider must handle these reads. -->
+                <exclusion>
+                    <groupId>org.glassfish.jersey.media</groupId>
+                    <artifactId>jersey-media-json-binding</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse</groupId>
+                    <artifactId>yasson</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- Apache HttpClient 5 is used as the JAX-RS transport for the SCIM client because the JDK
              HttpURLConnection cannot issue the PATCH method (SCIM PATCH update strategy). -->
