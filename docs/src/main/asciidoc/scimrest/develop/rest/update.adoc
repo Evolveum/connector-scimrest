@@ -118,6 +118,144 @@ A `supportedAttribute(name)` block with `value(...)` further restricts an attrib
 
 NOTE: `supportedAttribute(name) { transition(from, to) }` is accepted by the DSL, but value-transition filtering is *not enforced yet* — a transition-only endpoint does not handle the attribute.
 
+== Memberships stored as separate records
+
+Some REST APIs store each relationship as a separate record with its own identifier.
+Use `relationshipRecords` when updating a membership attribute must create or delete these records.
+The membership attribute must already exist in the schema and be multivalued.
+
+[source,groovy]
+----
+objectClass("User") {
+    update {
+        relationshipRecords("groups") {
+            endpoint "/memberships"
+            sourceField "userId"
+            targetField "groupId"
+            idField "id"
+        }
+    }
+}
+----
+
+The equivalent YAML is:
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    update:
+      relationshipRecords:
+        groups:
+          endpoint: /memberships
+          sourceField: userId
+          targetField: groupId
+          idField: id
+----
+
+For user `U`, assume `GET /memberships` returns:
+
+[source,json]
+----
+[
+  {"id": "M1", "userId": "U", "groupId": "A"},
+  {"id": "M2", "userId": "U", "groupId": "B"},
+  {"id": "M3", "userId": "V", "groupId": "A"}
+]
+----
+
+Replacing `User.groups` with `[B, C]` deletes `/memberships/M1`, retains `M2`, and posts `{"userId":"U","groupId":"C"}` to `/memberships`.
+Record `M3` belongs to another user and remains unchanged.
+The framework reads and validates the complete record collection before issuing writes; it does not rely on the User object's current membership array.
+
+[cols="1,3",options="header"]
+|===
+|Delta |Record operations
+|Add |Create one record for each requested target absent from the current memberships.
+|Remove |Delete every record belonging to this source and a requested target, using each record's identifier.
+|Replace |Retain records for requested targets, delete records for other targets, and create records for missing targets.
+|Clear |An empty replacement deletes every record belonging to this source.
+|===
+
+Repeated input values do not create duplicate memberships.
+Existing duplicate records for a retained target remain unchanged; removing that target deletes all its records for this source.
+The framework checks each record's source locally, including when the endpoint supports a source query filter.
+
+=== Record configuration
+
+`endpoint`::
+  Required collection endpoint. Used for `GET` to read records and `POST` to create them.
+  The optional `{source}` placeholder inserts the source UID as an encoded path segment, for example `/users/{source}/memberships`.
+
+`sourceField`, `targetField`, `idField`::
+  Required basic JSONPath expressions locating the source identifier, target identifier, and membership-record identifier in each record.
+  Simple names such as `userId` and nested paths such as `$.relationship.userId` are supported.
+  The source and target paths must identify structural object fields, not array elements or filtered paths, because they also define the JSON body for creation.
+  The source value is the UID of the object being updated.
+  Targets can be scalar identifiers or ConnId references containing the target UID.
+  Configure native target identifiers; lookup mappings are not supported for these attributes.
+
+`sourceType`, `targetType`::
+  Identifier wire types: `string` (default) or `integer`.
+  Set these to `integer` when the API expects JSON numbers instead of strings.
+  For integer targets, returned membership changes use canonical decimal identifiers (for example, `0004` becomes `4`), preserving ConnId value types and reference metadata.
+
+`deleteEndpoint`::
+  Optional deletion endpoint; defaults to `endpoint` followed by `/{id}`.
+  The `{id}` placeholder is the membership-record identifier, not the source or target identifier.
+  `{source}` is also available for source-specific deletion paths.
+
+`sourceParameter`::
+  Optional query parameter receiving the source UID on each collection request, for example `sourceParameter "userId"`.
+  This can reduce the response size; local source checks still apply.
+
+`recordsPath`::
+  Optional basic JSONPath locating the array in a response envelope, for example `recordsPath "$._embedded.elements"`.
+  By default, the response itself must be an array.
+  A missing collection path or malformed response is an error, not an empty membership list.
+
+=== Pagination and failure behavior
+
+Without pagination (`pageSize` defaults to `0`), the collection endpoint must return every record in one response.
+For an API using record offsets, configure:
+
+[source,groovy]
+----
+relationshipRecords("groups") {
+    endpoint "/memberships"
+    sourceField "userId"
+    targetField "groupId"
+    idField "id"
+    recordsPath "$.items"
+    sourceParameter "userId"
+    pageSize 100
+    offsetParameter "offset"
+    limitParameter "limit"
+    initialOffset 0
+    maxPages 1000
+}
+----
+
+`offsetParameter` defaults to `offset`, `limitParameter` to `limit`, and `initialOffset` to `0`.
+The offset advances by the number of records returned, including records belonging to other sources.
+The framework continues until an empty page, so a server returning fewer records than requested does not cause premature completion.
+`maxPages` defaults to `1000` and bounds the scan, including its terminating empty page.
+Repeated record identifiers across pages or reaching the page limit fail the update before any writes.
+The endpoint must provide a stable offset-based traversal; cursor pagination and page-number pagination are not supported by this configuration.
+
+Relationship handlers claim their configured attributes before ordinary REST endpoints and native SCIM update handlers.
+An update may therefore combine membership changes with ordinary attribute changes without sending the membership array to the User endpoint.
+The configuration applies to update deltas only: it does not create memberships when creating the parent, delete them when deleting the parent, or automatically populate membership attributes during search.
+Configure these operations separately when needed.
+
+Individual REST writes are not a transaction.
+Collection reads must return HTTP `200` with the complete requested array or page.
+Writes must complete synchronously: HTTP `202`, `206`, and `207` fail because the handler cannot poll for asynchronous completion or accept a partial result.
+HTTP `404` while deleting a record found in the snapshot is accepted as already absent.
+An HTTP failure is propagated, and successful earlier writes may remain applied.
+Retrying the update reads the current membership records again.
+Avoiding duplicates against concurrent writers requires the remote API to enforce uniqueness of the source/target pair; a read followed by a create cannot provide that guarantee by itself.
+
 == Complex update script examples
 
 === Multiple endpoints needed for update
