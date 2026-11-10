@@ -46,6 +46,188 @@ referenceBy:
   nameFrom: title
 ----
 
+== Reading separate membership records
+
+Use `search.relationshipRecords` when memberships live in a separate REST collection,
+rather than in the user response. The framework queries that collection for each user's
+ConnId UID, reads every page, and returns the target identifiers as typed references.
+No Group lookup or custom Groovy pagination code is needed.
+
+For example, a membership response may contain:
+
+[source,json]
+----
+{"result":[{"userId":"42","groupId":"engineering"},{"userId":"42","groupId":"support"}]}
+----
+
+Declare the reference in the schema. Its `objectClass` determines the type of every
+returned reference; its name identifies the attribute configured by `relationshipRecords`.
+
+[source,groovy]
+----
+objectClass('User') {
+    attribute('id') { jsonType 'string' }
+    attribute('name') { jsonType 'string' }
+    connIdAttribute('UID', 'id')
+    connIdAttribute('NAME', 'name')
+    reference('groups') {
+        objectClass 'Group'
+        multiValued true
+        creatable false
+        updateable false
+    }
+}
+objectClass('Group') {
+    attribute('id') { jsonType 'string' }
+    connIdAttribute('UID', 'id')
+}
+----
+
+Configure the user search and the membership reader in an operation document:
+
+[source,yaml]
+----
+objectClasses:
+  User:
+    search:
+      endpoints:
+        - path: /users
+          responseFormat: JSON_ARRAY
+      relationshipRecords:
+        groups:
+          endpoint: /memberships
+          sourceParameter: userId
+          objectsPath:
+            type: JSON_POINTER
+            value: /result
+          targetField: groupId
+          sourceField: userId
+          pagingSupport:
+            pageSize: 100
+            parameters:
+              offset: {in: query, name: offset}
+              pageSize: {in: query, name: limit}
+----
+
+For user `42` with 150 memberships, this sends:
+
+[source,text]
+----
+GET /memberships?userId=42&offset=0&limit=100     -> 100 records
+GET /memberships?userId=42&offset=100&limit=100   ->  50 records
+GET /memberships?userId=42&offset=150&limit=100   ->   0 records
+----
+
+All 150 target identifiers become `Group` references in `groups`. The final empty-page
+request establishes that the collection is complete. A short page alone does not stop
+retrieval: servers may cap responses below the requested page size. The offset advances
+by the number of records actually received, including duplicates and foreign records.
+The user's search page size does not limit the number of memberships retrieved.
+
+The equivalent Groovy declaration uses configuration statements only:
+
+[source,groovy]
+----
+objectClass('User') {
+    search {
+        endpoint('/users') { responseFormat JSON_ARRAY }
+        relationshipRecords('groups') {
+            endpoint '/memberships'
+            sourceParameter 'userId'
+            objectsPath '$.result'
+            targetField 'groupId'
+            sourceField 'userId'
+            pageSize 100
+            pagingParameter('offset', 'query', 'offset')
+            pagingParameter('pageSize', 'query', 'limit')
+        }
+    }
+}
+----
+
+=== Source filtering and paths
+
+`sourceParameter` sends the current object's ConnId UID as a query parameter on every
+request. To place it inside a query expression, set `sourceTemplate`, for example:
+
+[source,yaml]
+----
+sourceParameter: sysparm_query
+sourceTemplate: 'user={uid}'
+pagingSupport:
+  parameters:
+    offset: {in: query, name: sysparm_offset}
+    pageSize: {in: query, name: sysparm_limit}
+----
+
+The framework substitutes `{uid}` and URL-encodes the complete query parameter value.
+It does not escape the target API's query language. Use a direct UID parameter where
+available; expression templates require identifiers valid in that API's expression syntax.
+
+Alternatively, use a source-scoped endpoint such as `/users/{source}/memberships`.
+`{source}` is percent-encoded as one URI path segment. At least one of `sourceParameter`
+or `{source}` is required, so the configuration cannot accidentally request an unscoped
+membership collection. Both may be used together.
+
+`objectsPath` selects the response array; omit it when the root is already an array.
+`targetField` selects the target identifier within each record. Optional `sourceField`
+checks ownership independently of the server-side filter and excludes other users' records.
+Paths accept a basic JSONPath string, or a `{type: JSON_POINTER, value: /path}` mapping.
+
+=== Paging configuration
+
+Membership retrieval uses the same declarative `pagingSupport` structure as search
+endpoints. Explicitly map both `offset` and `pageSize` in `parameters`; neither
+mapping is inferred. Each mapping accepts `in: query` or `in: header`
+and an optional `name`, which defaults to the token name. For example, an API using
+headers can map `offset` to `X-Offset` and `pageSize` to `X-Limit`.
+
+This GET reader supports only record offsets and page sizes. The `page` token,
+`in: body`, and Groovy `pagingSupport` closures are rejected. Use `pageSize` and
+`pagingParameter` configuration statements for the Groovy form shown above.
+The offset is `initialOffset` plus the number of records received so far; it does
+not assume that previous pages contained the requested number of records.
+
+=== Options and failure handling
+
+[cols="1,1,3",options="header"]
+|===
+|Option |Default |Meaning
+|`endpoint` |Required |GET collection endpoint, optionally containing `{source}`.
+|`sourceParameter` |None |Query parameter carrying the source UID or template result.
+|`sourceTemplate` |`{uid}` |Query value template containing `{uid}`; requires `sourceParameter`.
+|`objectsPath` |Response root |Path to the membership array.
+|`targetField` |Required |Path to each record's target identifier.
+|`sourceField` |None |Optional path to the source identifier for ownership checking.
+|`pagingSupport.pageSize` |`100` |Positive number of records requested per page; `pageSize` in Groovy.
+|`pagingSupport.parameters.offset` |Required |Record-offset mapping with `in: query` or `in: header` and optional `name`.
+|`pagingSupport.parameters.pageSize` |Required |Requested-size mapping with `in: query` or `in: header` and optional `name`.
+|`initialOffset` |`0` |First record offset; use `1` for APIs with one-based offsets.
+|`maxPages` |`1000` |Maximum collection requests, including the terminating empty page.
+|===
+
+The target attribute must be a multivalued reference with a declared target object class.
+The reader accepts nonblank string and integral numeric identifiers. Duplicate target
+identifiers produce one reference, in first-seen order. An empty collection produces an
+empty reference attribute. Membership record IDs are not required.
+
+The reader adds the attribute only after the complete collection has been read. An HTTP
+error, invalid JSON, missing collection, malformed record or target identifier, or exhausted
+`maxPages` fails resolution instead of returning a truncated list.
+With the framework's `allowPartialAttributeValues` option, a failed resolver may leave the
+attribute absent; it still does not publish a partial membership list.
+
+This configuration uses the existing attribute resolver lifecycle: it fills an attribute
+missing from the primary object response and respects `skipAttributeResolution`. Do not
+add a second resolver or set `emulated: true` on this reference. These are separate
+configuration mechanisms. The `creatable` and `updateable` flags in the example describe
+a read-only reference; this reader does not create or delete membership records.
+
+The endpoint must provide stable offset pagination and return an empty array past the
+last record. Cursor, next-link, and page-number pagination are not supported by this
+reader. Concurrent changes in the remote collection can affect offset pagination; use
+an API with stable ordering or snapshot semantics when consistency across pages matters.
+
 == Defining relationships
 
 ConnID & schema for Connector allows you to specify some attributes as

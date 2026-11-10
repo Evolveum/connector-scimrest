@@ -25,6 +25,17 @@ public interface RestSearchOperationBuilder extends SearchOperationBuilder {
     RestSearchEndpointBuilder endpoint(String path);
 
     /**
+    Resolves an existing multivalued reference attribute from a separate, paginated membership endpoint scoped to the current object's UID.
+    */
+    @Yaml.Map("relationshipRecords")
+    RelationshipReadBuilder relationshipRecords(String attribute);
+
+    default RelationshipReadBuilder relationshipRecords(String attribute,
+            @DelegatesTo(value = RelationshipReadBuilder.class, strategy = Closure.DELEGATE_ONLY) Closure<?> declaration) {
+        return GroovyClosures.callAndReturnDelegate(declaration, relationshipRecords(attribute));
+    }
+
+    /**
      * Marker for the YAML front-end: the {@code endpoints:} block is bound by
      * {@link SearchEndpointsHandler}, which calls {@link #endpoint(String)} per list item. The method
      * body is unused.

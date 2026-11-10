@@ -1,0 +1,7 @@
+application:
+  name: Membership retrieval
+connector:
+  schema:
+    - script: /relationships/User.schema.yaml
+  operation:
+    - script: /relationships/User.search.yaml
