@@ -1,0 +1,20 @@
+objectClasses:
+  User:
+    search:
+      endpoints:
+        - path: /users
+          responseFormat: JSON_ARRAY
+      relationshipRecords:
+        groups:
+          endpoint: /memberships
+          sourceParameter: userId
+          objectsPath:
+            type: JSON_POINTER
+            value: /result
+          targetField: groupId
+          sourceField: userId
+          pagingSupport:
+            pageSize: 100
+            parameters:
+              offset: {in: query, name: offset}
+              pageSize: {in: query, name: limit}

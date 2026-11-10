@@ -1,0 +1,22 @@
+objectClasses:
+  User:
+    attributes:
+      id:
+        jsonType: string
+      name:
+        jsonType: string
+    connId:
+      UID: id
+      NAME: name
+    references:
+      groups:
+        objectClass: Group
+        multiValued: true
+        creatable: false
+        updateable: false
+  Group:
+    attributes:
+      id:
+        jsonType: string
+    connId:
+      UID: id

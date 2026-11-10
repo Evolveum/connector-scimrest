@@ -11,25 +11,18 @@ import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
 import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.PagingSupportBuilder;
 
 /**
- * Binds a search endpoint's {@code pagingSupport:} key. Two shapes are accepted:
- *
- * <ul>
- *   <li>a mapping with a {@code pageSize} (the requested page size) and/or a {@code parameters}
- *       mapping of paging tokens ({@code pageSize}, {@code page}, {@code offset}) to
- *       {@code { in, name }} entries — a declarative paging handler; {@code name} defaults to
- *       the token;</li>
- *   <li>a string / block scalar — the Groovy form (a closure mapping the paging info onto the
- *       request).</li>
- * </ul>
- */
+Binds the shared pagingSupport mapping of pageSize and parameter tokens to their request locations and names.
+Search endpoints also accept a Groovy block for custom paging.
+*/
 public class PagingSupportHandler implements CustomYamlHandler {
 
     @Override
     public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
-        if (!(target instanceof RestSearchEndpointBuilder endpoint)) {
-            throw new IllegalArgumentException("The 'pagingSupport' key requires a search endpoint, got: "
+        if (!(target instanceof PagingSupportBuilder<?> endpoint)) {
+            throw new IllegalArgumentException("The 'pagingSupport' key requires a collection reader, got: "
                     + target.getClass().getName());
         }
         if (value == null || value.isNull()) {
@@ -93,7 +86,10 @@ public class PagingSupportHandler implements CustomYamlHandler {
             return;
         }
         if (value.isValue()) {
-            endpoint.pagingSupport(binder.compileClosure(value.text()));
+            if (!(target instanceof RestSearchEndpointBuilder search)) {
+                throw new IllegalArgumentException("This collection reader requires a declarative pagingSupport mapping");
+            }
+            search.pagingSupport(binder.compileClosure(value.text()));
             return;
         }
         throw new IllegalArgumentException("The 'pagingSupport' key requires a mapping (pageSize / parameters)"
