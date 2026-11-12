@@ -11,7 +11,10 @@ import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * A {@link PagingHandler} built from declarative paging parameters instead of a Groovy closure:
@@ -70,5 +73,43 @@ public record DeclarativePagingHandler(List<EndpointBasedSearchBuilder.PagingPar
                                 + "' is mapped onto the request body, which requires the endpoint httpOperation to be POST");
             }
         }
+    }
+
+    /**
+    Validates offset-based GET paging, parameter names, and collisions with the optional source query parameter.
+    Both offset and pageSize tokens are required unless paging is optional and no mappings are declared.
+    Throws ConfigurationException before requests are sent when the declaration is invalid.
+    */
+    public static void validateOffset(List<EndpointBasedSearchBuilder.PagingParameter> parameters, String path, String sourceParameter, boolean required) {
+        validate(parameters, HttpMethod.GET, path);
+        var tokens = new HashSet<String>();
+        var destinations = new HashSet<String>();
+        if (sourceParameter != null) {
+            validateName(sourceParameter, "sourceParameter", path);
+            destinations.add("query:" + sourceParameter);
+        }
+        for (var parameter : parameters) {
+            validateName(parameter.name(), "paging parameter", path);
+            if (!tokens.add(parameter.token())) {
+                throw invalidOffset(path, "duplicate paging token '" + parameter.token() + "'");
+            }
+            var name = "header".equals(parameter.location()) ? parameter.name().toLowerCase(Locale.ROOT) : parameter.name();
+            if (!destinations.add(parameter.location() + ":" + name)) {
+                throw invalidOffset(path, "paging and source parameter destinations must be distinct");
+            }
+        }
+        if ((required || !parameters.isEmpty()) && !tokens.equals(Set.of("offset", "pageSize"))) {
+            throw invalidOffset(path, "requires offset and pageSize paging tokens");
+        }
+    }
+
+    private static void validateName(String parameter, String name, String path) {
+        if (parameter == null || !parameter.matches("[A-Za-z_$][A-Za-z0-9_.$~-]*")) {
+            throw invalidOffset(path, name + " must be a nonempty request parameter name");
+        }
+    }
+
+    private static ConfigurationException invalidOffset(String path, String message) {
+        return new ConfigurationException("Offset paging for endpoint '" + path + "' " + message);
     }
 }

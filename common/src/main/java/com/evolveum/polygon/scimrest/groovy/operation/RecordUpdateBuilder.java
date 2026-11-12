@@ -11,7 +11,6 @@ import com.evolveum.polygon.conndev.api.BasicJsonPathFormat;
 import com.evolveum.polygon.conndev.api.JavaPathFormat;
 import com.evolveum.polygon.conndev.api.ParsingException;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
-import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RelationshipRecordsBuilder;
 import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.scimrest.groovy.search.DeclarativePagingHandler;
@@ -24,9 +23,7 @@ import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
@@ -248,35 +245,10 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
         if (pageSize < 0 || initialOffset < 0 || maxPages <= 0) {
             throw invalid("pageSize and initialOffset must be nonnegative; maxPages must be positive");
         }
-        DeclarativePagingHandler.validate(parameters, HttpMethod.GET, endpoint);
-        var tokens = new HashSet<String>();
-        var destinations = new HashSet<String>();
-        if (sourceParameter != null) {
-            validateParameter(sourceParameter, "sourceParameter");
-            destinations.add("query:" + sourceParameter);
-        }
-        for (var parameter : parameters) {
-            validateParameter(parameter.name(), "paging parameter");
-            if (!tokens.add(parameter.token())) {
-                throw invalid("duplicate paging token '" + parameter.token() + "'");
-            }
-            var name = "header".equals(parameter.location()) ? parameter.name().toLowerCase(Locale.ROOT) : parameter.name();
-            if (!destinations.add(parameter.location() + ":" + name)) {
-                throw invalid("paging and source parameter destinations must be distinct");
-            }
-        }
         if (pageSize == 0 && !parameters.isEmpty()) {
             throw invalid("paging parameters require a positive pageSize");
         }
-        if (pageSize > 0 && !tokens.equals(Set.of("offset", "pageSize"))) {
-            throw invalid("requires offset and pageSize paging tokens");
-        }
-    }
-
-    private void validateParameter(String parameter, String name) {
-        if (parameter == null || !parameter.matches("[A-Za-z_$][A-Za-z0-9_.$~-]*")) {
-            throw invalid(name + " must be a nonempty request parameter name");
-        }
+        DeclarativePagingHandler.validateOffset(parameters, endpoint, sourceParameter, pageSize > 0);
     }
 
     private ConfigurationException invalid(String message) {
