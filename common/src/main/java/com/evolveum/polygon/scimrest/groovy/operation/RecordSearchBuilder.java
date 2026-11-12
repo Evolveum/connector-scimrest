@@ -11,6 +11,7 @@ import com.evolveum.polygon.conndev.api.BasicJsonPathFormat;
 import com.evolveum.polygon.conndev.api.JavaPathFormat;
 import com.evolveum.polygon.conndev.api.ParsingException;
 import com.evolveum.polygon.conndev.spi.AttributeResolver;
+import com.evolveum.polygon.scimrest.config.RelationshipContext;
 import com.evolveum.polygon.scimrest.groovy.api.RelationshipReadBuilder;
 import com.evolveum.polygon.scimrest.groovy.search.DeclarativePagingHandler;
 import com.evolveum.polygon.scimrest.groovy.search.EndpointBasedSearchBuilder.PagingParameter;
@@ -103,6 +104,10 @@ final class RecordSearchBuilder implements RelationshipReadBuilder {
         return this;
     }
 
+    RelationshipContext configuration() {
+        return new RelationshipContext(attributeName(), endpoint);
+    }
+
     String attributeName() {
         return attribute.connId().getName();
     }
@@ -185,7 +190,7 @@ final class RecordSearchBuilder implements RelationshipReadBuilder {
         try {
             return declaration.actual();
         } catch (ParsingException exception) {
-            throw new ConfigurationException("Invalid " + name + " for relationship attribute '" + attributeName() + "': " + exception.getMessage(), exception);
+            throw configuration().invalid("Invalid " + name + ": " + exception.getMessage(), exception);
         }
     }
 
@@ -198,6 +203,6 @@ final class RecordSearchBuilder implements RelationshipReadBuilder {
     }
 
     private ConfigurationException invalid(String message) {
-        return new ConfigurationException("Relationship records for attribute '" + attributeName() + "' " + message);
+        return configuration().invalid(message);
     }
 }

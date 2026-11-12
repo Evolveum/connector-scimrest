@@ -20,14 +20,14 @@ import com.evolveum.polygon.scimrest.yaml.binding.SearchEndpointsHandler;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
-public interface RestSearchOperationBuilder extends SearchOperationBuilder {
+public interface RestSearchOperationBuilder extends SearchOperationBuilder, RelationshipOperationBuilder<RelationshipReadBuilder> {
 
     RestSearchEndpointBuilder endpoint(String path);
 
     /**
     Resolves an existing multivalued reference attribute from a separate, paginated membership endpoint scoped to the current object's UID.
     */
-    @Yaml.Map("relationshipRecords")
+    @Override
     RelationshipReadBuilder relationshipRecords(String attribute);
 
     default RelationshipReadBuilder relationshipRecords(String attribute,
