@@ -175,6 +175,7 @@ public class RecordConfigTest extends AbstractCrudConnectorTest {
 
         // Then: Reject competing mappings before remote requests
         assertTrue(messages(failure).contains("duplicate paging token"), messages(failure));
+        assertTrue(messages(failure).contains("attribute 'groups' at endpoint '/memberships'"), messages(failure));
         assertTrue(wireMockServer.getAllServeEvents().isEmpty());
     }
 

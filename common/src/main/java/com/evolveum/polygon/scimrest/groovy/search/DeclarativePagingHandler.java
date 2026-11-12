@@ -78,38 +78,44 @@ public record DeclarativePagingHandler(List<EndpointBasedSearchBuilder.PagingPar
     /**
     Validates offset-based GET paging, parameter names, and collisions with the optional source query parameter.
     Both offset and pageSize tokens are required unless paging is optional and no mappings are declared.
-    Throws ConfigurationException before requests are sent when the declaration is invalid.
+    Reports invalid declarations with the attribute name and endpoint, preserving the original validation failure as the cause.
     */
-    public static void validateOffset(List<EndpointBasedSearchBuilder.PagingParameter> parameters, String path, String sourceParameter, boolean required) {
+    public static void validateOffset(List<EndpointBasedSearchBuilder.PagingParameter> parameters, String path, String sourceParameter, boolean required,
+            String attribute) {
+        try {
+            validateMappings(parameters, path, sourceParameter, required);
+        } catch (ConfigurationException exception) {
+            throw new ConfigurationException("Invalid offset paging for attribute '" + attribute + "' at endpoint '" + path + "': " + exception.getMessage(), exception);
+        }
+    }
+
+    private static void validateMappings(List<EndpointBasedSearchBuilder.PagingParameter> parameters, String path, String sourceParameter, boolean required) {
         validate(parameters, HttpMethod.GET, path);
         var tokens = new HashSet<String>();
         var destinations = new HashSet<String>();
         if (sourceParameter != null) {
-            validateName(sourceParameter, "sourceParameter", path);
+            validateName(sourceParameter, "sourceParameter");
             destinations.add("query:" + sourceParameter);
         }
         for (var parameter : parameters) {
-            validateName(parameter.name(), "paging parameter", path);
+            validateName(parameter.name(), "paging parameter");
             if (!tokens.add(parameter.token())) {
-                throw invalidOffset(path, "duplicate paging token '" + parameter.token() + "'");
+                throw new ConfigurationException("duplicate paging token '" + parameter.token() + "'");
             }
             var name = "header".equals(parameter.location()) ? parameter.name().toLowerCase(Locale.ROOT) : parameter.name();
             if (!destinations.add(parameter.location() + ":" + name)) {
-                throw invalidOffset(path, "paging and source parameter destinations must be distinct");
+                throw new ConfigurationException("paging and source parameter destinations must be distinct");
             }
         }
         if ((required || !parameters.isEmpty()) && !tokens.equals(Set.of("offset", "pageSize"))) {
-            throw invalidOffset(path, "requires offset and pageSize paging tokens");
+            throw new ConfigurationException("requires offset and pageSize paging tokens");
         }
     }
 
-    private static void validateName(String parameter, String name, String path) {
+    private static void validateName(String parameter, String name) {
         if (parameter == null || !parameter.matches("[A-Za-z_$][A-Za-z0-9_.$~-]*")) {
-            throw invalidOffset(path, name + " must be a nonempty request parameter name");
+            throw new ConfigurationException(name + " must be a nonempty request parameter name");
         }
     }
 
-    private static ConfigurationException invalidOffset(String path, String message) {
-        return new ConfigurationException("Offset paging for endpoint '" + path + "' " + message);
-    }
 }
