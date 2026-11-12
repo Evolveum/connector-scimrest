@@ -168,7 +168,7 @@ final class RecordSearchBuilder implements RelationshipReadBuilder {
         if (pageSize <= 0 || initialOffset < 0 || maxPages <= 0) {
             throw invalid("pageSize and maxPages must be positive; initialOffset must be nonnegative");
         }
-        DeclarativePagingHandler.validateOffset(parameters, endpoint, sourceParameter, true);
+        DeclarativePagingHandler.validateOffset(parameters, endpoint, sourceParameter, true, attributeName());
         if (sourceTemplate == null || !sourceTemplate.contains("{uid}")) {
             throw invalid("sourceTemplate must contain {uid}");
         }
