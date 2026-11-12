@@ -7,6 +7,9 @@
 package com.evolveum.polygon.scimrest.groovy.operation;
 
 import com.evolveum.polygon.scimrest.groovy.search.EndpointBasedSearchBuilder;
+import com.evolveum.polygon.conndev.spi.AttributeResolver;
+import com.evolveum.polygon.scimrest.groovy.api.RelationshipReadBuilder;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 
 import com.evolveum.polygon.conndev.concepts.GroovyClosures;
@@ -28,14 +31,56 @@ import groovy.lang.DelegatesTo;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
 public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuilder<RestObjectClassDefinition> implements RestSearchOperationBuilder {
 
     Map<String, EndpointBasedSearchBuilder<?,?>> endpointBuilder = new HashMap<>();
     private ScimSearchHandler.Builder scim;
+    private final Map<String, RecordSearchBuilder> relationships = new LinkedHashMap<>();
 
     public RestSearchOperationBuilderImpl(BaseOperationSupportBuilder parent) {
         super(parent);
+    }
+
+    @Override
+    public RelationshipReadBuilder relationshipRecords(String attribute) {
+        var definition = parent.getObjectClass().requireAttribute(attribute, "when defining relationship record retrieval");
+        var name = definition.connId().getName();
+        if (relationships.containsKey(name)) {
+            throw new ConfigurationException("Multiple relationship record declarations resolve to attribute '" + name + "'");
+        }
+        var builder = new RecordSearchBuilder(definition);
+        relationships.put(name, builder);
+        return builder;
+    }
+
+    @Override
+    protected void applyAdditionalAttributeResolvers(Set<AttributeResolver> perObject, Set<AttributeResolver> batched) {
+        for (var relationship : relationships.values()) {
+            for (var resolver : resolvers) {
+                var configured = resolver.build();
+                if (configured != null && configured.getSupportedAttributes().stream()
+                        .anyMatch(attribute -> relationship.attributeName().equals(attribute.connId().getName()))) {
+                    throw new ConfigurationException("Relationship attribute '" + relationship.attributeName() + "' already has an attribute resolver");
+                }
+            }
+            perObject.add(relationship.build());
+        }
+    }
+
+    @Override
+    public ObjectSearchOperation build() {
+        if (!relationships.isEmpty() && isEmpty()) {
+            throw new ConfigurationException("Relationship record retrieval requires an object search endpoint");
+        }
+        var operation = super.build();
+        if (relationships.isEmpty()) {
+            return operation;
+        }
+        return (context, filter, handler, options) -> operation.executeQuery(context, filter, handler,
+                options != null ? options : new OperationOptionsBuilder().build());
     }
 
     @Override
