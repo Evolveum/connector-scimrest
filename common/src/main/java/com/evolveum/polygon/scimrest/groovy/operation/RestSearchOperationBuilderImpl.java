@@ -9,6 +9,8 @@ package com.evolveum.polygon.scimrest.groovy.operation;
 import com.evolveum.polygon.scimrest.groovy.search.EndpointBasedSearchBuilder;
 import com.evolveum.polygon.conndev.spi.AttributeResolver;
 import com.evolveum.polygon.scimrest.groovy.api.RelationshipReadBuilder;
+import com.evolveum.polygon.scimrest.config.RelationshipContext;
+import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import com.evolveum.polygon.scimrest.groovy.schema.BaseOperationSupportBuilder;
 
@@ -46,10 +48,15 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
 
     @Override
     public RelationshipReadBuilder relationshipRecords(String attribute) {
-        var definition = parent.getObjectClass().requireAttribute(attribute, "when defining relationship record retrieval");
+        RestAttributeDefinition definition;
+        try {
+            definition = parent.getObjectClass().requireAttribute(attribute, "when defining relationship record retrieval");
+        } catch (ConfigurationException exception) {
+            throw new RelationshipContext(attribute, null).invalid(exception.getMessage(), exception);
+        }
         var name = definition.connId().getName();
         if (relationships.containsKey(name)) {
-            throw new ConfigurationException("Multiple relationship record declarations resolve to attribute '" + name + "'");
+            throw relationships.get(name).configuration().invalid("Multiple relationship record declarations resolve to attribute '" + name + "'");
         }
         var builder = new RecordSearchBuilder(definition);
         relationships.put(name, builder);
@@ -63,7 +70,7 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
                 var configured = resolver.build();
                 if (configured != null && configured.getSupportedAttributes().stream()
                         .anyMatch(attribute -> relationship.attributeName().equals(attribute.connId().getName()))) {
-                    throw new ConfigurationException("Relationship attribute '" + relationship.attributeName() + "' already has an attribute resolver");
+                    throw relationship.configuration().invalid("Relationship attribute '" + relationship.attributeName() + "' already has an attribute resolver");
                 }
             }
             perObject.add(relationship.build());
@@ -73,7 +80,7 @@ public class RestSearchOperationBuilderImpl extends AbstractSearchOperationBuild
     @Override
     public ObjectSearchOperation build() {
         if (!relationships.isEmpty() && isEmpty()) {
-            throw new ConfigurationException("Relationship record retrieval requires an object search endpoint");
+            throw relationships.values().iterator().next().configuration().invalid("Relationship record retrieval requires an object search endpoint");
         }
         var operation = super.build();
         if (relationships.isEmpty()) {
