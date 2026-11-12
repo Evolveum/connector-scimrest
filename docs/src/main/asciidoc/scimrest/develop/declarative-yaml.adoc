@@ -307,10 +307,12 @@ objectClasses:
           targetField: groupId
           idField: id
           sourceParameter: userId
-          recordsPath: $.items
-          pageSize: 100
-          offsetParameter: offset
-          limitParameter: limit
+          objectsPath: $.items
+          pagingSupport:
+            pageSize: 100
+            parameters:
+              offset: { in: query, name: offset }
+              pageSize: { in: query, name: limit }
           initialOffset: 0
           maxPages: 1000
 ----
@@ -326,10 +328,14 @@ Optional `sourceType` and `targetType` select `string` (default) or `integer` JS
 
 `sourceParameter` optionally filters collection reads using a query parameter.
 Every returned record is also checked locally to protect other sources' memberships.
-`recordsPath` selects an array inside a JSON response envelope; omit it when the response is an array.
+`objectsPath` selects an array inside a JSON response envelope; omit it when the response is an array.
 
-`pageSize` defaults to `0`, requiring a complete collection in one response.
-A positive size enables record-offset pagination with `offsetParameter` (default `offset`), `limitParameter` (default `limit`), and `initialOffset` (default `0`).
+Without `pagingSupport`, the endpoint must return the complete collection in one response.
+Enable record-offset pagination with a positive `pagingSupport.pageSize` and both `offset` and `pageSize` entries in `pagingSupport.parameters`.
+This is the same declarative paging format as search endpoints; each entry maps a token to a `query` or `header` parameter.
+Parameter destinations must be distinct and must not overwrite `sourceParameter`.
+Body mappings, page-number tokens, and scripted paging are not supported here.
+`initialOffset` defaults to `0`.
 Offsets advance by the count of returned records.
 Reads continue until an empty page, with at most `maxPages` requests (default `1000`, including the empty page).
 Repeated record identifiers or exhausting the page limit fail before writes.

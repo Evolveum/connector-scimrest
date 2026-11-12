@@ -13,7 +13,9 @@ import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.JacksonBodyHandler;
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
+import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
 import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
+import com.evolveum.polygon.scimrest.groovy.search.DeclarativePagingHandler;
 import com.evolveum.polygon.scimrest.impl.rest.ErrorDetail;
 import com.evolveum.polygon.scimrest.impl.rest.HttpExceptionMapper;
 import com.evolveum.polygon.scimrest.impl.rest.HttpStatusMapper;
@@ -59,20 +61,19 @@ final class RelationshipHandler implements UpdateOperationHandler {
     private final AttributePath sourceField;
     private final AttributePath targetField;
     private final AttributePath idField;
-    private final AttributePath recordsPath;
+    private final AttributePath objectsPath;
     private final String sourceParameter;
     private final String sourceType;
     private final String targetType;
     private final int pageSize;
-    private final String offsetParameter;
-    private final String limitParameter;
+    private final DeclarativePagingHandler pagingHandler;
     private final int initialOffset;
     private final int maxPages;
     private final Object[] locks = new Object[64];
 
     RelationshipHandler(RestConnectorContext context, String attribute, String endpoint, String deleteEndpoint, AttributePath sourceField,
-            AttributePath targetField, AttributePath idField, AttributePath recordsPath, String sourceParameter, String sourceType, String targetType,
-            int pageSize, String offsetParameter, String limitParameter, int initialOffset, int maxPages) {
+            AttributePath targetField, AttributePath idField, AttributePath objectsPath, String sourceParameter, String sourceType, String targetType,
+            int pageSize, DeclarativePagingHandler pagingHandler, int initialOffset, int maxPages) {
         this.context = context;
         this.attribute = attribute;
         this.endpoint = endpoint;
@@ -80,13 +81,12 @@ final class RelationshipHandler implements UpdateOperationHandler {
         this.sourceField = sourceField;
         this.targetField = targetField;
         this.idField = idField;
-        this.recordsPath = recordsPath;
+        this.objectsPath = objectsPath;
         this.sourceParameter = sourceParameter;
         this.sourceType = sourceType;
         this.targetType = targetType;
         this.pageSize = pageSize;
-        this.offsetParameter = offsetParameter;
-        this.limitParameter = limitParameter;
+        this.pagingHandler = pagingHandler;
         this.initialOffset = initialOffset;
         this.maxPages = maxPages;
         for (int index = 0; index < locks.length; index++) {
@@ -231,16 +231,16 @@ final class RelationshipHandler implements UpdateOperationHandler {
                 request.queryParameter(sourceParameter, source);
             }
             if (pageSize > 0) {
-                request.queryParameter(offsetParameter, offset).queryParameter(limitParameter, pageSize);
+                pagingHandler.handlePaging(request, new PagingInfo(pageSize, page + 1), offset);
             }
             var response = execute(request, new JacksonBodyHandler<>(JsonNode.class, "relationship " + attribute + ", page " + (page + 1)));
             checkStatus(response, HttpStatusMapper.OperationKind.SEARCH);
             if (response.statusCode() != 200 || !(response.body() instanceof JsonNode body)) {
                 throw invalidSnapshot("expected a completed HTTP 200 collection response");
             }
-            var collection = recordsPath == null ? body : recordsPath.resolve(body, JsonAttributeMapping.NULLABLE_PATH_RESOLVER);
+            var collection = objectsPath == null ? body : objectsPath.resolve(body, JsonAttributeMapping.NULLABLE_PATH_RESOLVER);
             if (collection == null || !collection.isArray()) {
-                throw invalidSnapshot("recordsPath must resolve to an array");
+                throw invalidSnapshot("objectsPath must resolve to an array");
             }
             for (var record : collection) {
                 if (!record.isObject()) {
