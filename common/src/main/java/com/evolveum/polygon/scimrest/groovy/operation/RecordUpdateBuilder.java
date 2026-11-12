@@ -11,6 +11,7 @@ import com.evolveum.polygon.conndev.api.BasicJsonPathFormat;
 import com.evolveum.polygon.conndev.api.JavaPathFormat;
 import com.evolveum.polygon.conndev.api.ParsingException;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
+import com.evolveum.polygon.scimrest.config.RelationshipContext;
 import com.evolveum.polygon.scimrest.groovy.api.RelationshipRecordsBuilder;
 import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
 import com.evolveum.polygon.scimrest.groovy.search.DeclarativePagingHandler;
@@ -127,6 +128,10 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
         return this;
     }
 
+    RelationshipContext configuration() {
+        return new RelationshipContext(attributeName(), endpoint);
+    }
+
     String attributeName() {
         return attribute.connId().getName();
     }
@@ -182,8 +187,7 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
         try {
             return declaration.actual();
         } catch (ParsingException exception) {
-            throw new ConfigurationException("Invalid " + name + " for relationship attribute '" + attributeName() + "': "
-                    + exception.getMessage() + " (" + declaration.value().location() + ")", exception);
+            throw configuration().invalid("Invalid " + name + ": " + exception.getMessage() + " (" + declaration.value().location() + ")", exception);
         }
     }
 
@@ -203,35 +207,36 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
     }
 
     private void validateEndpoint(String path, boolean deletion) {
+        var endpointContext = new RelationshipContext(attributeName(), path);
         if (path == null || path.isBlank()) {
-            throw invalid("requires " + (deletion ? "deleteEndpoint" : "endpoint"));
+            throw endpointContext.invalid("requires " + (deletion ? "deleteEndpoint" : "endpoint"));
         }
         String decoded;
         try {
             decoded = URLDecoder.decode(path.replace("+", "%2B"), StandardCharsets.UTF_8);
         } catch (IllegalArgumentException exception) {
-            throw invalid("contains an invalid endpoint escape");
+            throw endpointContext.invalid("contains an invalid endpoint escape");
         }
         if (decoded.startsWith("//") || decoded.contains(":") || decoded.contains("?") || decoded.contains("#") || decoded.contains("\\")) {
-            throw invalid("endpoint must be a relative API path without a query or fragment");
+            throw endpointContext.invalid("endpoint must be a relative API path without a query or fragment");
         }
         if (decoded.replace("/", "").isBlank()) {
-            throw invalid("endpoint must identify a collection");
+            throw endpointContext.invalid("endpoint must identify a collection");
         }
         for (String segment : decoded.split("/")) {
             if (segment.equals(".") || segment.equals("..")) {
-                throw invalid("endpoint must not contain traversal segments");
+                throw endpointContext.invalid("endpoint must not contain traversal segments");
             }
         }
         String literal = path.replace("{source}", "");
         if (deletion) {
             if (!path.contains("{id}")) {
-                throw invalid("deleteEndpoint must contain {id}");
+                throw endpointContext.invalid("deleteEndpoint must contain {id}");
             }
             literal = literal.replace("{id}", "");
         }
         if (literal.contains("{") || literal.contains("}")) {
-            throw invalid("endpoint contains an unsupported placeholder");
+            throw endpointContext.invalid("endpoint contains an unsupported placeholder");
         }
     }
 
@@ -252,6 +257,6 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
     }
 
     private ConfigurationException invalid(String message) {
-        return new ConfigurationException("Relationship records for attribute '" + attributeName() + "' " + message);
+        return configuration().invalid(message);
     }
 }

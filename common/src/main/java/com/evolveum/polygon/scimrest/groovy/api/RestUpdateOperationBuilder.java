@@ -18,14 +18,15 @@ import org.identityconnectors.framework.common.objects.AttributeDelta;
 
 import java.util.Set;
 
-public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<RestUpdateOperationBuilder.Endpoint>, UpdateOperationBuilder {
+public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<RestUpdateOperationBuilder.Endpoint>,
+        UpdateOperationBuilder, RelationshipOperationBuilder<RelationshipRecordsBuilder> {
 
     ScimUpdateBuilder scim();
 
     /**
     Routes one membership attribute to CRUD of separate relationship records before regular update endpoints.
     */
-    @Yaml.Map("relationshipRecords")
+    @Override
     RelationshipRecordsBuilder relationshipRecords(String attribute);
 
     default RelationshipRecordsBuilder relationshipRecords(String attribute,
