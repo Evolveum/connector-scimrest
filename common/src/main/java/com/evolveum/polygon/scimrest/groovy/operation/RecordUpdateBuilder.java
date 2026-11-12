@@ -11,8 +11,11 @@ import com.evolveum.polygon.conndev.api.BasicJsonPathFormat;
 import com.evolveum.polygon.conndev.api.JavaPathFormat;
 import com.evolveum.polygon.conndev.api.ParsingException;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
+import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RelationshipRecordsBuilder;
 import com.evolveum.polygon.scimrest.groovy.connector.RestConnectorContext;
+import com.evolveum.polygon.scimrest.groovy.search.DeclarativePagingHandler;
+import com.evolveum.polygon.scimrest.groovy.search.EndpointBasedSearchBuilder.PagingParameter;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
@@ -20,6 +23,10 @@ import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
 import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
@@ -31,13 +38,12 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
     private AttributePathDeclaration<?, ?> sourceField;
     private AttributePathDeclaration<?, ?> targetField;
     private AttributePathDeclaration<?, ?> idField;
-    private AttributePathDeclaration<?, ?> recordsPath;
+    private AttributePathDeclaration<?, ?> objectsPath;
     private String sourceParameter;
     private String sourceType = "string";
     private String targetType = "string";
     private int pageSize;
-    private String offsetParameter = "offset";
-    private String limitParameter = "limit";
+    private final List<PagingParameter> parameters = new ArrayList<>();
     private int initialOffset;
     private int maxPages = 1000;
 
@@ -77,8 +83,8 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
     }
 
     @Override
-    public RelationshipRecordsBuilder recordsPath(AttributePathDeclaration<?, ?> path) {
-        recordsPath = normalizePath(path);
+    public RelationshipRecordsBuilder objectsPath(AttributePathDeclaration<?, ?> path) {
+        objectsPath = normalizePath(path);
         return this;
     }
 
@@ -107,14 +113,8 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
     }
 
     @Override
-    public RelationshipRecordsBuilder offsetParameter(String name) {
-        offsetParameter = name;
-        return this;
-    }
-
-    @Override
-    public RelationshipRecordsBuilder limitParameter(String name) {
-        limitParameter = name;
+    public RelationshipRecordsBuilder pagingParameter(String token, String location, String name) {
+        parameters.add(new PagingParameter(token, location, name));
         return this;
     }
 
@@ -149,8 +149,8 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
         validateType(targetType, "targetType");
         validatePaging();
         return new RelationshipHandler(context, attributeName(), endpoint, deletionPath, sourcePath, targetPath, identifierPath,
-                recordsPath != null ? resolvePath(recordsPath, "recordsPath") : null, sourceParameter, sourceType, targetType,
-                pageSize, offsetParameter, limitParameter, initialOffset, maxPages);
+                objectsPath != null ? resolvePath(objectsPath, "objectsPath") : null, sourceParameter, sourceType, targetType,
+                pageSize, new DeclarativePagingHandler(List.copyOf(parameters)), initialOffset, maxPages);
     }
 
     private void validateAttribute() {
@@ -248,19 +248,34 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
         if (pageSize < 0 || initialOffset < 0 || maxPages <= 0) {
             throw invalid("pageSize and initialOffset must be nonnegative; maxPages must be positive");
         }
-        validateParameter(offsetParameter, "offsetParameter");
-        validateParameter(limitParameter, "limitParameter");
+        DeclarativePagingHandler.validate(parameters, HttpMethod.GET, endpoint);
+        var tokens = new HashSet<String>();
+        var destinations = new HashSet<String>();
         if (sourceParameter != null) {
             validateParameter(sourceParameter, "sourceParameter");
+            destinations.add("query:" + sourceParameter);
         }
-        if (pageSize > 0 && (offsetParameter.equals(limitParameter) || offsetParameter.equals(sourceParameter) || limitParameter.equals(sourceParameter))) {
-            throw invalid("paging and source query parameter names must be distinct");
+        for (var parameter : parameters) {
+            validateParameter(parameter.name(), "paging parameter");
+            if (!tokens.add(parameter.token())) {
+                throw invalid("duplicate paging token '" + parameter.token() + "'");
+            }
+            var name = "header".equals(parameter.location()) ? parameter.name().toLowerCase(Locale.ROOT) : parameter.name();
+            if (!destinations.add(parameter.location() + ":" + name)) {
+                throw invalid("paging and source parameter destinations must be distinct");
+            }
+        }
+        if (pageSize == 0 && !parameters.isEmpty()) {
+            throw invalid("paging parameters require a positive pageSize");
+        }
+        if (pageSize > 0 && !tokens.equals(Set.of("offset", "pageSize"))) {
+            throw invalid("requires offset and pageSize paging tokens");
         }
     }
 
     private void validateParameter(String parameter, String name) {
-        if (parameter == null || !parameter.matches("[A-Za-z_][A-Za-z0-9_.-]*")) {
-            throw invalid(name + " must be a nonempty query parameter name");
+        if (parameter == null || !parameter.matches("[A-Za-z_$][A-Za-z0-9_.$~-]*")) {
+            throw invalid(name + " must be a nonempty request parameter name");
         }
     }
 

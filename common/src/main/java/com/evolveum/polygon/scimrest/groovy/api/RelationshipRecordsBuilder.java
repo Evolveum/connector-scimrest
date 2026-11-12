@@ -15,7 +15,7 @@ is the source identifier; attribute values or reference UIDs are target identifi
 collection, POST creates records, and DELETE addresses individual record IDs. These operations are
 not transactional. Without paging, GET must return the complete collection.
 */
-public interface RelationshipRecordsBuilder {
+public interface RelationshipRecordsBuilder extends PagingSupportBuilder<RelationshipRecordsBuilder> {
 
     /**
     Sets the GET/POST collection path. The optional {@code {source}} placeholder contains the encoded source UID.
@@ -65,10 +65,10 @@ public interface RelationshipRecordsBuilder {
     Selects the record array in a wrapped GET response. Omit when the response root is an array.
     */
     @Yaml.Path
-    RelationshipRecordsBuilder recordsPath(AttributePathDeclaration<?, ?> path);
+    RelationshipRecordsBuilder objectsPath(AttributePathDeclaration<?, ?> path);
 
-    default RelationshipRecordsBuilder recordsPath(String path) {
-        return recordsPath(AttributePathDeclaration.of(BasicJsonPathFormat.INSTANCE, path));
+    default RelationshipRecordsBuilder objectsPath(String path) {
+        return objectsPath(AttributePathDeclaration.of(BasicJsonPathFormat.INSTANCE, path));
     }
 
     /**
@@ -91,23 +91,17 @@ public interface RelationshipRecordsBuilder {
     RelationshipRecordsBuilder targetType(String type);
 
     /**
-    Enables offset paging with a positive requested page size. Zero disables paging. Reading continues
-    until an empty page, including after short pages; every page is validated before any mutation.
+    Enables offset paging with a positive requested page size and explicit offset/pageSize parameter mappings.
+    Defaults to zero without paging. Reading continues until an empty page, including after short pages; every page is validated before any mutation.
     */
-    @Yaml.Key
+    @Override
     RelationshipRecordsBuilder pageSize(int size);
 
     /**
-    Sets the offset query parameter name; defaults to {@code offset}.
+    Declares offset and pageSize parameters using the shared paging syntax. Both are required when paging is enabled; GET supports query parameters and headers.
     */
-    @Yaml.Key
-    RelationshipRecordsBuilder offsetParameter(String name);
-
-    /**
-    Sets the page-size query parameter name; defaults to {@code limit}.
-    */
-    @Yaml.Key
-    RelationshipRecordsBuilder limitParameter(String name);
+    @Override
+    RelationshipRecordsBuilder pagingParameter(String token, String location, String name);
 
     /**
     Sets the first offset; defaults to zero. Subsequent offsets advance by the number of returned records.

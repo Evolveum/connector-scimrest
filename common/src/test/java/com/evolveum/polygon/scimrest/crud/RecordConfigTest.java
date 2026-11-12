@@ -8,6 +8,7 @@ package com.evolveum.polygon.scimrest.crud;
 import com.evolveum.polygon.scimrest.support.AbstractCrudConnectorTest;
 import com.evolveum.polygon.scimrest.support.YamlOperationsConnector;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeDeltaBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
@@ -21,7 +22,7 @@ import java.util.Set;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
-public class RelationshipConfigTest extends AbstractCrudConnectorTest {
+public class RecordConfigTest extends AbstractCrudConnectorTest {
 
     private static final String SCHEMA = """
             objectClass("Account") {
@@ -36,6 +37,14 @@ public class RelationshipConfigTest extends AbstractCrudConnectorTest {
             sourceField: userId
             targetField: groupId
             idField: id
+            """;
+
+    private static final String PAGING = """
+            pagingSupport:
+              pageSize: 2
+              parameters:
+                offset: {in: query, name: offset}
+                pageSize: {in: query, name: limit}
             """;
 
     @DataProvider
@@ -53,18 +62,12 @@ public class RelationshipConfigTest extends AbstractCrudConnectorTest {
                 {SETTINGS.replace("idField: id", "idField: userId"), "must not overlap"},
                 {SETTINGS.replace("idField: id", "idField: groupId"), "must not overlap"},
                 {SETTINGS.replace("idField: id", "idField: '$.'"), "Invalid idField"},
-                {SETTINGS + "recordsPath: '$.'\n", "Invalid recordsPath"},
+                {SETTINGS + "objectsPath: '$.'\n", "Invalid objectsPath"},
                 {SETTINGS + "sourceType: number\n", "sourceType must be"},
                 {SETTINGS + "targetType: boolean\n", "targetType must be"},
-                {SETTINGS + "pageSize: -1\n", "pageSize and initialOffset"},
-                {SETTINGS + "initialOffset: -1\n", "pageSize and initialOffset"},
+                {SETTINGS + "initialOffset: -1\n", "initialOffset"},
                 {SETTINGS + "maxPages: 0\n", "maxPages must be positive"},
-                {SETTINGS + "offsetParameter: 'offset&user'\n", "offsetParameter must be"},
-                {SETTINGS + "limitParameter: ''\n", "limitParameter must be"},
                 {SETTINGS + "sourceParameter: 'user=name'\n", "sourceParameter must be"},
-                {SETTINGS + "pageSize: 10\noffsetParameter: limit\n", "parameter names must be distinct"},
-                {SETTINGS + "pageSize: 10\nsourceParameter: offset\n", "parameter names must be distinct"},
-                {SETTINGS + "pageSize: 10\nsourceParameter: limit\n", "parameter names must be distinct"},
                 {SETTINGS.replace("/memberships", "https://example.test/memberships"), "relative API path"},
                 {SETTINGS.replace("/memberships", "/memberships?user=other"), "without a query or fragment"},
                 {SETTINGS.replace("/memberships", "/memberships/../users"), "traversal segments"},
@@ -85,6 +88,93 @@ public class RelationshipConfigTest extends AbstractCrudConnectorTest {
 
         // Then: Explain failure before HTTP requests
         assertTrue(exception.getMessage().contains(message), exception.getMessage());
+        assertTrue(wireMockServer.getAllServeEvents().isEmpty());
+    }
+
+    @DataProvider
+    public Object[][] invalidPaging() {
+        return new Object[][] {
+                {PAGING.replace("pageSize: 2", "pageSize: 0"), "pageSize"},
+                {PAGING.replace("pageSize: 2", "pageSize: -1"), "pageSize"},
+                {PAGING.replace("  pageSize: 2\n", ""), "positive pageSize"},
+                {"pagingSupport:\n  pageSize: 2\n", "offset and pageSize"},
+                {PAGING.replace("    offset: {in: query, name: offset}\n", ""), "offset and pageSize"},
+                {PAGING.replace("    pageSize: {in: query, name: limit}\n", ""), "offset and pageSize"},
+                {PAGING.replace("offset: {in: query, name: offset}", "page: {in: query, name: page}"), "offset and pageSize"},
+                {PAGING.replace("offset: {in: query, name: offset}", "cursor: {in: query, name: cursor}"), "token"},
+                {PAGING.replace("in: query, name: offset", "in: body, name: offset"), "POST"},
+                {PAGING.replace("in: query, name: offset", "in: cookie, name: offset"), "location"},
+                {PAGING.replace("name: limit", "name: offset"), "distinct"},
+                {PAGING + "sourceParameter: offset\n", "distinct"},
+                {PAGING + "sourceParameter: limit\n", "distinct"},
+                {PAGING.replace("in: query, name: offset", "in: header, name: X-Page")
+                        .replace("in: query, name: limit", "in: header, name: x-page"), "distinct"},
+                {PAGING.replace("name: offset", "name: 'offset&user'"), "name"},
+                {PAGING.replace("name: limit", "name: ''"), "name"},
+                {"pagingSupport: 'request.queryParameter(\"offset\", 0)'\n", "declarative pagingSupport"}
+        };
+    }
+
+    @Test(dataProvider = "invalidPaging")
+    public void testInvalidPaging(String settings, String expected) {
+        // Given: Membership paging violates its supported contract
+        var operations = operations(SETTINGS + settings);
+
+        // When: Build the relationship paging handler
+        var failure = expectThrows(ConnectorException.class, () -> update(SCHEMA, operations));
+
+        // Then: Reject invalid paging before remote access
+        assertTrue(messages(failure).contains(expected), messages(failure));
+        assertTrue(wireMockServer.getAllServeEvents().isEmpty());
+    }
+
+    @DataProvider
+    public Object[][] obsoleteSettings() {
+        return new Object[][] {{"recordsPath", "'$.result'"}, {"offsetParameter", "offset"}, {"limitParameter", "limit"}, {"pageSize", "2"}};
+    }
+
+    @Test(dataProvider = "obsoleteSettings")
+    public void testObsoleteSetting(String name, String value) {
+        // Given: Configuration uses an obsolete membership key
+        var operations = operations(SETTINGS + name + ": " + value + "\n");
+
+        // When: Load the obsolete YAML declaration
+        var failure = expectThrows(ConnectorException.class, () -> update(SCHEMA, operations));
+
+        // Then: Report obsolete configuration without remote requests
+        assertTrue(messages(failure).contains(name), messages(failure));
+        assertTrue(messages(failure).toLowerCase().contains("unknown"), messages(failure));
+        assertTrue(wireMockServer.getAllServeEvents().isEmpty());
+    }
+
+    @Test
+    public void testDuplicateToken() {
+        // Given: Groovy repeats the offset token mapping
+        var operations = """
+                objectClass('Account') {
+                    update {
+                        relationshipRecords('groups') {
+                            endpoint '/memberships'
+                            sourceField 'userId'
+                            targetField 'groupId'
+                            idField 'id'
+                            pageSize 2
+                            pagingParameter 'offset', 'query', 'offset'
+                            pagingParameter 'pageSize', 'query', 'limit'
+                            pagingParameter 'offset', 'header', 'X-Offset'
+                        }
+                    }
+                }
+                """;
+        var connector = initConnector(SCHEMA, CONNID_SCHEMA_SCRIPT, operations);
+        var delta = AttributeDeltaBuilder.build("groups", List.of("A"));
+
+        // When: Build the membership paging parameter mappings
+        var failure = expectThrows(ConnectorException.class, () -> connector.updateDelta(new ObjectClass("Account"), new Uid("123"), Set.of(delta),
+                new OperationOptionsBuilder().build()));
+
+        // Then: Reject competing mappings before remote requests
+        assertTrue(messages(failure).contains("duplicate paging token"), messages(failure));
         assertTrue(wireMockServer.getAllServeEvents().isEmpty());
     }
 
@@ -148,5 +238,14 @@ public class RelationshipConfigTest extends AbstractCrudConnectorTest {
         connector.init(new SimpleConfig(wireMockServer.port()));
         connector.updateDelta(new ObjectClass("Account"), new Uid("123"), Set.of(AttributeDeltaBuilder.build("groups", List.of("A"))),
                 new OperationOptionsBuilder().build());
+    }
+
+    private String messages(Throwable failure) {
+        var messages = new StringBuilder();
+        while (failure != null) {
+            messages.append(failure.getMessage()).append('\n');
+            failure = failure.getCause();
+        }
+        return messages.toString();
     }
 }

@@ -73,6 +73,14 @@ public class RelationshipRecordsTest extends AbstractCrudConnectorTest {
 
     private static final String INTEGER_OPERATIONS = OPERATIONS + "          targetType: integer\n";
 
+    private static final String PAGING = """
+                      pagingSupport:
+                        pageSize: 2
+                        parameters:
+                          offset: {in: query, name: offset}
+                          pageSize: {in: query, name: limit}
+            """;
+
     private static final String GROOVY_OPERATIONS = """
             objectClass("Account") {
                 update {
@@ -283,7 +291,7 @@ public class RelationshipRecordsTest extends AbstractCrudConnectorTest {
         // Given: Wrapped records and nested numeric identifiers
         var operations = OPERATIONS.replace("sourceField: userId", "sourceField: { type: JSON_POINTER, value: /user/id }\n          sourceType: integer")
                 .replace("targetField: groupId", "targetField: $.group.id\n          targetType: integer")
-                .replace("idField: id", "idField: $.record.id\n          recordsPath: { type: JSON_POINTER, value: /items }");
+                .replace("idField: id", "idField: $.record.id\n          objectsPath: { type: JSON_POINTER, value: /items }");
         stubRecords("{\"items\":[{\"record\":{\"id\":9},\"user\":{\"id\":123},\"group\":{\"id\":4}}]}");
         stubCreate("{\"user\":{\"id\":123},\"group\":{\"id\":5}}");
 
@@ -514,7 +522,7 @@ public class RelationshipRecordsTest extends AbstractCrudConnectorTest {
     @Test
     public void testPagedSnapshot() {
         // Given: More records beyond a short page
-        var operations = OPERATIONS + "          pageSize: 2\n";
+        var operations = OPERATIONS + PAGING;
         stubPage(0, "[{\"id\":\"M1\",\"userId\":\"123\",\"groupId\":\"A\"}]");
         stubPage(1, "[{\"id\":\"M2\",\"userId\":\"123\",\"groupId\":\"B\"}]");
         stubPage(2, "[]");
@@ -528,9 +536,91 @@ public class RelationshipRecordsTest extends AbstractCrudConnectorTest {
     }
 
     @Test
+    public void testQueryPaging() {
+        // Given: Wrapped pages include foreign membership records
+        var operations = OPERATIONS + PAGING.replace("name: offset", "name: start").replace("name: limit", "name: count")
+                + "          sourceParameter: user\n          initialOffset: 5\n          objectsPath: '$.result'\n";
+        wireMockServer.stubFor(get(urlPathEqualTo("/memberships")).withQueryParam("user", equalTo("123"))
+                .withQueryParam("start", equalTo("5")).withQueryParam("count", equalTo("2")).willReturn(okJson("""
+                        {"result":[{"id":"M1","userId":"123","groupId":"A"},{"id":"foreign","userId":"other","groupId":"A"}]}
+                        """)));
+        wireMockServer.stubFor(get(urlPathEqualTo("/memberships")).withQueryParam("user", equalTo("123"))
+                .withQueryParam("start", equalTo("7")).withQueryParam("count", equalTo("2"))
+                .willReturn(okJson("{\"result\":[{\"id\":\"M2\",\"userId\":\"123\",\"groupId\":\"B\"}]}")));
+        wireMockServer.stubFor(get(urlPathEqualTo("/memberships")).withQueryParam("user", equalTo("123"))
+                .withQueryParam("start", equalTo("8")).withQueryParam("count", equalTo("2")).willReturn(okJson("{\"result\":[]}")));
+        stubDelete("M1");
+        stubDelete("M2");
+
+        // When: Clear memberships through configured query mappings
+        update(initYaml(operations), AttributeDeltaBuilder.build("groups", List.of()));
+
+        // Then: Count foreign records but preserve them
+        assertRequests("GET /memberships?user=123&start=5&count=2", "GET /memberships?user=123&start=7&count=2",
+                "GET /memberships?user=123&start=8&count=2", "DELETE /memberships/M1", "DELETE /memberships/M2");
+    }
+
+    @Test
+    public void testHeaderPaging() {
+        // Given: Membership paging uses HTTP request headers
+        var operations = OPERATIONS + PAGING.replace("in: query, name: offset", "in: header, name: X-Offset")
+                .replace("in: query, name: limit", "in: header, name: X-Limit") + "          initialOffset: 3\n";
+        wireMockServer.stubFor(get(urlEqualTo("/memberships")).withHeader("X-Offset", equalTo("3")).withHeader("X-Limit", equalTo("2"))
+                .willReturn(okJson("[{\"id\":\"M1\",\"userId\":\"123\",\"groupId\":\"A\"}]")));
+        wireMockServer.stubFor(get(urlEqualTo("/memberships")).withHeader("X-Offset", equalTo("4")).withHeader("X-Limit", equalTo("2")).willReturn(okJson("[]")));
+        stubDelete("M1");
+        stubCreate("{\"userId\":\"123\",\"groupId\":\"B\"}");
+
+        // When: Replace memberships after completing header pagination
+        update(initYaml(operations), AttributeDeltaBuilder.build("groups", List.of("B")));
+
+        // Then: Advance headers by actual response count
+        assertRequests("GET /memberships", "GET /memberships", "DELETE /memberships/M1", "POST /memberships");
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo("/memberships")).withHeader("X-Offset", equalTo("3")).withHeader("X-Limit", equalTo("2")));
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo("/memberships")).withHeader("X-Offset", equalTo("4")).withHeader("X-Limit", equalTo("2")));
+        verifyCreate("{\"userId\":\"123\",\"groupId\":\"B\"}");
+    }
+
+    @Test
+    public void testGroovyPaging() {
+        // Given: Groovy maps paging tokens declaratively
+        var operations = GROOVY_OPERATIONS.replace("idField \"id\"", """
+                idField "id"
+                objectsPath '$.result'
+                pageSize 2
+                pagingParameter 'offset', 'query'
+                pagingParameter 'pageSize', 'query', 'limit'
+                """);
+        stubPage(0, "{\"result\":[{\"id\":\"M1\",\"userId\":\"123\",\"groupId\":\"A\"}]}");
+        stubPage(1, "{\"result\":[]}");
+        stubDelete("M1");
+
+        // When: Clear memberships using Groovy paging declarations
+        update(initConnector(SCHEMA, CONNID_SCHEMA_SCRIPT, operations), AttributeDeltaBuilder.build("groups", List.of()));
+
+        // Then: Resolve wrapped records across every page
+        assertRequests("GET /memberships?offset=0&limit=2", "GET /memberships?offset=1&limit=2", "DELETE /memberships/M1");
+    }
+
+    @Test
+    public void testLaterFailure() {
+        // Given: Discovery fails after an owned record
+        var operations = OPERATIONS + PAGING;
+        stubPage(0, "[{\"id\":\"M1\",\"userId\":\"123\",\"groupId\":\"A\"}]");
+        wireMockServer.stubFor(get(urlPathEqualTo("/memberships")).withQueryParam("offset", equalTo("1"))
+                .withQueryParam("limit", equalTo("2")).willReturn(aResponse().withStatus(503)));
+
+        // When: Attempt clearing with incomplete discovery
+        expectThrows(ConnectionFailedException.class, () -> update(initYaml(operations), AttributeDeltaBuilder.build("groups", List.of())));
+
+        // Then: Preserve memberships until discovery succeeds completely
+        assertRequests("GET /memberships?offset=0&limit=2", "GET /memberships?offset=1&limit=2");
+    }
+
+    @Test
     public void testRepeatedPage() {
         // Given: Server ignores the paging offset
-        var operations = OPERATIONS + "          pageSize: 2\n";
+        var operations = OPERATIONS + PAGING;
         var records = "[{\"id\":\"M1\",\"userId\":\"123\",\"groupId\":\"A\"}]";
         stubPage(0, records);
         stubPage(1, records);
@@ -546,7 +636,7 @@ public class RelationshipRecordsTest extends AbstractCrudConnectorTest {
     @Test
     public void testPageLimit() {
         // Given: Snapshot exceeds the configured page limit
-        var operations = OPERATIONS + "          pageSize: 2\n          maxPages: 1\n";
+        var operations = OPERATIONS + PAGING + "          maxPages: 1\n";
         stubPage(0, "[{\"id\":\"M1\",\"userId\":\"123\",\"groupId\":\"A\"}]");
 
         // When: Attempt clear without a complete snapshot

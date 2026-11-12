@@ -268,25 +268,7 @@ public class EndpointBasedSearchBuilder<BF, OF> implements FilterAwareSearchProc
         // Note: pageSize alone composes with a pagingSupport closure (it feeds the closure's
         // paging.pageSize); only the declarative parameters list is an alternative to the closure.
         if (!declarativePagingParameters.isEmpty()) {
-            for (var parameter : declarativePagingParameters) {
-                if (!"pageSize".equals(parameter.token()) && !"page".equals(parameter.token())
-                        && !"offset".equals(parameter.token())) {
-                    throw new ConfigurationException(
-                            "Unknown paging token '" + parameter.token() + "' in search endpoint '" + path
-                                    + "' (expected 'pageSize', 'page', or 'offset')");
-                }
-                if (!"query".equals(parameter.location()) && !"header".equals(parameter.location())
-                        && !"body".equals(parameter.location())) {
-                    throw new ConfigurationException(
-                            "Unknown paging location '" + parameter.location() + "' in search endpoint '" + path
-                                    + "' (expected 'query', 'header', or 'body')");
-                }
-                if ("body".equals(parameter.location()) && httpMethod != HttpMethod.POST) {
-                    throw new ConfigurationException(
-                            "Paging parameter '" + parameter.name() + "' of search endpoint '" + path
-                                    + "' is mapped onto the request body, which requires the endpoint httpOperation to be POST");
-                }
-            }
+            DeclarativePagingHandler.validate(declarativePagingParameters, httpMethod, path);
             if (pagingHandler == null) {
                 pagingHandler = new DeclarativePagingHandler(declarativePagingParameters);
             }

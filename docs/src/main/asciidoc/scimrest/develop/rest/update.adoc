@@ -209,15 +209,16 @@ The framework checks each record's source locally, including when the endpoint s
   Optional query parameter receiving the source UID on each collection request, for example `sourceParameter "userId"`.
   This can reduce the response size; local source checks still apply.
 
-`recordsPath`::
-  Optional basic JSONPath locating the array in a response envelope, for example `recordsPath "$._embedded.elements"`.
+`objectsPath`::
+  Optional basic JSONPath locating the array in a response envelope, for example `objectsPath '$._embedded.elements'`.
   By default, the response itself must be an array.
   A missing collection path or malformed response is an error, not an empty membership list.
 
 === Pagination and failure behavior
 
-Without pagination (`pageSize` defaults to `0`), the collection endpoint must return every record in one response.
-For an API using record offsets, configure:
+Without pagination configuration, the collection endpoint must return every record in one response.
+Pagination uses the shared `pagingSupport.parameters` YAML format and `pagingParameter` Groovy methods used by search endpoints.
+For an API using record offsets, configure a positive page size and both `offset` and `pageSize` mappings:
 
 [source,groovy]
 ----
@@ -226,17 +227,36 @@ relationshipRecords("groups") {
     sourceField "userId"
     targetField "groupId"
     idField "id"
-    recordsPath "$.items"
+    objectsPath '$.items'
     sourceParameter "userId"
     pageSize 100
-    offsetParameter "offset"
-    limitParameter "limit"
+    pagingParameter "offset", "query", "offset"
+    pagingParameter "pageSize", "query", "limit"
     initialOffset 0
     maxPages 1000
 }
 ----
 
-`offsetParameter` defaults to `offset`, `limitParameter` to `limit`, and `initialOffset` to `0`.
+The equivalent YAML pagination settings inside `update.relationshipRecords.groups` are:
+
+[source,yaml]
+----
+objectsPath: $.items
+sourceParameter: userId
+pagingSupport:
+  pageSize: 100
+  parameters:
+    offset: { in: query, name: offset }
+    pageSize: { in: query, name: limit }
+initialOffset: 0
+maxPages: 1000
+----
+
+Both mappings are required when pagination is enabled; their names must match the remote API.
+Use `in: header` (or `"header"` in Groovy) for APIs that accept pagination in HTTP headers.
+Mappings must use distinct destinations and must not overwrite the source query parameter.
+Body mappings and scripted paging are not supported for relationship collection GET requests.
+`initialOffset` defaults to `0`.
 The offset advances by the number of records returned, including records belonging to other sources.
 The framework continues until an empty page, so a server returning fewer records than requested does not cause premature completion.
 `maxPages` defaults to `1000` and bounds the scan, including its terminating empty page.
