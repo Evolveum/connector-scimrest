@@ -25,6 +25,7 @@ import com.evolveum.polygon.scimrest.groovy.api.GroovyContentTypeMixin;
 import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.RestUpdateOperationBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.RelationshipRecordsBuilder;
+import com.evolveum.polygon.scimrest.config.RelationshipContext;
 import com.evolveum.polygon.scimrest.groovy.api.scim.ScimUpdateBuilder;
 import com.evolveum.polygon.conndev.spi.UpdateOperationHandler;
 import com.evolveum.polygon.scimrest.impl.scim.ScimPatchOperations;
@@ -81,7 +82,11 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 definition = parent.getObjectClass().attributeFromConnIdName(name);
             }
             if (definition == null) {
-                definition = parent.getObjectClass().requireAttribute(name, "when defining relationship record updates");
+                try {
+                    definition = parent.getObjectClass().requireAttribute(name, "when defining relationship record updates");
+                } catch (ConfigurationException exception) {
+                    throw new RelationshipContext(name, null).invalid(exception.getMessage(), exception);
+                }
             }
             return new RecordUpdateBuilder((RestConnectorContext) parent.context, definition);
         });
@@ -106,7 +111,7 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
         var attributes = new HashSet<String>();
         for (var relationship : relationships.values()) {
             if (!attributes.add(relationship.attributeName())) {
-                throw new ConfigurationException("Multiple relationship record declarations resolve to attribute '" + relationship.attributeName() + "'");
+                throw relationship.configuration().invalid("Multiple relationship record declarations resolve to attribute '" + relationship.attributeName() + "'");
             }
             handlers.add(relationship.build());
         }
