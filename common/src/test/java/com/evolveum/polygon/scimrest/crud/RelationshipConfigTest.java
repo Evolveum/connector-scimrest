@@ -142,6 +142,7 @@ public class RelationshipConfigTest extends AbstractCrudConnectorTest {
 
         // Then: Reject competing mappings for one token
         assertTrue(messages(failure).toLowerCase().contains("duplicate paging token"), messages(failure));
+        assertTrue(messages(failure).contains("attribute 'groups' at endpoint '/memberships'"), messages(failure));
         assertEquals(wireMockServer.getAllServeEvents(), List.of());
     }
 
