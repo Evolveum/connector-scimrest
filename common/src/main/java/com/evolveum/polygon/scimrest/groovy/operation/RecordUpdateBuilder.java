@@ -248,7 +248,7 @@ final class RecordUpdateBuilder implements RelationshipRecordsBuilder {
         if (pageSize == 0 && !parameters.isEmpty()) {
             throw invalid("paging parameters require a positive pageSize");
         }
-        DeclarativePagingHandler.validateOffset(parameters, endpoint, sourceParameter, pageSize > 0);
+        DeclarativePagingHandler.validateOffset(parameters, endpoint, sourceParameter, pageSize > 0, attributeName());
     }
 
     private ConfigurationException invalid(String message) {
