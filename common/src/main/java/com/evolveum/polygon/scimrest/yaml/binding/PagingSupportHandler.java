@@ -103,8 +103,9 @@ public class PagingSupportHandler implements CustomYamlHandler {
             search.pagingSupport(binder.compileClosure(value.text()));
             return;
         }
+        var alternative = target instanceof RestSearchEndpointBuilder ? " or a Groovy block" : "";
         throw new IllegalArgumentException("The 'pagingSupport' key requires a mapping (pageSize / parameters)"
-                + " or a Groovy block at " + value.line() + ":" + value.col());
+                + alternative + " at " + value.line() + ":" + value.col());
     }
 
     @Override

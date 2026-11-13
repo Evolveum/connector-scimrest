@@ -273,7 +273,7 @@ public class RecordConfigTest extends AbstractCrudConnectorTest {
                 {"pagingSupport:\n  parameters:\n    offset: {in: query, name: []}\n", "'name'"},
                 {"pagingSupport:\n  parameters:\n    offset: {in: query, surprise: offset}\n", "surprise"},
                 {"pagingSupport:\n  mystery: value\n", "mystery"},
-                {"pagingSupport: []\n", "mapping"}
+                {"pagingSupport: []\n", "The 'pagingSupport' key requires a mapping (pageSize / parameters) at "}
         };
     }
 
