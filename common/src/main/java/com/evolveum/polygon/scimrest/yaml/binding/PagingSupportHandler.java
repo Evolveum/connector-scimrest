@@ -14,9 +14,20 @@ import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
 import com.evolveum.polygon.scimrest.groovy.api.PagingSupportBuilder;
 
 /**
-Binds the shared pagingSupport mapping of pageSize and parameter tokens to their request locations and names.
-Search endpoints also accept a Groovy block for custom paging.
-*/
+ * Binds a REST collection reader's {@code pagingSupport:} key. Two shapes are supported:
+ *
+ * <ul>
+ *   <li>a mapping with a {@code pageSize} (the requested page size) and/or a {@code parameters}
+ *       mapping of paging tokens ({@code pageSize}, {@code page}, {@code offset}) to
+ *       {@code { in, name }} entries — a declarative paging handler; {@code name} defaults to
+ *       the token;</li>
+ *   <li>a string / block scalar — the Groovy form (a closure mapping the paging info onto the
+ *       request), accepted only by {@link RestSearchEndpointBuilder}.</li>
+ * </ul>
+ *
+ * <p>The declarative form is shared by search endpoints and relationship readers through
+ * {@link PagingSupportBuilder}. Each reader validates its supported paging tokens and request locations.</p>
+ */
 public class PagingSupportHandler implements CustomYamlHandler {
 
     @Override
