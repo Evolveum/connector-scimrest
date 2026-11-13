@@ -168,6 +168,23 @@ public class DeclarativePagingSupportTest extends AbstractCrudConnectorTest {
     }
 
     @Test
+    public void testPagingShape() {
+        // Given: Search paging uses an invalid sequence
+        var connector = yamlConnector("""
+                - path: accounts
+                  pagingSupport: []
+                """.indent(8));
+
+        // When: Bind the search paging declaration
+        var failure = expectThrows(ConnectorException.class, () -> search(connector, null));
+
+        // Then: Describe both supported configuration forms
+        assertTrue(failure.getMessage(), failure.getMessage().contains(
+                "The 'pagingSupport' key requires a mapping (pageSize / parameters) or a Groovy block at "));
+        assertEquals(wireMockServer.getAllServeEvents().size(), 0);
+    }
+
+    @Test
     public void bodyParameterWithoutPostFails() {
         var connector = yamlConnector("""
                 - path: accounts
