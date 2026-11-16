@@ -336,16 +336,11 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 if (definition == null) {
                     throw new IllegalArgumentException("Unknown attribute: " + delta.getName());
                 }
-                var attrBuilder = new AttributeBuilder();
-                attrBuilder.setName(delta.getName());
                 Attribute attr = null;
                 if (request.before() != null) {
                     attr = request.before().getAttributeByName(delta.getName());
                 }
-                if (attr == null) {
-                    attr = AttributeBuilder.build(delta.getName());
-                }
-                var updated = delta.applyTo(attr);
+                var updated = applyDelta(delta, attr);
                 if (lookupConverter != null) {
                     var converted = lookupConverter.toNative(request.clazz(), Set.of(updated));
                     if (!converted.isEmpty()) {
@@ -355,6 +350,43 @@ public class RestUpdateOperationBuilderImpl extends AbstractUpdateOperationBuild
                 definition.json().toJsonNode(updated, obj);
             }
             return obj.toPrettyString().getBytes(StandardCharsets.UTF_8);
+        }
+
+        private static Attribute applyDelta(AttributeDelta delta, Attribute original) {
+            if (delta.getValuesToReplace() != null) {
+                return AttributeBuilder.build(delta.getName(), delta.getValuesToReplace());
+            }
+            if (original == null || original.getAttributeValueCompleteness() != AttributeValueCompleteness.COMPLETE) {
+                throw new ConnectorException("Original object omitted or incompletely returned update attribute: " + delta.getName());
+            }
+            var values = new ArrayList<>(original.getValue() != null
+                    ? original.getValue() : List.of());
+            if (delta.getValuesToRemove() != null) {
+                for (var removed : delta.getValuesToRemove()) {
+                    values.removeIf(existing -> sameValue(existing, removed));
+                }
+            }
+            if (delta.getValuesToAdd() != null) {
+                for (var added : delta.getValuesToAdd()) {
+                    if (values.stream().noneMatch(existing -> sameValue(existing, added))) {
+                        values.add(added);
+                    }
+                }
+            }
+            return AttributeBuilder.build(delta.getName(), values);
+        }
+
+        private static boolean sameValue(Object left, Object right) {
+            if (left instanceof ConnectorObjectReference a && right instanceof ConnectorObjectReference b) {
+                var aUid = AttributeUtil.getUidAttribute(a.getValue().getAttributes());
+                var bUid = AttributeUtil.getUidAttribute(b.getValue().getAttributes());
+                if (aUid == null || bUid == null) {
+                    throw new ConnectorException("Reference updates require UIDs");
+                }
+                return Objects.equals(a.getValue().getObjectClass(), b.getValue().getObjectClass())
+                        && aUid.equals(bUid);
+            }
+            return Objects.equals(left, right);
         }
     }
 
