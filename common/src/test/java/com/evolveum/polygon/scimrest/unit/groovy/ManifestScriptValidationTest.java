@@ -302,6 +302,53 @@ public class ManifestScriptValidationTest {
         assertNonBlankMessages(result);
     }
 
+    @Test
+    public void validatingWithoutArtifactKindReportsInitializationError() {
+        var result = validate(
+                "objectClass('Account') { search { endpoint('/accounts') { } } }", """
+                {
+                  "operation": "build"
+                }
+                """);
+
+        assertEquals(withoutVersionSpecifics(result), json("""
+                {
+                  "status": "error",
+                  "errors": [
+                    {
+                      "status": "error",
+                      "phase": "initialization"
+                    }
+                  ]
+                }
+                """));
+        assertTrue(result.get("errors").get(0).get("message").asString().contains("Unsupported artifactKind"));
+    }
+
+    @Test
+    public void validatingWithUnknownArtifactKindReportsInitializationError() {
+        var result = validate(
+                "objectClass('Account') { search { endpoint('/accounts') { } } }", """
+                {
+                  "operation": "build",
+                  "artifactKind": "bogus"
+                }
+                """);
+
+        assertEquals(withoutVersionSpecifics(result), json("""
+                {
+                  "status": "error",
+                  "errors": [
+                    {
+                      "status": "error",
+                      "phase": "initialization"
+                    }
+                  ]
+                }
+                """));
+        assertTrue(result.get("errors").get(0).get("message").asString().contains("Unsupported artifactKind: bogus"));
+    }
+
     private static JsonNode json(String json) {
         return MAPPER.readTree(json);
     }
