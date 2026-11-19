@@ -219,6 +219,36 @@ objectClasses:
 `search.attributeResolvers[]`::
   One resolver per entry: `attribute`, `resolutionType` (`PER_OBJECT` / `BATCH`), and the `implementation` Groovy block
 
+`search.relationshipRecords.<attribute>`::
+  Reads a multivalued reference from a separate membership endpoint, using the current object's UID.
+  Required keys are `endpoint`, `targetField`, and either `sourceParameter` or `{source}` in the endpoint.
+  `objectsPath` selects the response array (for example `{type: JSON_POINTER, value: /result}`), and optional `sourceField` checks ownership.
+  `sourceTemplate` defaults to `{uid}` and can embed the UID in a query expression.
+  The existing `pagingSupport` structure configures the requested `pageSize` (default 100) and explicit `parameters` mappings for both `offset` and `pageSize`.
+  Each mapping accepts `in: query` or `in: header` and an optional `name` defaulting to the token name; both token mappings must be declared.
+  This GET offset reader rejects the `page` token, `in: body`, and Groovy paging closures.
+  `initialOffset` defaults to 0 and `maxPages` to 1000, including the final empty-page request.
+  Offsets advance by the number of records actually received. All pages, including short pages, are followed until an empty array.
+  The target class comes from the schema reference declaration. See the REST relationship topic for a complete example and error handling.
+
+For a `groups` reference to `Group`, the membership declaration can be added alongside
+the user's search endpoints:
+
+[source,yaml]
+----
+relationshipRecords:
+  groups:
+    endpoint: /memberships
+    sourceParameter: userId
+    objectsPath: {type: JSON_POINTER, value: /result}
+    targetField: groupId
+    pagingSupport:
+      pageSize: 100
+      parameters:
+        offset: {in: query, name: offset}
+        pageSize: {in: query, name: limit}
+----
+
 `search.custom`::
   Custom search: `supportedFilters` (each a `spec` expression), `emptyFilterSupported`, and the `implementation` Groovy block (see custom search)
 

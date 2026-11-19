@@ -7,10 +7,14 @@
 package com.evolveum.polygon.scimrest.groovy.search;
 
 import com.evolveum.polygon.scimrest.api.HttpRequestSpecification;
+import com.evolveum.polygon.scimrest.groovy.api.HttpMethod;
 import com.evolveum.polygon.scimrest.groovy.api.PagingInfo;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * A {@link PagingHandler} built from declarative paging parameters instead of a Groovy closure:
@@ -23,10 +27,17 @@ public record DeclarativePagingHandler(List<EndpointBasedSearchBuilder.PagingPar
 
     @Override
     public void handlePaging(HttpRequestSpecification request, PagingInfo pagingInfo) {
+        handlePaging(request, pagingInfo, (long) (pagingInfo.getPageOffset() - 1) * pagingInfo.getPageSize());
+    }
+
+    /**
+    Applies the same parameter mapping with an explicit record offset, for readers advancing by actual response size.
+    */
+    public void handlePaging(HttpRequestSpecification request, PagingInfo pagingInfo, long offset) {
         for (var parameter : parameters) {
             long value = switch (parameter.token()) {
                 case "page" -> pagingInfo.getPageOffset();
-                case "offset" -> (long) (pagingInfo.getPageOffset() - 1) * pagingInfo.getPageSize();
+                case "offset" -> offset;
                 default -> pagingInfo.getPageSize(); // pageSize
             };
             switch (parameter.location()) {
@@ -38,4 +49,73 @@ public record DeclarativePagingHandler(List<EndpointBasedSearchBuilder.PagingPar
             }
         }
     }
+
+    /**
+    Validates declarative paging tokens and request locations before a collection reader sends requests.
+    */
+    public static void validate(List<EndpointBasedSearchBuilder.PagingParameter> parameters, HttpMethod method, String path) {
+        for (var parameter : parameters) {
+            if (!"pageSize".equals(parameter.token()) && !"page".equals(parameter.token())
+                    && !"offset".equals(parameter.token())) {
+                throw new ConfigurationException(
+                        "Unknown paging token '" + parameter.token() + "' in search endpoint '" + path
+                                + "' (expected 'pageSize', 'page', or 'offset')");
+            }
+            if (!"query".equals(parameter.location()) && !"header".equals(parameter.location())
+                    && !"body".equals(parameter.location())) {
+                throw new ConfigurationException(
+                        "Unknown paging location '" + parameter.location() + "' in search endpoint '" + path
+                                + "' (expected 'query', 'header', or 'body')");
+            }
+            if ("body".equals(parameter.location()) && method != HttpMethod.POST) {
+                throw new ConfigurationException(
+                        "Paging parameter '" + parameter.name() + "' of search endpoint '" + path
+                                + "' is mapped onto the request body, which requires the endpoint httpOperation to be POST");
+            }
+        }
+    }
+
+    /**
+    Validates offset-based GET paging, parameter names, and collisions with the optional source query parameter.
+    Both offset and pageSize tokens are required unless paging is optional and no mappings are declared.
+    Reports invalid declarations with the attribute name and endpoint, preserving the original validation failure as the cause.
+    */
+    public static void validateOffset(List<EndpointBasedSearchBuilder.PagingParameter> parameters, String path, String sourceParameter, boolean required,
+            String attribute) {
+        try {
+            validateMappings(parameters, path, sourceParameter, required);
+        } catch (ConfigurationException exception) {
+            throw new ConfigurationException("Invalid offset paging for attribute '" + attribute + "' at endpoint '" + path + "': " + exception.getMessage(), exception);
+        }
+    }
+
+    private static void validateMappings(List<EndpointBasedSearchBuilder.PagingParameter> parameters, String path, String sourceParameter, boolean required) {
+        validate(parameters, HttpMethod.GET, path);
+        var tokens = new HashSet<String>();
+        var destinations = new HashSet<String>();
+        if (sourceParameter != null) {
+            validateName(sourceParameter, "sourceParameter");
+            destinations.add("query:" + sourceParameter);
+        }
+        for (var parameter : parameters) {
+            validateName(parameter.name(), "paging parameter");
+            if (!tokens.add(parameter.token())) {
+                throw new ConfigurationException("duplicate paging token '" + parameter.token() + "'");
+            }
+            var name = "header".equals(parameter.location()) ? parameter.name().toLowerCase(Locale.ROOT) : parameter.name();
+            if (!destinations.add(parameter.location() + ":" + name)) {
+                throw new ConfigurationException("paging and source parameter destinations must be distinct");
+            }
+        }
+        if ((required || !parameters.isEmpty()) && !tokens.equals(Set.of("offset", "pageSize"))) {
+            throw new ConfigurationException("requires offset and pageSize paging tokens");
+        }
+    }
+
+    private static void validateName(String parameter, String name) {
+        if (parameter == null || !parameter.matches("[A-Za-z_$][A-Za-z0-9_.$~-]*")) {
+            throw new ConfigurationException(name + " must be a nonempty request parameter name");
+        }
+    }
+
 }
