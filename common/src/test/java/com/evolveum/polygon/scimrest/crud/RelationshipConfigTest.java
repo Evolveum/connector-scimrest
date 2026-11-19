@@ -46,6 +46,10 @@ public class RelationshipConfigTest extends AbstractCrudConnectorTest {
                 {"sourceParameter: user", "sourceParameter: user\n          initialOffset: -1", "initialOffset", "/memberships"},
                 {"endpoint: /memberships", "endpoint: /users/{unknown}/memberships", "endpoint", "/users/{unknown}/memberships"},
                 {"sourceParameter: user", "sourceParameter: 'user&admin=true'", "sourceParameter", "/memberships"},
+                {"sourceParameter: user", "sourceParameter: user\n          request: {queryParameters: {'view&user': other}}",
+                        "invalid fixed query parameter name", "/memberships"},
+                {"sourceParameter: user", "sourceParameter: user\n          request: {queryParameters: {'%zz': other}}", "invalid fixed query parameter name", "/memberships"},
+                {"sourceParameter: user", "sourceParameter: user\n          request: {headers: {'X Version': other}}", "invalid fixed header name", "/memberships"},
                 {"endpoint: /memberships", "endpoint: https://example.invalid/memberships", "endpoint", "https://example.invalid/memberships"},
                 {"endpoint: /memberships", "endpoint: /users/%2e%2e/memberships", "endpoint", "/users/%2e%2e/memberships"},
                 {"endpoint: /memberships", "endpoint: /memberships?user=other", "endpoint", "/memberships?user=other"},
@@ -104,6 +108,40 @@ public class RelationshipConfigTest extends AbstractCrudConnectorTest {
         // Then: Reject invalid paging before remote access
         assertTrue(messages(failure).toLowerCase().contains(expected.toLowerCase()), messages(failure));
         assertContext(failure, "groups", "/memberships");
+        assertEquals(wireMockServer.getAllServeEvents(), List.of());
+    }
+
+    @DataProvider
+    public Object[][] requestConflicts() {
+        return new Object[][] {
+                {"queryParameters: {user: other}", "sourceParameter", "user"},
+                {"queryParameters: {'%75ser': other}", "sourceParameter", "%75ser"},
+                {"queryParameters: {offset: 10}", "offset", "offset"},
+                {"queryParameters: {'%6fffset': 10}", "offset", "offset"},
+                {"queryParameters: {limit: 20}", "pageSize", "limit"},
+                {"headers: {x-OFFSET: 10}", "offset", "X-Offset"},
+                {"headers: {X-LIMIT: 20}", "pageSize", "X-Limit"}
+        };
+    }
+
+    @Test(dataProvider = "requestConflicts")
+    public void rejectRequestConflicts(String settings, String owner, String name) {
+        // Given: Fixed and dynamic destinations overlap
+        var operations = RelationshipReadTest.OPERATIONS;
+        if (settings.startsWith("headers")) {
+            operations = operations.replace("in: query, name: offset", "in: header, name: X-Offset").replace("in: query, name: limit", "in: header, name: X-Limit");
+        }
+        operations += ("request:\n  " + settings).indent(10);
+        var connector = YamlOperationsConnector.fromStrings(operations).withSchema(RelationshipReadTest.SCHEMA, CONNID_SCHEMA_SCRIPT);
+        connector.init(new SimpleConfig(wireMockServer.port()));
+
+        // When: Build the relationship reader
+        var failure = expectThrows(ConnectorException.class, () -> search(connector, null));
+
+        // Then: Identify conflict before remote access
+        assertContext(failure, "groups", "/memberships");
+        assertTrue(messages(failure).contains(owner), messages(failure));
+        assertTrue(messages(failure).contains("'" + name + "'"), messages(failure));
         assertEquals(wireMockServer.getAllServeEvents(), List.of());
     }
 
@@ -265,6 +303,9 @@ public class RelationshipConfigTest extends AbstractCrudConnectorTest {
     public Object[][] invalidYaml() {
         return new Object[][] {
                 {"misspelled: true\n", "misspelled"},
+                {"request:\n  contentType: APPLICATION_JSON\n", "Unknown key 'contentType'"},
+                {"request:\n  headers: {X-Version: [1, 2]}\n", "requires a scalar"},
+                {"request:\n  queryParameters: {view: [brief]}\n", "requires a scalar"},
                 {"maxPages: several\n", "several"},
                 {"targetField: {type: INVALID, value: /group}\n", "INVALID"},
                 {"pagingSupport:\n  pageSize: [2]\n", "scalar"},

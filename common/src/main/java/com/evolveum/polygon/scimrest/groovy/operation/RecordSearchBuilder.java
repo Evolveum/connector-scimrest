@@ -12,7 +12,9 @@ import com.evolveum.polygon.conndev.api.JavaPathFormat;
 import com.evolveum.polygon.conndev.api.ParsingException;
 import com.evolveum.polygon.conndev.spi.AttributeResolver;
 import com.evolveum.polygon.scimrest.config.RelationshipContext;
+import com.evolveum.polygon.scimrest.groovy.api.EndpointBuilder.FixedRequest;
 import com.evolveum.polygon.scimrest.groovy.api.RelationshipReadBuilder;
+import com.evolveum.polygon.scimrest.groovy.endpoint.QueryRequestBuilderImpl;
 import com.evolveum.polygon.scimrest.groovy.search.DeclarativePagingHandler;
 import com.evolveum.polygon.scimrest.groovy.search.EndpointBasedSearchBuilder.PagingParameter;
 import com.evolveum.polygon.scimrest.schema.RestAttributeDefinition;
@@ -20,15 +22,19 @@ import org.identityconnectors.framework.common.exceptions.ConfigurationException
 import org.identityconnectors.framework.common.objects.ConnectorObjectReference;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 
+import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 final class RecordSearchBuilder implements RelationshipReadBuilder {
 
     private final RestAttributeDefinition attribute;
+    private final RecordRequest request = new RecordRequest();
     private String endpoint;
     private String sourceParameter;
     private String sourceTemplate = "{uid}";
@@ -42,6 +48,27 @@ final class RecordSearchBuilder implements RelationshipReadBuilder {
 
     RecordSearchBuilder(RestAttributeDefinition attribute) {
         this.attribute = attribute;
+    }
+
+    @Override
+    public FixedRequest request() {
+        return request;
+    }
+
+    private static final class RecordRequest implements FixedRequest {
+        private final QueryRequestBuilderImpl settings = new QueryRequestBuilderImpl();
+
+        @Override
+        public FixedRequest queryParameter(String name, Object value) {
+            settings.queryParameter(name, value);
+            return this;
+        }
+
+        @Override
+        public FixedRequest header(String name, String value) {
+            settings.header(name, value);
+            return this;
+        }
     }
 
     @Override
@@ -136,7 +163,8 @@ final class RecordSearchBuilder implements RelationshipReadBuilder {
         }
         return new RelationshipResolver(attribute, new ObjectClass(targetClass), endpoint, sourceParameter, sourceTemplate,
                 objectsPath != null ? resolvePath(objectsPath, "objectsPath") : null, targetPath, sourcePath,
-                pageSize, new DeclarativePagingHandler(List.copyOf(parameters)), initialOffset, maxPages);
+                pageSize, new DeclarativePagingHandler(List.copyOf(parameters)), initialOffset, maxPages,
+                Map.copyOf(request.settings.queryParameters), Map.copyOf(request.settings.headers));
     }
 
     private void validateEndpoint() {
@@ -174,6 +202,7 @@ final class RecordSearchBuilder implements RelationshipReadBuilder {
             throw invalid("pageSize and maxPages must be positive; initialOffset must be nonnegative");
         }
         DeclarativePagingHandler.validateOffset(parameters, endpoint, sourceParameter, true, attributeName());
+        validateRequest();
         if (sourceTemplate == null || !sourceTemplate.contains("{uid}")) {
             throw invalid("sourceTemplate must contain {uid}");
         }
@@ -183,6 +212,42 @@ final class RecordSearchBuilder implements RelationshipReadBuilder {
         }
         if (sourceParameter == null && !"{uid}".equals(sourceTemplate)) {
             throw invalid("a custom sourceTemplate requires sourceParameter");
+        }
+    }
+
+    private void validateRequest() {
+        var settings = request.settings;
+        var queryNames = new HashSet<String>();
+        for (var name : settings.queryParameters.keySet()) {
+            var decoded = queryName(name);
+            if (decoded.equals(sourceParameter)) {
+                throw invalid("fixed query parameter '" + name + "' conflicts with sourceParameter");
+            }
+            queryNames.add(decoded);
+        }
+        for (var name : settings.headers.keySet()) {
+            if (name == null || !name.matches("[!#$%&'*+.^_`|~A-Za-z0-9-]+")) {
+                throw invalid("invalid fixed header name '" + name + "'");
+            }
+        }
+        for (var parameter : parameters) {
+            boolean conflict = "query".equals(parameter.location()) ? queryNames.contains(parameter.name())
+                    : settings.headers.keySet().stream().anyMatch(parameter.name()::equalsIgnoreCase);
+            if (conflict) {
+                throw invalid("fixed " + parameter.location() + " parameter '" + parameter.name() + "' conflicts with paging token '" + parameter.token() + "'");
+            }
+        }
+    }
+
+    private String queryName(String name) {
+        // The HTTP converter writes names verbatim. Compare the key the server receives.
+        if (name == null || name.isBlank() || name.matches(".*[&;=#].*")) {
+            throw invalid("invalid fixed query parameter name '" + name + "'");
+        }
+        try {
+            return URLDecoder.decode(URI.create("?" + name).getRawQuery(), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException exception) {
+            throw invalid("invalid fixed query parameter name '" + name + "'");
         }
     }
 

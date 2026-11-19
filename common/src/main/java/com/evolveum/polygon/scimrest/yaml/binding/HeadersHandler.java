@@ -24,13 +24,8 @@ public class HeadersHandler implements CustomYamlHandler {
         if (value == null || value.isNull()) {
             return; // no headers declared
         }
-        EndpointBuilder.RequestBuilder<?> requestBuilder = null;
-        EndpointBuilder.QueryRequestBuilder<?> queryRequestBuilder = null;
-        switch (target) {
-            case EndpointBuilder.RequestBuilder<?> rb -> requestBuilder = rb;
-            case EndpointBuilder.QueryRequestBuilder<?> qrb -> queryRequestBuilder = qrb;
-            case null, default -> throw new IllegalArgumentException("The 'headers' key requires a request builder, got: "
-                    + target.getClass().getName());
+        if (!(target instanceof EndpointBuilder.FixedRequest request)) {
+            throw new IllegalArgumentException("The 'headers' key requires a request builder");
         }
         if (value.kind() != LocatedNode.Kind.OBJECT) {
             throw new IllegalArgumentException("The 'headers' key requires a mapping of header"
@@ -45,11 +40,7 @@ public class HeadersHandler implements CustomYamlHandler {
                 throw new IllegalArgumentException("The header '" + entry.key()
                         + "' requires a scalar value at " + entryValue.line() + ":" + entryValue.col());
             }
-            if (requestBuilder != null) {
-                requestBuilder.header(entry.key(), entryValue.text());
-            } else {
-                queryRequestBuilder.header(entry.key(), entryValue.text());
-            }
+            request.header(entry.key(), entryValue.text());
         }
     }
 }

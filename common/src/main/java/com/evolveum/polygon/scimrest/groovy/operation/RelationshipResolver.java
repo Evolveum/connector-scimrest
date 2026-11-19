@@ -33,6 +33,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -52,10 +53,12 @@ final class RelationshipResolver implements AttributeResolver {
     private final DeclarativePagingHandler pagingHandler;
     private final int initialOffset;
     private final int maxPages;
+    private final Map<String, Object> queryParameters;
+    private final Map<String, String> headers;
 
     RelationshipResolver(RestAttributeDefinition attribute, ObjectClass targetClass, String endpoint, String sourceParameter, String sourceTemplate,
             AttributePath objectsPath, AttributePath targetField, AttributePath sourceField, int pageSize, DeclarativePagingHandler pagingHandler,
-            int initialOffset, int maxPages) {
+            int initialOffset, int maxPages, Map<String, Object> queryParameters, Map<String, String> headers) {
         this.attribute = attribute;
         this.targetClass = targetClass;
         this.endpoint = endpoint;
@@ -68,6 +71,8 @@ final class RelationshipResolver implements AttributeResolver {
         this.pagingHandler = pagingHandler;
         this.initialOffset = initialOffset;
         this.maxPages = maxPages;
+        this.queryParameters = queryParameters;
+        this.headers = headers;
     }
 
     @Override
@@ -116,6 +121,8 @@ final class RelationshipResolver implements AttributeResolver {
 
     private JsonNode fetchPage(RestContext context, String source, long offset, int page) {
         var request = context.newRequest().apiEndpoint(endpoint);
+        queryParameters.forEach(request::queryParameter);
+        headers.forEach(request::header);
         pagingHandler.handlePaging(request, new PagingInfo(pageSize, page), offset);
         if (endpoint.contains("{source}")) {
             if (source.equals(".") || source.equals("..")) {

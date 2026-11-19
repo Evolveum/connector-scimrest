@@ -102,6 +102,43 @@ public class RelationshipReadTest extends AbstractCrudConnectorTest {
     }
 
     @Test
+    public void applyRequestSettings() {
+        // Given: Two membership pages and fixed settings
+        var operations = OPERATIONS.replace("in: query, name: offset", "in: header, name: start") + """
+                request:
+                  queryParameters: {start: 'all & active', User: 7, ignored: null}
+                  headers: {limit: fixed, user: current}
+                """.indent(10);
+        stubAccounts("123");
+        for (int offset : List.of(0, 1, 2)) {
+            var page = offset < 2 ? records(offset + 1, offset + 1) : "[]";
+            wireMockServer.stubFor(get(urlPathEqualTo("/memberships")).withHeader("start", equalTo(String.valueOf(offset))).willReturn(okJson("{\"result\":" + page + "}")));
+        }
+
+        // When: Read through the final empty page
+        var results = search(initYaml(operations), null);
+
+        // Then: Check each request and resolved references
+        assertGroups(results.getFirst(), List.of("G1", "G2"));
+        var requests = wireMockServer.getAllServeEvents().stream().map(event -> event.getRequest()).toList();
+        assertEquals(requests.size(), 4);
+        for (var request : requests) {
+            if (request.getUrl().equals("/accounts")) {
+                assertFalse(request.containsHeader("limit"));
+                assertFalse(request.containsHeader("user"));
+                continue;
+            }
+            assertEquals(request.getQueryParams().keySet(), java.util.Set.of("start", "User", "user", "limit"));
+            assertEquals(request.queryParameter("start").values(), List.of("all & active"));
+            assertEquals(request.queryParameter("User").values(), List.of("7"));
+            assertEquals(request.queryParameter("user").values(), List.of("123"));
+            assertEquals(request.queryParameter("limit").values(), List.of("100"));
+            assertEquals(request.header("limit").values(), List.of("fixed"));
+            assertEquals(request.header("user").values(), List.of("current"));
+        }
+    }
+
+    @Test
     public void testGroovyLookup() {
         // Given: Groovy declarations use custom paging parameters
         var operations = """
@@ -114,6 +151,10 @@ public class RelationshipReadTest extends AbstractCrudConnectorTest {
                         relationshipRecords("groups") {
                             endpoint "/memberships"
                             sourceParameter "user"
+                            request {
+                                queryParameter 'view', 'compact'
+                                header 'X-Version', '2'
+                            }
                             objectsPath '$.result'
                             targetField '$.group.id'
                             pageSize 2
@@ -136,7 +177,8 @@ public class RelationshipReadTest extends AbstractCrudConnectorTest {
         // Then: Resolve typed references with configured offsets
         assertEquals(results.size(), 1);
         assertGroups(results.getFirst(), List.of("G1", "G2"));
-        assertRequests("GET /accounts/123", "GET /memberships?user=123&start=1&count=2", "GET /memberships?user=123&start=3&count=2");
+        assertRequests("GET /accounts/123", "GET /memberships?user=123&start=1&count=2&view=compact", "GET /memberships?user=123&start=3&count=2&view=compact");
+        wireMockServer.verify(2, getRequestedFor(urlPathEqualTo("/memberships")).withHeader("X-Version", equalTo("2")));
     }
 
     @Test

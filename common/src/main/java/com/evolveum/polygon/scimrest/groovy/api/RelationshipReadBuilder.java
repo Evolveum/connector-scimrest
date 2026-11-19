@@ -8,12 +8,26 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.api.BasicJsonPathFormat;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 
 /**
 Reads a multivalued reference attribute from separate, UID-scoped membership records. The target object class comes from the attribute schema.
 Offset pagination continues until an empty page, including after short pages; the attribute is published only after the complete collection is read.
 */
 public interface RelationshipReadBuilder extends PagingSupportBuilder<RelationshipReadBuilder> {
+
+    /**
+    Configures fixed query parameters and headers on every membership GET, including the final empty page.
+    Their destinations must be distinct from the source and paging parameters in the same location.
+    */
+    @Yaml.Sub
+    EndpointBuilder.FixedRequest request();
+
+    default EndpointBuilder.FixedRequest request(@DelegatesTo(value = EndpointBuilder.FixedRequest.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, request());
+    }
 
     /**
     Sets the GET collection path. The optional {@code {source}} placeholder contains the source UID encoded as one URI path segment.

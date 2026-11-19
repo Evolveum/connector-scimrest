@@ -145,6 +145,22 @@ objectClass('User') {
 }
 ----
 
+=== Fixed request settings
+
+The optional `request` block uses the same fixed query parameters and headers as an ordinary search endpoint.
+For example, a membership API might require a tenant header and a projection on every GET, including the final empty page.
+
+[source,yaml]
+----
+request:
+  queryParameters: {fields: 'userId,groupId'}
+  headers: {X-Tenant: engineering}
+----
+
+In Groovy, use `queryParameter('fields', 'userId,groupId')` and `header('X-Tenant', 'engineering')` inside `request { ... }`.
+Fixed settings may use a name from another location. In the same location, a fixed name that conflicts with the source or a paging parameter fails configuration.
+Query names are case-sensitive and header names are case-insensitive.
+
 === Source filtering and paths
 
 `sourceParameter` sends the current object's ConnId UID as a query parameter on every
@@ -195,6 +211,8 @@ not assume that previous pages contained the requested number of records.
 |Option |Default |Meaning
 |`endpoint` |Required |GET collection endpoint, optionally containing `{source}`.
 |`sourceParameter` |None |Query parameter carrying the source UID or template result.
+|`request.queryParameters` |None |Fixed query parameters sent on every membership GET.
+|`request.headers` |None |Fixed headers sent on every membership GET.
 |`sourceTemplate` |`{uid}` |Query value template containing `{uid}`; requires `sourceParameter`.
 |`objectsPath` |Response root |Path to the membership array.
 |`targetField` |Required |Path to each record's target identifier.
