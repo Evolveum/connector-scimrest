@@ -520,6 +520,60 @@ public class RelationshipRecordsTest extends AbstractCrudConnectorTest {
     }
 
     @Test
+    public void configureSnapshotPages() {
+        // Given: Fixed settings and short membership pages
+        var operations = OPERATIONS + PAGING.replace("in: query, name: offset", "in: header, name: start") + """
+                sourceParameter: user
+                request:
+                  queryParameters: {start: 'active & pending', User: 7, ignored: null}
+                  headers: {limit: fixed}
+                """.indent(10);
+        var pages = List.of("[{\"id\":\"M1\",\"userId\":\"123\",\"groupId\":\"A\"}]", "[{\"id\":\"M2\",\"userId\":\"123\",\"groupId\":\"B\"}]", "[]");
+        for (int offset = 0; offset < pages.size(); offset++) {
+            wireMockServer.stubFor(get(urlPathEqualTo("/memberships")).withHeader("start", equalTo(String.valueOf(offset))).willReturn(okJson(pages.get(offset))));
+        }
+        stubDelete("M1");
+        stubCreate("{\"userId\":\"123\",\"groupId\":\"C\"}");
+        var delta = AttributeDeltaBuilder.build("groups", List.of("B", "C"));
+
+        // When: Replace memberships across all pages
+        var applied = update(initYaml(operations), delta);
+
+        // Then: Verify every GET and both writes
+        assertEquals(applied, Set.of(delta));
+        assertEquals(wireMockServer.getAllServeEvents().size(), 5);
+        for (int offset = 0; offset < pages.size(); offset++) {
+            wireMockServer.verify(1, getRequestedFor(urlPathEqualTo("/memberships")).withHeader("start", equalTo(String.valueOf(offset))).withHeader("limit", equalTo("fixed"))
+                    .withQueryParam("start", equalTo("active & pending")).withQueryParam("User", equalTo("7")).withQueryParam("user", equalTo("123"))
+                    .withQueryParam("limit", equalTo("2")).withQueryParam("ignored", absent()));
+        }
+        wireMockServer.verify(1, deleteRequestedFor(urlEqualTo("/memberships/M1")).withHeader("limit", absent()));
+        wireMockServer.verify(1, postRequestedFor(urlEqualTo("/memberships")).withHeader("limit", absent()).withRequestBody(equalToJson("{\"userId\":\"123\",\"groupId\":\"C\"}")));
+    }
+
+    @Test
+    public void configureUnpagedSnapshot() {
+        // Given: Groovy settings for one membership GET
+        var operations = GROOVY_OPERATIONS.replace("idField \"id\"", """
+                idField "id"
+                request {
+                    queryParameter 'fields', 'id,userId,groupId'
+                    header 'X-Tenant', 'engineering'
+                }
+                """);
+        wireMockServer.stubFor(get(urlPathEqualTo("/memberships")).withQueryParam("fields", equalTo("id,userId,groupId")).withHeader("X-Tenant", equalTo("engineering"))
+                .willReturn(okJson(RECORDS)));
+        var delta = AttributeDeltaBuilder.build("groups", List.of("A", "B"));
+
+        // When: Reconcile against the unpaged snapshot
+        var applied = update(initConnector(SCHEMA, CONNID_SCHEMA_SCRIPT, operations), delta);
+
+        // Then: Resolve existing memberships in one request
+        assertEquals(applied, Set.of(delta));
+        assertRequests("GET /memberships?fields=id%2CuserId%2CgroupId");
+    }
+
+    @Test
     public void testPagedSnapshot() {
         // Given: More records beyond a short page
         var operations = OPERATIONS + PAGING;

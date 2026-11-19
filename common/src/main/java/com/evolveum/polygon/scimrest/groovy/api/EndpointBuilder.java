@@ -71,7 +71,7 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
     }
 
     interface RequestBuilder<I>
-            extends RequestHeadersBuilder<I>, RequestEntityBuilder<I> {
+            extends FixedRequest, RequestHeadersBuilder<I>, RequestEntityBuilder<I> {
 
         @Override
         RequestBuilder<I> accept(String... contentType);
@@ -99,30 +99,11 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
          * @param name the query parameter name
          * @param value the parameter value (stringified into the URL; {@code null} adds nothing)
          */
+        @Override
         RequestBuilder<I> queryParameter(String name, Object value);
-
-        /**
-         * Marker for the YAML front-end: the {@code queryParameters:} mapping (parameter name to
-         * scalar value) under {@code request:} is bound by
-         * {@link com.evolveum.polygon.scimrest.yaml.binding.QueryParametersHandler}; the method
-         * body is unused.
-         */
-        @Yaml.Custom(QueryParametersHandler.class)
-        default void queryParameters() {
-        }
-
-        /**
-         * Marker for the YAML front-end: the {@code headers:} mapping (header name to scalar
-         * value) under {@code request:} is bound by
-         * {@link com.evolveum.polygon.scimrest.yaml.binding.HeadersHandler}; the method body
-         * is unused.
-         */
-        @Yaml.Custom(HeadersHandler.class)
-        default void headers() {
-        }
     }
 
-    interface QueryRequestBuilder<I> extends RequestHeadersBuilder<I>{
+    interface QueryRequestBuilder<I> extends FixedRequest, RequestHeadersBuilder<I> {
 
         @Override
         QueryRequestBuilder<I> accept(String... contentType);
@@ -151,24 +132,22 @@ public interface EndpointBuilder extends GroovyHttpOperationMixin {
          * @param name the query parameter name
          * @param value the parameter value (stringified into the URL; {@code null} adds nothing)
          */
+        @Override
         QueryRequestBuilder<I> queryParameter(String name, Object value);
+    }
 
-        /**
-         * Marker for the YAML front-end: the {@code queryParameters:} mapping (parameter name to
-         * scalar value) under {@code request:} is bound by
-         * {@link com.evolveum.polygon.scimrest.yaml.binding.QueryParametersHandler}; the method
-         * body is unused.
-         */
+    /**
+    Declares fixed query parameters and headers for every request issued by an endpoint. Null values are ignored.
+    */
+    interface FixedRequest {
+        FixedRequest queryParameter(String name, Object value);
+
+        FixedRequest header(String name, String value);
+
         @Yaml.Custom(QueryParametersHandler.class)
         default void queryParameters() {
         }
 
-        /**
-         * Marker for the YAML front-end: the {@code headers:} mapping (header name to scalar
-         * value) under {@code request:} is bound by
-         * {@link com.evolveum.polygon.scimrest.yaml.binding.HeadersHandler}; the method body
-         * is unused.
-         */
         @Yaml.Custom(HeadersHandler.class)
         default void headers() {
         }

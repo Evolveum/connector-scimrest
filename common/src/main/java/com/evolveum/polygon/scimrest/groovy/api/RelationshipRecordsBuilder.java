@@ -8,6 +8,9 @@ package com.evolveum.polygon.scimrest.groovy.api;
 import com.evolveum.polygon.conndev.annotations.Yaml;
 import com.evolveum.polygon.conndev.api.AttributePathDeclaration;
 import com.evolveum.polygon.conndev.api.BasicJsonPathFormat;
+import com.evolveum.polygon.conndev.concepts.GroovyClosures;
+import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 
 /**
 Maps one multivalued ConnId attribute to separate REST relationship records. The updated object's UID
@@ -16,6 +19,17 @@ collection, POST creates records, and DELETE addresses individual record IDs. Th
 not transactional. Without paging, GET must return the complete collection.
 */
 public interface RelationshipRecordsBuilder extends PagingSupportBuilder<RelationshipRecordsBuilder> {
+
+    /**
+    Configures fixed query parameters and headers on the membership snapshot GET, including the final empty page when paging is enabled.
+    Their destinations must be distinct from the source and paging parameters in the same location.
+    */
+    @Yaml.Sub
+    EndpointBuilder.FixedRequest request();
+
+    default EndpointBuilder.FixedRequest request(@DelegatesTo(value = EndpointBuilder.FixedRequest.class, strategy = Closure.DELEGATE_ONLY) Closure<?> closure) {
+        return GroovyClosures.callAndReturnDelegate(closure, request());
+    }
 
     /**
     Sets the GET/POST collection path. The optional {@code {source}} placeholder contains the encoded source UID.

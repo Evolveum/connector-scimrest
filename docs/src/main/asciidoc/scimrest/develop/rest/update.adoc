@@ -214,6 +214,11 @@ The framework checks each record's source locally, including when the endpoint s
   By default, the response itself must be an array.
   A missing collection path or malformed response is an error, not an empty membership list.
 
+`request.queryParameters`, `request.headers`::
+  Optional fixed settings for the membership snapshot GET. The connector sends them on the unpaged request or on every page, including the final empty page.
+  Membership creation and deletion use their own requests.
+  Query names are case-sensitive, and header names are case-insensitive. Within the same location a fixed name must be distinct from the source and paging parameters.
+
 === Pagination and failure behavior
 
 Without pagination configuration, the collection endpoint must return every record in one response.
@@ -229,6 +234,10 @@ relationshipRecords("groups") {
     idField "id"
     objectsPath '$.items'
     sourceParameter "userId"
+    request {
+        queryParameter "fields", "id,userId,groupId"
+        header "X-Tenant", "engineering"
+    }
     pageSize 100
     pagingParameter "offset", "query", "offset"
     pagingParameter "pageSize", "query", "limit"
@@ -243,6 +252,9 @@ The equivalent YAML pagination settings inside `update.relationshipRecords.group
 ----
 objectsPath: $.items
 sourceParameter: userId
+request:
+  queryParameters: {fields: 'id,userId,groupId'}
+  headers: {X-Tenant: engineering}
 pagingSupport:
   pageSize: 100
   parameters:

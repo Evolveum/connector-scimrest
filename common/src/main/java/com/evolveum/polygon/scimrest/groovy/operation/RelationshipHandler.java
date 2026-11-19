@@ -69,11 +69,13 @@ final class RelationshipHandler implements UpdateOperationHandler {
     private final DeclarativePagingHandler pagingHandler;
     private final int initialOffset;
     private final int maxPages;
+    private final Map<String, Object> queryParameters;
+    private final Map<String, String> headers;
     private final Object[] locks = new Object[64];
 
     RelationshipHandler(RestConnectorContext context, String attribute, String endpoint, String deleteEndpoint, AttributePath sourceField,
             AttributePath targetField, AttributePath idField, AttributePath objectsPath, String sourceParameter, String sourceType, String targetType,
-            int pageSize, DeclarativePagingHandler pagingHandler, int initialOffset, int maxPages) {
+            int pageSize, DeclarativePagingHandler pagingHandler, int initialOffset, int maxPages, Map<String, Object> queryParameters, Map<String, String> headers) {
         this.context = context;
         this.attribute = attribute;
         this.endpoint = endpoint;
@@ -89,6 +91,8 @@ final class RelationshipHandler implements UpdateOperationHandler {
         this.pagingHandler = pagingHandler;
         this.initialOffset = initialOffset;
         this.maxPages = maxPages;
+        this.queryParameters = queryParameters;
+        this.headers = headers;
         for (int index = 0; index < locks.length; index++) {
             locks[index] = new Object();
         }
@@ -227,6 +231,8 @@ final class RelationshipHandler implements UpdateOperationHandler {
         long offset = initialOffset;
         for (int page = 0; page < maxPages; page++) {
             var request = request(HttpMethod.GET, endpoint, source);
+            queryParameters.forEach(request::queryParameter);
+            headers.forEach(request::header);
             if (sourceParameter != null) {
                 request.queryParameter(sourceParameter, source);
             }
