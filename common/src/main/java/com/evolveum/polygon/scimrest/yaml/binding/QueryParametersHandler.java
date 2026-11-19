@@ -24,13 +24,8 @@ public class QueryParametersHandler implements CustomYamlHandler {
         if (value == null || value.isNull()) {
             return; // no query parameters declared
         }
-        EndpointBuilder.RequestBuilder<?> requestBuilder = null;
-        EndpointBuilder.QueryRequestBuilder<?> queryRequestBuilder = null;
-        switch (target) {
-            case EndpointBuilder.RequestBuilder<?> rb -> requestBuilder = rb;
-            case EndpointBuilder.QueryRequestBuilder<?> qrb -> queryRequestBuilder = qrb;
-            case null, default -> throw new IllegalArgumentException("The 'queryParameters' key requires a request builder, got: "
-                    + target.getClass().getName());
+        if (!(target instanceof EndpointBuilder.FixedRequest request)) {
+            throw new IllegalArgumentException("The 'queryParameters' key requires a request builder");
         }
         if (value.kind() != LocatedNode.Kind.OBJECT) {
             throw new IllegalArgumentException("The 'queryParameters' key requires a mapping of query parameter"
@@ -45,11 +40,7 @@ public class QueryParametersHandler implements CustomYamlHandler {
                 throw new IllegalArgumentException("The query parameter '" + entry.key()
                         + "' requires a scalar value at " + entryValue.line() + ":" + entryValue.col());
             }
-            if (requestBuilder != null) {
-                requestBuilder.queryParameter(entry.key(), entryValue.text());
-            } else {
-                queryRequestBuilder.queryParameter(entry.key(), entryValue.text());
-            }
+            request.queryParameter(entry.key(), entryValue.text());
         }
     }
 }

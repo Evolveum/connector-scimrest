@@ -11,9 +11,10 @@ import com.evolveum.polygon.conndev.yaml.decl.LocatedNode;
 import com.evolveum.polygon.conndev.yaml.decl.CustomYamlHandler;
 import com.evolveum.polygon.conndev.yaml.decl.DeclYamlBinder;
 import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
+import com.evolveum.polygon.scimrest.groovy.api.PagingSupportBuilder;
 
 /**
- * Binds a search endpoint's {@code pagingSupport:} key. Two shapes are accepted:
+ * Binds a REST collection reader's {@code pagingSupport:} key. Two shapes are supported:
  *
  * <ul>
  *   <li>a mapping with a {@code pageSize} (the requested page size) and/or a {@code parameters}
@@ -21,15 +22,18 @@ import com.evolveum.polygon.scimrest.groovy.api.RestSearchEndpointBuilder;
  *       {@code { in, name }} entries — a declarative paging handler; {@code name} defaults to
  *       the token;</li>
  *   <li>a string / block scalar — the Groovy form (a closure mapping the paging info onto the
- *       request).</li>
+ *       request), accepted only by {@link RestSearchEndpointBuilder}.</li>
  * </ul>
+ *
+ * <p>The declarative form is shared by search endpoints and relationship readers through
+ * {@link PagingSupportBuilder}. Each reader validates its supported paging tokens and request locations.</p>
  */
 public class PagingSupportHandler implements CustomYamlHandler {
 
     @Override
     public void apply(DeclYamlBinder binder, Object target, LocatedNode value) {
-        if (!(target instanceof RestSearchEndpointBuilder endpoint)) {
-            throw new IllegalArgumentException("The 'pagingSupport' key requires a search endpoint, got: "
+        if (!(target instanceof PagingSupportBuilder<?> endpoint)) {
+            throw new IllegalArgumentException("The 'pagingSupport' key requires a collection reader, got: "
                     + target.getClass().getName());
         }
         if (value == null || value.isNull()) {
@@ -93,11 +97,15 @@ public class PagingSupportHandler implements CustomYamlHandler {
             return;
         }
         if (value.isValue()) {
-            endpoint.pagingSupport(binder.compileClosure(value.text()));
+            if (!(target instanceof RestSearchEndpointBuilder search)) {
+                throw new IllegalArgumentException("This collection reader requires a declarative pagingSupport mapping");
+            }
+            search.pagingSupport(binder.compileClosure(value.text()));
             return;
         }
+        var alternative = target instanceof RestSearchEndpointBuilder ? " or a Groovy block" : "";
         throw new IllegalArgumentException("The 'pagingSupport' key requires a mapping (pageSize / parameters)"
-                + " or a Groovy block at " + value.line() + ":" + value.col());
+                + alternative + " at " + value.line() + ":" + value.col());
     }
 
     @Override
