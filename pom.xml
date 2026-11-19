@@ -230,6 +230,9 @@
                     <configuration>
                         <dependencyTrackBaseUrl>${env.DTRACK_URL}</dependencyTrackBaseUrl>
                         <apiKey>${env.DTRACK_TOKEN}</apiKey>
+                        <!-- Nest under the existing versionless "connector-frameworks" project in Dependency-Track. -->
+                        <parentName>connector-frameworks</parentName>
+                        <updateParent>true</updateParent>
                     </configuration>
                 </plugin>
                 <plugin>
