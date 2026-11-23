@@ -20,6 +20,7 @@ import com.evolveum.polygon.scimrest.schema.strategy.ScimMetadataToConnIdRule;
 import com.evolveum.polygon.scimrest.schema.strategy.ScimMembershipReferenceRule;
 import com.evolveum.polygon.scimrest.schema.strategy.ScimMutabilityToCrudRule;
 import com.evolveum.polygon.scimrest.schema.strategy.ScimNameDetectionRule;
+import com.evolveum.polygon.scimrest.schema.strategy.ScimPasswordGuardedStringRule;
 import com.evolveum.polygon.scimrest.schema.strategy.ScimTypeToJsonTypeRule;
 import com.evolveum.polygon.scimrest.schema.strategy.ScimUidDetectionRule;
 import com.unboundid.scim2.common.types.AttributeDefinition;
@@ -99,6 +100,7 @@ public class ScimSchemaTranslator {
     private void registerDefaultRules() {
         // Attribute-level rules — order matters; general rules run before specific ones
         attributeRules.add(new ScimTypeToJsonTypeRule());
+        attributeRules.add(new ScimPasswordGuardedStringRule());
         attributeRules.add(new ScimMetadataToConnIdRule());
         attributeRules.add(new ScimMutabilityToCrudRule());
         attributeRules.add(new ScimNameDetectionRule());
