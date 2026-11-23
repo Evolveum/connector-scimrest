@@ -44,6 +44,11 @@ public class ScimCreateHandler implements CreateOperationHandler {
         var objectClassDef = schema.objectClass(objectClass.getObjectClassValue());
 
         var scimResource = buildScimResource(createAttributes, objectClassDef);
+        // RFC 7643/7644 requires the schemas attribute on a create body; it is not part of the
+        // object-class schema, so it is determined here from the endpoint (primary schema) and the
+        // set attributes (the extensions their SCIM paths reference).
+        scimResource.setSchemaUrns(ScimSchemas.determine(resource,
+                createAttributes.stream().map(Attribute::getName).toList(), objectClassDef));
 
         GenericScimResource created;
         try {

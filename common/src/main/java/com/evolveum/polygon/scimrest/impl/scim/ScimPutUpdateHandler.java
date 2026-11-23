@@ -74,6 +74,15 @@ public class ScimPutUpdateHandler extends AbstractScimUpdateHandler {
             setAtPath(root, mapping.scimPath(), value);
         }
 
+        // RFC 7643/7644 requires the schemas attribute on a PUT (full replacement) body; it is not
+        // part of the object-class schema, so it is determined here from the endpoint (primary
+        // schema) and the attributes being written (the extensions their SCIM paths reference).
+        // (this.objectClass is the ObjectClass field — the objectClass parameter above is the
+        // RestObjectClassDefinition and shadows the field name.)
+        var resource = context.resourceForObjectClass(this.objectClass);
+        scimResource.setSchemaUrns(ScimSchemas.determine(resource,
+                deltas.stream().map(AttributeDelta::getName).toList(), objectClass));
+
         return scimResource;
     }
 

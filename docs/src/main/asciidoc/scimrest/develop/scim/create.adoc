@@ -14,6 +14,7 @@ The built-in handler:
 
 * Uses POST to the resource endpoint
 * Serializes creatable attributes to JSON
+* Sets the mandatory `schemas` attribute, determined from the endpoint and the set attributes: the resource's primary schema (identified by the endpoint) plus the URN of any schema extension referenced by an attribute being created
 * Handles the response to extract the created object
 * Parses the `id` from response as Uid
 

@@ -161,7 +161,9 @@ public class ScimPutUpdateTest extends AbstractScimTest {
         var putRequests = wireMockServer.findAll(putRequestedFor(urlEqualTo(USER_BY_ID_PATH))
                 .withHeader("Authorization", equalTo("Bearer test-token"))
                 .withRequestBody(matchingJsonPath("$.id", equalTo("123")))
-                .withRequestBody(matchingJsonPath("$.active", equalTo("true"))));
+                .withRequestBody(matchingJsonPath("$.active", equalTo("true")))
+                // a PUT (full replacement) must declare the schemas attribute (RFC 7643/7644)
+                .withRequestBody(matchingJsonPath("$.schemas[0]", equalTo("urn:ietf:params:scim:schemas:core:2.0:User"))));
         assertEquals(putRequests.size(), 1);
         // a PUT (full replace) must have been issued - not a PATCH
         assertEquals(wireMockServer.findAll(patchRequestedFor(urlEqualTo(USER_BY_ID_PATH))).size(), 0);

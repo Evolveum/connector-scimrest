@@ -41,6 +41,7 @@ With the `put` strategy the framework:
 . Reads the original state of the object
 . Applies each ConnId attribute delta on top of the original values
 . Serializes the resulting attributes that the SCIM resource supports into the request body
+. Sets the mandatory `schemas` attribute, determined from the endpoint and the set attributes: the resource's primary schema (identified by the endpoint) plus the URN of any schema extension referenced by an attribute being written
 . Issues a `PUT` to `{resource endpoint}/{id}` with the replacement
 
 NOTE: Declaring a `put` block selects full `PUT` replacement; a `patch` block (or neither block) selects the default `PATCH` strategy. If both are declared, `put` takes precedence.
