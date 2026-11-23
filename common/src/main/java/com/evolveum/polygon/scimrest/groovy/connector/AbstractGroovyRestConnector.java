@@ -236,26 +236,37 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
      */
     @Override
     protected ScriptValidationResult validateScript(ScriptValidationRequest request) throws Exception {
-        if (ScriptValidationRequest.ARTIFACT_KIND_SCHEMA.equals(request.artifactKind())) {
-            if (request.isYaml()) {
-                return validateYamlSchema(request);
-            }
-            var builder = new RestSchemaBuilderImpl(getClass(), context);
-            var loader = new SchemaDefinitionLoader(context.configuration().groovyContext(), builder);
-            var siblingsResult = loadSchemaSiblings(loader, request);
-            RestSchema[] candidateSchema = new RestSchema[1];
-            var schemaResult = GroovyScriptValidator.validate(
-                    loader::parse, () -> {
-                        builder.applyStructuralRules();
-                        candidateSchema[0] = builder.build();
-                    }, request.scriptText(), request.operation());
-            var combinedSchemaResult = combine(siblingsResult, schemaResult);
-            if (combinedSchemaResult.status() != ScriptValidationResult.Status.OK
-                    || !ScriptValidationRequest.SCRIPT_OPERATION_BUILD.equals(request.operation())) {
-                return combinedSchemaResult;
-            }
-            return validateOperationsAgainstCandidateSchema(candidateSchema[0]);
+        return switch (request.artifactKind()) {
+            case ScriptValidationRequest.ARTIFACT_KIND_SCHEMA -> validateSchema(request);
+            case ScriptValidationRequest.ARTIFACT_KIND_AUTHENTICATION -> validateAuthentication(request);
+            case ScriptValidationRequest.ARTIFACT_KIND_OPERATION -> validateOperations(request);
+            case null, default -> throw new IllegalArgumentException(
+                    "Unsupported artifactKind: " + request.artifactKind());
+        };
+    }
+
+    private ScriptValidationResult validateSchema(ScriptValidationRequest request) {
+        if (request.isYaml()) {
+            return validateYamlSchema(request);
         }
+        var builder = new RestSchemaBuilderImpl(getClass(), context);
+        var loader = new SchemaDefinitionLoader(context.configuration().groovyContext(), builder);
+        var siblingsResult = loadSchemaSiblings(loader, request);
+        RestSchema[] candidateSchema = new RestSchema[1];
+        var schemaResult = GroovyScriptValidator.validate(
+                loader::parse, () -> {
+                    builder.applyStructuralRules();
+                    candidateSchema[0] = builder.build();
+                }, request.scriptText(), request.operation());
+        var combinedSchemaResult = combine(siblingsResult, schemaResult);
+        if (combinedSchemaResult.status() != ScriptValidationResult.Status.OK
+                || !ScriptValidationRequest.SCRIPT_OPERATION_BUILD.equals(request.operation())) {
+            return combinedSchemaResult;
+        }
+        return validateOperationsAgainstCandidateSchema(candidateSchema[0]);
+    }
+
+    private ScriptValidationResult validateOperations(ScriptValidationRequest request) {
         if (request.isYaml()) {
             return validateYamlOperations(request);
         }
@@ -264,6 +275,24 @@ public abstract class AbstractGroovyRestConnector extends ClassHandlerConnectorB
         var siblingsResult = loadOperationSiblings(builder, request);
         var primaryResult = GroovyScriptValidator.validate(builder::parse, builder::build, request.scriptText(), request.operation());
         return combine(siblingsResult, primaryResult);
+    }
+
+    /**
+     * Validates an authentication script on its own, without initializing the connector: it runs
+     * before credentials exist, when SCIM discovery would be rejected, and it needs neither the
+     * discovered schema nor the deployed operation scripts.
+     */
+    private ScriptValidationResult validateAuthentication(ScriptValidationRequest request) {
+        var builder = new GroovyRestHandlerBuilder(context.configuration().groovyContext(), context);
+        var result = request.isYaml()
+                ? YamlScriptValidator.validate(
+                        request,
+                        document -> GroovySyntaxChecker.checkOperations(document, BaseOperationSupportBuilder.class,
+                                AuthenticationCustomizationBuilder.class, new GroovyScriptCompiler(context.configuration().groovyContext())),
+                        () -> new YamlRestHandlerLoader(builder, context.configuration().groovyContext()).loadFromString(request.scriptText()),
+                        builder::build)
+                : GroovyScriptValidator.validate(builder::parse, builder::build, request.scriptText(), request.operation());
+        return ScriptValidationResult.combined(result.errors());
     }
 
     /**
