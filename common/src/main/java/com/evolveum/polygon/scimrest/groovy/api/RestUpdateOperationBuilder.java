@@ -18,9 +18,21 @@ import org.identityconnectors.framework.common.objects.AttributeDelta;
 
 import java.util.Set;
 
-public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<RestUpdateOperationBuilder.Endpoint>, UpdateOperationBuilder {
+public interface RestUpdateOperationBuilder extends RestObjectOperationBuilder<RestUpdateOperationBuilder.Endpoint>,
+        UpdateOperationBuilder, RelationshipOperationBuilder<RelationshipRecordsBuilder> {
 
     ScimUpdateBuilder scim();
+
+    /**
+    Routes one membership attribute to CRUD of separate relationship records before regular update endpoints.
+    */
+    @Override
+    RelationshipRecordsBuilder relationshipRecords(String attribute);
+
+    default RelationshipRecordsBuilder relationshipRecords(String attribute,
+            @DelegatesTo(value = RelationshipRecordsBuilder.class, strategy = Closure.DELEGATE_ONLY) @Script.Initialization Closure<?> declaration) {
+        return GroovyClosures.callAndReturnDelegate(declaration, relationshipRecords(attribute));
+    }
 
     default ScimUpdateBuilder scim(@DelegatesTo(value = ScimUpdateBuilder.class, strategy = Closure.DELEGATE_ONLY)
                               @Script.Initialization
